@@ -38,11 +38,15 @@ class TestPropose(TestCase):
         """Test the class of ComposeProposal."""
         proposal_dict = OrderedDict()
         proposal_dict["step_trace-proposer_type_label"] = None
+        proposal_dict["step_trace-iter_interval"] = ['0.5']
         proposal_dict.update(self.step_trace_proposal_dict)
         proposal_dict["minddata-proposer_type_label"] = None
         proposal_dict["minddata_device_queue"] = [1, 1, 0, 1]
-        proposal_dict["minddata_warning_op"] = ["data_process"]
+        proposal_dict["minddata_device_queue_rate"] = {'empty_rate': 100.0, 'empty_warning_threshold': 30}
         proposal_dict["minddata_cpu_utilization"] = [90]
+        proposal_dict['minddata_pipeline-proposer_type_label'] = None
+        proposal_dict['minddata_pipeline-general'] = ['TFReader_3/TFReader_2']
+        proposal_dict['minddata_pipeline-dataset_op'] = ['TFReader_3/TFReader_2']
         proposal_dict["common-proposer_type_label"] = None
         proposal_dict.update(self.common_proposal_dict)
         type_list = ['step_trace', 'minddata', 'minddata_pipeline', 'common']
@@ -73,8 +77,6 @@ class TestPropose(TestCase):
     def test_propose_compose_type_label(self):
         """Test the class of ComposeProposal."""
         proposal_dict = OrderedDict()
-        proposal_dict["test_label-proposer_type_label"] = None
-        proposal_dict.update(self.step_trace_proposal_dict)
         proposal_dict["common-proposer_type_label"] = None
         proposal_dict.update(self.common_proposal_dict)
         type_list = ['step_trace', 'common']
@@ -89,7 +91,6 @@ class TestPropose(TestCase):
     def test_propose_compose_type_label_flag(self):
         """Test the class of ComposeProposal."""
         proposal_dict = OrderedDict()
-        proposal_dict.update(self.step_trace_proposal_dict)
         proposal_dict.update(self.common_proposal_dict)
 
         type_list = ['step_trace', 'common']

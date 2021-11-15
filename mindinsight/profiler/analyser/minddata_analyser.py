@@ -21,8 +21,7 @@ from mindinsight.profiler.common.validator.validate_path import validate_and_nor
 class MinddataAnalyser(BaseAnalyser):
     """The Minddata profiling analyser."""
 
-    DEVICE_QUEUE_EMPTY_WARNING_THRESHOLD = 0.7
-    DEVICE_QUEUE_NOT_EMPTY_THRESHOLD = 0.95
+    DEVICE_QUEUE_EMPTY_WARNING_THRESHOLD = 0.3
 
     def analyse_get_next_info(self, info_type="all"):
         """
@@ -200,7 +199,7 @@ class MinddataAnalyser(BaseAnalyser):
         result = {}
         if get_next_queue_info and device_queue_info:
             result = {"data_process": {"status": "normal"},
-                      "device_queue_op": {"status": "normal"},
+                      "device_queue_warning": {"status": "normal"},
                       "data_transmission": {"status": "normal"},
                       "get_next": {"status": "normal"}}
 
@@ -224,14 +223,14 @@ class MinddataAnalyser(BaseAnalyser):
                 "total_batch": device_queue_info.get("size")}}
 
             # Adapt to the case that the first step data in the GPU is always empty
-            if get_next_queue_empty_count > 1:
-                if device_queue_empty_count > device_queue_info.get("size", 0)*\
-                        MinddataAnalyser.DEVICE_QUEUE_EMPTY_WARNING_THRESHOLD:
-                    result["data_process"]["status"] = "warning"
-                elif device_queue_empty_count < device_queue_info.get("size", 0)*\
-                        MinddataAnalyser.DEVICE_QUEUE_NOT_EMPTY_THRESHOLD:
-                    result["data_transmission"]["status"] = "warning"
-                    result["device_queue_op"]["status"] = "warning"
+            if device_queue_empty_count > device_queue_info.get("size", 0)*\
+                    MinddataAnalyser.DEVICE_QUEUE_EMPTY_WARNING_THRESHOLD:
+                result["data_process"]["status"] = "warning"
+            elif device_queue_empty_count <= device_queue_info.get("size", 0)*\
+                    MinddataAnalyser.DEVICE_QUEUE_EMPTY_WARNING_THRESHOLD and get_next_queue_empty_count > 0:
+                result["data_transmission"]["status"] = "warning"
+            else:
+                result["device_queue_warning"]["status"] = "warning"
 
         elif device_queue_info and not get_next_queue_info:
             result = {"data_process": {"status": "normal"},
@@ -250,8 +249,11 @@ class MinddataAnalyser(BaseAnalyser):
                 }
             }
 
-            if device_queue_empty_count > device_queue_info.get("size", 0)*0.7:
+            if device_queue_empty_count > device_queue_info.get("size", 0)*\
+                    MinddataAnalyser.DEVICE_QUEUE_EMPTY_WARNING_THRESHOLD:
                 result["data_process"]["status"] = "warning"
+            else:
+                result["device_queue_warning"]["status"] = "warning"
 
         return result
 

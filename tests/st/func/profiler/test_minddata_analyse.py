@@ -50,9 +50,9 @@ class TestMinddataAnalyser:
     def test_analyse_queue_summary(self):
         """Test analysing the queue summary info."""
         expect_result = {
-            "data_process": {"status": "normal"},
+            "data_process": {"status": "warning"},
             "device_queue_info": {"summary": {"empty_batch_count": 1, "full_batch_count": 0, "total_batch": 1}},
-            "device_queue_op": {"status": "normal"},
+            "device_queue_warning": {"status": "normal"},
             "get_next": {"status": "normal"},
             "get_next_queue_info": {"summary": {"empty_batch_count": 0, "total_batch": 3}},
             "data_transmission": {"status": "normal"}

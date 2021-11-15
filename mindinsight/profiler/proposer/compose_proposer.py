@@ -22,6 +22,7 @@ from mindinsight.profiler.proposer.proposer_factory import ProposerFactory
 
 class ComposeProposal:
     """Get the proposals from multiple different proposers."""
+
     def __init__(self, profiling_path, device_id, type_list=None):
         self.profiling_path = profiling_path
         self.device_id = device_id
@@ -35,6 +36,7 @@ class ComposeProposal:
 
         Args:
             options (dict): options for composed proposal.
+
                 - compose_proposal_result: execution results of the already running proposers.
                 - step_trace: include optional parameters for step trace，The dictionary key is iter_interval
                   used to get the analyser options for iteration interval time.
@@ -79,6 +81,32 @@ class ComposeProposal:
             elif result and not type_label_flag:
                 # Merge results to the proposals dictionary.
                 compose_proposal_result.update(result)
-
+        compose_proposal_result = self.show_result_condition(compose_proposal_result)
         logger.debug("The 'compose_proposal_result' is %s", str(compose_proposal_result))
         return compose_proposal_result
+
+    def show_result_condition(self, proposal_result):
+        """Hide some suggestions based on conditions."""
+
+        # If the average step interval is greater than StepTraceProposer.__step_trace_iter_interval_threshold or the
+        # data processing performance optimization is empty, it is recommended that only the Profiling and Optimization
+        # Guide be displayed.
+        hidden_key = list()
+        if 'step_trace-iter_interval' not in proposal_result.keys() \
+                or 'minddata_pipeline-general' not in proposal_result.keys():
+            for key in proposal_result.keys():
+                if key not in ['common-proposer_type_label', 'common-profiler_tutorial']:
+                    hidden_key.append(key)
+        else:
+            # Hide optimization suggestions for data processing if there is a problem with data transmission.
+            empty_rate = proposal_result.get('minddata_device_queue_rate', {}).get('empty_rate')
+            empty_warning_threshold = proposal_result.get('minddata_device_queue_rate', {})\
+                .get('empty_warning_threshold')
+            if empty_rate and empty_rate <= empty_warning_threshold:
+                for key in proposal_result.keys():
+                    if key.startswith('minddata_pipeline-') and key not in hidden_key:
+                        hidden_key.append(key)
+
+        for key in hidden_key:
+            del proposal_result[key]
+        return proposal_result

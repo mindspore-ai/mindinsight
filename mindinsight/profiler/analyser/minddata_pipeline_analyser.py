@@ -136,6 +136,7 @@ class MinddataPipelineAnalyser(BaseAnalyser):
         Args:
             filter_condition (dict): The filter condition.
         """
+
         def _inner_filter(item: list):
             return self._default_filter(item, filter_condition)
 
@@ -177,8 +178,8 @@ class MinddataPipelineAnalyser(BaseAnalyser):
         """
         root_node = None
         leaf_nodes = []
-        all_below_low_threshold = True
         all_higher_high_threshold = True
+        maximum_cur_child_differance = 0.1
         result = []
         for item in data:
             parent_id = item[self._index_parent_id]
@@ -188,11 +189,6 @@ class MinddataPipelineAnalyser(BaseAnalyser):
 
             # current usage rate compared to the threshold
             cur_usage_rate = item[self._index_output_queue_usage_rate]
-            is_low = False
-            if cur_usage_rate < low_threshold:
-                is_low = True
-            else:
-                all_below_low_threshold = False
             if cur_usage_rate < high_threshold:
                 all_higher_high_threshold = False
 
@@ -204,18 +200,16 @@ class MinddataPipelineAnalyser(BaseAnalyser):
             child_usage_rates = [
                 self._get_usage_rate_by_op_id(op_id) for op_id in child_ids
             ]
-            is_high = True
             for usage_rate in child_usage_rates:
-                if usage_rate < high_threshold:
-                    is_high = False
-                    break
+                if usage_rate - cur_usage_rate > maximum_cur_child_differance:
+                    if item not in result:
+                        result.append(item)
 
-            if is_high and is_low:
-                result.append(item)
+        for leaf_node in leaf_nodes:
+            if leaf_node[self._index_output_queue_usage_rate] < low_threshold:
+                result.append(leaf_node)
 
-        if all_below_low_threshold:
-            result = leaf_nodes
-        elif all_higher_high_threshold:
+        if all_higher_high_threshold:
             result = [root_node]
         return result
 
