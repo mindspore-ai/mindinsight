@@ -495,13 +495,27 @@ export default {
      * @param {Boolean} isQuery whether to query tree data
      */
     dealMetadata(metadata) {
-      if (
-        metadata.graph_name &&
-        metadata.graph_name !== this.graphFiles.value &&
-        this.graphFiles.value !== this.$t('debugger.all')
+      if (metadata.graph_name && !this.graphFiles.options.includes(metadata.graph_name)) {
+        this.$message.success(this.$t('debugger.newGraphName'));
+        location.reload();
+      }
+      if (metadata.graph_name 
+          && metadata.graph_name !== this.metadata.graph_name 
+          && this.graphFiles.value !== this.$t('debugger.all')     
       ) {
         this.graphFiles.value = metadata.graph_name;
         this.isCurrentGraph = false;
+      }
+      if (metadata.graph_name 
+          && metadata.step !== undefined 
+          && metadata.step !== this.metadata.step 
+          && metadata.graph_name === this.metadata.graph_name 
+          && this.graphFiles.value !== metadata.graph_name 
+          && this.graphFiles.value !== this.$t('debugger.all')    
+      ) {
+        this.graphFiles.value = metadata.graph_name;
+        this.isCurrentGraph = false;
+        this.queryGraphByFile();
       }
       this.metadata.pos = metadata.pos;
       if (metadata.enable_recheck !== undefined) {
@@ -1368,6 +1382,9 @@ export default {
                 this.graphFiles.options.unshift(this.$t('debugger.all'));
               }
               this.graphFiles.value = this.graphFiles.options[0];
+              if(this.trainId){
+                this.getGraphRuns();
+              }             
               if (res.data.metadata 
                   && res.data.metadata.state === this.state.waiting 
                   && this.trainId 
@@ -1396,7 +1413,7 @@ export default {
               }
               this.metadata = res.data.metadata;
               if (!this.trainId) {
-                this.metadata.total_step_num = 2147483648;
+                this.metadata.total_step_num = 2147483647;
               }
               if (res && res.data && res.data.metadata && res.data.metadata.enable_recheck !== undefined) {
                 this.enableRecheck = res.data.metadata.enable_recheck;

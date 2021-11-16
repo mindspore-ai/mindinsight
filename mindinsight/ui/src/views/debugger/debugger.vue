@@ -639,6 +639,81 @@ limitations under the License.
             </div>
           </div>
         </div>
+        <div class="graph-count-wrap"
+             v-if="trainId">
+          <div class="title">
+            {{ $t('debugger.graphExecutionHistory') }}
+            <el-tooltip class="tooltip"
+                        effect="light"
+                        placement="right">
+              <div slot="content">
+                <div class="graph-count-info">
+                  <div class="graph-execution-history">{{$t('debugger.graphExecutionHistoryTip')}}</div>
+                  <div class="has-data"></div>{{this.$t('debugger.hasDataTip')}}<br>
+                  <div class="current-step"></div>{{this.$t('debugger.currentStepTip')}}
+                </div>
+              </div>
+              <i class="el-icon-info"></i>
+            </el-tooltip>
+            <div class="select-wrap">
+              <div class="label">{{ $t('debugger.hasData') }}</div>
+              <el-select v-model="hasDataObj.value"
+                         @change="graphExecutionSelect">
+                <el-option v-for="item in hasDataObj.options"
+                           :key="item.value"
+                           :label="item.label"
+                           :value="item.value">
+                </el-option>
+              </el-select>
+              <div class="label">{{ $t('debugger.graphName') }}</div>
+              <el-select v-model="graphNameObj.value"
+                         @change="graphExecutionSelect">
+                <el-option v-for="item in graphNameObj.options"
+                           :key="item"
+                           :value="item">
+                </el-option>
+              </el-select>
+            </div>
+            <img :src="require('@/assets/images/all-drop-down.png')"
+                 v-show="!showGraphCount"
+                 @click="showGraphCount = !showGraphCount"
+                 alt="" />
+            <img :src="require('@/assets/images/all-uptake.png')"
+                 v-show="showGraphCount"
+                 @click="showGraphCount = !showGraphCount"
+                 alt="" />
+          </div>
+          <div class="content"
+               v-show="showGraphCount">
+            <div class="left">
+              <div class="graph-count">{{$t('debugger.graphExecutionStep')}}</div>
+              <div class="graph-id">{{$t('debugger.graphName')}}</div>
+            </div>
+            <div class="right"
+                 id="graph-count-container">
+              <div :style="{width:`${graphIdArr.length*graphCountWidth}px`}"
+                   v-if="graphIdArr.length">
+                <div class="value-wrap"
+                     v-for="(item,index) in graphIdArr"
+                     :key="index"
+                     :class="{highLight:metadata.step===item.count,hasData:item.has_data}">
+                  <div class="count">{{item.count}}</div>
+                  <el-tooltip class="item"
+                              effect="light"
+                              :content="`sub(${item.sub_graph_names.join()})`"
+                              placement="top"
+                              v-if="item.sub_graph_names.length">
+                    <div class="graph-name">{{ item.graph_name }}</div>
+                  </el-tooltip>
+                </div>
+              </div>
+              <div class="no-data"
+                   v-else>
+                {{ $t('public.noData') }}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="table-container"
            :class="{collapse: collapseTable}">
@@ -1185,6 +1260,32 @@ export default {
         watchPoint: '',
       },
       hitWatchPointArr: [],
+      showGraphCount: true,
+      allGraphIdArr: [],
+      graphIdArr: [],
+      graphCountWidth: 80,
+      showCount: 5,
+      graphNameObj: {
+        value: this.$t('debugger.all'),
+        options: [],
+      },
+      hasDataObj: {
+        value: 'all',
+        options: [
+          {
+            label: this.$t('debugger.noDistinguish'),
+            value: 'all',
+          },
+          {
+            label: this.$t('debugger.yes'),
+            value: true,
+          },
+          {
+            label: this.$t('debugger.no'),
+            value: false,
+          },
+        ],
+      },
       noOfflineGraphName: false,
     };
   },
@@ -1193,13 +1294,7 @@ export default {
     document.title = `${this.$t('debugger.debugger')}-MindInsight`;
     this.nodeTypes.label = this.$t('debugger.nodeType');
     this.pageKey = 'debugger';
-    if (this.trainId) {
-      document.title = `${this.trainId}-${this.$t('debugger.debugger')}-MindInsight`;
-      this.retrieveAll();
-      this.queryStacks();
-    } else {
-      this.getSession();
-    }
+    this.initDebugger();
     window.addEventListener('resize', this.initSvgSize, false);
   },
   watch: {
@@ -1242,6 +1337,13 @@ export default {
       },
       deep: true,
     },
+    'metadata.step': {
+      handler() {
+        if (this.trainId) {
+          this.scrollGraphCount();
+        }
+      },
+    },
     watchPointArr: {
       handler(newValue) {
         const hitArr = newValue.map((val) => {
@@ -1262,6 +1364,58 @@ export default {
     },
   },
   methods: {
+    initDebugger() {
+      if (this.trainId) {
+        document.title = `${this.trainId}-${this.$t('debugger.debugger')}-MindInsight`;
+        this.retrieveAll();
+        this.queryStacks();
+        this.scrollGraphCount();
+      } else {
+        this.getSession();
+      }
+    },
+    getGraphRuns() {
+      RequestService.getGraphRuns(this.sessionId, this.logicCard.value).then((res) => {
+        if (res.data.graph_runs?.length) {
+          this.allGraphIdArr = res.data.graph_runs;
+          this.graphIdArr = JSON.parse(JSON.stringify(this.allGraphIdArr));
+          const graphNames = [...new Set(this.allGraphIdArr.map((val) => val.graph_name))];
+          if (graphNames.length > 1) {
+            this.graphNameObj.options = [this.$t('debugger.all'), ...graphNames];
+          } else {
+            this.graphNameObj.options = graphNames;
+          }
+          this.scrollGraphCount();
+        } else {
+          this.$message.error(this.$t('debugger.noExexutionGraph'));
+        }
+      });
+    },
+    graphExecutionSelect() {
+      this.graphIdArr = this.allGraphIdArr
+        .filter((val) => {
+          if (this.graphNameObj.value === this.$t('debugger.all')) {
+            return true;
+          } else {
+            return this.graphNameObj.value === val.graph_name;
+          }
+        })
+        .filter((val) => {
+          if (this.hasDataObj.value === 'all') {
+            return true;
+          } else {
+            return this.hasDataObj.value === val.has_data;
+          }
+        });
+    },
+    scrollGraphCount() {
+      this.$nextTick(() => {
+        const countIndex = this.graphIdArr.findIndex((val) => val.count === thi.metadata.step);
+        const viewAreaLength = 3;
+        document.querySelector('#graph-count-container').scrollLeft =
+          countIndex < viewAreaLength ? 0 : this.graphCountWidth * countIndex;
+      });
+    },
     stackOperator(stack) {
       if (!stack || !stack.file_path || !(stack.line_no || stack.line_no === 0)) {
         return;
@@ -2579,6 +2733,73 @@ export default {
   border-bottom: 1px solid var(--table-border-color);
   position: relative;
 }
+.deb-wrap .right .svg-wrap .graph-count-wrap {
+  position: absolute;
+  width: 600px;
+  left: 0px;
+  top: 0px;
+  background-color: var(--graph-legend-bg-color);
+  border: 1px solid var(--table-border-color);
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .title {
+  padding: 10px 0 10px 10px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--table-border-color);
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .select-wrap {
+  display: inline-block;
+  margin-left: 15px;
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .select-wrap > div {
+  display: inline-block;
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .select-wrap .label {
+  margin: 0 10px;
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .select-wrap > div .el-input__inner {
+  width: 100px;
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .title img {
+  float: right;
+  margin-right: 10px;
+  cursor: pointer;
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .content {
+  display: flex;
+  line-height: 30px;
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .left {
+  flex: 2;
+  text-align: center;
+  border-right: 1px solid var(--table-border-color);
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .left .graph-count {
+  border-bottom: 1px solid var(--table-border-color);
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .right {
+  flex: 5;
+  overflow: auto;
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .right .no-data {
+  line-height: 60px;
+  text-align: center;
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .right .value-wrap {
+  width: 80px;
+  text-align: center;
+  border-right: 1px solid var(--table-border-color);
+  float: left;
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .right .value-wrap.highLight {
+  color: var(--theme-color);
+  border: 1px solid var(--theme-color);
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .right .value-wrap.hasData {
+  background-color: #ff9800;
+}
+.deb-wrap .right .svg-wrap .graph-count-wrap .right .value-wrap .count {
+  border-bottom: 1px solid var(--table-border-color);
+}
 .deb-wrap .right .svg-wrap .legend {
   width: 400px;
   position: absolute;
@@ -2942,5 +3163,25 @@ export default {
 
 .deb-indent {
   padding-left: 40px;
+}
+.graph-count-info .graph-execution-history{
+ margin-bottom: 5px;
+}
+.graph-count-info .has-data {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background-color: #ff9800;
+  margin-right: 10px;
+  margin-bottom: 5px;
+  vertical-align: middle;
+}
+.graph-count-info .current-step {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--theme-color);
+  margin-right: 10px;
+  vertical-align: middle;
 }
 </style>
