@@ -61,6 +61,8 @@ RWX_MODE_FOR_OWNER = stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR
 
 MAIN_CLASS_NAME = "MindSporeModel"
 
+MAX_INT = 9223372036854775807
+
 DTYPE_MAP = {
     1: np.float32,
     2: np.uint8,
@@ -98,6 +100,18 @@ ONNX_MS_MAP = {1: 'mindspore.float32',
                15: 'UNSUPPORTED',
                16: 'UNSUPPORTED'}
 
+PYTORCH_MS_MAP = {
+    "default": "mindspore.float32",
+    0: "mindspore.uint8",
+    1: "mindspore.int8",
+    2: "mindspore.int16",
+    3: "mindspore.int32",
+    4: "mindspore.int64",
+    5: "mindspore.float16",
+    6: "mindspore.float32",
+    7: "mindspore.float64",
+    11: "mindspore.bool_"
+}
 
 MS_DATA_EDGE = 0
 
@@ -167,6 +181,12 @@ NO_CONVERTED_OPERATORS = [
     "Constant"
 ]
 
+UNCONVERTED_ATEN_OPERATORS = [
+    "aten::Int",
+    "aten::contiguous",
+    "aten::ScalarImplicit"
+]
+
 THIRD_PART_VERSION = {
     "onnx": (ONNX_MIN_VER,),
     "onnxruntime": (ONNXRUNTIME_MIN_VER,),
@@ -215,6 +235,7 @@ def get_imported_module():
     """
     return f"import numpy as np{NEW_LINE}" \
            f"import mindspore{NEW_LINE}" \
+           f"import mindspore.numpy as ms_np{NEW_LINE}" \
            f"import mindspore.ops as P{NEW_LINE}" \
            f"from mindspore import nn{NEW_LINE}" \
            f"from mindspore import Tensor, Parameter{NEW_LINE * 3}"
