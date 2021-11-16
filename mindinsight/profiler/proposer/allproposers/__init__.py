@@ -18,6 +18,8 @@ from mindinsight.profiler.proposer.allproposers.minddata_proposer import Minddat
 from mindinsight.profiler.proposer.allproposers.step_trace_proposer import StepTraceProposer
 from mindinsight.profiler.proposer.allproposers.minddata_pipeline_proposer import \
     MinddataPipelineProposer
+from mindinsight.profiler.proposer.allproposers.parallel_proposer import ParallelProposer
 
 
-__all__ = ["CommonProposer", "StepTraceProposer", "MinddataProposer", "MinddataPipelineProposer"]
+__all__ = ["CommonProposer", "StepTraceProposer", "MinddataProposer", "MinddataPipelineProposer",
+           "ParallelProposer"]

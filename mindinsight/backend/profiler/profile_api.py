@@ -42,6 +42,7 @@ from mindinsight.profiler.proposer.compose_proposer import ComposeProposal
 from mindinsight.profiler.common.log import logger
 from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.backend.application import CustomResponse
+from mindinsight.profiler.proposer.proposer_factory import ProposerFactory
 
 BLUEPRINT = Blueprint("profile", __name__, url_prefix=settings.URL_PATH_PREFIX+settings.API_PREFIX)
 
@@ -348,6 +349,32 @@ def get_profile_summary_proposal():
     proposal_type_list = ['step_trace', 'minddata', 'minddata_pipeline', 'common']
     proposal_obj = ComposeProposal(profiler_dir_abs, device_id, proposal_type_list)
     proposal_info = proposal_obj.get_proposal(options)
+    # Use json.dumps for orderly return
+    return CustomResponse(json.dumps(proposal_info), mimetype='application/json')
+
+
+@BLUEPRINT.route("/profile/summary/cluster-propose", methods=["GET"])
+def get_profile_summary_cluster_proposal():
+    """
+    Get the cluster summary profiling proposal.
+
+    Returns:
+        str, the cluster summary profiling proposal.
+
+    Raises:
+        ParamValueError: If the parameters contain some errors.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/summary/cluster-propose
+    """
+    summary_dir = get_train_id(request)
+    profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
+
+    options = None
+    proposer_type = 'parallel'
+    proposer = ProposerFactory.instance().get_proposer(proposer_type, profiler_dir_abs, 0)
+    proposal_info = proposer.analyze(options)
     # Use json.dumps for orderly return
     return CustomResponse(json.dumps(proposal_info), mimetype='application/json')
 
