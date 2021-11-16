@@ -106,6 +106,11 @@ export default {
         };
       },
     },
+    //  Indicates whether different loss graph properties need to be merged
+    mergeGraphproperties: {
+      type: Boolean,
+      default: false
+    }
   },
   data() {
     return {
@@ -305,7 +310,7 @@ export default {
         }
         this.chartObj = echarts.init(chartDom);
       }
-      this.chartObj.setOption(this.chartOption, true);
+      this.chartObj.setOption(this.chartOption,  !this.mergeGraphproperties);
     },
     /**
      * Draw animation
