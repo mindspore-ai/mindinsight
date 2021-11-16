@@ -454,11 +454,30 @@ def extract_in_out_nodes(file_config, frame_type):
         model = onnx.load(file_config["model_file"])
         input_nodes = extract_from_model(model.graph.input, file_config)
         output_nodes = [out.name for out in model.graph.output]
+        verify_input_actual_info(file_config, input_nodes, output_nodes)
     else:
         check_params = ("shape", "input_nodes", "output_nodes")
         input_nodes = extract_from_cli(file_config, check_params)
         output_nodes = file_config["output_nodes"]
     return input_nodes, output_nodes
+
+
+def verify_input_actual_info(file_config, act_input_nodes, act_output_nodes):
+    """verify the input and actual information"""
+    input_shape = file_config.get("shape")
+    input_name = file_config.get("input_nodes")
+    if input_name is None:
+        input_name = list()
+    input_nodes = {node[0]: node[1] for node in zip(input_name, input_shape)}
+    output_nodes = file_config.get("output_nodes")
+    if (input_shape or input_name) and input_nodes != act_input_nodes:
+        MindConverterLogger.warning(f"If don't set `input_nodes` and `--shape`, it automatically gets information"
+                                    f" `{act_input_nodes}`. Whether set it or not, don't affect convert model.")
+    if output_nodes:
+        if len(output_nodes) != len(act_output_nodes) or any(node not in act_output_nodes for node in output_nodes):
+            MindConverterLogger.warning(f"If don't set `--output_nodes`, it automatically gets information "
+                                        f" `{act_output_nodes}`. Whether set it or not, don't affect convert model.")
+
 
 def generate_operator_scanning_report(graph_obj, table, framework, out_folder: str):
     """Scanning operators in ONNX graph and report the supported status"""
