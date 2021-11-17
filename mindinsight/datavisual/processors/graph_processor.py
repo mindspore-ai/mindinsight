@@ -33,11 +33,11 @@ class GraphProcessor(BaseProcessor):
         data_manager (DataManager): A `DataManager` object.
         tag (str): The tag of graph, if tag is None, will load the first graph.
     """
-    def __init__(self, train_id, data_manager, tag=None):
+    def __init__(self, train_id, data_manager, tag=None, mode='normal'):
         Validation.check_param_empty(train_id=train_id)
         super(GraphProcessor, self).__init__(data_manager)
-
-        train_job = self._data_manager.get_train_job_by_plugin(train_id, PluginNameEnum.GRAPH.value)
+        plugin = PluginNameEnum.GRAPH.value if mode == 'normal' else PluginNameEnum.OPTIMIZED_GRAPH.value
+        train_job = self._data_manager.get_train_job_by_plugin(train_id, plugin)
         if train_job is None:
             raise exceptions.TrainJobNotExistError()
         if not train_job['tags'] or (tag is not None and tag not in train_job['tags']):

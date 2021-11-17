@@ -37,6 +37,7 @@ class PluginNameEnum(BaseEnum):
     IMAGE = 'image'
     SCALAR = 'scalar'
     GRAPH = 'graph'
+    OPTIMIZED_GRAPH = 'optimized_graph'
     HISTOGRAM = 'histogram'
     TENSOR = 'tensor'
     LANDSCAPE = 'loss_landscape'

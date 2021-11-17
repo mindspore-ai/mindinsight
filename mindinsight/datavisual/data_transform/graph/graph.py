@@ -380,11 +380,11 @@ class Graph:
                     Node.copy_node_without_input_output(cache_node, variable_node)
                     variable_node.scope = node.scope
 
-                variable_node.add_outputs(dst_name=node.name, output_attr=input_attr)
+                variable_node.add_outputs(dst_name=node.name, output_attr=dict(input_attr))
                 node_map.update({variable_name: variable_node})
 
                 node.delete_inputs(src_name)
-                node.add_inputs(variable_name, input_attr)
+                node.add_inputs(variable_name, dict(input_attr))
 
         for node in node_map.values():
             self._cache_node(node)
@@ -481,6 +481,7 @@ class Graph:
         logger.debug('Update node name of cache, node(%s), new name is %s.', str(node), new_name)
         origin_name = node.name
         node.name = new_name
+        node.scope = new_name.rsplit('/', 1)[0]
 
         # Find all nodes that need to modify the input and input
         update_node_map = {}

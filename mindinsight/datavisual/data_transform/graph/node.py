@@ -24,6 +24,11 @@ class NodeTypeEnum(Enum):
     AGGREGATION_SCOPE = 'aggregation_scope'
     PARAMETER = 'Parameter'
     CONST = 'Const'
+    LOAD = 'Load'
+    MAKETUPLE = 'MakeTuple'
+    TUPLE_GET_ITEM = 'TupleGetItem'
+    UPDATE_STATE = 'UpdateState'
+
 
 
 class Node:

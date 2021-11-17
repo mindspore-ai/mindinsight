@@ -32,6 +32,7 @@ from mindinsight.datavisual.data_access.file_handler import FileHandler
 from mindinsight.datavisual.data_transform.events_data import EventsData
 from mindinsight.datavisual.data_transform.events_data import TensorEvent
 from mindinsight.datavisual.data_transform.graph import MSGraph
+from mindinsight.datavisual.data_transform.graph import OptimizedGraph
 from mindinsight.datavisual.data_transform.histogram import Histogram
 from mindinsight.datavisual.data_transform.histogram_container import HistogramContainer
 from mindinsight.datavisual.data_transform.image_container import ImageContainer
@@ -198,9 +199,10 @@ class _PbParser(_Parser):
                 continue
             future = executor.submit(self._parse_pb_file, self._summary_dir, filename)
             def add_tensor_event(future_value):
-                tensor_event = future_value.result()
-                if tensor_event is not None:
-                    events_data.add_tensor_event(tensor_event)
+                tensor_events = future_value.result()
+                for tensor_event in tensor_events:
+                    if tensor_event is not None:
+                        events_data.add_tensor_event(tensor_event)
             if future is not None:
                 future.add_done_callback(exception_no_raise_wrapper(add_tensor_event))
             return False
@@ -268,26 +270,9 @@ class _PbParser(_Parser):
             logger.warning("The given file is not a valid pb file, file path: %s.", file_path)
             return None
 
-        graph = MSGraph()
-
-        try:
-            graph.build_graph(model_proto.graph)
-        except Exception as ex:
-            # Normally, there are no exceptions, and it is only possible for users on the MindSpore side
-            # to dump other non-default graphs.
-            logger.error("Build graph failed, file path: %s.", file_path)
-            logger.exception(ex)
-            raise UnknownError(str(ex))
-
-        tensor_event = TensorEvent(wall_time=FileHandler.file_stat(file_path).mtime,
-                                   step=0,
-                                   tag=filename,
-                                   plugin_name=PluginNameEnum.GRAPH.value,
-                                   value=graph,
-                                   filename=filename)
-
+        ret_tensor_events = build_graph_events(model_proto.graph, filename, 0, FileHandler.file_stat(file_path).mtime)
         logger.info("Build graph success, file path: %s.", file_path)
-        return tensor_event
+        return ret_tensor_events
 
 
 class _SummaryParser(_Parser):
@@ -536,15 +521,7 @@ class _SummaryParser(_Parser):
                     ret_tensor_events.append(tensor_event)
 
         elif event.HasField('graph_def'):
-            graph = MSGraph()
-            graph.build_graph(event.graph_def)
-            tensor_event = TensorEvent(wall_time=event.wall_time,
-                                       step=event.step,
-                                       tag=latest_file_name,
-                                       plugin_name=PluginNameEnum.GRAPH.value,
-                                       value=graph,
-                                       filename=latest_file_name)
-            ret_tensor_events.append(tensor_event)
+            ret_tensor_events.extend(build_graph_events(event.graph_def, latest_file_name, event.step, event.wall_time))
 
         return ret_tensor_events
 
@@ -554,3 +531,38 @@ class _SummaryParser(_Parser):
                            key=lambda filename: (-int(re.search(r'summary\.(\d+)', filename)[1]), filename),
                            reverse=True)
         return filenames
+
+
+def build_graph_events(graph_proto, filename, step, wall_time):
+    """Build graph events for MSgraph and OptimizedGraph."""
+    ret_tensor_events = []
+    graph_event = build_graph_event(graph_proto, PluginNameEnum.GRAPH.value, filename, step, wall_time)
+    if graph_event.value.list_node_by_scope():
+        ret_tensor_events.append(graph_event)
+    optimized_graph_event = build_graph_event(graph_proto, PluginNameEnum.OPTIMIZED_GRAPH.value, filename, step,
+                                              wall_time)
+    if optimized_graph_event.value.list_node_by_scope():
+        ret_tensor_events.append(optimized_graph_event)
+    return ret_tensor_events
+
+
+def build_graph_event(graph_proto, plugin, filename, step, wall_time):
+    """Build a graph event."""
+    graph = MSGraph() if plugin == PluginNameEnum.GRAPH.value else OptimizedGraph()
+
+    try:
+        graph.build_graph(graph_proto)
+    except Exception as ex:
+        # Normally, there are no exceptions, and it is only possible for users on the MindSpore side
+        # to dump other non-default graphs.
+        logger.error("Build graph failed, file path: %s.", filename)
+        logger.exception(ex)
+        raise UnknownError(str(ex))
+
+    tensor_event = TensorEvent(wall_time=wall_time,
+                               step=step,
+                               tag=filename if plugin == PluginNameEnum.GRAPH.value else filename + " (optimized)",
+                               plugin_name=plugin,
+                               value=graph,
+                               filename=filename)
+    return tensor_event

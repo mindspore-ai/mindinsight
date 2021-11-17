@@ -13,7 +13,6 @@
 # limitations under the License.
 # ============================================================================
 """This file is used to define the MindSpore graph."""
-from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.data_transform.graph.graph import EdgeTypeEnum, Graph, check_invalid_character
 from mindinsight.datavisual.data_transform.graph.node import Node, NodeTypeEnum
@@ -57,36 +56,35 @@ class MSGraph(Graph):
                 logger.warning("Finding a node with an empty name will not save it.")
                 continue
 
-            if node_proto.op_type == "Load":
-                # The Load operator needs to be renamed as it has the same name with parameter
-                node_name = Node.create_node_name(scope=node_proto.scope,
-                                                  base_name=f'{node_proto.op_type}-op{node_proto.name}')
-                node_proto.full_name = node_name
-            elif not node_proto.full_name or any(
-                    node_proto.full_name.lower().endswith(f'[:{plugin.value.lower()}]') for plugin in PluginNameEnum):
-                node_name = Node.create_node_name(scope=node_proto.scope,
-                                                  base_name=f'{node_proto.op_type}{node_proto.name}')
-            else:
-                node_name = node_proto.full_name
+            self._parse_op_node(topological_index, node_proto)
 
-            # The Graphviz plug-in that the UI USES can't handle these special characters.
-            check_invalid_character(node_name)
+    def _parse_op_node(self, topological_index, node_proto):
+        """Parse `anf_ir_pb2.NodeProto` object, and create a normal node."""
+        name = node_proto.name.split('/')[-1]
+        node_id = name.split('op')[-1]
+        name = f'{node_proto.op_type}-op{node_id}'
+        node_name = Node.create_node_name(node_proto.scope, name)
+        if node_proto.full_name:
+            node_name = node_proto.full_name
 
-            node = Node(name=node_name, node_id=node_proto.name, topological_index=topological_index)
-            node.full_name = node_proto.full_name
-            node.type = node_proto.op_type
-            if getattr(node_proto, 'source_address', None):
-                node.stack = DebuggerSource.build_stack_from_source_address(node_proto.source_address)
-            self._parse_attributes(node_proto.attribute, node)
-            self._parse_inputs(node_proto.input, node)
+        # The Graphviz plug-in that the UI USES can't handle these special characters.
+        check_invalid_character(node_name)
 
-            node.output_i = node_proto.output_i
-            node.scope = node_proto.scope
-            node.output_shape = self._get_shape_by_parse_type_proto(node_proto.output_type)
-            node.output_nums = len(node.output_shape)
-            node.output_data_type = self._get_data_type_by_parse_type_proto(node_proto.output_type, node)
+        node = Node(name=node_name, node_id=node_id, topological_index=topological_index)
+        node.full_name = node_proto.full_name
+        node.type = node_proto.op_type
+        if getattr(node_proto, 'source_address', None):
+            node.stack = DebuggerSource.build_stack_from_source_address(node_proto.source_address)
+        self._parse_attributes(node_proto.attribute, node)
+        self._parse_inputs(node_proto.input, node)
 
-            self._cache_node(node)
+        node.output_i = node_proto.output_i
+        node.scope = node_proto.scope
+        node.output_shape = self._get_shape_by_parse_type_proto(node_proto.output_type)
+        node.output_nums = len(node.output_shape)
+        node.output_data_type = self._get_data_type_by_parse_type_proto(node_proto.output_type, node)
+
+        self._cache_node(node)
 
     def _parse_parameters(self, parameter_protos):
         """
@@ -344,6 +342,9 @@ class MSGraph(Graph):
             if not input_proto.name:
                 logger.warning("The name in input proto of node(%s) is empty, will ignore.", node.name)
                 continue
+
+            if "/" in input_proto.name:
+                input_proto.name = input_proto.name.split("op")[-1]
 
             edge_type = EdgeTypeEnum.DATA.value if not input_proto.type else EdgeTypeEnum.CONTROL.value
 
