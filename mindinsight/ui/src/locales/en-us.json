@@ -345,7 +345,7 @@
       "desc": "Step trace performance optimization"
     },
     "step_trace-iter_interval": {
-      "desc": "After the praph mode and dataset sink mode are enabled, if the average step interval is greater than {n1} ms, the process from data processing to computational graph execution can be optimized."
+      "desc": "After the praph mode and dataset sink mode are enabled, if the average step interval is greater than {n1} ms, the process from data processing to computational graph execution can be optimized.You can prepare performance analysis and optimization scripts based on the data."
     },
     "common-proposer_type_label": {
       "desc": "Profiling and optimization guide"
@@ -371,8 +371,9 @@
     "minddata_pipeline-batch_op": {
       "desc": "For operator {n1}, you can increase the prefetch_size value."
     },
-    "minddata_warning_op": {
-      "desc": "Based on the preceding determination, {n1} can be optimized, and it is recommended to adjust the data processing script logic."
+    "minddata_device_queue_rate": {
+      "empty_rate": "The current host-side queue empty queue ratio is {empty_rate}%, and the threshold is {empty_warning_threshold}%. There may be room for optimization in the data processing stage. You can adjust the script according to the data processing performance optimization reference recommendation.",
+      "empty_warning_threshold": "The current host-side queue empty queue ratio is {empty_rate}%, the threshold is {empty_warning_threshold}%, and there is an empty queue in the chip-side queue, there may be room for optimization in the data sending stage. It is recommended to submit an issue to the MindSpore community for feedback."
     },
     "minddata-proposer_type_label": {
       "desc": "Step interval profiling"
@@ -382,6 +383,9 @@
     },
     "minddata_get_next_queue": {
       "desc": "The ratio of empty queues on a chip is {n1}/{n2}, and the ratio of non empty queues is {n3}/{n4}."
+    },
+    "device_queue_warning": {
+      "desc": "According to the data processing performance optimization refer to the recommended optimization script."
     },
     "millisecond": "ms",
     "curCard": "Number of cards",
@@ -629,7 +633,21 @@
     "receiveAloneTimeTip":"only the point-to-point (receive) communication operator is executed, and the calculation operator does not execute the time period. This time period reflects the asynchronous situation between the parallel stages of the Pipeline.",
     "computationTimeTip":"The total execution time of AICore operator, used to judge whether there is a slow card. The longer the time, the slower the execution speed of the corresponding card.",
     "collectiveCommunicationAloneTip": "Only the time period during which other communication operators except the receive communication operator are executed, and the calculation operator does not execute. The greater the proportion of this time period, the need to consider whether the segmentation strategy of the operators in the stage can be adjusted to reduce the time-consuming duration of this time period.",
-    "flopsRateLabel":"the ratio of the current device FLOPs to the maximum FLOPs of all devices"
+    "flopsRateLabel": "the ratio of the current device FLOPs to the maximum FLOPs of all devices",
+    "step_interval": "The iteration interval of the {rank_id} card is {val}ms, which is {percent}% higher than the average of the cards, which may affect the overall performance. Please go to the card's stand-alone page to focus on the data preparation stage.",
+    "flops_per_second": "The FLOPS (floating point operations per second) value of the {rank_id} card is {val}G/s, which is {percent}% lower than the average of the cards, which may affect the overall performance. Please pay attention to this card.",
+    "cluster_link": "The bandwidth of the communication link ({link_type}) from {src_rank} to {des_rank} card is {val}KB/s, which is {percent}% lower than the average link of {link_type}, which may affect the overall performance. Please pay attention to this link.",
+    "parallel_strategy": {
+      "data_parallel_communication_rate": "The communication time-consuming ratio of this model is {val}%, which exceeds the empirical threshold {threshold}%. You can try to refer to the MindSpore distributed parallel tutorial to set the all_reduce_fusion_config parameter to adjust the gradient AllReduce fusion splitting strategy to reduce the communication time.",
+      "model_parallel_communication_rate": "The communication time-consuming ratio of this model is {val}%, which exceeds the empirical threshold {threshold}%. You can try to optimize the operator segmentation strategy to reduce the communication time.",
+      "pipeline_parallel_between_stage": "The time-consuming ratio of inter-stage communication (only Receive operator) is {val}%, which exceeds the empirical threshold {threshold}%. You can try to focus on the analysis of the time-consuming reason of the Receive operator in combination with the timeline.",
+      "pipeline_parallel_within_stage": "The time-consuming ratio of communication within the stage{stage} (except the Receive operator) is {val}%, which exceeds the empirical threshold {threshold}%. You can analyze the time-consuming reason of the communication operator in combination with the timeline, and try to optimize the segmentation of the operator Strategies or other ways to reduce the time-consuming communication operators.",
+      "pipeline_parallel_flops": "The calculation amount of stage{stage} internal card {rank_id} is {val}M, which is {percent}% higher than the average value. You can try to optimize the stage segmentation strategy to balance the calculation amount of each card."
+    },
+    "step_interval_title": "Step interval performance analysis",
+    "flops_per_second_title": "Card calculation performance analysis",
+    "cluster_link_title": "Performance analysis of link bandwidth between cards",
+    "parallel_strategy_title": "Analysis on the rationality of segmentation of communication operators"
   },
   "components": {
     "summaryTitle": "Training Selection",
@@ -656,7 +674,7 @@
     "debugger": "Debugger",
     "nodeTypes": "Node Types",
     "nodeList": "Node List",
-    "watchList": "Watch Point List",
+    "watchList": "Anomaly check list",
     "watchPoint": "Watch Point",
     "continue": "CONTINUE",
     "pause": "PAUSE",
@@ -664,7 +682,7 @@
     "selectCondition": "Select a condition",
     "inputStep": "Enter a step value",
     "inputTip": "A positive integer less than or equal to {total_step_num}",
-    "curHitNode": "Watch Point Hit List",
+    "curHitNode": "Anomalies found",
     "backstageStatus": "The backend running status is ",
     "view": "View",
     "deleteWatchpointConfirm": "Are you sure you want to delete the watchpoint?",
@@ -730,7 +748,7 @@
     "tuningAdvice": "Optimization Suggestions",
     "setValue": "Preset Value",
     "actualValue": "Actual Value",
-    "noWatchPoint": "No watchpoint hit.",
+    "noWatchPoint": "No anomalies found.",
     "tensorTuningRule": {
       "operator_real_data_validation": "Real data validation using single operator",
       "loss_overflow": "Loss overflow (NAN,INF)",
@@ -905,11 +923,11 @@
     "curStep": "Current Step",
     "preStep": "Previous Step",
     "compareResult": "Comparison Result",
-    "recommendTip": "Use the recommended watchpoints?",
-    "recommendDetail": "The recommended watchpoints check zero tensors, gradient disappearances, and update weight above threshold.",
+    "recommendTip": "Whether to check for common anomalies?",
+    "recommendDetail": "Check for common anomalies such as all tensors, disappearing gradients, and excessive weight updates.",
     "use": "Yes",
     "notUse": "No",
-    "outdateTip": "When a watchpoint list or the current step is modified, the result may be outdated. Check again or perform subsequent step training. ",
+    "outdateTip": "When a anomaly check list or the current step is modified, the result may be outdated. Check again or perform subsequent step training. ",
     "versionConflictTip": "MindSpore and MindInsight versions do not match. MindSpore version: {msv}; MindInsight version: {miv}",
     "checkTips": {
       "nan": "A tensor contains NaN, ",

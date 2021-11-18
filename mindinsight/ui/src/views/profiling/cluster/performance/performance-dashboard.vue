@@ -53,10 +53,10 @@ limitations under the License.
 </template>
 
 <script>
-import echarts, {echartsThemeName} from '@/js/echarts';
+import echarts, { echartsThemeName } from '@/js/echarts';
 import RequestService from '@/services/request-service';
-import empty, {NO_DATA, LOADING_DATA, HETEROGENEOUS} from '@/components/empty';
-import {keepDecimalPlaces} from '@/js/utils';
+import empty, { NO_DATA, LOADING_DATA, HETEROGENEOUS } from '@/components/empty';
+import { keepDecimalPlaces } from '@/js/utils';
 const DEFAULT_DECIMAL_PLACES = 4;
 export default {
   components: {
@@ -109,6 +109,7 @@ export default {
       if (state) this.initChart(this.commChart);
     });
     window.addEventListener('resize', this.resizeCallBack);
+    this.$bus.$on('collapse', this.resizeCallBack);
   },
   methods: {
     /**
@@ -147,75 +148,71 @@ export default {
           train_id: this.trainInfo.id,
         };
         RequestService.getClusterInfo(params)
-            .then((res) => {
-              if (typeof res.data === 'object' && res.data.is_heterogeneous) {
-                this.performanceState = HETEROGENEOUS;
-                return;
-              }
-              if (res?.data?.info?.length > 0) {
-                let chartData = [];
-                const parallelMode = res.data['parallel-mode'];
-                const parallelModes = {
-                  'data-parallel': {
-                    model: 'step_trace_info',
-                    dimensions: [
-                      this.$t('profilingCluster.rankID'),
-                      this.$t('profiling.iterationGapTime'),
-                      this.$t('profiling.fpBpTime'),
-                      this.$t('profiling.tailTime'),
-                    ],
-                  },
-                  'model-parallel': {
-                    model: 'step_bottleneck_info',
-                    dimensions: [
-                      this.$t('profilingCluster.rankID'),
-                      this.$t('profiling.iterationGapTime'),
-                      this.$t('profilingCluster.computationTime'),
-                      this.$t('profilingCluster.communicationAloneTime'),
-                    ],
-                  },
-                  'pipeline-parallel': {
-                    model: 'step_bottleneck_info',
-                    dimensions: [
-                      this.$t('profilingCluster.rankID'),
-                      this.$t('profiling.iterationGapTime'),
-                      this.$t('profilingCluster.computationTime'),
-                      this.$t('profilingCluster.stageTime'),
-                      this.$t('profilingCluster.communicationAloneTime'),
-                      this.$t('profilingCluster.collectiveCommunicationAlone'),
-                      this.$t('profilingCluster.receiveAloneTime'),
-                    ],
-                  },
-                };
-                const tempChartData = [];
-                res.data.info.forEach((item) => {
-                  const chartItem = [item.rank_id].concat(item[parallelModes[parallelMode].model]);
-                  tempChartData.push(chartItem);
+          .then((res) => {
+            if (typeof res.data === 'object' && res.data.is_heterogeneous) {
+              this.performanceState = HETEROGENEOUS;
+              return;
+            }
+            if (res?.data?.info?.length > 0) {
+              let chartData = [];
+              const parallelMode = res.data['parallel-mode'];
+              const parallelModes = {
+                'data-parallel': {
+                  model: 'step_trace_info',
+                  dimensions: [
+                    this.$t('profilingCluster.rankID'),
+                    this.$t('profiling.iterationGapTime'),
+                    this.$t('profiling.fpBpTime'),
+                    this.$t('profiling.tailTime'),
+                  ],
+                },
+                'model-parallel': {
+                  model: 'step_bottleneck_info',
+                  dimensions: [
+                    this.$t('profilingCluster.rankID'),
+                    this.$t('profiling.iterationGapTime'),
+                    this.$t('profilingCluster.computationTime'),
+                    this.$t('profilingCluster.communicationAloneTime'),
+                  ],
+                },
+                'pipeline-parallel': {
+                  model: 'step_bottleneck_info',
+                  dimensions: [
+                    this.$t('profilingCluster.rankID'),
+                    this.$t('profiling.iterationGapTime'),
+                    this.$t('profilingCluster.computationTime'),
+                    this.$t('profilingCluster.stageTime'),
+                    this.$t('profilingCluster.communicationAloneTime'),
+                    this.$t('profilingCluster.collectiveCommunicationAlone'),
+                    this.$t('profilingCluster.receiveAloneTime'),
+                  ],
+                },
+              };
+              const tempChartData = [];
+              res.data.info.forEach((item) => {
+                const chartItem = [item.rank_id].concat(item[parallelModes[parallelMode].model]);
+                tempChartData.push(chartItem);
+              });
+              // sort
+              if (parallelMode === 'pipeline-parallel') {
+                tempChartData.forEach((val) => {
+                  chartData.push([val[0], val[1], val[2], val[4], val[3], val[6], val[5]]);
                 });
-                // sort
-                if (parallelMode === 'pipeline-parallel') {
-                  tempChartData.forEach((val) => {
-                    chartData.push([val[0], val[1], val[5], val[3], val[4], val[6], val[2]]);
-                  });
-                } else if (parallelMode === 'model-parallel') {
-                  tempChartData.forEach((val) => {
-                    chartData.push([val[0], val[1], val[3], val[2]]);
-                  });
-                } else {
-                  chartData = tempChartData;
-                }
-                this.performanceChart.data = chartData;
-                this.performanceChart.dimensions = parallelModes[parallelMode].dimensions;
-                this.performanceState = this.normalState;
-                resolve(true);
               } else {
-                this.performanceState = NO_DATA;
+                chartData = tempChartData;
               }
-            })
-            .catch((e) => {
+              this.performanceChart.data = chartData;
+              this.performanceChart.dimensions = parallelModes[parallelMode].dimensions;
+              this.performanceState = this.normalState;
+              resolve(true);
+            } else {
               this.performanceState = NO_DATA;
-              resolve(false);
-            });
+            }
+          })
+          .catch((e) => {
+            this.performanceState = NO_DATA;
+            resolve(false);
+          });
       });
     },
     /**
@@ -229,27 +226,27 @@ export default {
           train_id: this.trainInfo.id,
         };
         RequestService.getCommInfo(params)
-            .then((res) => {
-              if (res?.data?.communication.length > 0) {
-                const chartData = [];
-                res.data.communication.forEach((item) => {
-                  chartData.push([
-                    item.rank_id,
-                    keepDecimalPlaces(item.communication_info[0], DEFAULT_DECIMAL_PLACES),
-                    keepDecimalPlaces(item.communication_info[1], DEFAULT_DECIMAL_PLACES),
-                  ]);
-                });
-                this.commChart.data = chartData;
-                this.commState = this.normalState;
-                resolve(true);
-              } else {
-                this.commState = NO_DATA;
-              }
-            })
-            .catch((e) => {
+          .then((res) => {
+            if (res?.data?.communication.length > 0) {
+              const chartData = [];
+              res.data.communication.forEach((item) => {
+                chartData.push([
+                  item.rank_id,
+                  keepDecimalPlaces(item.communication_info[0], DEFAULT_DECIMAL_PLACES),
+                  keepDecimalPlaces(item.communication_info[1], DEFAULT_DECIMAL_PLACES),
+                ]);
+              });
+              this.commChart.data = chartData;
+              this.commState = this.normalState;
+              resolve(true);
+            } else {
               this.commState = NO_DATA;
-              resolve(false);
-            });
+            }
+          })
+          .catch((e) => {
+            this.commState = NO_DATA;
+            resolve(false);
+          });
       });
     },
 
@@ -314,7 +311,7 @@ export default {
             },
           },
         },
-        series: new Array(chart.dimensions.length - 1).fill({type: 'bar', barWidth: 8}),
+        series: new Array(chart.dimensions.length - 1).fill({ type: 'bar', barWidth: 8 }),
       });
     },
   },
@@ -323,6 +320,7 @@ export default {
       clearTimeout(this.resizeTimer);
     }
     window.removeEventListener('resize', this.resizeCallBack);
+    this.$bus.$off('collapse', this.resizeCallBack);
   },
 };
 </script>

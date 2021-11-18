@@ -216,6 +216,14 @@ export default {
       params: params,
     });
   },
+  // get data of cluster helper
+  queryDataOfProfileClusterHelper(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/summary/cluster-propose',
+      params: params,
+    });
+  },
   // query training trace
   queryTrainingTrace(params) {
     return axios({
@@ -440,6 +448,12 @@ export default {
       method: 'post',
       url: `v1/mindinsight/debugger/sessions/${sessionId}/tensor-files/load`,
       data: params,
+    });
+  },
+  getGraphRuns(sessionId, rankId) {
+    return axios({
+      method: 'get',
+      url: `v1/mindinsight/debugger/sessions/${sessionId}/ranks/${rankId}/graph-runs`,
     });
   },
   // explain list

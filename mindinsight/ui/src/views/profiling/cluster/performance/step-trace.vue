@@ -112,7 +112,7 @@ limitations under the License.
 </template>
 
 <script>
-import echarts, {echartsThemeName} from '@/js/echarts';
+import echarts, { echartsThemeName } from '@/js/echarts';
 import RequestService from '@/services/request-service';
 export default {
   data() {
@@ -204,11 +204,13 @@ export default {
     document.title = (id ? id + '-' : '') + `${this.$t('profilingCluster.clusterView')}-MindInsight`;
     // adding a Listener
     window.addEventListener('resize', this.resizeCallback, false);
+    this.$bus.$on('collapse', this.resizeCallback);
     this.queryStepTraceInfo(true);
   },
   destroyed() {
     // remove the size of a window and change the listener
     window.removeEventListener('resize', this.resizeCallback);
+    this.$bus.$off('collapse', this.resizeCallback);
     // remove chart calculation delay
     if (this.chartResizeTimer) {
       clearTimeout(this.chartResizeTimer);
@@ -236,8 +238,8 @@ export default {
 
     queryStepTraceInfo(isInit) {
       const params = {
-        params: {train_id: this.trainInfo.id},
-        body: {filter_condition: {}},
+        params: { train_id: this.trainInfo.id },
+        body: { filter_condition: {} },
       };
       if (this.sort_condition.type) {
         params.body.sort_condition = this.sort_condition;
@@ -252,166 +254,162 @@ export default {
         params.body.filter_condition.stage_id = this.stageId;
       }
       RequestService.getClusterInfo(params)
-          .then((res) => {
-            if (res && res.data && res.data.info && res.data.info.length) {
-              this.initOver = true;
-              this.step.maxStep = res.data.total_step_num;
-              this.stepTip = this.$t('profiling.stepInputTip', {max: this.step.maxStep});
-              this.totalCount = res.data.size;
-              this.stageArr = new Array(res.data.stage_num).fill().map((val, key) => key + 1);
-              if (this.stageArr.length > 1) this.stageArr.unshift(this.$t('debugger.all'));
-              if (!this.stageId) this.stageId = this.stageArr[0];
-              const tempChartData = [];
-              const parallelMode = res.data['parallel-mode'];
-              const parallelModes = {
-                'data-parallel': {
-                  model: 'step_trace_info',
-                  dimensions: [
-                    this.$t('profilingCluster.rankID'),
-                    this.$t('profiling.iterationGapTime'),
-                    this.$t('profiling.fpBpTime'),
-                    this.$t('profiling.tailTime'),
-                  ],
-                  cols: ['iteration_interval', 'fp_and_bp', 'tail'],
-                  tips: [
-                    {
-                      label: this.$t('profiling.iterationGapTime'),
-                      value: this.$t('profilingCluster.iterationGapTimeTip'),
-                    },
-                    {
-                      label: this.$t('profiling.fpBpTime'),
-                      value: this.$t('profilingCluster.fpBpTimeTip'),
-                    },
-                    {
-                      label: this.$t('profiling.tailTime'),
-                      value: this.$t('profilingCluster.tailTimeTip'),
-                    },
-                  ],
-                },
-                'model-parallel': {
-                  model: 'step_bottleneck_info',
-                  dimensions: [
-                    this.$t('profilingCluster.rankID'),
-                    this.$t('profiling.iterationGapTime'),
-                    this.$t('profilingCluster.computationTime'),
-                    this.$t('profilingCluster.communicationAloneTime'),
-                  ],
-                  cols: ['iteration_interval', 'communication_alone', 'computation'],
-                  tips: [
-                    {
-                      label: this.$t('profiling.iterationGapTime'),
-                      value: this.$t('profilingCluster.iterationGapTimeTip'),
-                    },
-                    {
-                      label: this.$t('profilingCluster.communicationAloneTime'),
-                      value: this.$t('profilingCluster.communicationAloneTimeTip'),
-                    },
-                    {
-                      label: this.$t('profilingCluster.computationTime'),
-                      value: this.$t('profilingCluster.computationTimeTip'),
-                    },
-                  ],
-                },
-                'pipeline-parallel': {
-                  model: 'step_bottleneck_info',
-                  dimensions: [
-                    this.$t('profilingCluster.rankID'),
-                    this.$t('profiling.iterationGapTime'),
-                    this.$t('profilingCluster.computationTime'),
-                    this.$t('profilingCluster.stageTime'),
-                    this.$t('profilingCluster.communicationAloneTime'),
-                    this.$t('profilingCluster.collectiveCommunicationAlone'),
-                    this.$t('profilingCluster.receiveAloneTime'),
-                  ],
-                  cols: [
-                    'iteration_interval',
-                    'receive_alone',
-                    'stage',
-                    'communication_alone',
-                    'computation',
-                    'collective_communication_alone',
-                  ],
-                  tips: [
-                    {
-                      label: this.$t('profiling.iterationGapTime'),
-                      value: this.$t('profilingCluster.iterationGapTimeTip'),
-                    },
-                    {
-                      label: this.$t('profilingCluster.receiveAloneTime'),
-                      value: this.$t('profilingCluster.receiveAloneTimeTip'),
-                    },
-                    {
-                      label: this.$t('profilingCluster.stageTime'),
-                      value: this.$t('profilingCluster.stageTimeTip'),
-                    },
-                    {
-                      label: this.$t('profilingCluster.communicationAloneTime'),
-                      value: this.$t('profilingCluster.communicationAloneTimeTip'),
-                    },
-                    {
-                      label: this.$t('profilingCluster.computationTime'),
-                      value: this.$t('profilingCluster.computationTimeTip'),
-                    },
-                    {
-                      label: this.$t('profilingCluster.collectiveCommunicationAlone'),
-                      value: this.$t('profilingCluster.collectiveCommunicationAloneTip'),
-                    },
-                  ],
-                },
-              };
-              this.tips = parallelModes[parallelMode].tips;
-              if (isInit) {
-                res.data.info.forEach((item) => {
-                  const chartItem = [item.rank_id].concat(item[parallelModes[parallelMode].model]);
-                  tempChartData.push(chartItem);
-                });
-                // sort
-                this.chartData = [];
-                if (parallelMode === 'pipeline-parallel') {
-                  tempChartData.forEach((val) => {
-                    this.chartData.push([val[0], val[1], val[5], val[3], val[4], val[6], val[2]]);
-                  });
-                } else if (parallelMode === 'model-parallel') {
-                  tempChartData.forEach((val) => {
-                    this.chartData.push([val[0], val[1], val[3], val[2]]);
-                  });
-                } else {
-                  this.chartData = tempChartData;
-                }
-                this.initChart(parallelModes[parallelMode].dimensions);
-              }
-              this.cols = parallelModes[parallelMode].cols;
-              const tempTableData = res.data.info.slice(0, this.group_condition.limit);
-              this.tableData = [];
-              tempTableData.forEach((item) => {
-                const tableItem = {};
-                tableItem.rank_id = item.rank_id;
-                tableItem.profiler_dir = item.profiler_dir;
-                const stepTraceInfo = item[parallelModes[parallelMode].model];
-                stepTraceInfo.forEach((val, key) => {
-                  tableItem[this.cols[key]] = stepTraceInfo[key];
-                });
-                this.tableData.push(tableItem);
-              });
-              if (parallelMode === 'pipeline-parallel') {
-                this.cols = [
+        .then((res) => {
+          if (res && res.data && res.data.info && res.data.info.length) {
+            this.initOver = true;
+            this.step.maxStep = res.data.total_step_num;
+            this.stepTip = this.$t('profiling.stepInputTip', { max: this.step.maxStep });
+            this.totalCount = res.data.size;
+            this.stageArr = new Array(res.data.stage_num).fill().map((val, key) => key + 1);
+            if (this.stageArr.length > 1) this.stageArr.unshift(this.$t('debugger.all'));
+            if (!this.stageId) this.stageId = this.stageArr[0];
+            const tempChartData = [];
+            const parallelMode = res.data['parallel-mode'];
+            const parallelModes = {
+              'data-parallel': {
+                model: 'step_trace_info',
+                dimensions: [
+                  this.$t('profilingCluster.rankID'),
+                  this.$t('profiling.iterationGapTime'),
+                  this.$t('profiling.fpBpTime'),
+                  this.$t('profiling.tailTime'),
+                ],
+                cols: ['iteration_interval', 'fp_and_bp', 'tail'],
+                tips: [
+                  {
+                    label: this.$t('profiling.iterationGapTime'),
+                    value: this.$t('profilingCluster.iterationGapTimeTip'),
+                  },
+                  {
+                    label: this.$t('profiling.fpBpTime'),
+                    value: this.$t('profilingCluster.fpBpTimeTip'),
+                  },
+                  {
+                    label: this.$t('profiling.tailTime'),
+                    value: this.$t('profilingCluster.tailTimeTip'),
+                  },
+                ],
+              },
+              'model-parallel': {
+                model: 'step_bottleneck_info',
+                dimensions: [
+                  this.$t('profilingCluster.rankID'),
+                  this.$t('profiling.iterationGapTime'),
+                  this.$t('profilingCluster.computationTime'),
+                  this.$t('profilingCluster.communicationAloneTime'),
+                ],
+                cols: ['iteration_interval', 'communication_alone', 'computation'],
+                tips: [
+                  {
+                    label: this.$t('profiling.iterationGapTime'),
+                    value: this.$t('profilingCluster.iterationGapTimeTip'),
+                  },
+                  {
+                    label: this.$t('profilingCluster.communicationAloneTime'),
+                    value: this.$t('profilingCluster.communicationAloneTimeTip'),
+                  },
+                  {
+                    label: this.$t('profilingCluster.computationTime'),
+                    value: this.$t('profilingCluster.computationTimeTip'),
+                  },
+                ],
+              },
+              'pipeline-parallel': {
+                model: 'step_bottleneck_info',
+                dimensions: [
+                  this.$t('profilingCluster.rankID'),
+                  this.$t('profiling.iterationGapTime'),
+                  this.$t('profilingCluster.computationTime'),
+                  this.$t('profilingCluster.stageTime'),
+                  this.$t('profilingCluster.communicationAloneTime'),
+                  this.$t('profilingCluster.collectiveCommunicationAlone'),
+                  this.$t('profilingCluster.receiveAloneTime'),
+                ],
+                cols: [
                   'iteration_interval',
-                  'computation',
+                  'receive_alone',
                   'stage',
                   'communication_alone',
+                  'computation',
                   'collective_communication_alone',
-                  'receive_alone',
-                ];
-              } else if (parallelMode === 'model-parallel') {
-                this.cols = ['iteration_interval', 'computation', 'communication_alone'];
+                ],
+                tips: [
+                  {
+                    label: this.$t('profiling.iterationGapTime'),
+                    value: this.$t('profilingCluster.iterationGapTimeTip'),
+                  },
+                  {
+                    label: this.$t('profilingCluster.receiveAloneTime'),
+                    value: this.$t('profilingCluster.receiveAloneTimeTip'),
+                  },
+                  {
+                    label: this.$t('profilingCluster.stageTime'),
+                    value: this.$t('profilingCluster.stageTimeTip'),
+                  },
+                  {
+                    label: this.$t('profilingCluster.communicationAloneTime'),
+                    value: this.$t('profilingCluster.communicationAloneTimeTip'),
+                  },
+                  {
+                    label: this.$t('profilingCluster.computationTime'),
+                    value: this.$t('profilingCluster.computationTimeTip'),
+                  },
+                  {
+                    label: this.$t('profilingCluster.collectiveCommunicationAlone'),
+                    value: this.$t('profilingCluster.collectiveCommunicationAloneTip'),
+                  },
+                ],
+              },
+            };
+            this.tips = parallelModes[parallelMode].tips;
+            if (isInit) {
+              res.data.info.forEach((item) => {
+                const chartItem = [item.rank_id].concat(item[parallelModes[parallelMode].model]);
+                tempChartData.push(chartItem);
+              });
+              // sort
+              this.chartData = [];
+              if (parallelMode === 'pipeline-parallel') {
+                tempChartData.forEach((val) => {
+                  this.chartData.push([val[0], val[1], val[2], val[4], val[3], val[6], val[5]]);
+                });
+              } else {
+                this.chartData = tempChartData;
               }
+              this.initChart(parallelModes[parallelMode].dimensions);
             }
-          })
-          .catch((error) => {
-            this.initOver = true;
-            this.chartData = [];
+            this.cols = parallelModes[parallelMode].cols;
+            const tempTableData = res.data.info.slice(0, this.group_condition.limit);
             this.tableData = [];
-          });
+            tempTableData.forEach((item) => {
+              const tableItem = {};
+              tableItem.rank_id = item.rank_id;
+              tableItem.profiler_dir = item.profiler_dir;
+              const stepTraceInfo = item[parallelModes[parallelMode].model];
+              stepTraceInfo.forEach((val, key) => {
+                tableItem[this.cols[key]] = stepTraceInfo[key];
+              });
+              this.tableData.push(tableItem);
+            });
+            if (parallelMode === 'pipeline-parallel') {
+              this.cols = [
+                'iteration_interval',
+                'computation',
+                'stage',
+                'communication_alone',
+                'collective_communication_alone',
+                'receive_alone',
+              ];
+            } else if (parallelMode === 'model-parallel') {
+              this.cols = ['iteration_interval', 'computation', 'communication_alone'];
+            }
+          }
+        })
+        .catch((error) => {
+          this.initOver = true;
+          this.chartData = [];
+          this.tableData = [];
+        });
     },
     /**
      *  init chart
@@ -470,7 +468,7 @@ export default {
     viewProfilingDetail(row) {
       const routeUrl = this.$router.resolve({
         path: '/profiling/single/performance',
-        query: Object.assign(this.trainInfo, {rankID: row.rank_id}),
+        query: Object.assign(this.trainInfo, { rankID: row.rank_id }),
       });
       window.open(routeUrl.href, '_blank');
     },
