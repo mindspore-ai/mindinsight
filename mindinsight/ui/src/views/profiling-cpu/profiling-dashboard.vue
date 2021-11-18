@@ -101,9 +101,9 @@ export default {
         'minddata_pipeline-map_op',
         'minddata_pipeline-batch_op',
         'minddata_cpu_utilization',
-        'minddata_warning_op',
+        'minddata_device_queue_rate',
       ],
-      moreParameter: ['minddata_device_queue', 'minddata_get_next_queue'],
+      moreParameter: ['minddata_device_queue', 'minddata_get_next_queue', 'device_queue_warning'],
       CardNumArr: [], // Card list
       collapse: false,
       curDashboardInfo: {
@@ -166,33 +166,33 @@ export default {
         train_id: this.curDashboardInfo.query.id,
       };
       RequestService.getProfilerDeviceData(params)
-          .then(
-              (res) => {
-                if (res && res.data && res.data.length) {
-                  const deviceList = res.data;
-                  deviceList.forEach((item) => {
-                    this.CardNumArr.push({
-                      value: item,
-                    });
-                  });
-                  if (this.curDashboardInfo.curCardNum === null) {
-                    this.curDashboardInfo.curCardNum = this.CardNumArr[0].value;
-                  }
-                } else {
-                  this.CardNumArr = [];
-                  this.curDashboardInfo.curCardNum = '';
-                  this.curDashboardInfo.initOver = true;
-                }
-              },
-              () => {
-                this.CardNumArr = [];
-                this.curDashboardInfo.curCardNum = '';
-                this.curDashboardInfo.initOver = true;
-              },
-          )
-          .catch(() => {
+        .then(
+          (res) => {
+            if (res && res.data && res.data.length) {
+              const deviceList = res.data;
+              deviceList.forEach((item) => {
+                this.CardNumArr.push({
+                  value: item,
+                });
+              });
+              if (this.curDashboardInfo.curCardNum === null) {
+                this.curDashboardInfo.curCardNum = this.CardNumArr[0].value;
+              }
+            } else {
+              this.CardNumArr = [];
+              this.curDashboardInfo.curCardNum = '';
+              this.curDashboardInfo.initOver = true;
+            }
+          },
+          () => {
+            this.CardNumArr = [];
+            this.curDashboardInfo.curCardNum = '';
             this.curDashboardInfo.initOver = true;
-          });
+          }
+        )
+        .catch(() => {
+          this.curDashboardInfo.initOver = true;
+        });
     },
     /**
      * Get profile helper data
@@ -204,96 +204,112 @@ export default {
         device_id: this.curDashboardInfo.curCardNum.toString() ? this.curDashboardInfo.curCardNum.toString() : '0',
       };
       RequestService.queryDataOfProfileHelper(params)
-          .then((resp) => {
-            if (resp && resp.data) {
-              const dataKeys = Object.keys(resp.data);
-              const helperDiv = document.getElementById('helper-tips');
-              helperDiv.innerHTML = '';
-              dataKeys.forEach((item) => {
-                if (!this.tipsArrayList.includes(item) && !this.moreParameter.includes(item) && resp.data[item]) {
-                  this.$t(`profiling`)[item] = resp.data[item];
-                }
-                if (item.endsWith('type_label')) {
-                  const divDom = document.createElement('div');
-                  divDom.setAttribute('class', 'suggested-items-style');
-                  divDom.innerHTML = `<div class="helper-icon"></div>
+        .then((resp) => {
+          if (resp && resp.data) {
+            const dataKeys = Object.keys(resp.data);
+            const helperDiv = document.getElementById('helper-tips');
+            helperDiv.innerHTML = '';
+            dataKeys.forEach((item) => {
+              if (!this.tipsArrayList.includes(item) && !this.moreParameter.includes(item) && resp.data[item]) {
+                this.$t(`profiling`)[item] = resp.data[item];
+              }
+              if (item.endsWith('type_label')) {
+                const divDom = document.createElement('div');
+                divDom.setAttribute('class', 'suggested-items-style');
+                divDom.innerHTML = `<div class="helper-icon"></div>
               <div class="helper-container-title">
               ${this.$t(`profiling`)[item].desc}
               </div>`;
-                  helperDiv.appendChild(divDom);
-                } else if (this.tipsArrayList.includes(item)) {
-                  const divDom = document.createElement('div');
-                  divDom.setAttribute('class', 'content-style');
-                  const content = `${this.$t(`profiling`)[item].desc}`.replace(`{n1}`, resp.data[item][0]);
-                  divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
+                helperDiv.appendChild(divDom);
+              } else if (this.tipsArrayList.includes(item)) {
+                const divDom = document.createElement('div');
+                divDom.setAttribute('class', 'content-style');
+                let content = '';
+                if (item === 'minddata_device_queue_rate') {
+                  if (resp.data[item].empty_rate > resp.data[item].empty_warning_threshold) {
+                    content = this.$t(`profiling.${item}.empty_rate`, resp.data[item]);
+                  } else {
+                    content = this.$t(`profiling.${item}.empty_warning_threshold`, resp.data[item]);
+                  }
+                } else {
+                  content = `${this.$t(`profiling`)[item].desc}`.replace(`{n1}`, resp.data[item][0]);
+                }
+                divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
               <div class="helper-content-style">${content}</div>`;
-                  helperDiv.appendChild(divDom);
-                } else if (item === 'minddata_device_queue') {
-                  const deviceEmpty =
+                helperDiv.appendChild(divDom);
+              } else if (item === 'minddata_device_queue') {
+                const deviceEmpty =
                   resp.data['minddata_device_queue'][0] >= 0 ? resp.data['minddata_device_queue'][0] : '--';
-                  const deviceTotal =
+                const deviceTotal =
                   resp.data['minddata_device_queue'][1] >= 0 ? resp.data['minddata_device_queue'][1] : '--';
-                  const divDom = document.createElement('div');
-                  divDom.setAttribute('class', 'content-style');
-                  const content = `${this.$t(`profilingGPU`)[item].desc}`
-                      .replace(`{n1}`, `<span class="nowrap-style"> ${deviceEmpty}</span>`)
-                      .replace(`{n2}`, `<span class="nowrap-style"> ${deviceTotal}</span>`)
-                      .replace(`{n3}`, `<span class="nowrap-style"> ${deviceTotal - deviceEmpty}</span>`)
-                      .replace(`{n4}`, `<span class="nowrap-style"> ${deviceTotal}</span>`);
-                  divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
+                const divDom = document.createElement('div');
+                divDom.setAttribute('class', 'content-style');
+                const content = `${this.$t(`profilingGPU`)[item].desc}`
+                  .replace(`{n1}`, `<span class="nowrap-style"> ${deviceEmpty}</span>`)
+                  .replace(`{n2}`, `<span class="nowrap-style"> ${deviceTotal}</span>`)
+                  .replace(`{n3}`, `<span class="nowrap-style"> ${deviceTotal - deviceEmpty}</span>`)
+                  .replace(`{n4}`, `<span class="nowrap-style"> ${deviceTotal}</span>`);
+                divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
               <div class="helper-content-style">${content}</div>`;
-                  helperDiv.appendChild(divDom);
-                } else if (item === 'minddata_get_next_queue') {
-                  const getNextEmpty =
+                helperDiv.appendChild(divDom);
+              } else if (item === 'minddata_get_next_queue') {
+                const getNextEmpty =
                   resp.data['minddata_get_next_queue'][0] >= 0 ? resp.data['minddata_get_next_queue'][0] : '--';
-                  const getNextTotal =
+                const getNextTotal =
                   resp.data['minddata_get_next_queue'][1] >= 0 ? resp.data['minddata_get_next_queue'][1] : '--';
+                const divDom = document.createElement('div');
+                divDom.setAttribute('class', 'content-style');
+                const content = `${this.$t(`profilingGPU`)[item].desc}`
+                  .replace(`{n1}`, `<span class="nowrap-style"> ${getNextEmpty}</span>`)
+                  .replace(`{n2}`, `<span class="nowrap-style"> ${getNextTotal}</span>`)
+                  .replace(`{n3}`, `<span class="nowrap-style"> ${getNextTotal - getNextEmpty}</span>`)
+                  .replace(`{n4}`, `<span class="nowrap-style"> ${getNextTotal}</span>`);
+                divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
+              <div class="helper-content-style">${content}</div>`;
+                helperDiv.appendChild(divDom);
+              } else if (item === 'device_queue_warning' && resp.data[item].length) {
+                const content = `${this.$t(`profiling`)[item].desc}`;
+                const divDom = `<div class="content-style">
+                         <div class="content-icon el-icon-caret-right"></div>
+                         <div class="helper-content-style">${content}</div>
+                       </div>`;
+                helperDiv.appendChild(new DOMParser().parseFromString(divDom, 'text/html').body.childNodes[0]);
+              } else if (this.$t(`profiling`)[item].anchor) {
+                if (this.$t(`profiling`)[item].anchor.length === 1) {
                   const divDom = document.createElement('div');
                   divDom.setAttribute('class', 'content-style');
-                  const content = `${this.$t(`profilingGPU`)[item].desc}`
-                      .replace(`{n1}`, `<span class="nowrap-style"> ${getNextEmpty}</span>`)
-                      .replace(`{n2}`, `<span class="nowrap-style"> ${getNextTotal}</span>`)
-                      .replace(`{n3}`, `<span class="nowrap-style"> ${getNextTotal - getNextEmpty}</span>`)
-                      .replace(`{n4}`, `<span class="nowrap-style"> ${getNextTotal}</span>`);
                   divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
-              <div class="helper-content-style">${content}</div>`;
-                  helperDiv.appendChild(divDom);
-                } else if (this.$t(`profiling`)[item].anchor) {
-                  if (this.$t(`profiling`)[item].anchor.length === 1) {
-                    const divDom = document.createElement('div');
-                    divDom.setAttribute('class', 'content-style');
-                    divDom.innerHTML = `<div class="content-icon el-icon-caret-right"></div>
                 <div class="helper-content-style">
                 <a target="_blank" href="${this.$t(`profiling`)[item].gpuUrl[0]}">
                 ${this.$t(`profiling`)[item].desc}</a></div>`;
-                    helperDiv.appendChild(divDom);
-                  } else {
-                    const divDom = document.createElement('div');
-                    divDom.setAttribute('class', 'content-style');
-                    const anchorList = this.$t(`profiling`)[item].anchor;
-                    let anchorContent = this.$t(`profiling`)[item].desc;
-                    for (let i = 0; i < anchorList.length; i++) {
-                      const desc = anchorContent.relpace(
-                          anchorList[i],
-                          `<a target="_blank" href="${this.$t(`profiling`)[item].gpuUrl[i]}">
-                      ${anchorList[i]}</a>`,
-                      );
-                      anchorContent = desc;
-                    }
-                    divDom.innerHTML = `<div class="content-icon el-icon-caret-right">
-                </div><div class="helper-content-style">${anchorContent}</div>`;
-                    helperDiv.appendChild(divDom);
-                  }
+                  helperDiv.appendChild(divDom);
                 } else {
                   const divDom = document.createElement('div');
                   divDom.setAttribute('class', 'content-style');
-                  divDom.innerHTML = `${this.$t(`profiling`)[item].desc}`;
+                  const anchorList = this.$t(`profiling`)[item].anchor;
+                  let anchorContent = this.$t(`profiling`)[item].desc;
+                  for (let i = 0; i < anchorList.length; i++) {
+                    const desc = anchorContent.relpace(
+                      anchorList[i],
+                      `<a target="_blank" href="${this.$t(`profiling`)[item].gpuUrl[i]}">
+                      ${anchorList[i]}</a>`
+                    );
+                    anchorContent = desc;
+                  }
+                  divDom.innerHTML = `<div class="content-icon el-icon-caret-right">
+                </div><div class="helper-content-style">${anchorContent}</div>`;
                   helperDiv.appendChild(divDom);
                 }
-              });
-            }
-          })
-          .catch(() => {});
+              } else {
+                const divDom = document.createElement('div');
+                divDom.setAttribute('class', 'content-style');
+                divDom.innerHTML = `${this.$t(`profiling`)[item].desc}`;
+                helperDiv.appendChild(divDom);
+              }
+            });
+          }
+        })
+        .catch(() => {});
     },
     /**
      * Router back to profiling-dashboard

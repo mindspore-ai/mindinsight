@@ -38,7 +38,7 @@ limitations under the License.
 
 <script>
 import RequestService from '@/services/request-service';
-import {isInteger} from '@/js/utils';
+import { isInteger } from '@/js/utils';
 export default {
   props: {
     defaultRankID: [Number, String],
@@ -60,9 +60,9 @@ export default {
         'minddata_pipeline-map_op',
         'minddata_pipeline-batch_op',
         'minddata_cpu_utilization',
-        'minddata_warning_op',
+        'minddata_device_queue_rate',
       ],
-      moreParameter: ['minddata_device_queue', 'minddata_get_next_queue'],
+      moreParameter: ['minddata_device_queue', 'minddata_get_next_queue', 'device_queue_warning'],
     };
   },
   mounted() {
@@ -89,29 +89,29 @@ export default {
           train_id: this.trainInfo.id,
         };
         RequestService.getProfilerDeviceData(params)
-            .then(
-                (res) => {
-                  if (res?.data?.length > 0) {
-                    this.rankIDList = res.data.sort((a, b) => +a - +b);
-                    this.rankID = isInteger(this.defaultRankID) ? (this.defaultRankID + '') : this.rankIDList[0];
-                    resolve(true);
-                  } else {
-                    this.rankIDList = [];
-                    this.rankID = '';
-                    resolve(false);
-                  }
-                },
-                () => {
-                  this.rankIDList = [];
-                  this.rankID = '';
-                  resolve(false);
-                },
-            )
-            .catch(() => {
+          .then(
+            (res) => {
+              if (res?.data?.length > 0) {
+                this.rankIDList = res.data.sort((a, b) => +a - +b);
+                this.rankID = isInteger(this.defaultRankID) ? this.defaultRankID + '' : this.rankIDList[0];
+                resolve(true);
+              } else {
+                this.rankIDList = [];
+                this.rankID = '';
+                resolve(false);
+              }
+            },
+            () => {
               this.rankIDList = [];
               this.rankID = '';
               resolve(false);
-            });
+            }
+          )
+          .catch(() => {
+            this.rankIDList = [];
+            this.rankID = '';
+            resolve(false);
+          });
       });
     },
     /**
@@ -124,103 +124,120 @@ export default {
         device_id: this.rankID,
       };
       RequestService.queryDataOfProfileHelper(params)
-          .then((res) => {
-            if (res && res.data) {
-              const innerHTMLs = [];
-              Object.keys(res.data).forEach((item) => {
-                if (!this.tipsArrayList.includes(item) && !this.moreParameter.includes(item) && res.data[item]) {
-                  this.$t(`profiling`)[item] = res.data[item];
-                }
-                if (item.endsWith('type_label')) {
-                  innerHTMLs.push(
-                      `<div class="suggested-items-style">
+        .then((res) => {
+          if (res && res.data) {
+            const innerHTMLs = [];
+            Object.keys(res.data).forEach((item) => {
+              if (!this.tipsArrayList.includes(item) && !this.moreParameter.includes(item) && res.data[item]) {
+                this.$t(`profiling`)[item] = res.data[item];
+              }
+              if (item.endsWith('type_label')) {
+                innerHTMLs.push(
+                  `<div class="suggested-items-style">
                          <div class="helper-icon"></div>
                          <div class="helper-container-title">
                            ${this.$t(`profiling`)[item].desc}
                          </div>
-                       </div>`,
-                  );
-                } else if (this.tipsArrayList.includes(item)) {
-                  const content = `${this.$t(`profiling`)[item].desc}`.replace(`{n1}`, res.data[item][0]);
-                  innerHTMLs.push(
-                      `<div class="content-style">
+                       </div>`
+                );
+              } else if (this.tipsArrayList.includes(item)) {
+                let content = '';
+                if (item === 'minddata_device_queue_rate') {
+                  if (res.data[item].empty_rate > res.data[item].empty_warning_threshold) {
+                    content = this.$t(`profiling.${item}.empty_rate`, res.data[item]);
+                  } else {
+                    content = this.$t(`profiling.${item}.empty_warning_threshold`, res.data[item]);
+                  }
+                } else {
+                  content = `${this.$t(`profiling`)[item].desc}`.replace(`{n1}`, res.data[item][0]);
+                }
+                innerHTMLs.push(
+                  `<div class="content-style">
                          <div class="content-icon el-icon-caret-right"></div>
                          <div class="helper-content-style">${content}</div>
-                       </div>`,
-                  );
-                } else if (item === 'minddata_device_queue') {
-                  const [queueStart, queueEnd] = res.data['minddata_device_queue'];
-                  const deviceEmpty = queueStart >= 0 ? queueStart : '--';
-                  const deviceTotal = queueEnd >= 0 ? queueEnd : '--';
-                  const content = `${this.$t(`profiling`)[item].desc}`
-                      .replace(`{n1}`, `<span class="nowrap-style"> ${deviceEmpty}</span>`)
-                      .replace(`{n2}`, `<span class="nowrap-style"> ${deviceTotal}</span>`)
-                      .replace(`{n3}`, `<span class="nowrap-style"> ${deviceTotal - deviceEmpty}</span>`)
-                      .replace(`{n4}`, `<span class="nowrap-style"> ${deviceTotal}</span>`);
-                  innerHTMLs.push(
-                      `<div class="content-style">
+                       </div>`
+                );
+              } else if (item === 'minddata_device_queue') {
+                const [queueStart, queueEnd] = res.data['minddata_device_queue'];
+                const deviceEmpty = queueStart >= 0 ? queueStart : '--';
+                const deviceTotal = queueEnd >= 0 ? queueEnd : '--';
+                const content = `${this.$t(`profiling`)[item].desc}`
+                  .replace(`{n1}`, `<span class="nowrap-style"> ${deviceEmpty}</span>`)
+                  .replace(`{n2}`, `<span class="nowrap-style"> ${deviceTotal}</span>`)
+                  .replace(`{n3}`, `<span class="nowrap-style"> ${deviceTotal - deviceEmpty}</span>`)
+                  .replace(`{n4}`, `<span class="nowrap-style"> ${deviceTotal}</span>`);
+                innerHTMLs.push(
+                  `<div class="content-style">
                          <div class="content-icon el-icon-caret-right"></div>
                          <div class="helper-content-style">${content}</div>
-                       </div>`,
-                  );
-                } else if (item === 'minddata_get_next_queue') {
-                  const [queueStart, queueEnd] = res.data['minddata_get_next_queue'];
-                  const getNextEmpty = queueStart >= 0 ? queueStart : '--';
-                  const getNextTotal = queueEnd >= 0 ? queueEnd : '--';
-                  const content = `${this.$t(`profiling`)[item].desc}`
-                      .replace(`{n1}`, `<span class="nowrap-style"> ${getNextEmpty}</span>`)
-                      .replace(`{n2}`, `<span class="nowrap-style"> ${getNextTotal}</span>`)
-                      .replace(`{n3}`, `<span class="nowrap-style"> ${getNextTotal - getNextEmpty}</span>`)
-                      .replace(`{n4}`, `<span class="nowrap-style"> ${getNextTotal}</span>`);
-                  innerHTMLs.push(
-                      `<div class="content-style">
+                       </div>`
+                );
+              } else if (item === 'minddata_get_next_queue') {
+                const [queueStart, queueEnd] = res.data['minddata_get_next_queue'];
+                const getNextEmpty = queueStart >= 0 ? queueStart : '--';
+                const getNextTotal = queueEnd >= 0 ? queueEnd : '--';
+                const content = `${this.$t(`profiling`)[item].desc}`
+                  .replace(`{n1}`, `<span class="nowrap-style"> ${getNextEmpty}</span>`)
+                  .replace(`{n2}`, `<span class="nowrap-style"> ${getNextTotal}</span>`)
+                  .replace(`{n3}`, `<span class="nowrap-style"> ${getNextTotal - getNextEmpty}</span>`)
+                  .replace(`{n4}`, `<span class="nowrap-style"> ${getNextTotal}</span>`);
+                innerHTMLs.push(
+                  `<div class="content-style">
                          <div class="content-icon el-icon-caret-right"></div>
                          <div class="helper-content-style">${content}</div>
-                       </div>`,
-                  );
-                } else if (this.$t(`profiling`)[item].anchor) {
-                  if (this.$t(`profiling`)[item].anchor.length === 1) {
-                    innerHTMLs.push(
-                        `<div class="content-style">
+                       </div>`
+                );
+              } else if (item === 'device_queue_warning' && res.data[item].length) {
+                const content = `${this.$t(`profiling`)[item].desc}`;
+                innerHTMLs.push(
+                  `<div class="content-style">
+                         <div class="content-icon el-icon-caret-right"></div>
+                         <div class="helper-content-style">${content}</div>
+                       </div>`
+                );
+              } else if (this.$t(`profiling`)[item].anchor) {
+                if (this.$t(`profiling`)[item].anchor.length === 1) {
+                  innerHTMLs.push(
+                    `<div class="content-style">
                            <div class="content-icon el-icon-caret-right"></div>
                            <div class="helper-content-style">
                              <a target="_blank" href="${this.$t(`profiling`)[item].url[0]}">
                                ${this.$t(`profiling`)[item].desc}
                              </a>
                            </div>
-                         </div>`,
+                         </div>`
+                  );
+                } else {
+                  const anchorList = this.$t(`profiling`)[item].anchor;
+                  let anchorContent = this.$t(`profiling`)[item].desc;
+                  for (let i = 0; i < anchorList.length; i++) {
+                    const desc = anchorContent.relpace(
+                      anchorList[i],
+                      `<a target="_blank" href="${this.$t(`profiling`)[item].url[i]}">
+                      ${anchorList[i]}</a>`
                     );
-                  } else {
-                    const anchorList = this.$t(`profiling`)[item].anchor;
-                    let anchorContent = this.$t(`profiling`)[item].desc;
-                    for (let i = 0; i < anchorList.length; i++) {
-                      const desc = anchorContent.relpace(
-                          anchorList[i],
-                          `<a target="_blank" href="${this.$t(`profiling`)[item].url[i]}">
-                      ${anchorList[i]}</a>`,
-                      );
-                      anchorContent = desc;
-                    }
-                    innerHTMLs.push(
-                        `<div class="content-style">
+                    anchorContent = desc;
+                  }
+                  innerHTMLs.push(
+                    `<div class="content-style">
                            <div class="content-icon el-icon-caret-right"></div>
                            <div class="helper-content-style">${anchorContent}</div>
-                         </div>`,
-                    );
-                  }
-                } else {
-                  innerHTMLs.push(
-                      `<div class="content-style">
-                         ${this.$t(`profiling`)[item].desc}
-                       </div>`,
+                         </div>`
                   );
                 }
-                const helper = document.getElementById('helper-tips');
-                if (helper) helper.innerHTML = innerHTMLs.join('');
-              });
-            }
-          })
-          .catch(() => {});
+              } else {
+                innerHTMLs.push(
+                  `<div class="content-style">
+                         ${this.$t(`profiling`)[item].desc}
+                       </div>`
+                );
+              }
+              const helper = document.getElementById('helper-tips');
+              if (helper) helper.innerHTML = innerHTMLs.join('');
+            });
+          }
+        })
+        .catch(() => {});
     },
   },
 };
@@ -228,7 +245,6 @@ export default {
 
 <style>
 .helper {
-  width: 100%;
   box-sizing: border-box;
   padding: 32px;
   padding-top: 20px;

@@ -396,12 +396,14 @@ export default {
     document.title = `${this.trainInfo.path}-${this.$t('profilingCluster.commChartTitle')}-MindInsight`;
     // Add chart resize Listener
     window.addEventListener('resize', this.resizeCallback);
+    this.$bus.$on('collapse', this.resizeCallback);
     this.initPage();
     this.initLinkTable();
   },
   beforeDestroy() {
     // remove the size of a window and change the listener
     window.removeEventListener('resize', this.resizeCallback);
+    this.$bus.$off('collapse', this.resizeCallback);
     // remove chart calculation delay
     if (this.chartResizeTimer) {
       clearTimeout(this.chartResizeTimer);

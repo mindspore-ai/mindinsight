@@ -14,33 +14,51 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div class="cluster-dashboard profiling-dashboard-tab">
-    <div class="dashboard-tabs"
-         v-show="!showDetail">
-      <el-tabs v-model="tab"
-               @tab-click="onTabClick">
-        <el-tab-pane v-for="tab in tabs"
-                     :key="tab.label"
-                     :label="tab.label"
-                     :name="tab.name"></el-tab-pane>
-      </el-tabs>
+  <div class="cluster-dashboard-wrap">
+    <div :class="{
+           'dashboard-left': true,
+           'is-hidden': !showHelper
+         }">
+      <helper v-show="showHelper"></helper>
+      <div :class="[
+             'helper-control',
+             !showHelper ? 'collapse' : '',
+             `collapse-btn-${this.$store.state.themeIndex}`
+           ]"
+           @click="controlHelper"></div>
     </div>
-    <div class="dashboard-content">
-      <router-view @viewDetail="viewDetail"></router-view>
-    </div>
-    <div class="dashboard-close-detail"
-         @click="closeDetail"
-         v-show="showDetail">
-      <img src="@/assets/images/close-page.png">
+    <div class="cluster-dashboard profiling-dashboard-tab">
+      <div class="dashboard-tabs"
+           v-show="!showDetail">
+        <el-tabs v-model="tab"
+                 @tab-click="onTabClick">
+          <el-tab-pane v-for="tab in tabs"
+                       :key="tab.label"
+                       :label="tab.label"
+                       :name="tab.name"></el-tab-pane>
+        </el-tabs>
+      </div>
+      <div class="dashboard-content">
+        <router-view @viewDetail="viewDetail"></router-view>
+      </div>
+      <div class="dashboard-close-detail"
+           @click="closeDetail"
+           v-show="showDetail">
+        <img src="@/assets/images/close-page.png">
+      </div>
     </div>
   </div>
 </template>
 <script>
+import helper from './cluster-helper.vue';
 export default {
-  props: {},
+  components: {
+    helper,
+  },
   data() {
     return {
       showDetail: false, // If show detail page
+      showHelper: true, // If show helper
       tab: null, // Now tab name
       tabs: [
         {
@@ -113,6 +131,13 @@ export default {
     closeDetail() {
       this.onTabClick();
     },
+    /**
+     * Control helper display
+     */
+    controlHelper() {
+      this.showHelper = !this.showHelper;
+      this.$bus.$emit('collapse');
+    },
   },
 };
 </script>
@@ -130,8 +155,50 @@ export default {
 }
 </style>
 <style scoped>
+.cluster-dashboard-wrap{
+  height: 100%;
+  display: flex;
+}
+.dashboard-left {
+  width: 22%;
+  flex-shrink: 0;
+  padding-right: 20px;
+  overflow: visible;
+  transition: width 0.1s;
+  position: relative;
+}
+.is-hidden {
+  width: 0%;
+  padding-right: 0;
+}
+.helper-control {
+  position: absolute;
+  right: 0px;
+  width: 31px;
+  height: 100px;
+  top: 50%;
+  margin-top: -50px;
+  cursor: pointer;
+  line-height: 86px;
+  z-index: 1;
+  text-align: center;
+}
+.collapse-btn-0 {
+  background-image: url('../../../assets/images/0/collapse-left.svg');
+}
+.collapse-btn-1 {
+  background-image: url('../../../assets/images/1/collapse-left.svg');
+}
+.collapse-btn-0.collapse {
+  background-image: url('../../../assets/images/0/collapse-right.svg');
+}
+.collapse-btn-1.collapse {
+  background-image: url('../../../assets/images/1/collapse-right.svg');
+}
 .cluster-dashboard {
   flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
 }
 .cluster-dashboard .dashboard-content .item-container {
   height: calc(100% - 47px);

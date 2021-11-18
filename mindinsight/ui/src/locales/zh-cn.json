@@ -345,7 +345,7 @@
       "desc": "迭代轨迹性能优化参考建议"
     },
     "step_trace-iter_interval": {
-      "desc": "在开启图模式和数据集下沉模式后，如果平均迭代间隙时间大于{n1}ms，则数据处理至计算图执行之间的流程可能存在优化空间。"
+      "desc": "在开启图模式和数据集下沉模式后，如果平均迭代间隙时间大于{n1}ms，则数据处理至计算图执行之间的流程可能存在优化空间，可根据数据准备性能分析优化脚本。"
     },
     "common-proposer_type_label": {
       "desc": "性能分析与优化指导"
@@ -371,17 +371,21 @@
     "minddata_pipeline-batch_op": {
       "desc": "对于算子{n1}，用户可以尝试增加prefetch_size大小。"
     },
-    "minddata_warning_op": {
-      "desc": "经过上述判断，{n1}可能存在优化空间，建议调整数据处理脚本逻辑。"
+    "minddata_device_queue_rate": {
+      "empty_rate": "当前主机侧队列空队列占比为{empty_rate}%，阈值为{empty_warning_threshold}%，数据处理阶段可能存在优化空间，可根据数据处理性能优化参考建议调整脚本。",
+      "empty_warning_threshold": "当前主机侧队列空队列占比为{empty_rate}%，阈值为{empty_warning_threshold}%，且芯片侧队列存在空队列，数据发送阶段可能存在优化空间，建议到MindSpore社区提交issue进行反馈。"
     },
     "minddata-proposer_type_label": {
-      "desc": "迭代间隙性能分析"
+      "desc": "数据准备性能分析"
     },
     "minddata_device_queue": {
       "desc": "主机侧队列为空比例{n1}/{n2}，非空比例{n3}/{n4}。"
     },
     "minddata_get_next_queue": {
       "desc": "芯片侧队列为空比例{n1}/{n2}，非空比例{n3}/{n4}。"
+    },
+    "device_queue_warning": {
+      "desc": "可根据数据处理性能优化参考建议优化脚本。"
     },
     "millisecond": "ms",
     "curCard": "当前卡片",
@@ -423,7 +427,7 @@
     "fpbpTitle": "前向反向",
     "fpbpInfo": "执行网络中的前向算子以及反向算子，承载了一个step主要的计算工作，如果该部分耗时较长，建议前往算子统计或时间线中进一步分析；",
     "iterativeTailingTitle": "迭代拖尾",
-    "iterativeTailingInfo": "主要在多卡场景下执行参数聚合、参数更新操作，如果该部分耗时较长，建议查看all_reduce耗时以及并行情况。",
+    "iterativeTailingInfo": "主要在多卡场景下执行参数聚合、参数更新操作，如果该部分耗时较长，建议查看AllReduce算子耗时以及并行情况。",
     "statistics": "统计信息：",
     "totalTime": "总耗时：",
     "totalSteps": "总step数：",
@@ -629,7 +633,21 @@
     "receiveAloneTimeTip": "只有点对点(Receive)通信算子执行、计算算子不执行的时间段。该时间段反映的是Pipeline并行各stage间的不同步情况。",
     "computationTimeTip": "AICore算子执行的时间总和，用于判断是否有慢的卡。时间越长，说明对应的卡执行速度越慢。",
     "collectiveCommunicationAloneTip": "只有除Receive通信算子外的其它通信算子执行、计算算子不执行的时间段。该时间段占的比例越大，需要考虑是否可以调整该stage内算子的切分策略，降低该时间段的耗时时长。",
-    "flopsRateLabel":"当前设备FLOPs与所有设备中最大FLOPs的比值"
+    "flopsRateLabel": "当前设备FLOPs与所有设备中最大FLOPs的比值",
+    "step_interval": "第{rank_id}卡的迭代间隙为{val}ms，比各卡平均值高{percent}%，可能会影响整体性能，请到该卡单机页面重点关注数据准备阶段。",
+    "flops_per_second": "第{rank_id}卡的FLOPS(每秒浮点运算次数)值为{val}G/s，比各卡平均值低{percent}%，可能会影响整体性能，请重点关注该卡。",
+    "cluster_link": "{src_rank}到{des_rank}卡的通信链路({link_type})带宽为{val}KB/s，比{link_type}链路平均值低{percent}%，可能会影响整体性能，请重点关注该链路。",
+    "parallel_strategy": {
+      "data_parallel_communication_rate": "该模型的通信耗时占比为{val}%，超过经验阈值{threshold}%，可尝试参考MindSpore分布式并行教程设置all_reduce_fusion_config参数，调整梯度 AllReduce 融合切分策略，降低通信耗时。",
+      "model_parallel_communication_rate": "该模型的通信耗时占比为{val}%，超过经验阈值{threshold}%，可以尝试优化算子切分策略，降低通信耗时。",
+      "pipeline_parallel_between_stage": "stage间通信(仅Receive算子)耗时占比为{val}%，超过经验阈值{threshold}%，可以尝试结合时间线重点分析Receive算子耗时长的原因。",
+      "pipeline_parallel_within_stage": "stage{stage}内通信(除Receive算子外)耗时占比为{val}%，超过经验阈值{threshold}%，可以结合时间线分析通信算子耗时长的原因，尝试优化算子切分策略或其他方式降低通信算子耗时。",
+      "pipeline_parallel_flops": "stage{stage}内卡{rank_id}的计算量为{val}M，比平均值高{percent}%，可以尝试优化stage切分策略，使各卡计算量达到均衡。"
+    },
+    "step_interval_title": "数据准备性能分析",
+    "flops_per_second_title": "卡计算性能分析",
+    "cluster_link_title": "卡之间链路带宽性能分析",
+    "parallel_strategy_title": "通信算子切分合理性分析"
   },
   "components": {
     "summaryTitle": "训练选择",
@@ -656,7 +674,7 @@
     "debugger": "调试器",
     "nodeTypes": "节点类型",
     "nodeList": "节点列表",
-    "watchList": "监测点列表",
+    "watchList": "异常现象检查列表",
     "watchPoint": "监测点",
     "continue": "继续",
     "pause": "暂停",
@@ -664,7 +682,7 @@
     "selectCondition": "请选择条件",
     "inputStep": "请输入轮次值",
     "inputTip": "小于等于{total_step_num}的正整数",
-    "curHitNode": "命中的监测点",
+    "curHitNode": "已发现的异常现象",
     "backstageStatus": "后台运行状态是",
     "view": "查看",
     "deleteWatchpointConfirm": "此操作将删除当前监测点，是否继续？",
@@ -730,7 +748,7 @@
     "tuningAdvice": "调优建议",
     "setValue": "设置值",
     "actualValue": "实际值",
-    "noWatchPoint": "没有命中的监测点",
+    "noWatchPoint": "没有已发现的异常现象",
     "tensorTuningRule": {
       "operator_real_data_validation": "真实数据单算子验证",
       "loss_overflow": "检查loss值溢出（NAN，INF）",
@@ -901,11 +919,11 @@
     "curStep": "显示当前轮次",
     "preStep": "显示上一轮次",
     "compareResult": "显示对比结果",
-    "recommendTip": "使用推荐监测点?",
-    "recommendDetail": "对张量全为零、梯度消失、权重更新过大等现象使用推荐监测点。",
+    "recommendTip": "是否检查常见异常现象?",
+    "recommendDetail": "检查张量全为零、梯度消失、权重更新过大等常见异常现象。",
     "use": "使用",
     "notUse": "不使用",
-    "outdateTip": "监测点列表或者当前轮次发生修改，结果可能过时，请重新检查或执行后续轮次训练。",
+    "outdateTip": "异常现象检查列表或者当前轮次发生修改，结果可能过时，请重新检查或执行后续轮次训练。",
     "versionConflictTip": "MindSpore和MindInsight版本不匹配，MindSpore版本：{msv}；MindInsight版本：{miv}；",
     "checkTips": {
       "nan": "张量中含有NaN，",
