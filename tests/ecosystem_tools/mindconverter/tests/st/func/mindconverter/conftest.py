@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2019-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,6 +29,14 @@ nn = types.ModuleType('torch.nn')
 sys.modules['torch.nn'] = nn
 nn.Module = type('Module', (object,), dict())
 sys.modules['torch.nn.functional'] = types.ModuleType('torch.nn.functional')
+
+_C = types.ModuleType("torch._C")
+sys.modules["torch._C"] = _C
+_C.TensorType = type("TensorType", (object,), dict())
+sys.modules["torch.onnx"] = types.ModuleType("torch.onnx")
+jit = types.ModuleType("torch.jit")
+sys.modules["torch.jit"] = jit
+jit.TracingCheckError = type("TracingCheckError", (object,), dict())
 
 
 @pytest.fixture(scope='session')
