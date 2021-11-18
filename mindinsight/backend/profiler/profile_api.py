@@ -374,9 +374,9 @@ def get_profile_summary_cluster_proposal():
     options = None
     proposer_type = 'parallel'
     proposer = ProposerFactory.instance().get_proposer(proposer_type, profiler_dir_abs, 0)
-    proposal_info = proposer.analyze(options)
+    propose_info = proposer.analyze(options)
     # Use json.dumps for orderly return
-    return CustomResponse(json.dumps(proposal_info), mimetype='application/json')
+    return CustomResponse(json.dumps(propose_info), mimetype='application/json')
 
 
 @BLUEPRINT.route("/profile/minddata-pipeline/op-queue", methods=["POST"])
