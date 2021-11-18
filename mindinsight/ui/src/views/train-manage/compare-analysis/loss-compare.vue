@@ -110,7 +110,8 @@ limitations under the License.
           <diagram3D class="mixed-chart"
                      ref="mixedDiagram3D"
                      :styleSetting="diagram3DSetting"
-                     :componentConfigOptions="diagram3DMaintoolsShow"></diagram3D>
+                     :componentConfigOptions="diagram3DMaintoolsShow"
+                     :mergeGraphproperties="true"></diagram3D>
         </div>
         <div class="superimposedView-con">
           <div :class="[
