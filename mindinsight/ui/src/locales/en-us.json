@@ -959,15 +959,18 @@
       "pending": "Waiting for backend connection: Waiting for a new training connection or the debugger environment is being initialized."
     },
     "back": "Back",
-    "graphExecutionOrder": "Graph Execution ID",
+    "graphExecutionHistory": "Graph Execution History",
     "graphExecutionStep": "Graph Execution Epochs",
     "hasData": "Containing Data",
     "forward": "Forward",
     "yes": "Yes",
     "no": "No",
-    "hasDataTip": "Indicates that the graph file contains data",
+    "hasDataTip": "Indicates that tensor data is saved in this round",
     "currentStepTip": "Indicates the current graph execution epoch",
-    "noDistinguish": "All"
+    "noDistinguish": "All",
+    "newGraphName": "New graph received",
+    "noExexutionGraph": "The graph execution order file in the execution_order directory is missing.",
+    "graphExecutionHistoryTip":"Graph execution history file: save the history round information of graph execution"
   },
   "explain": {
     "explain": "Model Explanation",

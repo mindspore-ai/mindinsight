@@ -955,15 +955,18 @@
       "pending": "等待后台连接：等待新训练连接或正在初始化调试环境。"
     },
     "back": "回退",
-    "graphExecutionOrder": "图执行序",
+    "graphExecutionHistory": "图执行历史",
     "graphExecutionStep": "图执行轮次",
     "hasData": "是否有数据",
     "forward": "前进",
     "yes": "是",
     "no": "否",
-    "hasDataTip": "表示图文件有数据",
+    "hasDataTip": "表示该轮次有张量数据被保存",
     "currentStepTip": "表示当前图执行轮次",
-    "noDistinguish": "不区分"
+    "noDistinguish": "不区分",
+    "newGraphName": "收到新图",
+    "noExexutionGraph": "execution_order目录下的图执行序文件缺失。",
+    "graphExecutionHistoryTip":"图执行历史文件：保存该图执行的历史轮次信息"
   },
   "explain": {
     "explain": "模型解释",
