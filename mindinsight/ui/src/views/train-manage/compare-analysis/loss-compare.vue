@@ -25,313 +25,142 @@ limitations under the License.
     <div v-else
          class="loss-compare">
       <div class="mi-border-header">
-      <div class="compare-run">
-        <multiselectGroupComponents ref="multiselectGroupComponents"
-                                    :componentsLabel="componentsLabel"
-                                    :checkListArr="summaryOperateList"
-                                    :isLimit="true"
-                                    :limitNum="pageNum"
-                                    @selectedChange="summarySelectedChanged"></multiselectGroupComponents>
-      </div>
-      <div class="compare-graph">
-        <div class="view-title">{{$t('lossCompare.visualiation')}}</div>
-        <el-radio-group class="graph-radio"
-                        v-model="curGraphName"
-                        fill="#00A5A7"
-                        text-color="#FFFFFF"
-                        size="small"
-                        @change="viewGraphChange">
-          <el-radio-button label='isopleth'>{{$t('lossAnalysis.isopleth')}}</el-radio-button>
-          <el-radio-button label='reliefMap'>{{$t('lossAnalysis.reliefMap')}}</el-radio-button>
-          <el-radio-button label='threeDiagram'>{{$t('lossAnalysis.threeDiagram')}}</el-radio-button>
-        </el-radio-group>
-        <div class="inline-show color-style">
-          <!-- set line num -->
-          <div class="inline-show"
-               v-show="curGraphName!=='threeDiagram'">
-            <div class="line-num-style">{{$t('lossAnalysis.setLineNum')}}</div>
-            <el-select v-model="contourSetting.contoursNumber"
-                       :placeholder="$t('public.select')"
-                       @change="mapLineNumChange"
-                       class="inline-show color-select">
-              <el-option v-for="item in lineNumoptions"
-                         :key="item.value"
-                         :label="item.label"
-                         :value="item.value">
-              </el-option>
-            </el-select>
-          </div>
-          <div class="view-title">{{$t('lossCompare.colorMatching')}}
-          </div>
-          <el-select class="inline-show color-select"
-                     v-model="colorValue"
-                     :placeholder="$t('public.select')"
-                     @change="colorChange">
-            <el-option v-for="colorItem in colorOptions"
-                       :key="colorItem.value"
-                       :label="colorItem.label"
-                       :value="colorItem.value">
-            </el-option>
-          </el-select>
-          <div class="inline-show">{{$t('lossCompare.high')}}</div>
-          <div class="inline-show color-legend-jet"
-               v-show="colorValue === 0"></div>
-          <div class="inline-show color-legend-viridis"
-               v-show="colorValue === 1"></div>
-          <div class="inline-show color-legend-ruBu"
-               v-show="colorValue === 2"></div>
-          <div class="inline-show">{{$t('lossCompare.low')}}</div>
-          <div class="conpoint inline-show"></div>
-          <div class="conpoint-title inline-show">{{$t('lossCompare.conpoint')}}</div>
+        <div class="compare-run">
+          <multiselectGroupComponents ref="multiselectGroupComponents"
+                                      :componentsLabel="componentsLabel"
+                                      :checkListArr="summaryOperateList"
+                                      :isLimit="true"
+                                      :limitNum="pageNum"
+                                      @selectedChange="summarySelectedChanged"></multiselectGroupComponents>
         </div>
-        <div class="inline-show mode-select"
-             v-show="curGraphName==='threeDiagram'">
-          <div class="view-title">{{$t('lossCompare.compareMode')}}</div>
-          <el-radio-group v-model="curModeName"
+        <div class="compare-graph">
+          <div class="view-title">{{$t('lossCompare.visualiation')}}</div>
+          <el-radio-group class="graph-radio"
+                          v-model="curGraphName"
                           fill="#00A5A7"
                           text-color="#FFFFFF"
                           size="small"
-                          @change="viewModeChange">
-            <el-radio-button :label=0>{{$t('lossCompare.tiled')}}</el-radio-button>
-            <el-radio-button :label=1>{{$t('lossCompare.superimposed')}}</el-radio-button>
+                          @change="viewGraphChange">
+            <el-radio-button label='isopleth'>{{$t('lossAnalysis.isopleth')}}</el-radio-button>
+            <el-radio-button label='reliefMap'>{{$t('lossAnalysis.reliefMap')}}</el-radio-button>
+            <el-radio-button label='threeDiagram'>{{$t('lossAnalysis.threeDiagram')}}</el-radio-button>
           </el-radio-group>
+          <div class="inline-show color-style">
+            <!-- set line num -->
+            <div class="inline-show"
+                 v-show="curGraphName!=='threeDiagram'">
+              <div class="line-num-style">{{$t('lossAnalysis.setLineNum')}}</div>
+              <el-select v-model="contourSetting.contoursNumber"
+                         :placeholder="$t('public.select')"
+                         @change="mapLineNumChange"
+                         class="inline-show color-select">
+                <el-option v-for="item in lineNumoptions"
+                           :key="item.value"
+                           :label="item.label"
+                           :value="item.value">
+                </el-option>
+              </el-select>
+            </div>
+            <div class="view-title">{{$t('lossCompare.colorMatching')}}
+            </div>
+            <el-select class="inline-show color-select"
+                       v-model="colorValue"
+                       :placeholder="$t('public.select')"
+                       @change="colorChange">
+              <el-option v-for="colorItem in colorOptions"
+                         :key="colorItem.value"
+                         :label="colorItem.label"
+                         :value="colorItem.value">
+              </el-option>
+            </el-select>
+            <div class="inline-show">{{$t('lossCompare.high')}}</div>
+            <div class="inline-show color-legend-jet"
+                 v-show="colorValue === 0"></div>
+            <div class="inline-show color-legend-viridis"
+                 v-show="colorValue === 1"></div>
+            <div class="inline-show color-legend-ruBu"
+                 v-show="colorValue === 2"></div>
+            <div class="inline-show">{{$t('lossCompare.low')}}</div>
+            <div class="conpoint inline-show"></div>
+            <div class="conpoint-title inline-show">{{$t('lossCompare.conpoint')}}</div>
+          </div>
+          <div class="inline-show mode-select"
+               v-show="curGraphName==='threeDiagram'">
+            <div class="view-title">{{$t('lossCompare.compareMode')}}</div>
+            <el-radio-group v-model="curModeName"
+                            fill="#00A5A7"
+                            text-color="#FFFFFF"
+                            size="small"
+                            @change="viewModeChange">
+              <el-radio-button :label=0>{{$t('lossCompare.tiled')}}</el-radio-button>
+              <el-radio-button :label=1>{{$t('lossCompare.superimposed')}}</el-radio-button>
+            </el-radio-group>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="compare-content"
-         ref="compareContent">
-      <!-- Data -->
-      <div id="superimposedView"
-            v-if="originDataArr.length"
-            v-show="curGraphName==='threeDiagram' && curModeName"
-            class="superimposedView">
-        <div class="superimposedView-left"
-              :class="{collapse:collapse}">
-          <diagram3D class="mixed-chart"
-                     ref="mixedDiagram3D"
-                     :styleSetting="diagram3DSetting"
-                     :componentConfigOptions="diagram3DMaintoolsShow"
-                     :mergeGraphproperties="true"></diagram3D>
-        </div>
-        <div class="superimposedView-con">
-          <div :class="[
+      <div class="compare-content"
+           ref="compareContent">
+        <!-- Data -->
+        <div id="superimposedView"
+             v-if="originDataArr.length"
+             v-show="curGraphName==='threeDiagram' && curModeName"
+             class="superimposedView">
+          <div class="superimposedView-left"
+               :class="{collapse:collapse}">
+            <diagram3D class="mixed-chart"
+                       ref="mixedDiagram3D"
+                       :styleSetting="diagram3DSetting"
+                       :componentConfigOptions="diagram3DMaintoolsShow"
+                       :mergeGraphproperties="true"></diagram3D>
+          </div>
+          <div class="superimposedView-con">
+            <div :class="[
                   `collapse-btn-${this.$store.state.themeIndex}`,
                   collapse ? 'collapse' : '',
                 ]"
-                @click="clickCollapse"></div>
-        </div>
-        <div class="superimposedView-right"
-             v-show="!collapse">
-          <div class="superimposedView-right-item"
-               v-for="(sampleItem, index) in originDataArr"
-               :key="index"
-               :class="sampleItem.diagram3DSVChecked ? 'activeCheck' :
-               (diagram3DSVCheckCount >= diagram3DSVCheckLimit ? 'activeDisabled' : '')"
-               :title="(!sampleItem.diagram3DSVChecked && diagram3DSVCheckCount >= diagram3DSVCheckLimit) ?
-               $t('lossCompare.diagram3DSVLimitTip'): ''"
-               @click="activeCheck(sampleItem)"
-               v-show="sampleItem.show">
-            <diagram3D :ref="'threeDiagram'+'mixed'+sampleItem.ref"
-                       :oriData="sampleItem.fullData"
-                       :styleSetting="diagram3DSetting"></diagram3D>
-            <div class="superimposedView-right-float">
-              <i class="el-icon-check"></i>
-            </div>
-            <div class="chart-item-info">
-              <div class="info-content">
-                <div class="w100">
-                  <span class="label">{{sampleItem.label}}</span>
-                </div>
-              </div>
-              <div class="info-content">
-                <div>
-                  <span class="label">{{$t('lossAnalysis.network')}}{{$t('symbols.colon')}}</span>
-                  <span class="value">
-                    [
-                    <span class="res-net"
-                          :title="sampleItem.info.network">{{sampleItem.info.network}}</span>
-                    ]
-                  </span>
-                </div>
-                <div>
-                  <span class="label">{{$t('lossAnalysis.optimizer')}}{{$t('symbols.colon')}}</span>
-                  <span class="value">
-                    [
-                    <span class="res-net"
-                          :title="sampleItem.info.optimizer">{{sampleItem.info.optimizer}}</span>
-                    ]</span>
-                </div>
-              </div>
-              <div class="info-content">
-                <div>
-                  <span class="label">{{$t('lossAnalysis.learning_rate')}}{{$t('symbols.colon')}}</span>
-                  <span class="value"
-                        :title="sampleItem.info.learning_rate">{{sampleItem.info.learning_rate}}
-                  </span>
-                </div>
-                <div v-show="Object.keys(sampleItem.info.metric).length">
-                  <span class="label">{{sampleItem.showMetric.label}}{{$t('symbols.colon')}}</span>
-                  <span class="value"
-                        :title="sampleItem.showMetric.value">{{sampleItem.showMetric.value}}</span>
-                </div>
-              </div>
-            </div>
-            <div class="chart-item-mask"></div>
+                 @click="clickCollapse"></div>
           </div>
-
-        </div>
-      </div>
-      <div id="tiledView"
-            v-if="originDataArr.length"
-            v-show="curGraphName!=='threeDiagram' || !curModeName"
-            class="data-content">
-        <div class="sample-content"
-              v-for="sampleItem in originDataArr"
-              :key="sampleItem.ref"
-              v-show="sampleItem.show">
-          <div class="detail-container">
-            <!-- components -->
-            <div v-if="curGraphName === 'isopleth'||curGraphName === 'reliefMap'">
-              <div class="chart-info"
-                    v-show="curGraphName === 'isopleth'">
-                <div class="chartdiv-container">
-                  <contourMap :ref="'isopleth'+sampleItem.ref"
-                              type="contour"
-                              showConvergencePoint>
-                  </contourMap>
-                  <div class="chart-item-mask"
-                        v-show="false"></div>
+          <div class="superimposedView-right"
+               v-show="!collapse">
+            <div class="superimposedView-right-item"
+                 v-for="(sampleItem, index) in originDataArr"
+                 :key="index"
+                 :class="sampleItem.diagram3DSVChecked ? 'activeCheck' :
+               (diagram3DSVCheckCount >= diagram3DSVCheckLimit ? 'activeDisabled' : '')"
+                 :title="(!sampleItem.diagram3DSVChecked && diagram3DSVCheckCount >= diagram3DSVCheckLimit) ?
+               $t('lossCompare.diagram3DSVLimitTip'): ''"
+                 @click="activeCheck(sampleItem)"
+                 v-show="sampleItem.show">
+              <template v-if="sampleItem.hasError">
+                <div class="error-message-container">
+                  {{sampleItem.errorMessage}}
                 </div>
-                <div class="info-container">
-                  <div class="info-title">
-                    <div class="view-title inline-show">{{$t('lossCompare.trainInfo')}}</div>
-                  </div>
-                  <div class="info-content">
-                    <div class="w33">
-                      <span class="label">{{$t('lossAnalysis.network')}}{{$t('symbols.colon')}}</span>
-                      <span class="value">
-                        [
-                        <span class="res-net"
-                              :title="sampleItem.info.network">{{sampleItem.info.network}}</span>
-                        ]</span>
-                    </div>
-                    <div class="w33">
-                      <span class="label">{{$t('lossAnalysis.optimizer')}}{{$t('symbols.colon')}}</span>
-                      <span class="value">
-                        [
-                        <span class="res-net"
-                              :title="sampleItem.info.optimizer">{{sampleItem.info.optimizer}}</span>
-                        ]</span>
-                    </div>
-                    <div class="w33">
-                      <span class="label">{{$t('lossAnalysis.learning_rate')}}{{$t('symbols.colon')}}</span>
-                      <span class="value"
-                            :title="sampleItem.info.learning_rate">{{sampleItem.info.learning_rate}}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="info-title">
-                    <div class="view-title inline-show">{{$t('lossCompare.evaluateInfo')}}</div>
-                    <div class="view-more inline-show"
-                          v-show="Object.keys(sampleItem.info.metric).length>3"
-                          @click="showMetricDialog(sampleItem)">
-                      {{$t('lossCompare.more')}}</div>
-                  </div>
-                  <div class="info-content">
-                    <div class="w33"
-                          v-for="(evalKey, index) in Object.keys(sampleItem.info.metric).slice(0, 3)"
-                          :key="index">
-                      <span class="label">{{evalKey}}{{$t('symbols.colon')}}</span>
-                      <span class="value"
-                            :title="sampleItem.info.metric[evalKey]">{{sampleItem.info.metric[evalKey]}}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              </template>
+              <template v-else>
+                <diagram3D :ref="'threeDiagram'+'mixed'+sampleItem.ref"
+                           :oriData="sampleItem.fullData"
+                           :styleSetting="diagram3DSetting"></diagram3D>
+              </template>
+              <div class="superimposedView-right-float">
+                <i class="el-icon-check"></i>
               </div>
-              <div class="chart-info"
-                    v-show="curGraphName === 'reliefMap'">
-                <div class="chartdiv-container">
-                  <contourMap :ref="'reliefMap'+sampleItem.ref"
-                              type="topographic"
-                              showConvergencePoint>
-                  </contourMap>
-                  <div class="chart-item-mask"
-                        v-show="false"></div>
-                </div>
-                <div class="info-container">
-                  <div class="info-title">
-                    <div class="view-title inline-show">{{$t('lossCompare.trainInfo')}}</div>
+              <div class="chart-item-info">
+                <div class="info-content">
+                  <div class="w100">
+                    <span class="label">{{sampleItem.label}}</span>
                   </div>
-                  <div class="info-content">
-                    <div class="w33">
-                      <span class="label">{{$t('lossAnalysis.network')}}{{$t('symbols.colon')}}</span>
-                      <span class="value">
-                        [
-                        <span class="res-net"
-                              :title="sampleItem.info.network">{{sampleItem.info.network}}</span>
-                        ]</span>
-                    </div>
-                    <div class="w33">
-                      <span class="label">{{$t('lossAnalysis.optimizer')}}{{$t('symbols.colon')}}</span>
-                      <span class="value">
-                        [
-                        <span class="res-net"
-                              :title="sampleItem.info.optimizer">{{sampleItem.info.optimizer}}</span>
-                        ]
-                      </span>
-                    </div>
-                    <div class="w33">
-                      <span class="label">{{$t('lossAnalysis.learning_rate')}}{{$t('symbols.colon')}}</span>
-                      <span class="value"
-                            :title="sampleItem.info.learning_rate">{{sampleItem.info.learning_rate}}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="info-title">
-                    <div class="view-title inline-show">{{$t('lossCompare.evaluateInfo')}}</div>
-                    <div class="view-more inline-show"
-                          v-show="Object.keys(sampleItem.info.metric).length>3"
-                          @click="showMetricDialog(sampleItem)">
-                      {{$t('lossCompare.more')}}</div>
-                  </div>
-                  <div class="info-content">
-                    <div class="w33"
-                          v-for="(evalKey, index) in Object.keys(sampleItem.info.metric).slice(0, 3)"
-                          :key="index">
-                      <span class="label">{{evalKey}}{{$t('symbols.colon')}}</span>
-                      <span class="value"
-                            :title="sampleItem.info.metric[evalKey]">{{sampleItem.info.metric[evalKey]}}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="chart-info"
-                  v-show="curGraphName === 'threeDiagram'">
-              <div class="chartdiv-container">
-                <diagram3D :ref="'threeDiagram'+sampleItem.ref"
-                            :oriData="sampleItem.fullData"
-                            :componentConfigOptions="diagram3DMintoolsShow"
-                            :styleSetting="diagram3DSetting"></diagram3D>
-                <div class="chart-item-mask"
-                      v-show="false"></div>
-              </div>
-              <div class="info-container">
-                <div class="info-title">
-                  <div class="view-title inline-show">{{$t('lossCompare.trainInfo')}}</div>
                 </div>
                 <div class="info-content">
-                  <div class="w33">
+                  <div>
                     <span class="label">{{$t('lossAnalysis.network')}}{{$t('symbols.colon')}}</span>
                     <span class="value">
                       [
                       <span class="res-net"
                             :title="sampleItem.info.network">{{sampleItem.info.network}}</span>
-                      ]</span>
+                      ]
+                    </span>
                   </div>
-                  <div class="w33">
+                  <div>
                     <span class="label">{{$t('lossAnalysis.optimizer')}}{{$t('symbols.colon')}}</span>
                     <span class="value">
                       [
@@ -339,41 +168,239 @@ limitations under the License.
                             :title="sampleItem.info.optimizer">{{sampleItem.info.optimizer}}</span>
                       ]</span>
                   </div>
-                  <div class="w33">
+                </div>
+                <div class="info-content">
+                  <div>
                     <span class="label">{{$t('lossAnalysis.learning_rate')}}{{$t('symbols.colon')}}</span>
                     <span class="value"
                           :title="sampleItem.info.learning_rate">{{sampleItem.info.learning_rate}}
                     </span>
                   </div>
-                </div>
-                <div class="info-title">
-                  <div class="view-title inline-show">{{$t('lossCompare.evaluateInfo')}}</div>
-                  <div class="view-more inline-show"
-                        v-show="Object.keys(sampleItem.info.metric).length>3"
-                        @click="showMetricDialog(sampleItem)">
-                    {{$t('lossCompare.more')}}</div>
-                </div>
-                <div class="info-content">
-                  <div class="w33"
-                        v-for="(evalKey, index) in Object.keys(sampleItem.info.metric).slice(0, 3)"
-                        :key="index">
-                    <span class="label">{{evalKey}}{{$t('symbols.colon')}}</span>
+                  <div v-show="Object.keys(sampleItem.info.metric).length">
+                    <span class="label">{{sampleItem.showMetric.label}}{{$t('symbols.colon')}}</span>
                     <span class="value"
-                          :title="sampleItem.info.metric[evalKey]">{{sampleItem.info.metric[evalKey]}}
-                    </span>
+                          :title="sampleItem.showMetric.value">{{sampleItem.showMetric.value}}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="chart-item-mask"></div>
+            </div>
+
+          </div>
+        </div>
+        <div id="tiledView"
+             v-if="originDataArr.length"
+             v-show="curGraphName!=='threeDiagram' || !curModeName"
+             class="data-content">
+          <div class="sample-content"
+               v-for="sampleItem in originDataArr"
+               :key="sampleItem.ref"
+               v-show="sampleItem.show">
+            <div class="detail-container">
+              <!-- components -->
+              <div v-if="curGraphName === 'isopleth'||curGraphName === 'reliefMap'">
+                <div class="chart-info"
+                     v-show="curGraphName === 'isopleth'">
+                  <div class="chartdiv-container">
+                    <template v-if="sampleItem.hasError">
+                      <div class="error-message-container">
+                        {{sampleItem.errorMessage}}
+                      </div>
+                    </template>
+                    <template v-else>
+                      <contourMap :ref="'isopleth' + sampleItem.ref"
+                                  type="contour"
+                                  showConvergencePoint>
+                      </contourMap>
+                      <div class="chart-item-mask"
+                           v-show="false"></div>
+                    </template>
+                  </div>
+                  <div class="info-container">
+                    <div class="info-title">
+                      <div class="view-title inline-show">{{$t('lossCompare.trainInfo')}}</div>
+                    </div>
+                    <div class="info-content">
+                      <div class="w33">
+                        <span class="label">{{$t('lossAnalysis.network')}}{{$t('symbols.colon')}}</span>
+                        <span class="value">
+                          [
+                          <span class="res-net"
+                                :title="sampleItem.info.network">{{sampleItem.info.network}}</span>
+                          ]</span>
+                      </div>
+                      <div class="w33">
+                        <span class="label">{{$t('lossAnalysis.optimizer')}}{{$t('symbols.colon')}}</span>
+                        <span class="value">
+                          [
+                          <span class="res-net"
+                                :title="sampleItem.info.optimizer">{{sampleItem.info.optimizer}}</span>
+                          ]</span>
+                      </div>
+                      <div class="w33">
+                        <span class="label">{{$t('lossAnalysis.learning_rate')}}{{$t('symbols.colon')}}</span>
+                        <span class="value"
+                              :title="sampleItem.info.learning_rate">{{sampleItem.info.learning_rate}}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="info-title">
+                      <div class="view-title inline-show">{{$t('lossCompare.evaluateInfo')}}</div>
+                      <div class="view-more inline-show"
+                           v-show="Object.keys(sampleItem.info.metric).length>3"
+                           @click="showMetricDialog(sampleItem)">
+                        {{$t('lossCompare.more')}}</div>
+                    </div>
+                    <div class="info-content">
+                      <div class="w33"
+                           v-for="(evalKey, index) in Object.keys(sampleItem.info.metric).slice(0, 3)"
+                           :key="index">
+                        <span class="label">{{evalKey}}{{$t('symbols.colon')}}</span>
+                        <span class="value"
+                              :title="sampleItem.info.metric[evalKey]">{{sampleItem.info.metric[evalKey]}}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="chart-info"
+                     v-show="curGraphName === 'reliefMap'">
+                  <div class="chartdiv-container">
+                    <template v-if="sampleItem.hasError">
+                      <div class="error-message-container">
+                        {{sampleItem.errorMessage}}
+                      </div>
+                    </template>
+                    <template v-else>
+                      <contourMap :ref="'reliefMap' + sampleItem.ref"
+                                  type="topographic"
+                                  showConvergencePoint>
+                      </contourMap>
+                      <div class="chart-item-mask"
+                           v-show="false"></div>
+                    </template>
+                  </div>
+                  <div class="info-container">
+                    <div class="info-title">
+                      <div class="view-title inline-show">{{$t('lossCompare.trainInfo')}}</div>
+                    </div>
+                    <div class="info-content">
+                      <div class="w33">
+                        <span class="label">{{$t('lossAnalysis.network')}}{{$t('symbols.colon')}}</span>
+                        <span class="value">
+                          [
+                          <span class="res-net"
+                                :title="sampleItem.info.network">{{sampleItem.info.network}}</span>
+                          ]</span>
+                      </div>
+                      <div class="w33">
+                        <span class="label">{{$t('lossAnalysis.optimizer')}}{{$t('symbols.colon')}}</span>
+                        <span class="value">
+                          [
+                          <span class="res-net"
+                                :title="sampleItem.info.optimizer">{{sampleItem.info.optimizer}}</span>
+                          ]
+                        </span>
+                      </div>
+                      <div class="w33">
+                        <span class="label">{{$t('lossAnalysis.learning_rate')}}{{$t('symbols.colon')}}</span>
+                        <span class="value"
+                              :title="sampleItem.info.learning_rate">{{sampleItem.info.learning_rate}}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="info-title">
+                      <div class="view-title inline-show">{{$t('lossCompare.evaluateInfo')}}</div>
+                      <div class="view-more inline-show"
+                           v-show="Object.keys(sampleItem.info.metric).length>3"
+                           @click="showMetricDialog(sampleItem)">
+                        {{$t('lossCompare.more')}}</div>
+                    </div>
+                    <div class="info-content">
+                      <div class="w33"
+                           v-for="(evalKey, index) in Object.keys(sampleItem.info.metric).slice(0, 3)"
+                           :key="index">
+                        <span class="label">{{evalKey}}{{$t('symbols.colon')}}</span>
+                        <span class="value"
+                              :title="sampleItem.info.metric[evalKey]">{{sampleItem.info.metric[evalKey]}}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="chart-info"
+                   v-show="curGraphName === 'threeDiagram'">
+                <div class="chartdiv-container">
+                  <template v-if="sampleItem.hasError">
+                    <div class="error-message-container">
+                      {{sampleItem.errorMessage}}
+                    </div>
+                  </template>
+                  <template v-else>
+                    <diagram3D :ref="'threeDiagram'+sampleItem.ref"
+                               :oriData="sampleItem.fullData"
+                               :componentConfigOptions="diagram3DMintoolsShow"
+                               :styleSetting="diagram3DSetting"></diagram3D>
+                    <div class="chart-item-mask"
+                         v-show="false"></div>
+                  </template>
+                </div>
+                <div class="info-container">
+                  <div class="info-title">
+                    <div class="view-title inline-show">{{$t('lossCompare.trainInfo')}}</div>
+                  </div>
+                  <div class="info-content">
+                    <div class="w33">
+                      <span class="label">{{$t('lossAnalysis.network')}}{{$t('symbols.colon')}}</span>
+                      <span class="value">
+                        [
+                        <span class="res-net"
+                              :title="sampleItem.info.network">{{sampleItem.info.network}}</span>
+                        ]</span>
+                    </div>
+                    <div class="w33">
+                      <span class="label">{{$t('lossAnalysis.optimizer')}}{{$t('symbols.colon')}}</span>
+                      <span class="value">
+                        [
+                        <span class="res-net"
+                              :title="sampleItem.info.optimizer">{{sampleItem.info.optimizer}}</span>
+                        ]</span>
+                    </div>
+                    <div class="w33">
+                      <span class="label">{{$t('lossAnalysis.learning_rate')}}{{$t('symbols.colon')}}</span>
+                      <span class="value"
+                            :title="sampleItem.info.learning_rate">{{sampleItem.info.learning_rate}}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="info-title">
+                    <div class="view-title inline-show">{{$t('lossCompare.evaluateInfo')}}</div>
+                    <div class="view-more inline-show"
+                         v-show="Object.keys(sampleItem.info.metric).length>3"
+                         @click="showMetricDialog(sampleItem)">
+                      {{$t('lossCompare.more')}}</div>
+                  </div>
+                  <div class="info-content">
+                    <div class="w33"
+                         v-for="(evalKey, index) in Object.keys(sampleItem.info.metric).slice(0, 3)"
+                         :key="index">
+                      <span class="label">{{evalKey}}{{$t('symbols.colon')}}</span>
+                      <span class="value"
+                            :title="sampleItem.info.metric[evalKey]">{{sampleItem.info.metric[evalKey]}}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="summary-title"
-                :title="sampleItem.label">{{sampleItem.label}}
+            <div class="summary-title"
+                 :title="sampleItem.label">{{sampleItem.label}}
+            </div>
           </div>
         </div>
       </div>
     </div>
-    </div>
-
 
     <el-dialog :title="detailsDataTitle+$t('lossCompare.evaluateInfo')"
                :visible.sync="detailsDialogVisible"
@@ -402,7 +429,7 @@ import commonProperty from '@/common/common-property';
 import contourMap from '@/components/contour-map.vue';
 import diagram3D from '@/components/diagram-3D.vue';
 import elementResizeDetectorMaker from 'element-resize-detector';
-import empty, {NO_DATA, LOADING_DATA} from '@/components/empty.vue';
+import empty, { NO_DATA, LOADING_DATA } from '@/components/empty.vue';
 
 class DataItem {
   label;
@@ -421,7 +448,9 @@ class DataItem {
   };
   diagram3DSVNewDataFlag = true;
   diagram3DTVNewDataFlag = true;
-  diagram3DSVChecked= false;
+  diagram3DSVChecked = false;
+  hasError = false;
+  errorMessage = '';
   constructor(trainID) {
     this.label = trainID;
     this.ref = trainID;
@@ -488,18 +517,12 @@ export default {
         convergencePoint: true,
       },
       diagram3DSetting: {
-        camera: JSON.parse(
-            JSON.stringify(commonProperty.lossCommonStyle.camera),
-        ),
+        camera: JSON.parse(JSON.stringify(commonProperty.lossCommonStyle.camera)),
         light: JSON.parse(JSON.stringify(commonProperty.lossCommonStyle.light)),
         line: JSON.parse(JSON.stringify(commonProperty.lossCommonStyle.line)),
-        opacity: JSON.parse(
-            JSON.stringify(commonProperty.lossCommonStyle.opacity),
-        ),
+        opacity: JSON.parse(JSON.stringify(commonProperty.lossCommonStyle.opacity)),
         surface: {
-          colorscale: JSON.parse(
-              JSON.stringify(commonProperty.lossColorscale[0]),
-          ),
+          colorscale: JSON.parse(JSON.stringify(commonProperty.lossColorscale[0])),
         },
       },
       charResizeTimer: null,
@@ -510,9 +533,9 @@ export default {
       detailsDataTitle: '',
       detailsMetricList: {},
       lineNumoptions: [
-        {value: 10, label: 10},
-        {value: 20, label: 20},
-        {value: 30, label: 30},
+        { value: 10, label: 10 },
+        { value: 20, label: 20 },
+        { value: 30, label: 30 },
       ],
       contourSetting: {
         contoursNumber: 20,
@@ -535,10 +558,7 @@ export default {
   },
   beforeDestroy() {
     try {
-      this.eleResizeDetector.removeListener(
-          this.$refs.compareContent,
-          this.resizeCallback,
-      );
+      this.eleResizeDetector.removeListener(this.$refs.compareContent, this.resizeCallback);
     } catch {}
   },
   destroyed() {
@@ -566,55 +586,52 @@ export default {
         limit: 999,
       };
       requestService
-          .querySummaryList(params)
-          .then((res) => {
-            if (res.data?.train_jobs.length <= 0) {
-              this.pageState = NO_DATA;
-              return;
-            }
-            const tempSummaryList = [];
-            const dataList = [];
-            const data = res.data.train_jobs;
-            data.forEach((summaryObj, summaryIndex) => {
-              const trainID = summaryObj.train_id;
-              if (!this.oriDataDictionaries[trainID]) {
-                this.oriDataDictionaries[trainID] = true;
-                tempSummaryList.push({
-                  label: trainID,
-                  checked: true,
-                  show: true,
-                  ref: trainID,
+        .querySummaryList(params)
+        .then((res) => {
+          if (res.data?.train_jobs.length <= 0) {
+            this.pageState = NO_DATA;
+            return;
+          }
+          const tempSummaryList = [];
+          const dataList = [];
+          const data = res.data.train_jobs;
+          data.forEach((summaryObj, summaryIndex) => {
+            const trainID = summaryObj.train_id;
+            if (!this.oriDataDictionaries[trainID]) {
+              this.oriDataDictionaries[trainID] = true;
+              tempSummaryList.push({
+                label: trainID,
+                checked: true,
+                show: true,
+                ref: trainID,
+              });
+
+              if (summaryObj.cache_status === this.cacheStatus) {
+                tempSummaryList.forEach((item) => {
+                  if (item.label === trainID) {
+                    item.loading = true;
+                  }
                 });
-
-                if (summaryObj.cache_status === this.cacheStatus) {
-                  tempSummaryList.forEach((item) => {
-                    if (item.label === trainID) {
-                      item.loading = true;
-                    }
-                  });
-                }
-
-                dataList.push(new DataItem(trainID));
               }
-            });
-            this.summaryOperateList = tempSummaryList;
-            this.originDataArr = dataList;
 
-            this.$nextTick(() => {
-              this.eleResizeDetector.listenTo(
-                  this.$refs.compareContent,
-                  this.resizeCallback,
-              );
-              this.multiSelectedSummaryNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-              this.updateSummaryInPage();
-              if (Object.keys(this.multiSelectedSummaryNames).length > 0) {
-                this.trainJobsCaches();
-              }
-            });
-          }, this.requestErrorCallback)
-          .catch((e) => {
-            this.$message.error(this.$t('public.dataError'));
+              dataList.push(new DataItem(trainID));
+            }
           });
+          this.summaryOperateList = tempSummaryList;
+          this.originDataArr = dataList;
+
+          this.$nextTick(() => {
+            this.eleResizeDetector.listenTo(this.$refs.compareContent, this.resizeCallback);
+            this.multiSelectedSummaryNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+            this.updateSummaryInPage();
+            if (Object.keys(this.multiSelectedSummaryNames).length > 0) {
+              this.trainJobsCaches();
+            }
+          });
+        }, this.requestErrorCallback)
+        .catch((e) => {
+          this.$message.error(this.$t('public.dataError'));
+        });
     },
     trainJobsCaches() {
       const params = {
@@ -660,39 +677,39 @@ export default {
         limit: 999,
       };
       requestService
-          .querySummaryList(params, ignoreError)
-          .then((res) => {
-            if (this.isReloading) {
-              this.$store.commit('setIsReload', false);
-              this.isReloading = false;
+        .querySummaryList(params, ignoreError)
+        .then((res) => {
+          if (this.isReloading) {
+            this.$store.commit('setIsReload', false);
+            this.isReloading = false;
+          }
+
+          // Fault tolerance processing
+          if (res.data?.train_jobs.length <= 0) {
+            this.clearAllData();
+            return;
+          }
+          const data = res.data.train_jobs;
+
+          // Delete the data that does not exist
+          const removeFlag = this.removeNonexistentData(data);
+
+          // Check whether new data exists and add it to the page
+          const addFlag = this.checkNewDataAndComplete(data);
+
+          this.$nextTick(() => {
+            this.multiSelectedSummaryNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+            this.$refs.multiselectGroupComponents.$forceUpdate();
+
+            this.updateSummaryInPage(!removeFlag && !addFlag);
+            if (Object.keys(this.multiSelectedSummaryNames).length > 0) {
+              this.trainJobsCaches();
             }
-
-            // Fault tolerance processing
-            if (res.data?.train_jobs.length <= 0) {
-              this.clearAllData();
-              return;
-            }
-            const data = res.data.train_jobs;
-
-            // Delete the data that does not exist
-            const removeFlag = this.removeNonexistentData(data);
-
-            // Check whether new data exists and add it to the page
-            const addFlag = this.checkNewDataAndComplete(data);
-
-            this.$nextTick(() => {
-              this.multiSelectedSummaryNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-              this.$refs.multiselectGroupComponents.$forceUpdate();
-
-              this.updateSummaryInPage(!removeFlag && !addFlag);
-              if (Object.keys(this.multiSelectedSummaryNames).length > 0) {
-                this.trainJobsCaches();
-              }
-            });
-          }, this.requestErrorCallback)
-          .catch((e) => {
-            this.$message.error(this.$t('public.dataError'));
           });
+        }, this.requestErrorCallback)
+        .catch((e) => {
+          this.$message.error(this.$t('public.dataError'));
+        });
     },
     removeNonexistentData(oriData) {
       if (!oriData) {
@@ -811,22 +828,14 @@ export default {
         });
       }
       const curPageArr = [];
-      for (
-        let i = 0;
-        i < this.pageNum && i < this.curFilterSamples.length;
-        i++
-      ) {
+      for (let i = 0; i < this.pageNum && i < this.curFilterSamples.length; i++) {
         const sampleItem = this.curFilterSamples[i];
         if (sampleItem) {
           sampleItem.show = true;
           curPageArr.push(sampleItem);
         }
       }
-      if (
-        this.curGraphName === 'threeDiagram' &&
-        this.curModeName &&
-        curPageArr.length < this.curPageArr.length
-      ) {
+      if (this.curGraphName === 'threeDiagram' && this.curModeName && curPageArr.length < this.curPageArr.length) {
         this.curPageArr.forEach((item) => {
           const findItem = curPageArr.find((k) => {
             return k.label === item.label;
@@ -876,11 +885,18 @@ export default {
             return item.label === landscape.train_id;
           });
           if (sampleItem !== undefined) {
+            if (landscape.hasOwnProperty('error_code')) {
+              sampleItem.hasError = true;
+              sampleItem.errorMessage = this.$t(`error.${landscape['error_code']}`);
+              return;
+            } else {
+              sampleItem.hasError = false;
+            }
             sampleItem.diagram3DSVNewDataFlag = true;
             sampleItem.diagram3DTVNewDataFlag = true;
             sampleItem.fullData = landscape;
 
-            const {info, showMetric} = sampleItem;
+            const { info, showMetric } = sampleItem;
             info.network = landscape.metadata.network ?? '--';
             info.optimizer = landscape.metadata.optimizer ?? '--';
             info.learning_rate = landscape.metadata.learning_rate ?? '--';
@@ -912,12 +928,14 @@ export default {
           curNewDataKey = 'diagram3DTVNewDataFlag';
         }
         this.curPageArr.forEach((sampleItem) => {
-          const elementItem = this.$refs[prefix + sampleItem.ref];
-          if (elementItem && elementItem[0]) {
-            setTimeout(() => {
-              elementItem[0].updateView(sampleItem[curNewDataKey]);
-            }, 0);
-            sampleItem[curNewDataKey] = false;
+          if (!sampleItem.hasError) {
+            const elementItem = this.$refs[prefix + sampleItem.ref];
+            if (elementItem && elementItem[0]) {
+              setTimeout(() => {
+                elementItem[0].updateView(sampleItem[curNewDataKey]);
+              }, 0);
+              sampleItem[curNewDataKey] = false;
+            }
           }
         });
       } else {
@@ -955,6 +973,9 @@ export default {
       }
     },
     activeCheck(item) {
+      if (item.hasError) {
+        return;
+      }
       if (item.diagram3DSVChecked) {
         item.diagram3DSVChecked = false;
         this.diagram3DSVCheckCount--;
@@ -1044,8 +1065,7 @@ export default {
               const item = {};
               item.key = k;
               item.value = dataObj[key][k];
-              item.id =
-                `${new Date().getTime()}` + `${this.$store.state.tableId}`;
+              item.id = `${new Date().getTime()}` + `${this.$store.state.tableId}`;
               this.$store.commit('increaseTableId');
               tempData.children.push(item);
             });
@@ -1199,6 +1219,14 @@ export default {
   padding: 15px;
   position: relative;
 }
+.chartdiv-container .error-message-container {
+  text-align: center;
+  margin-top: 150px;
+}
+.superimposedView-right-item .error-message-container {
+  text-align: center;
+  margin-top: 90px;
+}
 .loss-compare .compare-content .data-content .detail-container .info-container {
   height: 130px;
   margin-top: 5px;
@@ -1272,22 +1300,22 @@ export default {
 .loss-compare .compare-content .superimposedView .superimposedView-con .collapse-btn-0 {
   width: 26px;
   height: 92px;
-  background: url("../../../assets/images/0/collapse-left.svg");
+  background: url('../../../assets/images/0/collapse-left.svg');
   transform: rotate(180deg);
   cursor: pointer;
 }
 .loss-compare .compare-content .superimposedView .superimposedView-con .collapse-btn-1 {
   width: 26px;
   height: 92px;
-  background: url("../../../assets/images/1/collapse-left.svg");
+  background: url('../../../assets/images/1/collapse-left.svg');
   transform: rotate(180deg);
   cursor: pointer;
 }
 .loss-compare .compare-content .superimposedView .superimposedView-con .collapse-btn.collapse {
-  background: url("../../../assets/images/0/collapse-right.svg");
+  background: url('../../../assets/images/0/collapse-right.svg');
 }
 .loss-compare .compare-content .superimposedView .superimposedView-con .collapse-btn.collapse {
-  background: url("../../../assets/images/1/collapse-right.svg");
+  background: url('../../../assets/images/1/collapse-right.svg');
 }
 .loss-compare .compare-content .superimposedView .superimposedView-right {
   height: 100%;
@@ -1378,11 +1406,11 @@ export default {
 }
 .loss-compare ::v-deep .details-metric-list .el-table th {
   padding: 10px 0;
-  border-top: 1px solid var(--border-color);;
+  border-top: 1px solid var(--border-color);
   background: #f5f7fa;
 }
 .loss-compare ::v-deep .details-metric-list .el-table th .cell {
-  border-left: 1px solid var(--border-color);;
+  border-left: 1px solid var(--border-color);
   height: 14px;
   line-height: 14px;
 }
