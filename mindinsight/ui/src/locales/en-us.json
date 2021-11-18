@@ -1144,6 +1144,7 @@
     "5054500E": "The scalar data does not exist. Please refresh.",
     "5054500F": "The parameter distribution data does not exist. Please refresh.",
     "50545010": "The requested data is not in the cache. Refresh.",
+    "50545017": "Collect summary data in the training script and save the Loss Multi graph data.",
     "50542082": "The model name is missing.",
     "50542085": "Invalid model name.",
     "50542215": "Incorrect query parameters.",
