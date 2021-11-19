@@ -54,7 +54,7 @@ class LandscapeProcessor(BaseProcessor):
         for train_id in train_ids:
             if not isinstance(train_id, str) or not train_id.startswith('./'):
                 logger.warning("The train id %s is invalid, it should be an relative path", train_id)
-                landscape = {"error_code": ParamValueError.error_code, "train_id": train_id}
+                landscape = {"error_code": ParamValueError().error_code, "train_id": train_id}
             else:
                 landscape = self._get_landscape(train_id, landscape_type, interval_id)
             landscapes.append(landscape)
@@ -65,7 +65,7 @@ class LandscapeProcessor(BaseProcessor):
         train_job = self._data_manager.get_train_job_by_plugin(train_id, PluginNameEnum.LANDSCAPE.value)
         if train_job is None:
             logger.warning("The train job for train id %s is not exist.", train_id)
-            return {"error_code": TrainJobNotExistError.error_code, "train_id": train_id}
+            return {"error_code": TrainJobNotExistError().error_code, "train_id": train_id}
 
         for tag in train_job['tags']:
             landscape_events = self._data_manager.list_tensors(train_id, tag)
@@ -89,7 +89,7 @@ class LandscapeProcessor(BaseProcessor):
                     return landscape
 
         logger.warning("The landscape value for train id %s is not found.", train_id)
-        return {"error_code": LandscapeNotExistError.error_code, "train_id": train_id}
+        return {"error_code": LandscapeNotExistError().error_code, "train_id": train_id}
 
     @staticmethod
     def _get_interval_id(loss_landscape):

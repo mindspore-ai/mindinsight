@@ -125,7 +125,7 @@ class TestEventsData:
         value = '1'
         tag = 'tag'
         plugin_name = 'scalar'
-        file1 = 'file1'
+        file1 = 'summary.1'
         ev_data = EventsData()
         steps = [i for i in range(2, 10)]
         for step in steps:
@@ -140,7 +140,7 @@ class TestEventsData:
         # Current steps should be: [1, 2, 3, 4, 5, 6, 7, 8, 9]
         assert len(ev_data._reservoir_by_tag[tag].samples()) == len(steps) + 1
 
-        file2 = 'file2'
+        file2 = 'summary.2'
         new_steps_1 = [5, 10]
         for step in new_steps_1:
             t_event = TensorEvent(wall_time=1, step=step, tag=tag,

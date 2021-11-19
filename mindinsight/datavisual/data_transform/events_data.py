@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Takes a generator of values, and collects them for a frontend."""
-
+import re
 import collections
 import threading
 
@@ -203,7 +203,7 @@ class EventsData:
             int, the number of items removed.
         """
         cnt_out_of_order = tensor_reservoir.remove_sample(
-            lambda x: x.step < start_step or (x.step > start_step and x.filename == filename))
+            lambda x: x.step < start_step or (x.step > start_step and is_new_file(x.filename, filename)))
 
         return cnt_out_of_order
 
@@ -232,3 +232,8 @@ class EventsData:
             return deleted_tag
 
         return None
+
+
+def is_new_file(last_file_name, file_name):
+    """Check if the file is a new file."""
+    return re.search(r'summary\.(\d+)', last_file_name)[1] >= re.search(r'summary\.(\d+)', file_name)[1]
