@@ -234,6 +234,7 @@ class MinddataAnalyser(BaseAnalyser):
 
         elif device_queue_info and not get_next_queue_info:
             result = {"data_process": {"status": "normal"},
+                      "device_queue_warning": {"status": "normal"},
                       "fpbp": {"status": "normal"}}
 
             device_queue_empty_count = device_queue_info.get(
