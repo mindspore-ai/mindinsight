@@ -645,7 +645,7 @@ export default {
       deviceCpuChart.cpuAvgSystem = deviceInfo.sys_utilization.avg_value;
       deviceCpuChart.cpuAvgIO = deviceInfo.io_utilization.avg_value;
       deviceCpuChart.cpuAvgFree = deviceInfo.idle_utilization.avg_value;
-      deviceCpuChart.cpuAvgProcess = deviceInfo.runable_processes.avg_value;
+      deviceCpuChart.cpuAvgProcess = deviceInfo.runnable_process.avg_value;
       deviceCpuChart.cpuAvgSwitch = deviceInfo.context_switch_count.avg_value;
       // Echarts option
       const deviceCpuChartOption = deviceCpuChart.option;
