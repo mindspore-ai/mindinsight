@@ -178,7 +178,7 @@ export default {
         return fetch;
       };
 
-      this.timer = setInterval(fetch(), 1000);
+      this.timer = setInterval(fetch(), 3000);
     },
 
     /**

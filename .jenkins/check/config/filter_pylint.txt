@@ -4,6 +4,7 @@
 "mindinsight/mindinsight/debugger/debugger_services/debugger_grpc_server.py"           "unused-argument"
 "mindinsight/mindinsight/optimizer/common/validator/optimizer_config.py"               "unused-argument"
 "mindinsight/mindinsight/backend/auth.py"                                              "unused-argument"
+"mindinsight/mindinsight/profiler/analyser/parallel_strategy_analyser.py"              "broad-except"
 
 # MindConverter
 "mindinsight/ecosystem_tools/mindconverter/mindconverter/forward_call.py"              "invalid-name"
