@@ -95,9 +95,26 @@ limitations under the License.
                 </div>
                 <div class="noData-text">{{ $t('public.noData') }}</div>
               </div>
+              <div :class="{
+                     'graph-mode-switch': true,
+                     'graph-mode-switch-full-screen': fullScreen,
+                   }">
+                <el-tooltip placement="bottom"
+                            effect="light">
+                  <div slot="content"
+                       class="tooltip-container">
+                    <div class="cl-graph-sidebar-tip">
+                      {{ $t('graph.optimizeText') }}
+                    </div>
+                  </div>
+                  <el-switch v-model="isOptimizeGraph"
+                             @change="handleGraphModeChange"/>
+                </el-tooltip>
+                {{ $t('components.optimize') }}
+              </div>
               <!-- Operation button column -->
               <div class="operate-button-list">
-                <!-- Download button. -->
+                <!-- Download button -->
                 <div :title="$t('graph.fullScreen')"
                      class="full-screen-button"
                      @click="toggleScreen"></div>
@@ -504,6 +521,9 @@ const d3 = {select, selectAll, zoom};
 import commonGraph from '../../mixins/common-graph.vue';
 import smallMap from '../../mixins/small-map.vue';
 
+const NORMAL_MODE = 'normal';
+const OPTIMIZE_MODE = 'optimize';
+
 export default {
   mixins: [commonGraph, smallMap],
   data() {
@@ -575,6 +595,9 @@ export default {
       searchResolve: null,
       isIntoView: true,
       themeIndex: this.$store.state.themeIndex,
+      graphMode: NORMAL_MODE,
+      OPTIMIZE_MODE,
+      isOptimizeGraph: false,
     };
   },
   watch: {
@@ -636,6 +659,16 @@ export default {
     window.onresize = null;
   },
   methods: {
+    /**
+     * Execute at graph mode changed
+     */
+    handleGraphModeChange() {
+      this.graphMode = this.isOptimizeGraph ? OPTIMIZE_MODE : NORMAL_MODE;
+      this.treeFlag = true;
+      this.searchBox.value = '';
+      this.initOver = false;
+      this.getDatavisualPlugins();
+    },
     /**
      * Tree linkage with graph  Expand of current node
      * @param {Object} nodes Data of children of current node
@@ -718,6 +751,7 @@ export default {
           name: node.data.name,
           train_id: this.trainJobID,
           tag: this.fileSearchBox.value,
+          mode: this.graphMode,
         };
         if (node.childNodes && node.childNodes.length) {
           node.expanded = true;
@@ -826,6 +860,7 @@ export default {
         name: name,
         train_id: this.trainJobID,
         tag: this.fileSearchBox.value,
+        mode: this.graphMode,
       };
       this.loading.info = this.$t('graph.queryLoading');
       this.loading.show = true;
@@ -919,6 +954,7 @@ export default {
      */
     getDatavisualPlugins() {
       const params = {
+        mode: this.graphMode,
         train_id: this.trainJobID,
       };
       RequestService.getDatavisualPlugins(params)
@@ -928,7 +964,7 @@ export default {
               this.initOver = true;
               return;
             }
-            const tags = res.data.plugins.graph;
+            const tags = this.graphMode === NORMAL_MODE ? res.data.plugins.graph : res.data.plugins.optimize_graph;
             let hasFileSearchValue = false;
             tags.forEach((k) => {
               this.fileSearchBox.suggestions.push({
@@ -1190,6 +1226,7 @@ export default {
         tag: this.fileSearchBox.value,
         offset: 0,
         limit: 1000,
+        mode: this.graphMode,
       };
       RequestService.searchNodesNames(params)
           .then(
@@ -1297,6 +1334,7 @@ export default {
         const params = {
           name: option.value,
           train_id: this.trainJobID,
+          mode: this.graphMode,
           tag: this.fileSearchBox.value,
         };
         this.loading.info = this.$t('graph.searchLoading');
@@ -1674,7 +1712,7 @@ export default {
   background: #f0f2f5;
 }
 .cl-graph-manage #graphs .search {
-  margin-bottom: 15px;
+  margin-bottom: 12px;
   width: 100%;
 }
 .cl-graph-manage #graphs .search-wrap {
@@ -1751,10 +1789,29 @@ export default {
   padding: 18px 32px 10px;
   border: 1px solid var(--graph-right-module-border-color);
 }
+.cl-graph-manage #graphs #sidebar .graph-mode {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  margin-bottom: 12px;
+}
+.cl-graph-manage #graphs #sidebar .graph-mode .select {
+  margin-left: 16px;
+  flex-grow: 1;
+}
+.cl-graph-manage #graphs #sidebar #small-container {
+  height: 209px;
+  width: 100%;
+  z-index: 100;
+  border: 1px solid var(--pagination-btn-color);
+  overflow: hidden;
+  background-color: var(--bg-color);
+  position: relative;
+}
 .cl-graph-manage #graphs #sidebar .sidebar-tooltip {
   position: absolute;
-  height: 32px;
-  top: 18px;
+  height: 62px;
+  top: 2px;
   left: 10px;
   display: flex;
   align-items: center;
@@ -1787,7 +1844,7 @@ export default {
   cursor: move;
 }
 .cl-graph-manage #graphs #sidebar .title {
-  padding: 20px 0;
+  padding: 12px 0;
   font-size: 14px;
 }
 .cl-graph-manage #graphs #sidebar .title img {
@@ -1837,10 +1894,10 @@ export default {
   height: 6px;
 }
 .cl-graph-manage #graphs #sidebar .node-info-container {
-  height: calc(100% - 451px);
+  height: calc(100% - 440px);
 }
 .cl-graph-manage #graphs #sidebar .node-info-container-long {
-  height: calc(100% - 357px);
+  height: calc(100% - 340px);
 }
 .cl-graph-manage #graphs #sidebar .node-info {
   font-size: 14px;
@@ -2004,18 +2061,33 @@ export default {
 .cl-graph-manage #graphs #sidebar .toggle-right.toggle-left.toggle-1-btn {
   background-image: url('../../assets/images/1/collapse-right.svg');
 }
+.cl-graph-manage #graphs .graph-mode-switch {
+  position: absolute;
+  left: 5px;
+  top: 5px;
+  z-index: 100;
+}
+.cl-graph-manage #graphs .graph-mode-switch-full-screen {
+  position: absolute;
+  left: 285px;
+  top: 5px;
+  z-index: 100;
+}
 .cl-graph-manage #graphs .operate-button-list {
   position: absolute;
   right: 0;
   top: 0;
   z-index: 100;
+  display: flex;
 }
 .cl-graph-manage #graphs .operate-button-list div {
   cursor: pointer;
-  width: 12px;
-  height: 12px;
+  width: 24px;
+  height: 24px;
+  margin: 0;
   display: inline-block;
-  margin: 5px;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 .cl-graph-manage #graphs .operate-button-list .download-button {
   background-image: url('../../assets/images/download.png');
