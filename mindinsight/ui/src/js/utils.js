@@ -75,7 +75,7 @@ export function formatRgbColorToHex(rgb) {
 }
 
 /**
- * The function of keep decimal places when the length of decimal digit is greater than param 'length'
+ * The function to keep decimal places when the length of decimal digit is greater than param 'length'
  * @param {number | string} number
  * @param {number} length
  * @return {string}
@@ -92,7 +92,7 @@ export function keepDecimalPlaces(number, length) {
 }
 
 /**
- * The function of judge whether the target is an integer
+ * The function to judge whether the target is an integer
  * @param {string | number} target
  * @return {boolean}
  */

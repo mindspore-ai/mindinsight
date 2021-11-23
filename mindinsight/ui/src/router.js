@@ -224,6 +224,10 @@ export default new Router({
               path: 'resource',
               component: () => import('./views/profiling/cluster/resource/resource-dashboard.vue'),
             },
+            {
+              path: 'strategy',
+              component: () => import('./views/profiling/parallel-graph/graph-container.vue'),
+            },
             // Performance Details
             {
               path: 'step-trace',

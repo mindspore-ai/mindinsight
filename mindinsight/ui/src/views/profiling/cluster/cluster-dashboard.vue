@@ -69,6 +69,10 @@ export default {
           name: 'resource',
           label: this.$t('profiling.resourceUtilization'),
         },
+        {
+          name: 'strategy',
+          label: this.$t('profiling.strategyPerception'),
+        },
       ],
     };
   },
@@ -97,6 +101,10 @@ export default {
         case '/profiling/cluster/step-trace':
         case '/profiling/cluster/communication':
           this.tab = this.tabs[0].name;
+          break;
+        case '/profiling/cluster/strategy':
+          this.tab = this.tabs[2].name;
+          this.showDetail = false;
           break;
         case '/profiling/cluster/resource':
           this.showDetail = false;

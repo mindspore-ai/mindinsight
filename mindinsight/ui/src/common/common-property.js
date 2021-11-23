@@ -619,11 +619,87 @@ export default {
         key: '--echarts-tooltip-font-color',
         value: '#fff',
       },
+      {
+        key: '--attribute-panel-bg-color',
+        value: '#fff',
+      },
+      {
+        key: '--common-stroke',
+        value: '#3f51b5',
+      },
+      {
+        key: '--common-node-stroke',
+        value: '#000000',
+      },
+      {
+        key: '--highlight-node-stroke-color',
+        value: '#fd9629',
+      },
+      {
+        key: '--conpoint-color',
+        value: '#ddd',
+      },
+      {
+        key: '--focused-node-color',
+        value: '#f2453d',
+      },
+      {
+        key: '--expanded-node-fill',
+        value: '#fff5e6',
+      },
+      {
+        key: '--unexpanded-node-fill',
+        value: '#ffffff',
+      },
+      {
+        key: '--pipeline-panel-title-bg-color',
+        value: '#cccccc',
+      },
+      {
+        key: '--pipeline-panel-content-bg-color',
+        value: '#ffffff',
+      },
     ],
     '1': [
       {
         key: '--conpoint-color',
         value: '#ddd',
+      },
+      {
+        key: '--pipeline-panel-title-bg-color',
+        value: '#6e7074',
+      },
+      {
+        key: '--pipeline-panel-content-bg-color',
+        value: '#cdcdcd',
+      },
+      {
+        key: '--common-node-stroke',
+        value: '#999999',
+      },
+      {
+        key: '--unexpanded-node-fill',
+        value: '#323232',
+      },
+      {
+        key: '--expanded-node-fill',
+        value: '#4d4b49',
+      },
+      {
+        key: '--focused-node-color',
+        value: '#ef9a9a',
+      },
+      {
+        key: '--attribute-panel-bg-color',
+        value: '#323232',
+      },
+      {
+        key: '--common-stroke',
+        value: '#9fa8da',
+      },
+      {
+        key: '--highlight-node-stroke-color',
+        value: '#ffcc80',
       },
       {
         key: '--theme-color',

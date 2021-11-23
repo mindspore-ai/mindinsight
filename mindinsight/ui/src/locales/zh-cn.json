@@ -528,6 +528,23 @@
     "utilizationTitle": "利用率（%）",
     "trainingPerformance": "训练性能",
     "resourceUtilization": "资源利用",
+    "strategyPerception": "策略感知",
+    "rankSelector": "Stage 选择",
+    "parallelStrategy": "并行方式",
+    "hasStrategy": "含切分策略算子",
+    "redistribution": "重排布算子",
+    "gradientAggregate": "梯度聚合算子",
+    "recomputeGraph": "重计算图",
+    "forwardGraph": "正向图",
+    "backwardGraph": "反向图",
+    "bipartiteExtractTips": "选择需要抽取通信算子的计算图",
+    "resetTips": "点击将图调整至画布中央",
+    "bipartiteExtractSelector": "图选择",
+    "noneNodesTips": "暂无选中结点",
+    "trainingPipeline": "流水线并行视图",
+    "specialNodeCnt": "特殊算子统计",
+    "nodeAttribute": "结点属性",
+    "updateButton": "更新",
     "memory": {
       "memoryDetailLink": "内存使用情况",
       "overView": "内存分配概览",
@@ -562,9 +579,9 @@
     },
     "isHeterogeneous": "暂不支持异构训练场景",
     "scopeNameNum": "展示算子ScopeName层数: ",
-    "flopsScopeTipOne":"节点移动：通过拖动scope节点，将其移动到指定位置。",
-    "flopsScopeTipTwo":"重置：将图形恢复到初始状态。",
-    "flopsScopeTipThree":"选中：点击选中某一个scope节点，其关联的父子节点长期高亮，再次点击可取消高亮。"
+    "flopsScopeTipOne": "节点移动：通过拖动scope节点，将其移动到指定位置。",
+    "flopsScopeTipTwo": "重置：将图形恢复到初始状态。",
+    "flopsScopeTipThree": "选中：点击选中某一个scope节点，其关联的父子节点长期高亮，再次点击可取消高亮。"
   },
   "profilingGPU": {
     "minddata_get_next_queue": {
