@@ -91,7 +91,7 @@ class DebuggerOfflineManager:
         self._metadata_stream = cache_store.get_stream_handler(Streams.METADATA)
 
         self._dbg_dir = dbg_dir
-        self._dbg_services_module = self._get_dbg_service_module()
+        self._dbg_services_module = self.get_dbg_service_module()
         self._dbg_service = None
 
         self._command_listener = CommandListener(cache_store)
@@ -119,7 +119,7 @@ class DebuggerOfflineManager:
         return flag
 
     @staticmethod
-    def _get_dbg_service_module():
+    def get_dbg_service_module():
         """Get dbg service module from MindSpore."""
         try:
             dbg_services_module = import_module('mindspore.offline_debug.dbg_services')
@@ -128,18 +128,26 @@ class DebuggerOfflineManager:
             raise DebuggerModuleNotFoundError("dbg_services")
         return dbg_services_module
 
+    @staticmethod
+    def get_dbg_service(dbg_services_module, data_loader, mem_limit):
+        """Initialize DbgServices object."""
+        is_sync = data_loader.get_sync_flag()
+        net_name = data_loader.get_net_name()
+        dump_dir = data_loader.get_dump_dir()
+        dbg_service = dbg_services_module.DbgServices(dump_dir)
+        try:
+            dbg_service.initialize(net_name=net_name, is_sync_mode=is_sync, max_mem_usage=mem_limit)
+        except TypeError:
+            log.warning("The MindSpore and MindInsight version are mismatched. Failed to enable memory limit.")
+            dbg_service.initialize(net_name=net_name, is_sync_mode=is_sync)
+        return dbg_service
+
     @debugger_server_wrap
     def initialize(self):
         """Start to load offline debugger data."""
-        is_sync = self._data_loader.get_sync_flag()
-        net_name = self._data_loader.get_net_name()
-        dump_dir = self._data_loader.get_dump_dir()
-        self._dbg_service = self._dbg_services_module.DbgServices(dump_dir)
-        try:
-            self._dbg_service.initialize(net_name=net_name, is_sync_mode=is_sync, max_mem_usage=MAX_MS_CACHE_SPACE_MB)
-        except TypeError:
-            log.warning("The MindSpore and MindInsight version are mismatched. Failed to enable memory limit.")
-            self._dbg_service.initialize(net_name=net_name, is_sync_mode=is_sync)
+        self._dbg_service = self.get_dbg_service(self._dbg_services_module,
+                                                 self._data_loader,
+                                                 MAX_MS_CACHE_SPACE_MB)
         self._cache_store.clean()
         self._command_listener.start()
         self._is_running_flag = True

@@ -349,16 +349,22 @@ class NodeOutput:
 
     def __init__(self, output_type):
         self.type = output_type
-        if output_type == OutputType.NONE:
-            self.info = None
-        elif output_type == OutputType.BOOL:
+        if output_type == OutputType.BOOL:
             self.info = dict(value=None)
+            self.slot_size = 1
         elif output_type in self.SCALAR_TYPES:
             self.info = dict(value=None)
+            self.slot_size = 1
         elif output_type == OutputType.TENSOR:
             self.info = dict(dtype='', shape=(), tensor=None)
+            self.slot_size = 1
         elif output_type == OutputType.TUPLE:
             self.info = dict(dtypes=[], shapes=[], tensors=[])
+            # need update when parse output items
+            self.slot_size = 0
+        else:
+            self.info = None
+            self.slot_size = 0
 
     def __repr__(self):
         return str({
@@ -533,3 +539,15 @@ class Parser:
     def parse(self):
         """Parse."""
         raise NotImplementedError
+
+
+class NodeTypeEnum(enum.Enum):
+    """Node type enum. The following types are new to our custom."""
+    NAME_SCOPE = 'name_scope'
+    AGGREGATION_SCOPE = 'aggregation_scope'
+    PARAMETER = 'Parameter'
+    CONST = 'Const'
+    LOAD = 'Load'
+    MAKETUPLE = 'MakeTuple'
+    TUPLE_GET_ITEM = 'TupleGetItem'
+    UPDATE_STATE = 'UpdateState'

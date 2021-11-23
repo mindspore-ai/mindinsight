@@ -70,24 +70,35 @@ class DbgServices:
         self.print_mes("Remove watchpoint with watchpoint id: {}".format(watchpoint_id))
         return self._watchpoints.pop(watchpoint_id)
 
-    def check_watchpoints(self, iteration):
+    def check_watchpoints(self, iteration, error_on_no_value=False):
         """Check watchpoints."""
         self.print_mes("Check watchpoint at iteration: {}".format(iteration))
         watch_hits = []
+        if error_on_no_value:
+            return []
         for watchpoint_id, watchpoint in self._watchpoints.items():
             # add param hit info
+            real_param_list = []
             for param in watchpoint.get('parameter_list'):
-                param.hit = True
-                param.value = 0.0
-            for watch_node_name, node_info in watchpoint.get('check_nodes'):
-                for device_id in node_info.get('device_id'):
+                mock_param = MagicMock(
+                    actual_value=param.actual_value,
+                    disabled=param.disabled,
+                    hit=True,
+                    name=param.name,
+                    value=0.0
+                )
+                real_param_list.append(mock_param)
+            watchpoint['parameter_list'] = real_param_list
+            for watch_node_name, node_info in watchpoint.get('check_nodes').items():
+                for rank_id in node_info.get('rank_id'):
                     hit = WatchpointHit(watch_node_name,
                                         0,
                                         watchpoint.get('watch_condition'),
                                         watchpoint_id,
                                         watchpoint.get('parameter_list'),
                                         0,
-                                        device_id)
+                                        rank_id,
+                                        watchpoint.get('root_graph_id'))
                     watch_hits.append(hit)
 
         return watch_hits
@@ -177,11 +188,12 @@ class Parameter:
 
 class WatchpointHit:
     """Watchpoint hit structure."""
-    def __init__(self, name, slot, condition, watchpoint_id, parameters, error_code, device_id):
+    def __init__(self, name, slot, condition, watchpoint_id, parameters, error_code, rank_id, root_graph_id):
         self.name = name
         self.slot = slot
         self.condition = condition
         self.watchpoint_id = watchpoint_id
+        self.root_graph_id = root_graph_id
         self.parameters = parameters
         self.error_code = error_code
-        self.device_id = device_id
+        self.rank_id = rank_id

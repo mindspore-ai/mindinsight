@@ -23,7 +23,7 @@ from collections import namedtuple
 import numpy as np
 
 from mindinsight.conf import settings
-from mindinsight.datavisual.data_transform.graph.node import NodeTypeEnum
+from mindinsight.domain.graph.base import NodeTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, DebuggerDownloadOverQueue, \
     DebuggerDownloadTensorNotExist
 from mindinsight.debugger.common.log import LOGGER as log

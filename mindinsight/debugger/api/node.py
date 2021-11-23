@@ -13,7 +13,18 @@
 # limitations under the License.
 # ==============================================================================
 """Node in the computational graph."""
+import collections
 from abc import ABC
+
+from mindinsight.debugger.api.debugger_engine import DebuggerEngine
+from mindinsight.debugger.api.debugger_tensor import DebuggerTensorImpl
+from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
+from mindinsight.debugger.common.utils import validate_slots, parse_param_to_iterable_obj
+from mindinsight.domain.graph.base import NodeType
+
+NodeFeature = collections.namedtuple('NodeFeature', ['name', 'rank', 'stack',
+                                                     'graph_name', 'root_graph_id'])
+NodeUniqueId = collections.namedtuple('NodeUniqueId', ['name', 'rank', 'graph_name'])
 
 
 class Node(ABC):
@@ -25,6 +36,9 @@ class Node(ABC):
         change and/or deletion.
     """
 
+    def __init__(self, node_feature):
+        self._node_feature = node_feature
+
     @property
     def name(self):
         """
@@ -33,17 +47,55 @@ class Node(ABC):
         Returns:
             str, the full name of the node.
         """
-        return ""
+        return self._node_feature.name
 
     @property
     def stack(self):
-        """Get stack info."""
-        return None
+        """
+        Get stack info.
+
+        Returns:
+            iterable[dict], each item format like:
+
+            ..code-block::
+                {
+                    'file_path': str,
+                    'line_no': int,
+                    'code_line': str
+                }
+
+        """
+        return self._node_feature.stack
 
     @property
     def rank(self) -> int:
-        """Get rank info."""
-        return -1
+        """
+        Get rank info.
+
+        Returns:
+            int, the rank id to which the node belong.
+        """
+        return self._node_feature.rank
+
+    @property
+    def root_graph_id(self) -> int:
+        """
+        Get the root graph id to which the dumped tensor of current node will belong.
+
+        Returns:
+            int, the root graph id.
+        """
+        return self._node_feature.root_graph_id
+
+    @property
+    def graph_name(self) -> str:
+        """
+        Get graph name of current node.
+
+        Returns:
+            str, the graph name.
+        """
+        return self._node_feature.graph_name
 
     def get_input_tensors(
             self,
@@ -80,3 +132,148 @@ class Node(ABC):
         Returns:
             Iterable[DebuggerTensor], the output tensors of the node.
         """
+
+    def __str__(self):
+        feature = f"rank: {self.rank}\n" \
+                  f"graph_name: {self.graph_name}\n" \
+                  f"node_name: {self.name}\n"
+        return feature
+
+
+class NodeImpl(Node):
+    """Node implementation."""
+
+    def __init__(self, base_node, node_type):
+        self._base_node = base_node
+        self._node_type = node_type
+        node_feature = self._get_node_feature()
+        super(NodeImpl, self).__init__(node_feature)
+        self.input_nodes = []
+        self.downstream = []
+
+    @property
+    def node_type(self):
+        """Get the node type."""
+        return self._node_type
+
+    @property
+    def base_node(self):
+        """Get the base node."""
+        return self._base_node
+
+    @property
+    def output_slot_size(self):
+        """Get the base node."""
+        return self._base_node.output.slot_size
+
+    @property
+    def full_name_with_graph(self):
+        """Return node name startswith graph name."""
+        return f"{self.graph_name}/{self.name}"
+
+    @property
+    def unique_id(self):
+        """Get the unique id of the node."""
+        return NodeUniqueId(self.name, self.rank, self.graph_name)
+
+    def _get_node_feature(self):
+        """Get node feature."""
+        node = self._base_node
+        if self._node_type in (NodeType.CONSTANT, NodeType.PARAMETER):
+            feature = NodeFeature(name=node.name,
+                                  rank=node.rank_id,
+                                  stack=[],
+                                  graph_name=node.graph_name,
+                                  root_graph_id=node.root_graph_id)
+        elif self._node_type == NodeType.OPERATOR:
+            feature = NodeFeature(name=node.full_name,
+                                  rank=node.rank_id,
+                                  stack=node.stack,
+                                  graph_name=node.graph_name,
+                                  root_graph_id=node.root_graph_id)
+        else:
+            raise DebuggerParamValueError(f"Invalid node_type, got {self._node_type}")
+        return feature
+
+    def get_input_tensors(
+            self,
+            iterations=None,
+            slots=None):
+        """
+        Get the input tensors of the node.
+
+        Args:
+            iterations (Iterable[int]): The iterations to which the returned
+                tensor should belong. Default: None, which means all
+                available iterations will be considered.
+            slots (Iterable[int]): The slots in which the returned tensors
+                should be. Default: None, which means all available slots will
+                be considered.
+
+        Returns:
+            Iterable[DebuggerTensor], the input tensors of the node.
+        """
+        validate_slots(slots)
+        iterations = self._get_iterable_iterations(iterations)
+        current_index = 0
+        res = []
+        for node in self.input_nodes:
+            if slots is not None:
+                query_slots = [slot for slot in range(node.output_slot_size) if slot + current_index in slots]
+            else:
+                query_slots = None
+            res.extend(node.get_output_tensors(iterations, query_slots))
+            current_index += node.output_slot_size
+        return res
+
+    def get_output_tensors(
+            self,
+            iterations=None,
+            slots=None):
+        """
+        Get the output tensors of this node.
+
+        Args:
+            iterations (Iterable[int]): The iterations to which the returned
+                tensor should belong.
+            slots (Iterable[int]): The slots in which the returned tensors
+                should be.
+
+        Returns:
+            Iterable[DebuggerTensor], the output tensors of the node.
+        """
+        validate_slots(slots)
+        iterations = self._get_iterable_iterations(iterations)
+        output_slots = list(range(self.output_slot_size))
+        if slots is None:
+            query_slots = output_slots
+        else:
+            query_slots = [slot for slot in output_slots if slot in slots]
+        res = []
+        for slot in query_slots:
+            for iteration in iterations:
+                res.append(DebuggerTensorImpl(self.copy(), slot, iteration))
+        return res
+
+    def _get_iterable_iterations(self, iterations):
+        """
+        Validate input and return iterable iterations.
+
+        Args:
+           iterations (Union[int, list[int], None], optional): The specified iterations.
+
+        Returns:
+            list[int], list of iteration.
+        """
+        data_loader = DebuggerEngine.get_instance().data_loader
+        total_dumped_steps = data_loader.load_dumped_step(self.rank)
+        dumped_iterations = total_dumped_steps.get(self.rank, {}).get(self.root_graph_id, [])
+        iterations = parse_param_to_iterable_obj(iterations, 'iterations', dumped_iterations, False)
+        return iterations
+
+    def copy(self):
+        """Copy Node."""
+        node = NodeImpl(self._base_node, self._node_type)
+        node.input_nodes = self.input_nodes.copy()
+        node.downstream = self.downstream.copy()
+        return node

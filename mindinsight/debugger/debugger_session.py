@@ -15,7 +15,7 @@
 """Implement the debugger server."""
 from functools import wraps
 
-from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
+from mindinsight.domain.graph.base import NodeTypeEnum
 from mindinsight.datavisual.utils.tools import to_float
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerParamTypeError, DebuggerCompareTensorError, DebuggerTensorGraphError, \

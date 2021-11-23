@@ -17,7 +17,7 @@ from collections import defaultdict
 
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.data_transform.graph.msgraph import MSGraph
-from mindinsight.datavisual.data_transform.graph.node import NodeTypeEnum
+from mindinsight.domain.graph.base import NodeTypeEnum
 
 
 class OptimizedGraph(MSGraph):

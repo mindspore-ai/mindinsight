@@ -49,7 +49,7 @@ class TestGraphRunsOperator:
     def get_cache_store(dump_dir):
         """Get initialized cache store."""
         cache_store = DebuggerCache()
-        with mock.patch.object(DebuggerOfflineManager, '_get_dbg_service_module', return_value=mock_dbg_services):
+        with mock.patch.object(DebuggerOfflineManager, 'get_dbg_service_module', return_value=mock_dbg_services):
             offline_manager = DebuggerOfflineManager(cache_store, dump_dir)
             offline_manager.initialize()
         return cache_store

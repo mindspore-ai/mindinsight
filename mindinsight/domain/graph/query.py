@@ -17,6 +17,21 @@
 import re
 
 
+def construct_filter_func(query_str, case_sensitive=False, use_regex=False):
+    """Get filter func."""
+    if use_regex:
+        if case_sensitive:
+            func = lambda x: bool(re.search(query_str, str(x)))
+        else:
+            func = lambda x: bool(re.search(query_str, str(x), flags=re.I))
+    else:
+        if case_sensitive:
+            func = lambda x: str(x).find(query_str) > -1
+        else:
+            func = lambda x: str(x).lower().find(query_str.lower()) > -1
+    return func
+
+
 class StackQuery:
     """Stack query."""
 
@@ -58,17 +73,7 @@ class StackQuery:
         Returns:
             StackQuery, cloned object.
         """
-        if use_regex:
-            if case_sensitive:
-                func = lambda x: bool(re.search(qs, str(x)))
-            else:
-                func = lambda x: bool(re.search(qs, str(x), flags=re.I))
-        else:
-            if case_sensitive:
-                func = lambda x: str(x).find(qs) > -1
-            else:
-                func = lambda x: str(x).lower().find(qs.lower()) > -1
-
+        func = construct_filter_func(qs, case_sensitive, use_regex)
         operators = []
         for operator in self.operators:
             for res in map(func, operator.stack):

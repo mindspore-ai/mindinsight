@@ -15,7 +15,8 @@
 """This file is used to define the MindSpore graph."""
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.data_transform.graph.graph import EdgeTypeEnum, Graph, check_invalid_character
-from mindinsight.datavisual.data_transform.graph.node import Node, NodeTypeEnum
+from mindinsight.datavisual.data_transform.graph.node import Node
+from mindinsight.domain.graph.base import NodeTypeEnum
 from mindinsight.datavisual.data_transform.graph.node_tree import NodeTree
 from mindinsight.datavisual.proto_files.mindinsight_anf_ir_pb2 import DataType
 from mindinsight.debugger.stream_cache.source import DebuggerSource

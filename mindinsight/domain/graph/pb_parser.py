@@ -261,26 +261,12 @@ class PBParser(Parser):
             if attr.name in ('input_names', 'output_names'):
                 operator.attrs[attr.name] = list(operator.attrs[attr.name])
 
-        # parse inputs
-        cst_mapping = dict((cst.name, cst) for cst in self.constants)
-        param_mapping = dict((param.name, param) for param in self.parameters)
-        op_mapping = dict((op.name, op) for op in self.operators)
-        for pb_input in pb_operator.input:
-            input_type = InputType.REFERENCE
-            if pb_input.name in cst_mapping:
-                input_type = InputType.CONSTANT
-            elif pb_input.name in param_mapping:
-                input_type = InputType.PARAMETER
-            elif pb_input.name in op_mapping:
-                input_type = InputType.OPERATOR
+        self._parse_operator_inputs(operator, pb_operator)
+        self._parse_operator_outputs(operator, pb_operator)
+        self._find_operator_output_tensors(operator)
 
-            op_input = NodeInput(input_type, pb_input.name)
-            if input_type == InputType.OPERATOR:
-                op_input.op_id = op_mapping[op_input.name].op_id
-
-            operator.inputs.append(op_input)
-
-        # parse output
+    def _parse_operator_outputs(self, operator, pb_operator):
+        """Parse the outputs of the operator."""
         proto_output = pb_operator.output_type
         if proto_output.data_type in (self.proto.DT_UNDEFINED, self.proto.DT_NONE):
             output = NodeOutput(OutputType.NONE)
@@ -300,11 +286,30 @@ class PBParser(Parser):
                 output.info['dtypes'].append(dtype)
                 output.info['shapes'].append(None)
                 output.info['tensors'].append(None)
+                output.slot_size += 1
         else:
             raise UnknownDataTypeError(proto_output.data_type)
-
         operator.output = output
-        self._find_operator_output_tensors(operator)
+
+    def _parse_operator_inputs(self, operator, pb_operator):
+        """Parse the inputs of the operator."""
+        cst_mapping = dict((cst.name, cst) for cst in self.constants)
+        param_mapping = dict((param.name, param) for param in self.parameters)
+        op_mapping = dict((op.name, op) for op in self.operators)
+        for pb_input in pb_operator.input:
+            input_type = InputType.REFERENCE
+            if pb_input.name in cst_mapping:
+                input_type = InputType.CONSTANT
+            elif pb_input.name in param_mapping:
+                input_type = InputType.PARAMETER
+            elif pb_input.name in op_mapping:
+                input_type = InputType.OPERATOR
+
+            op_input = NodeInput(input_type, pb_input.name)
+            if input_type == InputType.OPERATOR:
+                op_input.op_id = op_mapping[op_input.name].op_id
+
+            operator.inputs.append(op_input)
 
     def _get_tuple_item_dtype(self, elem_type):
         """

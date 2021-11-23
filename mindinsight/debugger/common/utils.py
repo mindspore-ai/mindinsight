@@ -14,8 +14,8 @@
 # ============================================================================
 """Define the utils."""
 import enum
-import re
 import os
+import re
 import struct
 import tempfile
 import time
@@ -23,7 +23,8 @@ import time
 import numpy as np
 
 from mindinsight.conf import settings
-from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
+from mindinsight.domain.graph.base import NodeTypeEnum
+from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamTypeError, DebuggerParamValueError
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
 from mindinsight.domain.graph.proto.ms_graph_pb2 import DataType
 from mindinsight.utils.tensor import Statistics
@@ -350,3 +351,53 @@ def get_tensor_value(tensor_proto, tensor_contents, node_info, cur_step, oversiz
         'oversize': oversize
     }
     return value
+
+
+def validate_type(param, param_name, expect_type, expect_type_name=None):
+    """Validate type."""
+    expect_types = expect_type
+    if isinstance(expect_types, list):
+        expect_types = tuple(expect_types)
+    if not isinstance(param, expect_types):
+        expect_type_name = expect_type_name if expect_type_name else expect_type
+        raise DebuggerParamTypeError(f"The type of {param_name} should be {expect_type_name}.")
+
+
+def parse_param_to_iterable_obj(param, param_name, expected_range=None, error_report=True):
+    """
+    Get iterable int objects which should in expected range.
+
+    Args:
+        param (Union[int, list[int], None], optional): The input param.
+        param_name (str): The name of the param.
+        expected_range (list[int]): The acceptable range of param value. Default None,
+            no check for value.
+        error_report (bool): Whether raise Exception if the value is not in expected_range.
+
+    Returns:
+        list[int], list of param objects.
+    """
+    if param is None:
+        return expected_range
+    if not isinstance(param, list):
+        param = [param]
+    # validate ranks
+    res = []
+    for param_item in param:
+        validate_type(param_item, param_name, int, 'int, list[int] or None')
+        if expected_range and param_item not in expected_range:
+            if error_report:
+                raise DebuggerParamValueError(f"The value should be in {expected_range}")
+            continue
+        res.append(param_item)
+    return res
+
+
+def validate_slots(slots):
+    """Validate slots is List[int] or None."""
+    if slots is None:
+        return
+    if not isinstance(slots, list):
+        raise TypeError(f"The param `slots` only support list[int] or None, but got {type(slots)}")
+    for slot in slots:
+        validate_type(slot, 'slot', int, 'list[int] or None')
