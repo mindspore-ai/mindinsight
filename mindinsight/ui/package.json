@@ -16,6 +16,7 @@
     "echarts": "5.0.2",
     "echarts-gl": "2.0.4",
     "element-ui": "2.13.0",
+    "elkjs": "0.7.1",
     "jquery": "3.5.0",
     "slickgrid": "2.4.22",
     "vue": "2.6.11",

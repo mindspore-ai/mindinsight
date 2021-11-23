@@ -316,6 +316,16 @@ export default {
       },
     });
   },
+  getGraphData(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/parallel-strategy/graphs',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
   // debugger
   getSession(params) {
     return axios({
