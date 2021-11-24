@@ -68,7 +68,7 @@ class TestDebuggerServerFactory:
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
-    @mock.patch.object(DebuggerOfflineManager, '_get_dbg_service_module')
+    @mock.patch.object(DebuggerOfflineManager, 'get_dbg_service_module')
     def test_get_dbg_offline_server(self, mock_method):
         """Get debugger offline server"""
         mock_method.return_value = mock_dbg_services

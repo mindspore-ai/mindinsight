@@ -63,7 +63,7 @@ class TestAscendDebugger:
             'name': 'Default/TransData-op99',
             'single_node': True}}, 'retrieve_single_node.json')
     ])
-    @mock.patch.object(DebuggerOfflineManager, '_get_dbg_service_module')
+    @mock.patch.object(DebuggerOfflineManager, 'get_dbg_service_module')
     def test_retrieve_when_train_begin(self, mock_method, app_client, body_data, expect_file):
         """Test retrieve when train_begin."""
         session_id = self.create_session(mock_method, app_client)
@@ -79,7 +79,7 @@ class TestAscendDebugger:
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
-    @mock.patch.object(DebuggerOfflineManager, '_get_dbg_service_module')
+    @mock.patch.object(DebuggerOfflineManager, 'get_dbg_service_module')
     def test_create_and_delete_watchpoint(self, mock_method, app_client):
         """Test create and delete watchpoint."""
         conditions = [
@@ -111,7 +111,7 @@ class TestAscendDebugger:
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
-    @mock.patch.object(DebuggerOfflineManager, '_get_dbg_service_module')
+    @mock.patch.object(DebuggerOfflineManager, 'get_dbg_service_module')
     def test_update_watchpoint(self, mock_method, app_client):
         """Test retrieve when train_begin."""
         watch_point_id = 1
@@ -140,7 +140,7 @@ class TestAscendDebugger:
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
-    @mock.patch.object(DebuggerOfflineManager, '_get_dbg_service_module')
+    @mock.patch.object(DebuggerOfflineManager, 'get_dbg_service_module')
     def test_retrieve_tensor_history(self, mock_method, app_client):
         """Test retrieve tensor value."""
         node_name = 'Default/TransData-op99'
@@ -166,7 +166,7 @@ class TestAscendDebugger:
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
-    @mock.patch.object(DebuggerOfflineManager, '_get_dbg_service_module')
+    @mock.patch.object(DebuggerOfflineManager, 'get_dbg_service_module')
     def test_retrieve_tensor_value(self, mock_method, app_client):
         """Test compare tensor value."""
         node_name = 'Default/TransData-op99'
@@ -199,7 +199,7 @@ class TestAscendDebugger:
           'graph_name': 'kernel_graph_0'},
          'retrieve_tensor_graph-0.json')
     ])
-    @mock.patch.object(DebuggerOfflineManager, '_get_dbg_service_module')
+    @mock.patch.object(DebuggerOfflineManager, 'get_dbg_service_module')
     def test_retrieve_tensor_graph(self, mock_method, app_client, body_data, expect_file):
         """Test retrieve tensor graph."""
         node_name = 'Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op25'
@@ -283,7 +283,7 @@ class TestMultiNetDebugger:
 
     def create_session(self, app_client):
         """Create offline session."""
-        with mock.patch.object(DebuggerOfflineManager, '_get_dbg_service_module', return_value=mock_dbg_services):
+        with mock.patch.object(DebuggerOfflineManager, 'get_dbg_service_module', return_value=mock_dbg_services):
             session_id = get_request_result(app_client=app_client, url=OFFLINE_BASE_DIR,
                                             body_data={
                                                 "session_type": "OFFLINE",

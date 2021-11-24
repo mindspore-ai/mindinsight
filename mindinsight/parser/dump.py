@@ -15,17 +15,14 @@
 """Graph API module."""
 
 import os
-import stat
-import datetime
 
-from mindinsight.debugger.stream_cache.data_loader import DataLoader
 from mindinsight.debugger.dump.convert import DumpRootDirConverter, FileMapping
-from mindinsight.domain.graph.pb_parser import PBParser
+from mindinsight.debugger.dump.parser import Parser
+from mindinsight.debugger.stream_cache.data_loader import DataLoader
 from mindinsight.domain.graph.query import StackQuery
-from mindinsight.domain.graph.utils import Toolkit
 
 
-class DumpParser:
+class DumpParser(Parser):
     """
     Dump Parser.
 
@@ -34,37 +31,8 @@ class DumpParser:
     """
 
     def __init__(self, dump_dir):
-        self._dump_dir = os.path.realpath(dump_dir)
-        self._loader = DataLoader(self._dump_dir)
-        self._constants = []
-        self._parameters = []
-        self._operators = []
-        self._parse()
-
-    def _parse(self):
-        """Parse dump graph files."""
-        graphs = self._loader.load_graphs()
-        for graph in graphs:
-            rank_id = graph['rank_id']
-            graph_protos = graph['graph_protos']
-            for graph_data in graph_protos:
-                parser = PBParser(graph_data=graph_data)
-                parser.parse()
-
-                for constant in parser.constants:
-                    constant.graph_name = graph_data.name
-                    constant.rank_id = rank_id
-                self._constants += parser.constants
-
-                for parameter in parser.parameters:
-                    parameter.graph_name = graph_data.name
-                    parameter.rank_id = rank_id
-                self._parameters += parser.parameters
-
-                for operator in parser.operators:
-                    operator.graph_name = graph_data.name
-                    operator.rank_id = rank_id
-                self._operators += parser.operators
+        loader = DataLoader(dump_dir)
+        super(DumpParser, self).__init__(loader)
 
     def get_tensor_files(self, qs, use_regex=False, rank_ids=None, iterations=None):
         """
@@ -116,31 +84,3 @@ class DumpParser:
         conversion = DumpRootDirConverter(self._loader)
         failed_lines = conversion.convert()
         return failed_lines
-
-    def export_xlsx(self, output_dir=None):
-        """
-        Export to excel file.
-
-        Args:
-            output_dir (str): Output directory to save the excel file. Default is None.
-
-        Returns:
-            str, excel file path.
-        """
-        if output_dir is None:
-            output_dir = os.getcwd()
-        else:
-            output_dir = os.path.realpath(output_dir)
-            if not os.path.exists(output_dir):
-                os.makedirs(output_dir, mode=stat.S_IRUSR | stat.S_IXUSR, exist_ok=True)
-
-        toolkit = Toolkit(
-            dump_dir=self._dump_dir,
-            constants=self._constants,
-            parameters=self._parameters,
-            operators=self._operators)
-
-        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-        file_path = os.path.join(output_dir, f'dump_{timestamp}.xlsx')
-        toolkit.export_xlsx(file_path)
-        return file_path

@@ -15,21 +15,6 @@
 """
 This file is used to define the node of graph and associated base types.
 """
-from enum import Enum
-
-
-class NodeTypeEnum(Enum):
-    """Node type enum. The following types are new to our custom."""
-    NAME_SCOPE = 'name_scope'
-    AGGREGATION_SCOPE = 'aggregation_scope'
-    PARAMETER = 'Parameter'
-    CONST = 'Const'
-    LOAD = 'Load'
-    MAKETUPLE = 'MakeTuple'
-    TUPLE_GET_ITEM = 'TupleGetItem'
-    UPDATE_STATE = 'UpdateState'
-
-
 
 class Node:
     """

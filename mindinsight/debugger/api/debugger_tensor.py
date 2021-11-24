@@ -13,7 +13,17 @@
 # limitations under the License.
 # ==============================================================================
 """DebuggerTensor."""
+import re
 from abc import ABC
+
+import numpy as np
+
+from mindinsight.debugger.api.debugger_engine import DebuggerEngine
+from mindinsight.debugger.common.log import LOGGER as log
+from mindinsight.debugger.common.utils import NUMPY_TYPE_MAP
+from mindinsight.debugger.stream_cache.data_loader import DumpTarget
+from mindinsight.domain.graph.base import NodeType
+from mindinsight.domain.graph.proto.ms_graph_pb2 import DataType
 
 
 class DebuggerTensor(ABC):
@@ -30,6 +40,11 @@ class DebuggerTensor(ABC):
         - A DebuggerTensor is always the output tensor of a node.
     """
 
+    def __init__(self, node, slot, iteration):
+        self._node = node
+        self._slot = slot
+        self._iteration = iteration
+
     @property
     def node(self):
         """
@@ -38,7 +53,7 @@ class DebuggerTensor(ABC):
         Returns:
             Node, the node that outputs this tensor.
         """
-        return None
+        return self._node
 
     @property
     def slot(self):
@@ -48,33 +63,97 @@ class DebuggerTensor(ABC):
         Returns:
             int, the slot of the tensor on the node.
         """
-        return -1
+        return self._slot
 
     @property
     def iteration(self):
         """
-        Get the iteration for this tensor.
+        Get iteration of the tensor.
 
         Returns:
-            int, the iteration for this tensor.
+            int, the iteration of the tensor.
         """
-        return -1
+        return self._iteration
 
     @property
     def rank(self):
         """
-        Get the rank for this tensor.
+        Get the rank of the tensor.
 
         Returns:
             int, the rank for this tensor.
 
         """
-        return -1
+        return self._node.rank
 
     def value(self):
         """
         Get the value of the tensor.
 
         Returns:
-            numpy.ndarray, the value of the debugger tensor.
+            Union[numpy.array, None], The value could be None if failed to find data file
+            in relative iteration.
         """
+        raise NotImplementedError
+
+    def __str__(self):
+        feature = f"rank: {self.rank}\n" \
+                  f"graph_name: {self.node.graph_name}\n" \
+                  f"node_name: {self.node.name}\n" \
+                  f"slot: {self.slot}\n" \
+                  f"iteration: {self.iteration}\n"
+        return feature
+
+
+class DebuggerTensorImpl(DebuggerTensor):
+    """DebuggerTensor implementation."""
+
+    @property
+    def root_graph_id(self):
+        """Get the root_graph_id for this tensor."""
+        return self._node.root_graph_id
+
+    def has_value(self):
+        """Check if the tensor has value."""
+        iteration = self.iteration
+        if iteration is None:
+            return False
+        data_loader = DebuggerEngine.get_instance().data_loader
+        has_dump_output = bool(data_loader.dump_target in [DumpTarget.FULL, DumpTarget.OUTPUT_ONLY])
+        if not has_dump_output:
+            return False
+        if self.node.node_type == NodeType.CONSTANT:
+            iteration = 'Constant'
+        iter_dirs = data_loader.get_step_iter(rank_id=self.rank, step=iteration)
+        tensor_pattern = self.node.name.split('/')[-1]
+        for iter_dir in iter_dirs:
+            for tensor_path in iter_dir.iterdir():
+                if re.search(tensor_pattern, tensor_path.name):
+                    return True
+        return False
+
+    def value(self):
+        if self.iteration is None:
+            log.warning("The iteration of is not specified, no value returned.")
+            return None
+        debugger_engine = DebuggerEngine.get_instance()
+        tensor_info = debugger_engine.dbg_services_module.TensorInfo(
+            node_name=self.node.name,
+            slot=self.slot,
+            iteration=self.iteration,
+            rank_id=self.rank,
+            root_graph_id=self.root_graph_id,
+            is_output=True)
+        tensors = debugger_engine.dbg_service.read_tensors([tensor_info])
+        return self._to_numpy(tensors[0])
+
+    @staticmethod
+    def _to_numpy(tensor_data):
+        """Turn tensor data into Numpy."""
+        if tensor_data.data_size == 0:
+            return None
+        dtype_str = DataType.Name(tensor_data.dtype)
+        np_type = NUMPY_TYPE_MAP.get(dtype_str)
+        data = np.frombuffer(tensor_data.data_ptr, dtype=np_type)
+        data = data.reshape(tensor_data.shape)
+        return data

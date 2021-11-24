@@ -14,6 +14,7 @@
 # ============================================================================
 """This file is used to define the DataLoader."""
 import csv
+import enum
 import os
 import json
 import re
@@ -31,6 +32,14 @@ from mindinsight.domain.graph.proto.ms_graph_pb2 import ModelProto
 RankDir = namedtuple("rank_dir", ["rank_id", "path"])
 
 
+@enum.unique
+class DumpTarget(enum.Enum):
+    """Define the status of reply."""
+    FULL = 0
+    INPUT_ONLY = 1
+    OUTPUT_ONLY = 2
+
+
 class DataLoader:
     """The DataLoader object provides interface to load graphs and device information from base_dir."""
 
@@ -46,7 +55,18 @@ class DataLoader:
         self._is_sync = False
         self._device_target = "Ascend"
         self._net_name = ""
+        self._dump_type = 0
         self._initialize()
+
+    @property
+    def dump_dir(self):
+        """The property of dump directory."""
+        return str(self._debugger_base_dir)
+
+    @property
+    def dump_target(self):
+        """The property of dump target."""
+        return DumpTarget(self._dump_type)
 
     @property
     def rank_dirs(self):
@@ -62,11 +82,12 @@ class DataLoader:
         rank_dir = self._rank_dirs[0].path
         dump_config = self._load_json_file(rank_dir / self.DUMP_METADATA / 'data_dump.json')
 
-        def _set_net_name():
+        def _parse_common_settings():
             nonlocal dump_config
             common_settings = dump_config.get(DumpSettings.COMMON_DUMP_SETTINGS.value, {})
             try:
                 self._net_name = common_settings['net_name']
+                self._dump_type = common_settings['input_output']
             except KeyError:
                 raise DebuggerJsonFileParseError("data_dump.json")
 
@@ -80,7 +101,7 @@ class DataLoader:
             else:
                 self._is_sync = False
 
-        _set_net_name()
+        _parse_common_settings()
         _set_dump_mode_and_device_target()
 
     def _load_rank_dirs(self):
@@ -159,9 +180,12 @@ class DataLoader:
                 log.warning("Failed to load json file %s. %s", str(file), str(err))
                 return {}
 
-    def load_dumped_step(self):
+    def load_dumped_step(self, rank_id=None):
         """
         Load dumped step number in the directory.
+
+        Args:
+            rank_id (int): The specified rank id to query dumped steps. If None, load all step number.
 
         Returns:
             dict, the dumped step info among all devices. The key is rank_id,
@@ -188,7 +212,8 @@ class DataLoader:
             return iters
 
         step_num = {}
-        for rank_dir in self._rank_dirs:
+        rank_dirs = [self.get_rank_dir(rank_id)] if rank_id is not None else self._rank_dirs
+        for rank_dir in rank_dirs:
             rank_id, rank_path = rank_dir.rank_id, rank_dir.path
             net_path = rank_path / self._net_name
             if not net_path.is_dir():
@@ -214,15 +239,16 @@ class DataLoader:
         log.error("No rank directory found.")
         raise DebuggerParamValueError("Invalid rank_id.")
 
-    def get_step_iter(self, rank_id=None, step=None):
+    def get_step_iter(self, rank_id=None, step=None, root_graph_id=None):
         """Get the generator of step path."""
         step_pattern = '[0-9]*' if step is None else step
+        graph_pattern = '[0-9]*' if root_graph_id is None else root_graph_id
         if rank_id is None:
             rank_dirs = self._rank_dirs
         else:
-            rank_dirs = list(self.get_rank_dir(rank_id))
+            rank_dirs = [self.get_rank_dir(rank_id)]
         for rank_dir in rank_dirs:
-            step_dirs = rank_dir.path.glob(f'{self._net_name}/[0-9]*/{step_pattern}')
+            step_dirs = rank_dir.path.glob(f'{self._net_name}/{graph_pattern}/{step_pattern}/')
             for step_dir in step_dirs:
                 yield step_dir
 

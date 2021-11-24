@@ -15,7 +15,8 @@
 """This file is used to define the basic graph."""
 import copy
 from mindinsight.debugger.common.log import LOGGER as log
-from mindinsight.datavisual.data_transform.graph.node import Node, NodeTypeEnum
+from mindinsight.datavisual.data_transform.graph.node import Node
+from ...domain.graph.base import NodeTypeEnum
 from .debugger_graph import DebuggerGraph
 
 

@@ -24,7 +24,7 @@ from mindinsight.datavisual.common.exceptions import NodeNotInGraphError
 from mindinsight.datavisual.common.log import logger
 from mindinsight.utils.exceptions import ParamMissError
 from mindinsight.utils.exceptions import ParamValueError
-from .node import NodeTypeEnum
+from mindinsight.domain.graph.base import NodeTypeEnum
 from .node import Node
 
 

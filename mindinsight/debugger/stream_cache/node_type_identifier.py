@@ -15,7 +15,7 @@
 """This file is used to identify the type of the node."""
 import sys
 
-from mindinsight.datavisual.data_transform.graph import NodeTypeEnum
+from mindinsight.domain.graph.base import NodeTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 
 _ACTIVATIONS = [
