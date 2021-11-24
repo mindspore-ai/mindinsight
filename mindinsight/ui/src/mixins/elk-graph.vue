@@ -54,6 +54,7 @@ export default {
       option: {
         layoutOptions,
       },
+      timer: null,
       bipartite: false,
       synchronizeTransitionDelay: 100,
       pathSearch: {
@@ -83,6 +84,10 @@ export default {
       pipelineNodeInfo: null,
       pipelineEdgeInfo: null,
       lastStackedParentID: '',
+      loading: {
+        show: true,
+        info: "",
+      },
     };
   },
 
@@ -91,6 +96,9 @@ export default {
   },
   mounted() {
     this.getDisplayedGraph();
+  },
+  destroyed() {
+    this.timer && clearInterval(this.timer);
   },
   methods: {
     // The logic of get displayedGraph
@@ -102,58 +110,75 @@ export default {
         profile: this.trainInfo.dir,
         train_id: this.trainInfo.id,
       };
-      await RequestService.getGraphData(params).then((res) => res.data)
+      const fetch = () => {
+        RequestService.getGraphData(params)
+          .catch(err => {
+            this.loading.show = false;
+            clearInterval(this.timer);
+            throw err;
+          })
+          .then(res => res.data)
           .then(async (res) => {
-            const {graphs, metadata} = res;
-            // pipelined stage
-            const {
-              pipelinedStageInfo,
-              pipelineNodeInfo,
-              pipelineEdgeInfo,
-            } = buildPipelinedStageInfo(graphs);
-            this.pipelinedStageInfo = pipelinedStageInfo;
-            this.pipelineNodeInfo = pipelineNodeInfo;
-            this.pipelineEdgeInfo = pipelineEdgeInfo;
-            // rank selector
-            let stageCnt = 0;
-            this.showRankIdOptions = Object.keys(graphs).map((key) => {
-              const ranks = graphs[key].rank_ids;
-              stageCnt += 1;
-              return {
-                value: key,
-                label: 'Stage ' + stageCnt + ': ' + JSON.stringify(ranks),
-              };
-            });
-            if (!showRankId) showRankId = 0;
-            const visGraph = buildGraph(
-                graphs[showRankId],
-                this.bipartite,
-            );
-            const topScopeSet = getTopScopeSet();
-            this.showNodeTypeOptions = [];
-            for (const topScope of topScopeSet) {
-              let label;
-              if (topScope.indexOf('Recompute') != -1) {
-                label = this.$t('profiling.recomputeGraph');
-              } else if (topScope.indexOf('Gradients') != -1) {
-                label = this.$t('profiling.backwardGraph');
-              } else if (topScope.indexOf('Default') != -1) {
-                label = this.$t('profiling.forwardGraph');
-              }
-              this.showNodeTypeOptions.push({
-                value: topScope,
-                label: label,
+            if (res.status === "loading" || res.status === "pending") { // continue loading
+              return;
+            } else if(res.status === "finish") {
+              const {graphs, metadata} = res;
+              // pipelined stage
+              const {
+                pipelinedStageInfo,
+                pipelineNodeInfo,
+                pipelineEdgeInfo,
+              } = buildPipelinedStageInfo(graphs);
+              this.pipelinedStageInfo = pipelinedStageInfo;
+              this.pipelineNodeInfo = pipelineNodeInfo;
+              this.pipelineEdgeInfo = pipelineEdgeInfo;
+              // rank selector
+              let stageCnt = 0;
+              this.showRankIdOptions = Object.keys(graphs).map((key) => {
+                const ranks = graphs[key].rank_ids;
+                stageCnt += 1;
+                return {
+                  value: key,
+                  label: 'Stage ' + stageCnt + ': ' + JSON.stringify(ranks),
+                };
               });
+              if (!showRankId) showRankId = 0;
+              const visGraph = buildGraph(
+                  graphs[showRankId],
+                  this.bipartite,
+              );
+              const topScopeSet = getTopScopeSet();
+              this.showNodeTypeOptions = [];
+              for (const topScope of topScopeSet) {
+                let label;
+                if (topScope.indexOf('Recompute') != -1) {
+                  label = this.$t('profiling.recomputeGraph');
+                } else if (topScope.indexOf('Gradients') != -1) {
+                  label = this.$t('profiling.backwardGraph');
+                } else if (topScope.indexOf('Default') != -1) {
+                  label = this.$t('profiling.forwardGraph');
+                }
+                this.showNodeTypeOptions.push({
+                  value: topScope,
+                  label: label,
+                });
+              }
+              this.showNodeType = showNodeType || this.showNodeTypeOptions[0].label;
+              this.showRankId = showRankId || this.showRankIdOptions[0].value;
+              this.parallelStrategy = metadata.parallel_type;
+              const elkGraph = createElkGraph(visGraph, true, this.$store.state.themeIndex);
+              await this.elk.layout(elkGraph, this.option).then((res) => {
+                this.processDisplayedGraph(res.getDisplayedGraph());
+                this.nodeAttrMap = visGraph.nodeAttrMap;
+              });
+              this.loading.show = false;
+              clearInterval(this.timer);
             }
-            this.showNodeType = showNodeType || this.showNodeTypeOptions[0].label;
-            this.showRankId = showRankId || this.showRankIdOptions[0].value;
-            this.parallelStrategy = metadata.parallel_type;
-            const elkGraph = createElkGraph(visGraph, true, this.$store.state.themeIndex);
-            await this.elk.layout(elkGraph, this.option).then((res) => {
-              this.processDisplayedGraph(res.getDisplayedGraph());
-              this.nodeAttrMap = visGraph.nodeAttrMap;
-            });
-          });
+          })
+        return fetch;
+      };
+
+      this.timer = setInterval(fetch(), 1000);
     },
 
     /**

@@ -85,7 +85,7 @@ limitations under the License.
         </svg>
         <svg v-if="specialNodesCnt.hasOwnProperty('hasStrategy')"  width="21" height="8">
           <g>
-            <text dx="0" dy="7" font-size="8">{{`:${specialNodesCnt["hasStrategy"]}`}}</text>
+            <text dx="0" dy="7" font-size="8">{{`:${specialNodesCnt["hasStrategy"] | 0}`}}</text>
           </g>
         </svg>
 
@@ -96,7 +96,7 @@ limitations under the License.
         </svg>
         <svg v-if="specialNodesCnt.hasOwnProperty('Redistribution')"  width="21" height="8">
           <g>
-            <text dx="0" dy="7" font-size="8">{{`:${specialNodesCnt["Redistribution"]}`}}</text>
+            <text dx="0" dy="7" font-size="8">{{`:${specialNodesCnt["Redistribution"] | 0}`}}</text>
           </g>
         </svg>
 
@@ -107,7 +107,7 @@ limitations under the License.
         </svg>
         <svg v-if="specialNodesCnt.hasOwnProperty('GradientAggregation')"  width="21" height="8">
           <g>
-            <text dx="0" dy="7" font-size="8">{{`:${specialNodesCnt["GradientAggregation"]}`}}</text>
+            <text dx="0" dy="7" font-size="8">{{`:${specialNodesCnt["GradientAggregation"] | 0}`}}</text>
           </g>
         </svg>
       </div>

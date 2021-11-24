@@ -20,6 +20,12 @@ limitations under the License.
     @mousemove="isDrag = true"
     class="graph-container"
   >
+    <div id="graph"
+      class="graph"
+      v-loading.fullscreen.lock="loading.show"
+      element-loading-background="rgba(0, 0, 0, 0.3)"
+      :element-loading-text="this.$t('trainingDashboard.loadingTip')">
+    </div>
     <svg-el-container ref="graphContainer" class="elk-graph" id="p-graph">
       <filter
         id="outline_selected_y"
@@ -527,19 +533,19 @@ limitations under the License.
       <div class="second-title" style="font-size: 10px;">
         {{ this.$t("profiling.hasStrategy") }}:
         <span style="font-weight: normal;">{{
-          specialNodesMap["hasStrategy"]
+          specialNodesMap["hasStrategy"] ? specialNodesMap["hasStrategy"] : 0
         }}</span>
       </div>
       <div class="second-title" style="font-size: 10px;">
         {{ this.$t("profiling.redistribution") }}:
         <span style="font-weight: normal;">{{
-          specialNodesMap["Redistribution"]
+          specialNodesMap["Redistribution"] ? specialNodesMap["Redistribution"] : 0
         }}</span>
       </div>
       <div class="second-title" style="font-size: 10px;">
         {{ this.$t("profiling.gradientAggregate") }}:
         <span style="font-weight: normal;">{{
-          specialNodesMap["GradientAggregation"]
+          specialNodesMap["GradientAggregation"] ? specialNodesMap["GradientAggregation"] : 0
         }}</span>
       </div>
     </div>
