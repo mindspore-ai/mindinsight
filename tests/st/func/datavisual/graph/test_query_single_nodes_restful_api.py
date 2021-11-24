@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,6 +49,29 @@ class TestQuerySingleNode:
 
         params = dict(train_id=train_id,
                       name=node_name)
+        url = get_url(BASE_URL, params)
+        response = client.get(url)
+        assert response.status_code == 200
+        file_path = os.path.join(self.graph_results_dir, result_file)
+        compare_result_with_file(response.get_json(), file_path)
+
+    @pytest.mark.level0
+    @pytest.mark.env_single
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.usefixtures("init_summary_logs")
+    @pytest.mark.parametrize("node_name, result_file", [
+        ('Default/bn1', "test_query_single_optimized_node_success_result1.json")
+    ])
+    def test_query_single_node_for_optimized_graph_success(self, client, node_name, result_file):
+        """Query single node for optimized graph."""
+        train_id = gbl.get_train_ids()[0]
+
+        params = dict(train_id=train_id,
+                      name=node_name,
+                      mode="optimize")
         url = get_url(BASE_URL, params)
         response = client.get(url)
         assert response.status_code == 200

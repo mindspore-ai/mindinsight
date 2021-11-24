@@ -31,8 +31,10 @@ from mindinsight.datavisual.processors.scalars_processor import ScalarsProcessor
 from mindinsight.datavisual.processors.graph_processor import GraphProcessor
 from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
 from mindinsight.datavisual.processors.landscape_processor import LandscapeProcessor
+from mindinsight.utils.exceptions import ParamValueError
 
 
+VALID_MODE = {"normal", "optimize"}
 BLUEPRINT = Blueprint("train_visual", __name__, url_prefix=settings.URL_PATH_PREFIX+settings.API_PREFIX)
 
 
@@ -105,9 +107,12 @@ def graph_nodes():
     """
     name = request.args.get('name', default=None)
     tag = request.args.get("tag", default=None)
+    mode = request.args.get("mode", default="normal")
     train_id = get_train_id(request)
+    if mode not in VALID_MODE:
+        raise ParamValueError("Invalid mode")
 
-    graph_process = GraphProcessor(train_id, DATA_MANAGER, tag)
+    graph_process = GraphProcessor(train_id, DATA_MANAGER, tag, mode)
     response = graph_process.list_nodes(scope=name)
     return jsonify(response)
 
@@ -124,9 +129,12 @@ def graph_node_names():
     offset = request.args.get("offset", default=0)
     limit = request.args.get("limit", default=100)
     tag = request.args.get("tag", default=None)
+    mode = request.args.get("mode", default="normal")
     train_id = get_train_id(request)
+    if mode not in VALID_MODE:
+        raise ParamValueError("Invalid mode")
 
-    graph_process = GraphProcessor(train_id, DATA_MANAGER, tag)
+    graph_process = GraphProcessor(train_id, DATA_MANAGER, tag, mode)
     resp = graph_process.search_node_names(search_content, offset, limit)
     return jsonify(resp)
 
@@ -141,9 +149,12 @@ def graph_search_single_node():
     """
     name = request.args.get("name")
     tag = request.args.get("tag", default=None)
+    mode = request.args.get("mode", default="normal")
     train_id = get_train_id(request)
+    if mode not in VALID_MODE:
+        raise ParamValueError("Invalid mode")
 
-    graph_process = GraphProcessor(train_id, DATA_MANAGER, tag)
+    graph_process = GraphProcessor(train_id, DATA_MANAGER, tag, mode)
     resp = graph_process.search_single_node(name)
     return jsonify(resp)
 

@@ -112,8 +112,9 @@ class TestPbParser:
         filename = 'ms_output.pb'
         create_graph_pb_file(output_dir=self._summary_dir, filename=filename)
         parser = _PbParser(self._summary_dir)
-        tensor_event = parser._parse_pb_file(self._summary_dir, filename)
-        assert isinstance(tensor_event, TensorEvent)
+        tensor_events = parser._parse_pb_file(self._summary_dir, filename)
+        for tensor_event in tensor_events:
+            assert isinstance(tensor_event, TensorEvent)
 
     def test_set_latest_file(self):
         """Test set latest file."""

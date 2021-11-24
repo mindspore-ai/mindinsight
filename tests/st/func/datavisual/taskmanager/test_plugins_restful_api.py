@@ -48,6 +48,8 @@ class TestPlugins:
         response = client.get(url)
         plugins = response.get_json().get('plugins')
         for plugin_name in PluginNameEnum.list_members():
+            if plugin_name == PluginNameEnum.OPTIMIZED_GRAPH.value:
+                continue
             if plugin_name == PluginNameEnum.GRAPH.value:
                 assert len(plugins.get(plugin_name)) == len(expected_plugins.get(plugin_name))
             else:

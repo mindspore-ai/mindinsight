@@ -15,6 +15,7 @@
 """This file is used to define the graph."""
 
 from .msgraph import MSGraph
+from .optimized_graph import OptimizedGraph
 from .node import NodeTypeEnum
 
-__all__ = ['MSGraph', 'NodeTypeEnum']
+__all__ = ['MSGraph', 'NodeTypeEnum', 'OptimizedGraph']

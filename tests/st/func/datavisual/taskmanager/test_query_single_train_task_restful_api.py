@@ -43,6 +43,8 @@ class TestQuerySingleTrainTask:
         for train_id in gbl.summaries_metadata:
             expected = gbl.summaries_metadata.get(train_id).get("plugins")
             for plugin_name in PluginNameEnum.list_members():
+                if plugin_name == PluginNameEnum.OPTIMIZED_GRAPH.value:
+                    continue
                 params = dict(train_id=train_id, plugin_name=plugin_name)
                 url = get_url(BASE_URL, params)
                 response = client.get(url)

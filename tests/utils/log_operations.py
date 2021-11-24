@@ -65,6 +65,8 @@ class LogOperations:
         metadata_dict.update({"metadata": dict()})
         metadata_dict.update({"actual_values": dict()})
         for plugin_name in PluginNameEnum.list_members():
+            if plugin_name == PluginNameEnum.OPTIMIZED_GRAPH.value:
+                continue
             metadata_dict["plugins"].update({plugin_name: list()})
             log_generator = log_generators.get(plugin_name)
             if plugin_name == PluginNameEnum.GRAPH.value:

@@ -120,6 +120,8 @@ class TestTrainTaskManager:
         """Test getting single train task with params."""
         train_task_manager = TrainTaskManager(self._mock_data_manager)
         for plugin_name in PluginNameEnum.list_members():
+            if plugin_name == PluginNameEnum.OPTIMIZED_GRAPH.value:
+                continue
             for test_train_id in self._train_id_list:
                 result = train_task_manager.get_single_train_task(plugin_name, test_train_id)
                 tags = result.get("train_jobs")[0].get("tags")
@@ -139,6 +141,8 @@ class TestTrainTaskManager:
             result = train_task_manager.get_plugins(train_id)
             plugins = result.get('plugins')
             for plugin_name in plugins:
+                if plugin_name == PluginNameEnum.OPTIMIZED_GRAPH.value:
+                    continue
                 if plugins.get(plugin_name):
                     assert train_id in self._plugins_id_map.get(plugin_name)
                 else:
