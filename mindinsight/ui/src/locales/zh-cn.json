@@ -717,7 +717,7 @@
     "curValue": "当前值",
     "compareToPre": "上一步对比",
     "stepTip": "0表示训练初始状态",
-    "stepTipOffline": "（起始Step从1开始编号，注意Dump配置文件中的iteration字段的编号从0开始，两者概念不同。）",
+    "stepTipOffline": "（起始轮次从1开始编号，注意Dump配置文件中的iteration字段的编号从0开始，两者概念不同,数值上差一。）",
     "toSummeryList": "返回训练列表",
     "clientIp": "训练端地址",
     "deviceId": "卡号",
@@ -1000,8 +1000,9 @@
     "currentStepTip": "表示当前图执行轮次",
     "noDistinguish": "不区分",
     "newGraphName": "收到新图",
-    "noExexutionGraph": "execution_order目录下的图执行序文件缺失。",
-    "graphExecutionHistoryTip":"图执行历史文件：保存该图执行的历史轮次信息"
+    "noExexutionGraph": "execution_order目录下的图执行历史文件缺失。",
+    "graphExecutionHistoryTip": "图执行历史文件：保存该图执行的历史轮次信息",
+    "noExecutionHistoryFile": "图执行历史文件缺失"
   },
   "explain": {
     "explain": "模型解释",

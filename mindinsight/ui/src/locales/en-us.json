@@ -717,7 +717,7 @@
     "curValue": "Current Value",
     "compareToPre": "Compare with Previous Step",
     "stepTip": "The value 0 indicates the initial training state.",
-    "stepTipOffline": "(Steps are numbered from 1, Note that the iteration field in the dump configuration file is numbered from 0. The two concepts are different.)",
+    "stepTipOffline": "(Steps are numbered from 1, Note that the iteration field in the dump configuration file is numbered from 0. The two concepts are different, and the difference in value is one.)",
     "toSummeryList": "Go to Summary List",
     "clientIp": "Client IP",
     "deviceId": "Device ID",
@@ -1004,8 +1004,9 @@
     "currentStepTip": "Indicates the current graph execution epoch",
     "noDistinguish": "All",
     "newGraphName": "New graph received",
-    "noExexutionGraph": "The graph execution order file in the execution_order directory is missing.",
-    "graphExecutionHistoryTip":"Graph execution history file: save the history round information of graph execution"
+    "noExexutionGraph": "The graph execution history file in the execution_order directory is missing.",
+    "graphExecutionHistoryTip":"Graph execution history file: save the history round information of graph execution",
+    "noExecutionHistoryFile": "Graph history file is not available"
   },
   "explain": {
     "explain": "Model Explanation",

@@ -705,11 +705,13 @@ limitations under the License.
                               v-if="item.sub_graph_names.length">
                     <div class="graph-name">{{ item.graph_name }}</div>
                   </el-tooltip>
+                  <div class="graph-name" 
+                       v-else>{{ item.graph_name }}</div>
                 </div>
               </div>
               <div class="no-data"
                    v-else>
-                {{ $t('public.noData') }}
+                {{ `${$t('public.noData')}(${$t('debugger.noExecutionHistoryFile')})` }}
               </div>
             </div>
           </div>
@@ -1263,7 +1265,7 @@ export default {
       showGraphCount: true,
       allGraphIdArr: [],
       graphIdArr: [],
-      graphCountWidth: 80,
+      graphCountWidth: 120,
       showCount: 5,
       graphNameObj: {
         value: this.$t('debugger.all'),
@@ -1410,7 +1412,7 @@ export default {
     },
     scrollGraphCount() {
       this.$nextTick(() => {
-        const countIndex = this.graphIdArr.findIndex((val) => val.count === thi.metadata.step);
+        const countIndex = this.graphIdArr.findIndex((val) => val.count === this.metadata.step);
         const viewAreaLength = 3;
         document.querySelector('#graph-count-container').scrollLeft =
           countIndex < viewAreaLength ? 0 : this.graphCountWidth * countIndex;
@@ -2785,7 +2787,7 @@ export default {
   text-align: center;
 }
 .deb-wrap .right .svg-wrap .graph-count-wrap .right .value-wrap {
-  width: 80px;
+  width: 120px;
   text-align: center;
   border-right: 1px solid var(--table-border-color);
   float: left;
