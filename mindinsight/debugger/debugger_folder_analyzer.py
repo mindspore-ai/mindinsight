@@ -27,7 +27,7 @@ class DebuggerFolderAnalyzer(FolderAnalyzer):
         """Check dir by debugger register."""
         update_info = {}
         if entry.is_dir():
-            sub_relative_path = os.path.join(relative_path, entry.path)
+            sub_relative_path = os.path.join(relative_path, entry.name)
             entry_path = entry.path
             try:
                 subdir_entries = os.scandir(entry_path)

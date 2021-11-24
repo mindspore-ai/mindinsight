@@ -110,8 +110,11 @@ class MindInsightException(Exception):
 
 class ParamValueError(MindInsightException):
     """Request param value error."""
-    def __init__(self, error_detail):
-        error_msg = 'Invalid parameter value. {}'.format(error_detail)
+    def __init__(self, error_detail=None):
+        if error_detail is None:
+            error_msg = "Invalid parameter value."
+        else:
+            error_msg = 'Invalid parameter value. {}'.format(error_detail)
         super(ParamValueError, self).__init__(
             GeneralErrors.PARAM_VALUE_ERROR,
             error_msg,

@@ -172,8 +172,11 @@ class TensorNotExistError(MindInsightException):
 
 class LandscapeNotExistError(MindInsightException):
     """Unable to get tensor values based on a given condition."""
-    def __init__(self, error_detail):
-        error_msg = f'Landscape value does not exist. Detail: {error_detail}'
+    def __init__(self, error_detail=None):
+        if error_detail is None:
+            error_msg = "Landscape value does not exist."
+        else:
+            error_msg = f'Landscape value does not exist. Detail: {error_detail}'
         super(LandscapeNotExistError, self).__init__(DataVisualErrors.LANDSCAPE_NOT_EXIST,
                                                      error_msg,
                                                      http_code=400)
