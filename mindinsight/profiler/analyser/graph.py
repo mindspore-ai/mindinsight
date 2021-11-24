@@ -14,6 +14,7 @@
 # ============================================================================
 """The parallel strategy graph classes."""
 import copy
+import sys
 from enum import Enum
 from typing import List
 
@@ -21,7 +22,6 @@ from mindinsight.profiler.common.log import logger
 from mindinsight.profiler.common.exceptions.exceptions import UnsupportedParallelTypeException
 from mindinsight.profiler.common.exceptions.exceptions import WrongParallelStrategyDataException
 from mindinsight.datavisual.common.enums import PluginNameEnum
-from mindinsight.datavisual.proto_files.mindinsight_anf_ir_pb2 import DataType
 
 
 class NodeType(Enum):
@@ -37,6 +37,26 @@ class NodeInstanceType(Enum):
 
     # Means that the operator is a redistribution insertion operator
     REDISTRIBUTION = 'Redistribution'
+
+
+class DataType(Enum):
+    """Define the data type, more detail refer the anf ir proto file."""
+    DT_STRING = 'DT_STRING'
+    DT_BOOL = 'DT_BOOL'
+    DT_INT8 = 'DT_INT8'
+    DT_INT16 = 'DT_INT16'
+    DT_INT32 = 'DT_INT32'
+    DT_INT64 = 'DT_INT64'
+    DT_UINT8 = 'DT_UINT8'
+    DT_UINT16 = 'DT_UINT16'
+    DT_UINT32 = 'DT_UINT32'
+    DT_UINT64 = 'DT_UINT64'
+    DT_FLOAT16 = 'DT_FLOAT16'
+    DT_FLOAT32 = 'DT_FLOAT32'
+    DT_FLOAT64 = 'DT_FLOAT64'
+    DT_TENSOR = 'DT_TENSOR'
+    DT_LIST = 'DT_LIST'
+    DT_TUPLE = 'DT_TUPLE'
 
 
 class Node:
@@ -85,7 +105,7 @@ class Node:
         Get all input of current node.
 
         Returns:
-            dict[str, dict], refer to the input attr.
+            list[str], refer to the input attr.
         """
         return self._input
 
@@ -98,9 +118,17 @@ class Node:
         """
         self._input.append(name)
 
+    def replace_input(self, inputs):
+        """Replace input"""
+        self._input = inputs
+
+    def remove_input(self, name):
+        """Remove the input from node."""
+        self._input.remove(name)
+
     def to_dict(self):
         return dict(
-            node_id=self._node_id,
+            node_id=str(self.topo_index),
             name=self.name,
             scope=self.scope,
             type=self.type,
@@ -127,7 +155,7 @@ class Graph:
         self.const_nodes = {}
         self.parameter_nodes = {}
 
-    def build_graph(self, graph_proto, rank_id):
+    def build_graph(self, graph_proto: dict, rank_id: str):
         self.rank_id = rank_id
         self._parse_graph_proto(graph_proto)
 
@@ -138,70 +166,87 @@ class Graph:
     def get_op_node(self, node_id):
         return self.op_nodes[node_id]
 
-    def _parse_graph_proto(self, graph_proto):
-        self._parse_const_nodes(graph_proto.const_vals)
-        self._parse_parameter_nodes(graph_proto.parameters)
-        self._parse_op_nodes(graph_proto.node)
+    def _parse_graph_proto(self, graph_proto: dict):
+        self._parse_op_nodes(graph_proto['node'])
+        self._update_input()
+        logger.info("Parse graph proto success, op node count: %d, parameters count: %d, const count: %d.",
+                    len(self.op_nodes), len(self.parameter_nodes), len(self.const_nodes))
+
+    def _update_input(self):
+        """Update op node input"""
+        for op_node in self.op_nodes.values():
+            inputs = list(op_node.input)
+            new_inputs = []
+            for input_name in inputs:
+                if input_name not in self.op_nodes:
+                    op_node.remove_input(input_name)
+                    continue
+                src_node = self.get_op_node(input_name)
+                new_inputs.append(str(src_node.topo_index))
+            op_node.replace_input(new_inputs)
 
     def _parse_op_nodes(self, node_protos):
         """Transform the node proto into Node class."""
-        for topo_index, node_proto in enumerate(node_protos):
-            if not node_proto.name or not node_proto.full_name:
+        index = 1
+        for _, node_proto in enumerate(node_protos):
+            if 'name' not in node_proto or not node_proto['name'] or\
+                    'fullName' not in node_proto or not node_proto['fullName']:
                 logger.warning("Finding a node with an empty name or empty full_name will not save it.")
                 continue
 
-            node_name = self._process_node_name(node_proto.scope, node_proto.op_type,
-                                                node_proto.name, node_proto.full_name)
-            node = Node(name=node_name, node_id=node_proto.name, topo_index=topo_index)
-            node.scope = node_proto.scope
-            node.type = node_proto.op_type
+            node_name = self._process_node_name(node_proto.get('scope', ''), node_proto.get('opType', ''),
+                                                node_proto['name'], node_proto['fullName'])
+            node = Node(name=node_name, node_id=node_proto['name'], topo_index=index)
+            index += 1
+            node.scope = node_proto.get('scope', '')
+            node.type = node_proto.get('opType', '')
 
-            self._parse_attr_proto(node_proto.attribute, node)
-            self._parse_input_proto(node_proto.input, node)
+            self._parse_attr_proto(node_proto.get('attribute', []), node)
+            self._parse_input_proto(node_proto.get('input', []), node)
             if 'shapes' in node.attr:
                 node.output_shape = node.attr['shapes']
             else:
-                node.output_shape = self._get_shape_by_parse_type_proto(node_proto.output_type)
-            node.output_data_type = self._get_data_type_by_parse_type_proto(node_proto.output_type)
+                node.output_shape = self._get_shape_by_parse_type_proto(node_proto.get('outputType', dict()))
+            node.output_data_type = self._get_data_type_by_parse_type_proto(node_proto.get('outputType', dict()))
 
             node.parallel_group = [node.attr['group']] if 'group' in node.attr else []
-            node.parallel_strategy = node.attr['strategy'] if 'strategy' in node.attr else []
-            node.parallel_strategy = node.attr['gen_strategy'] if 'gen_strategy' in node.attr else []
-            node.parallel_group_ranks = node.attr['group_ranks'] if 'group_ranks' in node.attr else ''
+            node.parallel_strategy = node.attr.get('in_strategy', [])
+            node.parallel_group_ranks = node.attr.get('group_ranks', '')
 
-            if 'grad_mirror' in node_proto.instance_name:
+            instance_name = node_proto.get('instanceName', '')
+            if 'grad_mirror' in instance_name:
                 node.instance_type = NodeInstanceType.GRADIENT_AGGREGATION.value
-            elif 'redistribution' in node_proto.instance_name:
+            elif 'redistribution' in instance_name:
                 node.instance_type = NodeInstanceType.REDISTRIBUTION.value
             else:
                 node.instance_type = ''
 
             self._append_node(node)
 
-    def _parse_parameter_nodes(self, parameter_protos):
+    def _parse_parameter_nodes(self, parameter_protos: list):
         """
         Parse `anf_ir_pb2.ParameterProto` object, and create a parameter node.
 
         Args:
-            parameter_protos (list[anf_ir_pb2.ParameterProto]): Refer to anf_ir_pb2.ParameterProto.
+            parameter_protos (list[dict]): The dict object refers to anf_ir_pb2.ParameterProto.
         """
         for parameter in parameter_protos:
-            if not parameter.name:
+            if not parameter['name']:
                 logger.warning("Finding a parameter with an empty name will not save it.")
                 continue
-            node = Node(name=parameter.name, node_id=parameter.name)
+            node = Node(name=parameter['name'], node_id=parameter['name'])
             node.type = NodeType.PARAMETER.value
-            node.output_shape = self._get_shape_by_parse_type_proto(parameter.type)
-            node.output_data_type = self._get_data_type_by_parse_type_proto(parameter.type)
+            node.output_shape = self._get_shape_by_parse_type_proto(parameter['type'])
+            node.output_data_type = self._get_data_type_by_parse_type_proto(parameter['type'])
             attr = dict(
-                type=self._get_data_type_by_parse_type_proto(parameter.type),
-                shape=str(self._get_shape_by_parse_type_proto(parameter.type))
+                type=self._get_data_type_by_parse_type_proto(parameter['type']),
+                shape=str(self._get_shape_by_parse_type_proto(parameter['type']))
             )
             node.add_attr(attr)
 
             self._append_node(node)
             logger.debug("Foreach graph proto parameters, node id: %s, node name: %s, "
-                         "node def name: %s", node.node_id, node.name, parameter.name)
+                         "node def name: %s", node.node_id, node.name, parameter['name'])
 
     def _parse_const_nodes(self, consts):
         """
@@ -211,28 +256,16 @@ class Graph:
             consts (list[anf_ir_pb2.NameValueProto]): Refer to `anf_ir_pb2.NameValueProto` object.
         """
         for const in consts:
-            if not const.key:
+            if 'key' not in const and not const['key']:
                 logger.warning("Finding a const with an empty key will not save it.")
                 continue
-            node = Node(name=const.key, node_id=const.key)
+            node = Node(name=const['key'], node_id=const['key'])
             node.type = NodeType.CONST.value
-            if const.value.ByteSize() > self.MAX_NODE_ATTRIBUTE_VALUE_BYTES:
-                node.add_attr({const.key: 'dtype: ' + DataType.Name(const.value.dtype)})
-            else:
-                node.add_attr({const.key: str(const.value)})
-
-            if const.value.dtype == DataType.DT_TENSOR:
-                shape = list(const.value.tensor_val.dims)
-                node.output_shape.append(shape)
-            else:
-                # dim is zero
-                node.output_shape.append([])
-
-            node.output_nums = len(node.output_shape)
+            node.add_attr({const['key']: str(const['value'].get('dtype', ''))})
 
             self._append_node(node)
 
-    def _append_node(self, node):
+    def _append_node(self, node: Node):
         if node.type == NodeType.PARAMETER.value:
             self.parameter_nodes[node.node_id] = node
         elif node.type == NodeType.CONST.value:
@@ -241,7 +274,7 @@ class Graph:
             self.op_nodes[node.node_id] = node
 
     @staticmethod
-    def _process_node_name(scope, node_type, node_id, full_name=None):
+    def _process_node_name(scope, node_type: str, node_id: str, full_name=None):
         """Handle the special node name."""
         if node_type == "Load":
             # The Load operator needs to be renamed as it has the same name with parameter
@@ -264,78 +297,87 @@ class Graph:
             node (Node): Refer to `Node` object, it is used to log message and update attr.
         """
         for attr in attributes:
-            if attr.value.ByteSize() > self.MAX_NODE_ATTRIBUTE_VALUE_BYTES:
+            if sys.getsizeof(attr['value']) > self.MAX_NODE_ATTRIBUTE_VALUE_BYTES:
                 message = f"The attribute value of node({node.name}) " \
                           f"is over {self.MAX_NODE_ATTRIBUTE_VALUE_BYTES} Bytes, will ignore."
                 logger.warning(message)
                 continue
 
-            value = self._parse_value_proto(attr.value)
-            # TODO parse attr.value and format it
-            node.add_attr({attr.name: str(value)})
+            if attr['name'] == 'gen_strategy':
+                # The gen_strategy value is equal in_strategy value, so we only need to show one strategy value in attr
+                continue
 
-    def _parse_value_proto(self, value_proto):
+            value = self._parse_value_proto(attr['value'])
+            # TODO parse attr.value and format it
+            node.add_attr({attr['name']: str(value)})
+
+    def _parse_value_proto(self, value_proto: dict):
         """Format the value proto into python base type."""
         actual_value = value_proto
 
-        if value_proto.dtype == DataType.DT_STRING:
-            actual_value = value_proto.str_val
-        elif value_proto.dtype in (DataType.DT_INT8, DataType.DT_INT16, DataType.DT_INT32, DataType.DT_INT64):
-            actual_value = value_proto.int_val
-        elif value_proto.dtype == DataType.DT_BOOL:
-            actual_value = value_proto.bool_val
-        elif value_proto.dtype in (DataType.DT_UINT8, DataType.DT_UINT16, DataType.DT_UINT32, DataType.DT_UINT64):
-            actual_value = value_proto.uint_val
-        elif value_proto.dtype in (DataType.DT_FLOAT16, DataType.DT_FLOAT32, DataType.DT_FLOAT64):
-            actual_value = value_proto.float_val if value_proto.float_val else value_proto.double_val
-        elif value_proto.dtype in (DataType.DT_TUPLE, DataType.DT_LIST):
+        if value_proto['dtype'] == DataType.DT_STRING.value:
+            actual_value = value_proto['strVal']
+        elif value_proto['dtype'] in (DataType.DT_INT8.value, DataType.DT_INT16.value,
+                                      DataType.DT_INT32.value, DataType.DT_INT64.value):
+            actual_value = int(value_proto['intVal'])
+        elif value_proto['dtype'] == DataType.DT_BOOL.value:
+            actual_value = bool(int(value_proto['boolVal']))
+        elif value_proto['dtype'] in (DataType.DT_UINT8.value, DataType.DT_UINT16.value,
+                                      DataType.DT_UINT32.value, DataType.DT_UINT64.value):
+            actual_value = int(value_proto['uintVal'])
+        elif value_proto['dtype'] in (DataType.DT_FLOAT16.value, DataType.DT_FLOAT32.value, DataType.DT_FLOAT64.value):
+            actual_value = float(value_proto['floatVal']) if value_proto['floatVal'] else value_proto['doubleVal']
+        elif value_proto['dtype'] in (DataType.DT_TUPLE.value, DataType.DT_LIST.value):
             actual_value = []
-            for value in value_proto.values:
+            for value in value_proto.get('values', []):
                 actual_value.append(self._parse_value_proto(value))
 
         return actual_value
 
     @staticmethod
-    def _parse_input_proto(input_protos, node):
+    def _parse_input_proto(input_protos: list, node: Node):
         """
         Parse `anf_ir_pb2.InputProto` object.
 
         Args:
-            input_protos (list[anf_ir_pb2.InputProto]): Refer to `anf_ir_pb2.InputProto` object.
+            input_protos (list[dict]): The key of this param refer to `anf_ir_pb2.InputProto` object.
             node (Node): Refer to `Node` object, it is used to log message and update input.
         """
         for input_proto in input_protos:
-            if not input_proto.name:
+            if not input_proto['name']:
                 logger.warning("The name in input proto of node(%s) is empty, will ignore.", node.name)
                 continue
 
-            node.add_input(name=input_proto.name)
+            node.add_input(name=input_proto['name'])
 
-    def _get_shape_by_parse_type_proto(self, type_proto):
+    def _get_shape_by_parse_type_proto(self, type_proto: dict):
         """
         Parse proto's `message TypeProto` to get shape information.
 
         Args:
-            type_proto (anf_ir_pb2.TypeProto): Refer to anf_ir_pb2.TypeProto.
+            type_proto (dict): The keys of this param refer to anf_ir_pb2.TypeProto.
 
         Returns:
             list, a list of shape.
         """
         shapes = []
-        if type_proto.HasField('data_type'):
-            if type_proto.data_type != DataType.DT_TENSOR and \
-                    type_proto.data_type != DataType.DT_TUPLE:
+        if not type_proto:
+            return shapes
+
+        if 'dataType' in type_proto:
+            if type_proto['dataType'] != DataType.DT_TENSOR.value and \
+                    type_proto['dataType'] != DataType.DT_TUPLE.value:
                 return []
-        if type_proto.HasField('tensor_type'):
-            tensor_type = type_proto.tensor_type
-            tensor_shape_proto = tensor_type.shape
-            shapes = [dim.size for dim in tensor_shape_proto.dim]
-        if type_proto.HasField('sequence_type'):
-            for elem_type in type_proto.sequence_type.elem_types:
+        if 'tensorType' in type_proto and 'shape' in type_proto['tensorType']:
+            tensor_type = type_proto['tensorType']
+            tensor_shape_proto = tensor_type['shape']
+            shapes = [dim['size'] for dim in tensor_shape_proto['dim']]
+        if 'sequenceType' in type_proto and 'elemTypes' in type_proto['sequenceType']:
+            for elem_type in type_proto['sequenceType']['elemTypes']:
                 shapes.append(self._get_shape_by_parse_type_proto(elem_type))
         return shapes
 
-    def _get_data_type_by_parse_type_proto(self, type_proto):
+    def _get_data_type_by_parse_type_proto(self, type_proto: dict):
         """
         Get data type by parse type proto object.
 
@@ -343,25 +385,23 @@ class Graph:
         If data type is tensor or tuple, the data name we return is `data_type[element_type, element_type]`.
 
         Args:
-            type_proto (anf_ir_pb2.TypeProto): Refer to anf_ir_pb2.TypeProto.
+            type_proto (dict): The keys of this param refer to anf_ir_pb2.TypeProto.
 
         Returns:
             str, the data type.
         """
+        if not type_proto:
+            return ''
 
-        def get_data_type_name_by_value(data_type, data_value, field_name):
-            return data_type.DESCRIPTOR.fields_by_name[field_name].enum_type.values_by_number[data_value].name
-
-        data_type_name = get_data_type_name_by_value(type_proto, type_proto.data_type, field_name='data_type')
-        if type_proto.data_type == DataType.DT_TENSOR:
-            tensor_type_proto = type_proto.tensor_type
-            value = type_proto.tensor_type.elem_type
-            elem_type_name = get_data_type_name_by_value(tensor_type_proto, value, field_name='elem_type')
+        data_type_name = type_proto['dataType']
+        if type_proto['dataType'] == DataType.DT_TENSOR.value:
+            tensor_type_proto = type_proto['tensorType']
+            elem_type_name = tensor_type_proto['elemType']
             return f'{data_type_name}[{elem_type_name}]'
 
-        if type_proto.data_type == DataType.DT_TUPLE:
+        if type_proto['dataType'] == DataType.DT_TUPLE.value:
             data_types = []
-            for elem_type in type_proto.sequence_type.elem_types:
+            for elem_type in type_proto['sequenceType']['elemTypes']:
                 data_types.append(self._get_data_type_by_parse_type_proto(elem_type))
             return f'{data_type_name}{str(data_types)}'
 
@@ -393,7 +433,7 @@ class MergedGraph:
             new_node = copy.deepcopy(node)
             for graph in graphs[1:]:
                 new_node.parallel_group.extend(graph.get_op_node(node_id).parallel_group)
-                new_node.parallel_group = list(set(new_node.parallel_group))
+                new_node.parallel_group = list(sorted(set(new_node.parallel_group)))
 
             self._op_nodes[new_node.node_id] = new_node
 
@@ -430,7 +470,8 @@ class GraphManager:
 
     Args:
         parallel_type (str): The parallel type, refer to `SupportedParallelType`.
-        stage_device (TensorShapeProto): refer to profiling_parallel_pb2.Config.stage_devices.
+        stage_devices (list): refer to MindSpore ccsrc/utils/profiling_parallel.proto
+            ProfilingParallel.Config.stage_devices.
 
     Examples:
         >>> manager = GraphManager('AUTO_PARALLEL', parallel.config.stage_devices)
@@ -440,7 +481,7 @@ class GraphManager:
         >>> manager.merge_graph()
     """
 
-    def __init__(self, parallel_type: str, stage_devices):
+    def __init__(self, parallel_type: str, stage_devices: list):
         if parallel_type not in SupportedParallelType.list_members():
             raise UnsupportedParallelTypeException(f"Only support {SupportedParallelType.list_members()} parallel type,"
                                                    f" but current parallel type is {parallel_type}.")
@@ -449,7 +490,7 @@ class GraphManager:
         self._stage_merged_graphs = {}
         self._rank_graphs = {}
 
-    def add_graph(self, graph_proto, rank_id: str):
+    def add_graph(self, graph_proto: dict, rank_id: str):
         """Add an original graph proto which is parsed from pb files."""
         if rank_id in self._rank_graphs:
             msg = f"The file with the same rank id({rank_id}) was found. " \
@@ -485,10 +526,10 @@ class GraphManager:
             self._stage_merged_graphs[stage] = merged_graph
 
     @staticmethod
-    def _get_stage_devices(tensor_proto):
+    def _get_stage_devices(tensor_proto: list):
         stage_devices = {}
         for stage, devices in enumerate(tensor_proto):
-            devices = [dim.size for dim in devices.dim]
+            devices = [dim['size'] for dim in devices['dim']]
             stage_devices[stage] = devices
         return stage_devices
 

@@ -249,10 +249,50 @@
               ]
             }
           }
-        ]
+        ],
+        "fullName" : "Default/conv1-Conv2d/Conv2D-op2",
+        "instanceName": ""
       }
     ],
-    "parameters" : [],
-    "constVals" : []
+    "parameters" : [
+      {
+        "name" : "conv1.weight",
+        "type" :
+        {
+          "dataType" : "DT_TENSOR",
+          "tensorType" :
+          {
+            "elemType" : "DT_FLOAT32",
+            "shape" :
+            {
+              "dim" : [
+                {
+                  "size" : "64"
+                },
+                {
+                  "size" : "3"
+                },
+                {
+                  "size" : "7"
+                },
+                {
+                  "size" : "7"
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "constVals" : [
+      {
+        "key" : "cst1",
+        "value" :
+        {
+          "dtype" : "DT_INT64",
+          "intVal" : "0"
+        }
+      }
+    ]
   }
 }

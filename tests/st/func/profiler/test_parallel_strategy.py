@@ -19,11 +19,13 @@ Usage:
     pytest tests/st/func/profiler
 """
 import os
-
+import shutil
+import time
 
 from mindinsight.conf import settings
 
-from tests.utils.log_generators.parallel_strategy_pb_generator import create_parallel_strategy_pb_file
+from mindinsight.profiler.analyser.parallel_strategy_analyser import Status
+
 from tests.utils.tools import get_url, compare_result_with_file
 from tests.st.func.profiler import RAW_DATA_BASE
 from tests.st.func.profiler.conftest import TEMP_BASE_SUMMARY_DIR
@@ -55,7 +57,7 @@ class TestParallelStrategy:
         source_path = os.path.join(RAW_DATA_BASE, 'parallel_strategy')
         for file in os.listdir(source_path):
             file_path = os.path.join(source_path, file)
-            create_parallel_strategy_pb_file(file_path, output_dir=profiler_dir)
+            shutil.copy(file_path, profiler_dir)
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -69,5 +71,12 @@ class TestParallelStrategy:
         url = get_url(URL, params)
         response = client.get(url)
         assert response.status_code == 200
+
+        ret_json = response.get_json()
+        while not ret_json['status'] == Status.FINISH.value:
+            time.sleep(0.2)
+            response = client.get(url)
+            ret_json = response.get_json()
+
         file_path = os.path.join(self.RESULT_DIR, 'parallel_strategy.json')
         compare_result_with_file(response.get_json(), file_path)

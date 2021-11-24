@@ -27,6 +27,7 @@ from mindinsight.datavisual.utils.tools import get_train_id
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
+from mindinsight.profiler.common.util import check_train_job_and_profiler_dir
 
 BLUEPRINT = Blueprint("profile_parallel_strategy", __name__, url_prefix=settings.URL_PATH_PREFIX+settings.API_PREFIX)
 
@@ -51,6 +52,8 @@ def get_parallel_strategy():
         profiler_dir = validate_and_normalize_path(profiler_dir, 'profiler')
     except ValidationError as exc:
         raise ProfilerFileNotFoundException('Invalid cluster_profiler dir, detail: %s.' % str(exc))
+
+    check_train_job_and_profiler_dir(profiler_dir)
 
     analyser = AnalyserFactory.instance().get_analyser('parallel_strategy', profiler_dir, train_id)
     return jsonify(analyser.data)
