@@ -364,7 +364,10 @@ class PBParser(Parser):
 
         if operator.type in ('tuple_getitem', 'TupleGetItem'):
             index = self._get_tuple_getitem_index(operator, constant_mapping)
-            output = operator_mapping[operator.inputs[0].name].output
+            node = operator_mapping.get(operator.inputs[0].name)
+            if node is None:
+                return
+            output = node.output
             if output.type == OutputType.TUPLE and len(output.info['tensors']) > index:
                 operator.output.info['tensor'] = output.info['tensors'][index]
 
@@ -408,7 +411,9 @@ class PBParser(Parser):
                         or (operator.output.type == OutputType.TENSOR and operator.output.info['tensor'] is None):
                     op_input = operator.inputs[0]
                     if op_input.type == InputType.OPERATOR:
-                        node = operator_mapping[op_input.name]
+                        node = operator_mapping.get(op_input.name)
+                        if node is None:
+                            continue
                         operator.output = node.output
 
             elif operator.type == 'Assign' and len(operator.inputs) == 3:
