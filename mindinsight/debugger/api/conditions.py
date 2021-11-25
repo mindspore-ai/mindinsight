@@ -389,19 +389,14 @@ class TensorRangeCondition(ConditionBase):
         range_percentage_lt (int, optional): The threshold for the
             percentage of the tensor in the range. The checking condition will be satisfied
             when the percentage of the tensor in the specified range is less than this value.
-
         range_percentage_gt (int, optional): The threshold for the
             percentage of the tensor in the range. The checking condition will be satisfied
             when the percentage of the tensor in the specified range is greater than this value.
-
         max_min_lt (int, optional): Threshold for the difference of
-                                    max and min of a tensor less than this value.
-
+            max and min of a tensor less than this value.
         max_min_gt (int, optional): Threshold for the difference of
-                                              max and min of a tensor greater than this value.
-
+            max and min of a tensor greater than this value.
         range_start_inclusive (int, required): The start of the range.
-
         range_end_inclusive (int, required): The end of the range.
     """
 
@@ -510,7 +505,7 @@ class TensorUnchangedCondition(ConditionBase):
     When all specified checking conditions were satisfied, this watchpoint would
     be hit after a check.
     Checks allclose function on previous and current tensor.
-    (abs(current_tensor - previous_tensor) <= (atol + rtol * abs(previous_tensor)));
+    (abs_mean(current_tensor - previous_tensor) <= (atol + rtol * abs_mean(previous_tensor)))
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
@@ -557,7 +552,6 @@ class TensorInitializationCondition(ConditionBase):
     Args:
         zero_percentage_ge (int, optional): The threshold to check if the percentage of
             zero values for initial tensor is greater than or equal to this value.
-
         max_gt (float, optional): The threshold to check if the max value of
             the initial tensor is greater than this value.
         min_lt (float, optional): The threshold to check if the min value of
@@ -595,6 +589,7 @@ class TensorChangeBelowThresholdCondition(ConditionBase):
 
     When all specified checking conditions were satisfied, this watchpoint would
     be hit after a check.
+    (abs_mean(current_tensor - previous_tensor) < epsilon + mean_update_ratio_lt * abs_mean(previous_tensor))
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
@@ -603,7 +598,6 @@ class TensorChangeBelowThresholdCondition(ConditionBase):
     Args:
         mean_update_ratio_lt (float, optional): The threshold value for mean update ration,
             if the mean update ratio is less that this value the watchpoint will be triggered.
-
         epsilon (float, optional): epsilon value.
     """
 
@@ -635,6 +629,7 @@ class TensorChangeAboveThresholdCondition(ConditionBase):
 
     When all specified checking conditions were satisfied, this watchpoint would
     be hit after a check.
+    (abs_mean(current_tensor - previous_tensor) > epsilon + mean_update_ratio_gt * abs_mean(previous_tensor))
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
@@ -642,8 +637,7 @@ class TensorChangeAboveThresholdCondition(ConditionBase):
 
     Args:
         mean_update_ratio_gt (float, optional): The threshold value for mean update ration,
-            if the mean update ratio is greater that this value the watchpoint will be triggered.
-
+            if the mean update ratio is greater than this value the watchpoint will be triggered.
         epsilon (float, optional): epsilon value.
     """
 
