@@ -372,7 +372,7 @@ limitations under the License.
                   `translate(${getPipelineNodePosition(1, block.length - 1, 0)
                     .map((v, i) => {
                       if (i === 0) return v + 17;
-                      if (i === 1) return v - 45;
+                      if (i === 1) return v - 36;
                       return v;
                     })
                     .join(',')}), rotate(90)`
@@ -398,7 +398,7 @@ limitations under the License.
                       Math.floor(col.length / 2)
                     )
                       .map((v, i) => {
-                        if (i === 0) return v + 35;
+                        if (i === 0) return v + 40;
                         if (i === 1) return v - 10;
                       })
                       .join(',')})`
@@ -445,10 +445,10 @@ limitations under the License.
                     :x="
                       colIndex % 2
                         ? pipelineRectWidth + 2
-                        : -pipelineRectWidth - 6
+                        : -pipelineRectWidth - 17
                     "
                     :y="10"
-                    font-size="8px"
+                    font-size="12px"
                   >
                     {{
                       getNodeNameFromIDAndStage(
@@ -1180,9 +1180,9 @@ export default {
       if (this.pipelineNodeInfo === null) return;
       const rectWidth = this.pipelineRectWidth;
       const rectMargin = 2 * this.pipelineRectMargin;
-      const textWidth = 10;
-      const stageBetween = 80;
-      const nodeBetween = 60;
+      const textWidth = 30;
+      const stageBetween = 60;
+      const nodeBetween = 80;
       const blockBetween = 50;
       const viewMargin = 10;
       const maxFirstBlockItemCount = this.pipelineNodeInfo[0].reduce(
