@@ -273,6 +273,7 @@ limitations under the License.
     </svg-el-container>
 
     <div
+      v-if="showPipelinePanel"
       class="pipeline-button"
       ref="pipeline-button"
       @click="clickPipelineBtn"
@@ -291,6 +292,7 @@ limitations under the License.
 
     <!-- Training Pipeline -->
     <div
+      v-if="showPipelinePanel"
       class="training-pipeline-container"
       ref="pipeline-container"
       style="background: #fff;"

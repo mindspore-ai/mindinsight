@@ -78,6 +78,8 @@ export default {
       showRankId: '',
       showRankIdOptions: [],
 
+      showPipelinePanel: true,
+
       parallelStrategy: '',
 
       pipelinedStageInfo: null,
@@ -124,16 +126,21 @@ export default {
             } else if(res.status === "finish") {
               const {graphs, metadata} = res;
               // pipelined stage
-              const {
-                pipelinedStageInfo,
-                pipelineNodeInfo,
-                pipelineEdgeInfo,
-              } = buildPipelinedStageInfo(graphs);
-              this.pipelinedStageInfo = pipelinedStageInfo;
-              this.pipelineNodeInfo = pipelineNodeInfo;
-              this.pipelineEdgeInfo = pipelineEdgeInfo;
+              const pipelineInfoRes = buildPipelinedStageInfo(graphs);
+              if (pipelineInfoRes.err) {
+                this.showPipelinePanel = false;
+              } else {
+                const {
+                  pipelinedStageInfo,
+                  pipelineNodeInfo,
+                  pipelineEdgeInfo,
+                } = pipelineInfoRes;
+                this.pipelinedStageInfo = pipelinedStageInfo;
+                this.pipelineNodeInfo = pipelineNodeInfo;
+                this.pipelineEdgeInfo = pipelineEdgeInfo;
+              }
               // rank selector
-              let stageCnt = 0;
+              let stageCnt = -1;
               this.showRankIdOptions = Object.keys(graphs).map((key) => {
                 const ranks = graphs[key].rank_ids;
                 stageCnt += 1;
