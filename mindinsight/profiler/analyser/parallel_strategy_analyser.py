@@ -81,6 +81,8 @@ class ParallelStrategyAnalyser(BaseAnalyser):
         if self._status == Status.FINISH.value:
             response = {'status': self._status}
             response.update(self._data)
+            if not response.get('graphs'):
+                raise WrongParallelStrategyDataException("Can not find any data or load data failed.")
             return response
 
         response = dict(
@@ -105,6 +107,10 @@ class ParallelStrategyAnalyser(BaseAnalyser):
         except Exception as exc:
             self._status = Status.FINISH.value
             logger.exception(exc)
+            self._data = dict(
+                metadata={},
+                graphs=[]
+            )
 
     def _load_data(self):
         """Load data in thread."""
@@ -122,8 +128,8 @@ class ParallelStrategyAnalyser(BaseAnalyser):
             if 'config' not in parallel or not isinstance(parallel.get('config'), dict):
                 raise WrongParallelStrategyDataException("Can not find 'config' key in the given data.")
 
-            parallel_type = parallel['config']['parallelType']
-            stage_devices = parallel['config']['stageDevices']
+            parallel_type = parallel['config'].get('parallelType', '')
+            stage_devices = parallel['config'].get('stageDevices', [])
             manager = GraphManager(parallel_type, stage_devices)
 
         threads = []

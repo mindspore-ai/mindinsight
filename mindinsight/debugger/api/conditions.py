@@ -183,7 +183,8 @@ class WatchpointHitImpl(WatchpointHit):
             return f"Watchpoint {self._condition.name} check failed on " \
                    f"slot {self._tensor.slot} of " \
                    f"node {self._tensor.node.name} in " \
-                   f"rank {self._tensor.rank}. " \
+                   f"rank {self._tensor.rank} at " \
+                   f"iteration {self._tensor.iteration}. " \
                    f"Error detail: {self.error_msg}"
 
         return f"Watchpoint {self._condition.name} triggered on " \
