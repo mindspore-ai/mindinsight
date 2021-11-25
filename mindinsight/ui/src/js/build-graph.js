@@ -1150,6 +1150,9 @@ function buildPipelinedStageInfo(data) {
       pipelineNodeInfo[firstIndex][endSecondIndex] = [];
     }
     for (const [startNodeId, endNodeId] of Object.values(stageInfo)) {
+      if (endNodeId === undefined) {
+        return {err: "build failed."};
+      }
       pipelineNodeInfo[firstIndex][startSecondIndex].push(startNodeId);
       pipelineNodeInfo[firstIndex][endSecondIndex].push(endNodeId);
       pipelineEdgeInfo.push([
@@ -1158,7 +1161,9 @@ function buildPipelinedStageInfo(data) {
       ]);
     }
   }
-
+  if (!pipelineEdgeInfo.length) {
+    return {err: "no pipeline data."}
+  }
   return {
     pipelinedStageInfo,
     pipelineNodeInfo,
