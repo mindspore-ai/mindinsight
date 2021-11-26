@@ -14,117 +14,20 @@
 # ==============================================================================
 """Graph based scripts converter workflow."""
 import os
-import sys
 from typing import List, Mapping, Dict
-from importlib.util import find_spec
-from functools import partial
 from google.protobuf.internal import api_implementation
 from mindconverter.graph_based_converter.common.global_context import GlobalContext
-from mindconverter.graph_based_converter.common.utils import onnx_satisfied, \
-    save_code_file_and_report, get_framework_type, check_dependency_integrity, \
-    get_third_part_lib_error_info, save_intermediate_graph, extract_in_out_nodes, \
-    generate_operator_scanning_report
+from mindconverter.graph_based_converter.common.utils import save_code_file_and_report, get_framework_type, \
+    save_intermediate_graph, extract_in_out_nodes, generate_operator_scanning_report, \
+    onnx_installation_validation, extract_model_name, tf_installation_validation, torch_installation_validation
 from mindconverter.graph_based_converter.constant import FrameworkType
 from mindconverter.graph_based_converter.generator import batch_add_nodes
-from mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper, get_table
+from mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper, PytorchToMindSporeMapper, get_table
 from mindconverter.common.log import MindConverterLogger
 from mindconverter.common.exceptions import GraphInitError, FileSaveError, \
-    BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, RuntimeIntegrityError, \
-    SubGraphSearchingError
+    BaseConverterError, UnknownModelError, GeneratorError, TfRuntimeError, SubGraphSearchingError
 from mindconverter.graph_based_converter.third_party_graph import GraphFactory
-
-check_common_dependency_integrity = partial(check_dependency_integrity,
-                                            "onnx", "onnxruntime", "onnxoptimizer", "mindspore")
-
-
-def _print_error(err):
-    """Print error to stdout and record it."""
-    MindConverterLogger.error(str(err))
-
-
-def onnx_installation_validation(func):
-    """
-    Validate args of func.
-
-    Args:
-        func (type): Function.
-
-    Returns:
-        type, inner function.
-    """
-
-    def _f(*args, **kwargs):
-        error_info = \
-            f"{get_third_part_lib_error_info(['mindspore', 'onnx', 'onnxruntime', 'onnxoptimizer'])} " \
-            f"are required when using graph based scripts converter or ONNX conversion."
-
-        # Check whether common dependency integrity is installed.
-        if not onnx_satisfied() or not check_common_dependency_integrity():
-            _print_error(RuntimeIntegrityError(error_info))
-            sys.exit(-1)
-
-        func(*args, **kwargs)
-
-    return _f
-
-
-def _check_tf_installation():
-    """
-    Check whether TensorFlow was installed.
-
-    Returns:
-        bool, true or false.
-    """
-    return find_spec("tensorflow") or find_spec("tensorflow-gpu")
-
-
-def tf_installation_validation(func):
-    """
-    Validate args of func.
-
-    Args:
-        func (type): Function.
-
-    Returns:
-        type, inner function.
-    """
-
-    def _f(*args, **kwargs):
-        not_integral_error = RuntimeIntegrityError(
-            f"TensorFlow, "
-            f"{get_third_part_lib_error_info(['mindspore', 'tf2onnx', 'onnx', 'onnxruntime', 'onnxoptimizer'])} "
-            f"are required when using graph based scripts converter for TensorFlow conversion."
-        )
-        # Check whether tensorflow and common dependency integrity are installed.
-        if not _check_tf_installation() or not onnx_satisfied():
-            _print_error(not_integral_error)
-            sys.exit(-1)
-
-        if not check_common_dependency_integrity("tensorflow"):
-            _print_error(not_integral_error)
-            sys.exit(-1)
-
-        func(*args, **kwargs)
-
-    return _f
-
-
-def _extract_model_name(model_path):
-    """
-    Extract model name from model path.
-
-    Args:
-        model_path (str): Path of Converted model.
-
-    Returns:
-        str, name of Converted model.
-    """
-    if isinstance(model_path, str) and model_path:
-        base_path = os.path.basename(model_path)
-        model_name = '.'.join(base_path.split('.')[:-1])
-    else:
-        model_name = 'model'
-    return model_name
+from mindconverter.graph_based_converter.third_party_graph.pytorch_graph import PytorchGraph
 
 
 @onnx_installation_validation
@@ -152,9 +55,9 @@ def graph_based_converter_onnx_to_ms(graph_path: str,
         GlobalContext.release()
         return
     graph_obj.build()
-    generate_operator_scanning_report(graph_obj, get_table('onnx'), 'onnx', report_folder)
+    generate_operator_scanning_report(graph_obj, get_table("onnx"), "onnx", report_folder)
     generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
-    model_name = _extract_model_name(graph_path)
+    model_name = extract_model_name(graph_path)
     MindConverterLogger.info("Code saving begins.")
     code_fragments = generator_inst.generate()
     save_code_file_and_report(model_name, code_fragments, output_folder, report_folder)
@@ -193,7 +96,7 @@ def graph_based_converter_tf_to_ms(graph_path: str,
         return
     graph_obj.build()
     generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
-    model_name = _extract_model_name(graph_path)
+    model_name = extract_model_name(graph_path)
     MindConverterLogger.info("Code saving begins.")
     code_fragments = generator_inst.generate()
     save_code_file_and_report(model_name, code_fragments, output_folder, report_folder)
@@ -202,9 +105,6 @@ def graph_based_converter_tf_to_ms(graph_path: str,
     GlobalContext.release()
 
 
-@FileSaveError.uniform_catcher()
-@GeneratorError.uniform_catcher()
-@SubGraphSearchingError.uniform_catcher()
 def convert_according_to_user_selections(graph_obj, output_folder: str, report_folder: str = None,
                                          user_operations: Mapping[str, Dict] = None):
     """
@@ -218,8 +118,8 @@ def convert_according_to_user_selections(graph_obj, output_folder: str, report_f
     """
     graph_obj.generate_scope_name(user_operations)
     graph_obj.build()
-    generator_inst = batch_add_nodes(graph_obj, ONNXToMindSporeMapper)
-    model_name = _extract_model_name(graph_obj.model_path)
+    generator_inst = batch_add_nodes(graph_obj, PytorchToMindSporeMapper)
+    model_name = extract_model_name(graph_obj.model_path)
     MindConverterLogger.info("Code saving begins.")
     code_fragments = generator_inst.generate()
     save_code_file_and_report(model_name, code_fragments, output_folder, report_folder)
@@ -266,3 +166,22 @@ def main_graph_base_converter(file_config):
         error_msg = "Get UNSUPPORTED model."
         error = UnknownModelError(error_msg)
         raise error
+
+
+@torch_installation_validation
+@FileSaveError.uniform_catcher()
+@GeneratorError.uniform_catcher()
+@SubGraphSearchingError.uniform_catcher()
+@GraphInitError.uniform_catcher()
+def convert_api(model, dummy_inputs, output_dir=None):
+    """
+    Api to convert the model.
+    Call the api in model script to run conversion.
+    """
+    if not isinstance(dummy_inputs, tuple):
+        dummy_inputs = (dummy_inputs,)
+
+    graph_obj = PytorchGraph(model, input_tensors=dummy_inputs)
+    default_output_dir = os.path.realpath(os.path.join(os.getcwd(), "output"))
+    output_dir = output_dir or default_output_dir
+    convert_according_to_user_selections(graph_obj, output_folder=output_dir, user_operations=graph_obj.patterns)

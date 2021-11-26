@@ -53,6 +53,8 @@ ONNXOPTIMIZER_MIN_VER = "0.1.2"
 ONNXOPTIMIZER_MAX_VER = "0.1.2"
 MINDSPORE_MIN_VER = "1.2.0"
 TENSORFLOW_MIN_VER = "1.15.0"
+TORCH_MIN_VER = "1.8.2"
+TORCH_MAX_VER = "1.8.2"
 CHECKPOINT_SEGMENT_SIZE = 2040109465  # 1.9GB, no more than 2GB
 
 WRITE_FLAGS = os.O_WRONLY | os.O_CREAT | os.O_EXCL
@@ -81,7 +83,6 @@ DTYPE_MAP = {
     15: np.complex128,
     16: None
 }
-
 
 ONNX_MS_MAP = {1: 'mindspore.float32',
                2: 'mindspore.uint8',
@@ -193,7 +194,8 @@ THIRD_PART_VERSION = {
     "onnxoptimizer": (ONNXOPTIMIZER_MIN_VER,),
     "tf2onnx": (TF2ONNX_MIN_VER,),
     "mindspore": (MINDSPORE_MIN_VER,),
-    "tensorflow": (TENSORFLOW_MIN_VER,)
+    "tensorflow": (TENSORFLOW_MIN_VER,),
+    "torch": (TORCH_MIN_VER, TORCH_MAX_VER)
 }
 
 

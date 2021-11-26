@@ -27,7 +27,7 @@ class ReportGenerator(metaclass=abc.ABCMeta):
         self._content = ''
         self._num_unconverted_operator = 0
         self._num_converted_operator = 0
-        self._unconverted_op_framework = ["onnx"]
+        self._unconverted_op_framework = ["onnx", "aten", "self_defined_pattern"]
 
     @staticmethod
     def _gen_title():
