@@ -54,8 +54,7 @@ PARALLEL_PROPOSE_RESULT = {
         },
         "pipeline_parallel_flops": {
             "stage": 2,
-            "rank_id": 3,
-            "val": 329612.4,
+            "val": 329610.3845,
             "percent": 50.94
         }
     }
