@@ -162,25 +162,32 @@ class Fragment:
         if ExchangeMessageKeywords.VariableScope.value.INPUTS.value in data:
             group_inputs = ExchangeMessageKeywords.VariableScope.value.GROUP_INPUTS.value
             if group_inputs in data:
-                input_tuple_list = []
-                tuple_index = 0
-                tuple_id = 0
-                while tuple_index < len(data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value]):
-                    if tuple_id < len(data[group_inputs]) and tuple_index in data[group_inputs][tuple_id]:
-                        tuple_added = ", ".join(data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value]
-                                                [data[group_inputs][tuple_id][0]:
-                                                 data[group_inputs][tuple_id][-1]+1])
-                        tuple_added = f"({tuple_added})"
-                        input_tuple_list.append(tuple_added)
-                        tuple_index = data[group_inputs][tuple_id][-1]+1
-                        tuple_id += 1
-                        continue
-                    input_tuple_list.append(data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value]
-                                            [tuple_index])
-                    tuple_index += 1
+                input_added_list = []
+                input_index = 0
+                group_id = 0
+                while input_index < len(data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value]):
+                    if group_id < len(data[group_inputs]) and input_index in data[group_inputs][group_id]:
+                        code_pattern = data[group_inputs][group_id][2] if len(
+                            data[group_inputs][group_id]) > 2 else "{%}"
+                        input_added = ", ".join(data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value]
+                                                [data[group_inputs][group_id][0]:
+                                                 data[group_inputs][group_id][1] + 1])
 
-                rewrite_data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value] = \
-                    ", ".join(input_tuple_list)
+                        input_added = code_pattern.format(**{"%": input_added})
+                        input_added_list.append(input_added)
+                        input_index = data[group_inputs][group_id][1] + 1
+                        group_id += 1
+                        continue
+                    input_added_list.append(data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value]
+                                            [input_index])
+                    input_index += 1
+
+                if len(input_added_list) != 1:
+                    rewrite_data.update(
+                        {f"{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}_{idx}": input_added for
+                         idx, input_added in enumerate(input_added_list)})
+                else:
+                    rewrite_data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value] = input_added_list[0]
             else:
                 rewrite_data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value] = ", ".join(
                     data[ExchangeMessageKeywords.VariableScope.value.INPUTS.value])
