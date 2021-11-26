@@ -50,7 +50,7 @@ class DumpAnalyzer:
         self._dump_dir = os.path.realpath(dump_dir)
         self._mem_limit = 0 if mem_limit is None else mem_limit
         self._data_loader = None
-        self._debugger_backend = None
+        self._debuger_engine = None
         self._parser = None
         # the key is rank_id, the value is <tensor_feature, TensorImpl> map
         self._nodes = {}
@@ -60,8 +60,7 @@ class DumpAnalyzer:
         """Initialize."""
         self._validate_mem_limit(self._mem_limit)
         self._data_loader = DataLoader(self._dump_dir)
-        self._debugger_backend = DebuggerEngine.get_instance(
-            self._data_loader, self._mem_limit).dbg_service
+        self._debugger_engine = DebuggerEngine(self._data_loader, self._mem_limit)
         self._parse()
 
     @staticmethod
@@ -82,6 +81,7 @@ class DumpAnalyzer:
             nonlocal id_to_name_map
             for b_node in base_nodes:
                 new_node = NodeImpl(b_node, node_type)
+                new_node.debugger_engine = self._debugger_engine
                 nodes[new_node.rank][new_node.unique_id] = new_node
                 id_to_name_map[new_node.rank][b_node.name] = new_node.name
 
@@ -317,17 +317,17 @@ class DumpAnalyzer:
         wp_handles = {wp_id: WatchpointHandle(wp_id, wp) for wp_id, wp in enumerate(watchpoints)}
         for wp_handle in wp_handles.values():
             iterations.update(wp_handle.get_iterations())
-
+        debugger_backend = self._debugger_engine.dbg_service
         # check all the watchpoint for the iterations
         for iteration in iterations:
             log.info("Check watchpoints for iteration %s", iteration)
             # adding the watchpoint for current iteration
             for wp_handle in wp_handles.values():
-                wp_handle.add_watchpoint(iteration)
+                wp_handle.add_watchpoint(iteration, self._debugger_engine)
             # check the watchpoint for current iteration
             # add the hit watchpoints to hit list
-            hit_list = self._debugger_backend.check_watchpoints(iteration=iteration,
-                                                                error_on_no_value=error_on_no_value)
+            hit_list = debugger_backend.check_watchpoints(
+                iteration=iteration, error_on_no_value=error_on_no_value)
             for hit in hit_list:
                 # the list of slots for the hit node to report
                 # (for the current watchpoint and iteration)
@@ -350,7 +350,7 @@ class DumpAnalyzer:
                 wp_hit_list += no_value_hit_list
             # remove all the watchpoints for the previous iterations
             for watchpoint_id in wp_handles:
-                self._debugger_backend.remove_watchpoint(watchpoint_id=watchpoint_id)
+                debugger_backend.remove_watchpoint(watchpoint_id=watchpoint_id)
 
         return wp_hit_list
 
