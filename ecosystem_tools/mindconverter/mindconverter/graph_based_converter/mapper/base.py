@@ -17,6 +17,7 @@ import abc
 import importlib
 import json
 import os
+import re
 from typing import Dict
 
 import numpy as np
@@ -55,6 +56,17 @@ def get_module_name(op_name):
             table = json.load(f)
         module_name = table.get(op_name)
     return module_name
+
+
+def flatten_list(input_list):
+    """Flatten multi-layer list ot one-layer."""
+    flattened_result = list()
+    for ipt in input_list:
+        if isinstance(ipt, (tuple, list)):
+            flattened_result.extend(flatten_list(ipt))
+        else:
+            flattened_result.append(ipt)
+    return flattened_result
 
 
 class Mapper(metaclass=abc.ABCMeta):
@@ -374,7 +386,7 @@ class AtenToMindSporeMapper(Mapper, abc.ABC):
 
     @staticmethod
     def _convert_params(**kwargs):
-        raise NotImplementedError
+        return dict()
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
@@ -406,137 +418,64 @@ class AtenToMindSporeMapper(Mapper, abc.ABC):
         return template, exchange_msg, outputs_list, outputs_mapping
 
     @staticmethod
-    def _find_val_by_index(loc_index, weights_list, default_val=None):
-        """Find value by location index of weights_list."""
-        result = default_val
-        if loc_index < 0:
-            return weights_list[loc_index].value
+    def get_args_name_list(**kwargs):
+        """Get args_name_list according to number params in node."""
+        params = kwargs.get("params", dict()).copy() or kwargs.get("raw_params", dict())
+        params.pop("input_shape")
+        params.pop("output_shape")
+        num_aten_inputs = len(params)
 
-        for idx, weight in enumerate(weights_list):
-            if idx == loc_index:
-                result = weight.value
-                break
-        return result
+        existing_packs = dict()
+        for name in params.copy():
+            ret = re.match(r"(.*)\[(.*)\((.*)\)]", name)
+            if ret:
+                param_name, pack_id, pack_struct_pattern = ret.groups()
+                pack_struct = [symbol for symbol in pack_struct_pattern.split(",")]
+                param_idx = pack_struct.index("*")
+                existing_packs.setdefault(pack_id, pack_struct)[param_idx] = param_name
+                params[param_name] = params.pop(name)
+            else:
+                existing_packs.setdefault(name, None)
 
-    @staticmethod
-    def _generate_snippet_template_for_math_operation(**kwargs):
-        """Generate code snippet for math operation."""
-        op = kwargs.get("operation").replace("::", ".")
-        args = kwargs.get("converted_params", dict())
-        if not op:
-            raise ValueError("Can not get MindSpore operation name.")
-        variable_slot = "var_0"
-        construct_template = f"opt_{{{variable_slot}}} = {op}()" \
-                             f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}})"
-        template = {
-            variable_slot: {
-                TemplateKeywords.INIT.value: [],
-                TemplateKeywords.CONSTRUCT.value: [construct_template]
-            }
-        }
+        for existing_packs_inst in existing_packs.values():
+            if existing_packs_inst:
+                num_aten_inputs -= len(existing_packs_inst) - 1
 
-        exchange_msg = AtenToMindSporeMapper._generate_exchange_msg(variable_slot=variable_slot, op=op, args=args)
-        outputs_list = [f"opt_{{{variable_slot}}}"]
-        outputs_mapping = ((0, 0),)
-        return template, exchange_msg, outputs_list, outputs_mapping
+        def get_extend_args_name_list(name_list):
+            """Get args_name_list extended."""
+            for existing_pack_id_, existing_pack_inst_ in existing_packs.items():
+                if existing_pack_inst_ and len(existing_pack_inst_) > 1:
+                    pack_name_ = name_list[int(existing_pack_id_)]
+                    extend_num_ = len(existing_pack_inst_)
+                    name_list[int(existing_pack_id_)] = [f"{pack_name_}{extend_idx}" for extend_idx in
+                                                         range(extend_num_)]
+            return flatten_list(name_list)
 
-    @staticmethod
-    def _generate_snippet_template_with_weights(**kwargs):
-        """Generate template when weights exist."""
-        math_symbol = kwargs.get("math_symbol")
-        if not math_symbol:
-            raise ValueError("Can not get math_symbol in weights template.")
-        weights = kwargs.get("weights")
-        args = kwargs.get("args")
-        op = kwargs.get("op")
-        trainable_params = kwargs.get("trainable_params")
-        is_reversed = kwargs.get("is_reversed", False)
-
-        tensor = AtenToMindSporeMapper._find_val_by_index(0, weights)
-        weight_shape = tensor.shape
-        weight_location = AtenToMindSporeMapper._find_location_by_index(0, weights)
-
-        variable_slot = "var_0"
-        inputs_in_construct = [f"{{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}"]
-        if weight_location != -1:
-            inputs_in_construct.insert(weight_location, f"self.{{{variable_slot}}}_w")
-
-        if is_reversed:
-            inputs_in_construct = [ipt for ipt in reversed(inputs_in_construct)]
-
-        if weight_shape:
-            # Note: adding weight shape to args is now deprecated due to conflict of partial weights share processing.
-            variable_slot_param_name = f"{variable_slot}/w"
-            init_tensor = f"self.{{{variable_slot}}}_w = {{{variable_slot_param_name}}}"
-
+        args_name = kwargs.get("args_name")
+        if isinstance(args_name, list):
+            args_name_list = get_extend_args_name_list(args_name)
+        elif isinstance(args_name, dict):
+            args_name_list = args_name.get(num_aten_inputs)
+            if not args_name_list:
+                raise ValueError(
+                    f"Number of params is required to be one of "
+                    f"[{', '.join([str(num) for num in args_name])}], but {num_aten_inputs} is gotten.")
+            args_name_list = get_extend_args_name_list(args_name_list)
         else:
-            args["w_value"] = tensor.tolist()
-            init_tensor = f"self.{{{variable_slot}}}_w = {{w_value}}"
-
-        construct_template = f"opt_{{{variable_slot}}} = {f' {math_symbol} '.join(inputs_in_construct)}"
-        template = {
-            variable_slot: {
-                TemplateKeywords.INIT.value: [init_tensor],
-                TemplateKeywords.CONSTRUCT.value: [construct_template]
-            }
-        }
-        exchange_msg = AtenToMindSporeMapper._generate_exchange_msg(variable_slot=variable_slot, op=op, args=args,
-                                                                    weights=weights,
-                                                                    trainable_params=trainable_params)
-        if weight_shape:
-            exchange_msg[variable_slot][ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value] = {
-                name: "" for name in trainable_params
-            }
-        outputs_list = [f"opt_{{{variable_slot}}}"]
-        outputs_mapping = ((0, 0),)
-        return template, exchange_msg, outputs_list, outputs_mapping
+            raise ValueError(f"Type of args_name should be Union<list, tuple>, but {type(args_name)} is gotten.")
+        return args_name_list
 
     @staticmethod
-    def _find_location_by_index(loc_index, weights_list):
-        """Find weight location in inputs of Node."""
-        result = -1
-        if loc_index < 0:
-            return weights_list[loc_index].location
-
-        for idx, weight in enumerate(weights_list):
-            if idx == loc_index:
-                result = weight.location
-                break
-        return result
-
-    @staticmethod
-    def _find_aten_name_by_index(loc_index, weights_list):
-        """Find weight aten name in inputs of Node."""
-        result = -1
-        if loc_index < 0:
-            return weights_list[loc_index].name
-
-        for idx, weight in enumerate(weights_list):
-            if idx == loc_index:
-                result = weight.name
-                break
-        return result
-
-    @staticmethod
-    def _convert_list_to_tuple(val):
-        """Convert list to tuple or return val if type of val is int."""
-        if isinstance(val, list):
-            return tuple(val)
-        return val
-
-    @staticmethod
-    def _params_parser(raw_params, args_name_list=None, trainable_params=None):
+    def _params_parser(raw_params, args_name, trainable_params):
         """Parse params in Node."""
         variable_slot = "var_0"
         input_symbol = ExchangeMessageKeywords.VariableScope.value.INPUTS.value
-        input_shape = raw_params.pop("input_shape")
-        if not AtenToMindSporeMapper.has_precursor_nodes(input_shape):
-            input_rank = 0
-        else:
-            input_rank = len(input_shape) if isinstance(input_shape, list) else 1
-        raw_params.pop("output_shape")
-        trainable_params = trainable_params or dict()
-        num_params = input_rank + len(raw_params) + len(trainable_params)
+        args_name_list = AtenToMindSporeMapper.get_args_name_list(raw_params=raw_params,
+                                                                  weights=trainable_params,
+                                                                  args_name=args_name)
+
+        num_params = len(args_name_list)
+        raw_params = {name: value for name, value in raw_params.items() if value != "from_input"}
 
         if trainable_params:
             constant_inputs_dict = {value.get("location", 0): name for name, value in trainable_params.items()}
@@ -547,7 +486,6 @@ class AtenToMindSporeMapper(Mapper, abc.ABC):
                                                                                                  f"{{{input_symbol}}}"))
         else:
             inputs = [raw_params.get(f"constant_{idx}", f"{{{input_symbol}}}") for idx in range(num_params)]
-        args_name_list = args_name_list or [f"input", *[f"dim_{idx}" for idx in range(num_params - 1)]]
 
         args = dict()
         for idx, (arg_name, arg_val) in enumerate(zip(args_name_list, inputs)):
