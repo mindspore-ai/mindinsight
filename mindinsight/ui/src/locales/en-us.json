@@ -239,6 +239,9 @@
     "titleText": "Data Graph"
   },
   "tensors": {
+    "mode": "Mode",
+    "tableMode": "Table Mode",
+    "chartMode": "Chart Mode",
     "titleText": "Tensor",
     "dimension": "Shape:",
     "tensorType": "Data type:",

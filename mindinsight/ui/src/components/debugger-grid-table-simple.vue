@@ -28,55 +28,79 @@ limitations under the License.
            class="error-msg-container">
         {{$t('components.gridTableNoData')}}
       </div>
+      <!-- Chart Mode -->
+      <div v-show="!!fullData.length && !incorrectData && displayMode === displayModes[0].value"
+           class="heatmap"
+           ref="heatmap"></div>
+      <!-- Table Mode -->
       <div :id="itemId"
-           v-show="!!fullData.length && !incorrectData"
+           v-show="!!fullData.length && !incorrectData && displayMode === displayModes[1].value"
            class="grid-item"></div>
     </div>
-    <div class="operate-container"
-         v-if="showOperate && (fullData.length || requestError)">
-      <div class="filter-container"
-           v-if="showFilterInput"
-           @keyup.enter="filterChange">
-        <div class="filter-input-title">{{$t('components.dimsFilterInputTitle')}}
-          <span :title="$t('components.dimsFilterInputTip')"
-                class="el-icon-info"></span>
+    <!-- Operators container -->
+    <div class="operators-container"
+         v-if="showOperators && (fullData.length || requestError)">
+      <!-- Left -->
+      <div class="operators">
+        <!-- Filter -->
+        <div class="filter-container"
+             v-if="showFilterInput"
+             @keyup.enter="filterChange">
+          <div class="filter-input-title">{{$t('components.dimsFilterInputTitle')}}
+            <span :title="$t('components.dimsFilterInputTip')"
+                  class="el-icon-info"></span>
+          </div>
+          <div v-for="(item, itemIndex) in filterArr"
+               class="filter-item"
+               :key="itemIndex">
+            <el-input class="filter-input long-input"
+                      :class="item.showError ? 'error-border' : ''"
+                      v-model="item.model"></el-input>
+            <span class="input-behind"
+                  v-if="itemIndex === filterArr.length - 1">{{$t('symbols.slashes')}}</span>
+            <span class="input-behind"
+                  v-else>{{$t('symbols.point')}}</span>
+          </div>
+          <el-button class="filter-check"
+                     size="mini"
+                     v-if="!!filterArr.length"
+                     @click="filterChange">
+            <i class="el-icon-check"></i>
+          </el-button>
+          <span class="filter-incorrect-text"
+                v-if="!filterCorrect">{{$t('components.inCorrectInput')}}</span>
         </div>
-        <div v-for="(item, itemIndex) in filterArr"
-             :key="itemIndex">
-          <el-input class="filter-input long-input"
-                    :class="item.showError ? 'error-border' : ''"
-                    v-model="item.model"></el-input>
-          <span class="input-behind"
-                v-if="itemIndex === filterArr.length - 1">{{$t('symbols.slashes')}}</span>
-          <span class="input-behind"
-                v-else>{{$t('symbols.point')}}</span>
-        </div>
-        <el-button class="filter-check"
-                   size="mini"
-                   v-if="!!filterArr.length"
-                   @click="filterChange">
-          <i class="el-icon-check"></i>
-        </el-button>
-        <span class="filter-incorrect-text"
-              v-if="!filterCorrect">{{$t('components.inCorrectInput')}}</span>
-      </div>
-      <div class="shape-wrap">
+        <!-- Shape -->
         <span>{{ $t('tensors.dimension') }} {{ shape }}</span>
       </div>
-      <div class="accuracy-container">
-        {{$t('components.category')}}<el-select v-model="category"
-                   class="select-category"
+      <!-- Right -->
+      <div class="operators">
+        <!-- Mode -->
+        {{ $t('tensors.mode') }}
+        <el-select v-model="displayMode"
+                   class="mode-selector"
+                   @change="handleDisplayModeChange">
+          <el-option v-for="mode of displayModes"
+                     :key="mode.value"
+                     :label="mode.label"
+                     :value="mode.value"></el-option>
+        </el-select>
+        <!-- Category -->
+        {{$t('components.category')}}
+        <el-select v-model="category"
+                   class="category-selector"
                    @change="accuracyChange">
           <el-option v-for="item in categoryArr"
                      :key="item.label"
                      :label="item.label"
                      :value="item.value"></el-option>
         </el-select>
+        <!-- Accuracy -->
         {{$t('components.gridAccuracy')}}
         <span :title="$t('components.accuracyTips')"
               class="el-icon-info"></span>
         <el-select v-model="accuracy"
-                   class="select-item-debugger"
+                   class="accuracy-selector"
                    @change="accuracyChange">
           <el-option v-for="item in accuracyArr"
                      :key="item.label"
@@ -84,6 +108,7 @@ limitations under the License.
                      :value="item.value"></el-option>
         </el-select>
       </div>
+      
     </div>
   </div>
 </template>
@@ -98,9 +123,16 @@ import 'slickgrid/slick.core.js';
 import 'slickgrid/slick.dataview.js';
 import 'slickgrid/slick.grid.js';
 import CommonProperty from '@/common/common-property.js';
+import echarts, {echartsThemeName} from '@/js/echarts';
+
+// Data display mode
+const [TABLE, CHART] = ['table', 'chart'];
+
+const gridPadding = [40, 0, 10, 40]; // Same as padding in CSS rule order
+
 export default {
   props: {
-    // Table data
+    // Original data
     fullData: {
       type: Array,
       default() {
@@ -108,7 +140,7 @@ export default {
       },
     },
     // Display operation Bar
-    showOperate: {
+    showOperators: {
       type: Boolean,
       default: true,
     },
@@ -151,19 +183,9 @@ export default {
       errorMsg: '', // Error message
       viewResizeFlag: false, // Size reset flag
       // Accuracy options
-      accuracyArr: [
-        {label: 0, value: 0},
-        {label: 1, value: 1},
-        {label: 2, value: 2},
-        {label: 3, value: 3},
-        {label: 4, value: 4},
-        {label: 5, value: 5},
-        {label: 6, value: 6},
-        {label: 7, value: 7},
-        {label: 8, value: 8},
-        {label: 9, value: 9},
-        {label: 10, value: 10},
-      ],
+      accuracyArr: new Array(11).fill(null).map((_, i) => {
+        return {label: i, value: i}
+      }),
       // Table configuration items
       optionObj: {
         enableColumnReorder: false,
@@ -175,7 +197,7 @@ export default {
         value: 'value',
         compare: 'compare',
       },
-      tableStartIndex: {
+      axisStartIndex: {
         rowStartIndex: 0,
         colStartIndex: 0,
       },
@@ -186,11 +208,17 @@ export default {
       ],
       category: 'value', // value:Numerical notation      science:Scientific notation
       gridTableThemeObj: CommonProperty.tensorThemes[this.$store.state.themeIndex],
+      displayMode: CHART,
+      displayModes: [
+        {label: this.$t('tensors.chartMode'), value: CHART},
+        {label: this.$t('tensors.tableMode'), value: TABLE},
+      ],
+      chartInstance: null,
+      filterStr: null,
     };
   },
-  computed: {},
   watch: {
-    showFilterInput(newValue, oldValue) {
+    showFilterInput() {
       this.resizeView();
     },
   },
@@ -199,6 +227,45 @@ export default {
   },
   methods: {
     /**
+     * Init common info of tensor value
+     * @param {Boolean} newDataFlag Whether data is updated
+     * @param {Array} dimension Array of dimension
+     * @param {Object} statistics Object contains maximum and minimum
+     * @param {String} filterStr String of dimension selection
+     */
+    initCommonInfo(newDataFlag, dimension, statistics, filterStr) {
+      this.shape = dimension;
+      this.updated = true;
+      this.requestError = false;
+      if (!this.fullData || !this.fullData.length) {
+        return;
+      }
+      if (newDataFlag) {
+        this.viewResizeFlag = true;
+        this.initializeFilterArr(dimension, filterStr);
+        this.scrollTop = true;
+      } else if (!this.filterArr.length && dimension && filterStr) {
+        this.initializeFilterArr(dimension, filterStr);
+      }
+      if (newDataFlag || this.statistics.overall_max === undefined) {
+        this.statistics = statistics;
+      }
+      this.handleDisplayModeChange();
+    },
+    handleDisplayModeChange() {
+      this.$nextTick(() => {
+        switch (this.displayMode) {
+          case TABLE:
+            this.updateGridData();
+            break;
+          case CHART:
+            this.chartInstance && this.chartInstance.resize();
+            this.renderHeatmapChart();
+            break;
+        }
+      })
+    },
+    /**
      * Initialize
      */
     init() {
@@ -206,58 +273,232 @@ export default {
       this.$store.commit('componentsNum');
     },
     /**
+     * Render heatmap chart by fullData
+     * @param {Object} statistics Object contains maximum and minimum
+     * @param {string} filterStr String of dimension selection
+     */
+    renderHeatmapChart() {
+      const data = this.fullData;
+      if (!data || !data.length) {
+        return;
+      }
+      if (!this.initHeatmapChart()) {
+        return;
+      }
+      const seriesData = [];
+      const xAxisData = [];
+      const yAxisData = [];
+      const {rowStartIndex, colStartIndex} = this.axisStartIndex;
+      if (Array.isArray(data)) {
+        if (Array.isArray(data[0])) {
+          // Matrix
+          data.forEach((row, rowIndex) => {
+            yAxisData.push(rowStartIndex + rowIndex);
+            row.forEach((item, columnIndex) => {
+              if (!rowIndex) {
+                xAxisData.push(colStartIndex + columnIndex);
+              }
+              seriesData.push([columnIndex, rowIndex, item === 'null' ? 0 : item, item]);
+            });
+          });
+        } else {
+          // Array
+          yAxisData.push(rowStartIndex);
+          data.forEach((item, columnIndex) => {
+            xAxisData.push(colStartIndex + columnIndex);
+            seriesData.push([columnIndex, 0, item === 'null' ? 0 : item, item]);
+          });
+        }
+      } else {
+        // Number
+        xAxisData.push(colStartIndex);
+        yAxisData.push(rowStartIndex);
+        seriesData.push([0, 0, data === 'null' ? 0 : data, data]);
+      }
+      const {overall_min, overall_max} = this.statistics;
+      const minAbs = Math.abs(overall_min);
+      const maxAbs = Math.abs(overall_max);
+      let ultimate = 0;
+      if (!Number.isNaN(minAbs) && !Number.isNaN(maxAbs)) {
+        ultimate = minAbs < maxAbs ? maxAbs : minAbs;
+      } else if (!Number.isNaN(minAbs) && Number.isNaN(maxAbs)) {
+        ultimate = minAbs;
+      } else if (Number.isNaN(minAbs) && !Number.isNaN(maxAbs)) {
+        ultimate = maxAbs;
+      }
+      this.chartInstance.setOption({
+        visualMap: {
+          min: -ultimate,
+          max: ultimate,
+          inRange: {
+            color: [
+              `rgb(${this.gridTableThemeObj.negativeColor})`,
+              this.gridTableThemeObj.middleColor,
+              `rgb(${this.gridTableThemeObj.positiveColor})`,
+            ],
+          },
+        },
+        xAxis: {
+          data: xAxisData,
+        },
+        yAxis: {
+          data: yAxisData,
+        },
+        series: {
+          data: seriesData,
+        },
+      });
+    },
+    initHeatmapChart() {
+      if (this.displayMode === CHART && this.$refs.heatmap) {
+        if (!this.chartInstance) {
+          this.chartInstance = echarts.init(this.$refs.heatmap, echartsThemeName);
+          this.chartInstance.setOption({
+            tooltip: {
+              position: 'top'
+            },
+            grid: {
+              top: gridPadding[0],
+              right: gridPadding[1],
+              bottom: gridPadding[2],
+              left: gridPadding[3],
+            },
+            dataZoom: [
+              {
+                type: 'inside',
+                xAxisIndex: 0,
+                yAxisIndex: 0,
+              }
+            ],
+            xAxis: {
+              type: 'category',
+              data: [],
+              position: 'top',
+              splitArea: {
+                show: true
+              }
+            },
+            yAxis: {
+              type: 'category',
+              data: [],
+              splitArea: {
+                show: true
+              },
+              inverse: true,
+            },
+            visualMap: {
+              show: false,
+            },
+            series: [
+              {
+                name: 'tensorHeatmap',
+                type: 'heatmap',
+                data: [],
+                label: {
+                  show: false
+                },
+                emphasis: {
+                  itemStyle: {
+                    shadowBlur: 10,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                  }
+                },
+                tooltip: {
+                  formatter: (params) => {
+                    const {category, accuracy, judgeDataType} = this;
+                    let value = params.data[3]; // Original data
+                    value = judgeDataType(value)
+                      ? value
+                      : category === 'science'
+                          ? value.toExponential(accuracy)
+                          : value.toFixed(accuracy)
+                    return `
+                      x: ${params.data[0]}<br>
+                      y: ${params.data[1]}<br>
+                      value: ${value}
+                    `
+                  }
+                },
+              }
+            ]
+          })
+        }
+        return true;
+      }
+      return false;
+    },
+    /**
      * Initialize dimension selection
      * @param {Array} dimension Dimension array
-     * @param {String} filterStr Dimension String
+     * @param {String} filterStrs Dimension String
      */
-    initializeFilterArr(dimension, filterStr) {
+    initializeFilterArr(dimension, filterStrs) {
       this.filterCorrect = true;
-      if (!filterStr) {
+      if (!filterStrs) {
         this.filterArr = [];
         return;
       }
-      const tempFilterArr = filterStr.slice(1, filterStr.length - 1).split(',');
-      const tempArr = [];
-      const multiDimsArr = [];
-      for (let i = 0; i < tempFilterArr.length; i++) {
-        tempArr.push({
-          model: tempFilterArr[i],
+      const fitlerStrList = filterStrs.slice(1, filterStrs.length - 1).split(',');
+      const filterInputList = [];
+      const specificDimensions = [];
+      const rangeDimensions = [];
+      let dimensionNumber = fitlerStrList.length;
+      fitlerStrList.forEach((filterStr, i) => {
+        filterInputList.push({
+          model: filterStr,
           max: dimension[i] - 1,
           showError: false,
         });
-        if (tempFilterArr[i].indexOf(':') !== -1) {
-          const curFilterArr = tempFilterArr[i].split(':');
-          if (curFilterArr[0]) {
-            let startIndex = Number(curFilterArr[0]);
-            startIndex = startIndex < 0 ? dimension[i] + startIndex : startIndex;
-            multiDimsArr.push(startIndex);
-          } else {
-            multiDimsArr.push(0);
+        if (filterStr.includes(':')) {
+          // Range in dimension
+          if (dimensionNumber <= 2) {
+            const [startIndexStr] = filterStr.split(':');
+            if (startIndexStr) {
+              const startIndex = +startIndexStr < 0 ? dimension[i] + +startIndexStr : +startIndexStr;
+              rangeDimensions.push(startIndex);
+            } else {
+              rangeDimensions.push(0);
+            }
+          }
+        } else {
+          // Specific Index in dimension
+          dimensionNumber--;
+          if (dimensionNumber < 2) {
+            const filterNumber = +filterStr;
+            const startIndex = filterNumber < 0 ? dimension[i] + filterNumber : filterNumber;
+            specificDimensions.push(startIndex);
           }
         }
-      }
-      this.filterArr = tempArr;
-      if (!multiDimsArr.length) {
-        this.tableStartIndex = {
-          rowStartIndex: 0,
-          colStartIndex: 0,
+      });
+      this.filterArr = filterInputList;
+      if (rangeDimensions.length === 2) {
+        this.axisStartIndex = {
+          rowStartIndex: rangeDimensions[0],
+          colStartIndex: rangeDimensions[1],
         };
-      } else if (multiDimsArr.length >= 2) {
-        this.tableStartIndex = {
-          rowStartIndex: multiDimsArr[0],
-          colStartIndex: multiDimsArr[1],
+      } else if (rangeDimensions.length === 1) {
+        this.axisStartIndex = {
+          rowStartIndex: specificDimensions.length ? specificDimensions[0] : 0,
+          colStartIndex: rangeDimensions[0],
         };
       } else {
-        this.tableStartIndex = {
-          rowStartIndex: 0,
-          colStartIndex: multiDimsArr[0],
-        };
+        if (specificDimensions.length) {
+          this.axisStartIndex = {
+            rowStartIndex: specificDimensions[0],
+            colStartIndex: specificDimensions.length > 1 ? specificDimensions[1] : 0,
+          };
+        } else {
+          this.axisStartIndex = {
+            rowStartIndex: 0,
+            colStartIndex: 0,
+          };
+        }
       }
     },
     /**
      * Initialize column information
      */
-    formateColumnsData() {
+    formatColumnsData() {
       this.columnsData = [
         {
           id: -1,
@@ -270,7 +511,7 @@ export default {
       const columnSample = this.formateData[0];
       if (columnSample) {
         columnSample.forEach((num, numIndex) => {
-          const order = numIndex + this.tableStartIndex.colStartIndex;
+          const order = numIndex + this.axisStartIndex.colStartIndex;
           this.columnsData.push({
             id: order,
             name: order,
@@ -278,7 +519,7 @@ export default {
             width: 120,
             headerCssClass: 'headerStyle',
             formatter:
-              this.gridType === this.gridTypeKeys.compare ? this.formateCompareColor : this.formateValueColor,
+              this.gridType === this.gridTypeKeys.compare ? this.formatCompareColor : this.formatValueColor,
           });
         });
       } else {
@@ -294,7 +535,7 @@ export default {
      * @param {Object} dataContext
      * @return {String}
      */
-    formateValueColor(row, cell, value, columnDef, dataContext) {
+    formatValueColor(row, cell, value, columnDef, dataContext) {
       if (!cell || !value || this.judgeDataType(value)) {
         return value;
       } else if (value < 0) {
@@ -325,7 +566,7 @@ export default {
      * @param {Object} dataContext
      * @return {String}
      */
-    formateCompareColor(row, cell, value, columnDef, dataContext) {
+    formatCompareColor(row, cell, value, columnDef, dataContext) {
       if (value instanceof Array && value.length >= 3) {
         const valueNum = value[2];
         if (!cell || !valueNum || this.judgeDataType(valueNum)) {
@@ -355,7 +596,7 @@ export default {
     /**
      * Convetring raw data into table data
      */
-    formateGridArray() {
+    formatGridArray() {
       const dims = this.calcForArrDims(this.fullData);
       if (dims > 3) {
         this.formateData = [[[]]];
@@ -374,10 +615,10 @@ export default {
       if (this.gridType === this.gridTypeKeys.compare) {
         this.formateData.forEach((outerData, outerIndex) => {
           const tempData = {
-            '-1': outerIndex + this.tableStartIndex.rowStartIndex,
+            '-1': outerIndex + this.axisStartIndex.rowStartIndex,
           };
           outerData.forEach((innerData, innerIndex) => {
-            const innerOrder = innerIndex + this.tableStartIndex.colStartIndex;
+            const innerOrder = innerIndex + this.axisStartIndex.colStartIndex;
             const tempArr = [];
             innerData.forEach((innerValue) => {
               if (this.judgeDataType(innerValue)) {
@@ -397,10 +638,10 @@ export default {
       } else {
         this.formateData.forEach((outerData, outerIndex) => {
           const tempData = {
-            '-1': outerIndex + this.tableStartIndex.rowStartIndex,
+            '-1': outerIndex + this.axisStartIndex.rowStartIndex,
           };
           outerData.forEach((innerData, innerIndex) => {
-            const innerOrder = innerIndex + this.tableStartIndex.colStartIndex;
+            const innerOrder = innerIndex + this.axisStartIndex.colStartIndex;
             if (this.judgeDataType(innerData)) {
               tempData[innerOrder] = innerData;
             } else {
@@ -441,7 +682,7 @@ export default {
      * @param {Number} value The value after changed
      */
     accuracyChange(value) {
-      this.formateGridArray();
+      this.formatGridArray();
       if (!this.requestError && !this.incorrectData) {
         this.updateGrid();
       }
@@ -563,52 +804,37 @@ export default {
         return true;
       }
     },
-    /**
-     * Updating Table Data
-     * @param {Boolean} newDataFlag Whether data is updated
-     * @param {Array} dimension Array of dimension
-     * @param {Object} statistics Object contains maximum and minimum
-     * @param {String} filterStr String of dimension selection
-     */
-    updateGridData(newDataFlag, dimension, statistics, filterStr) {
-      this.shape = dimension;
-      this.updated = true;
-      this.requestError = false;
-      this.$nextTick(() => {
-        if (!this.fullData || !this.fullData.length) {
-          return;
-        }
-        if (newDataFlag) {
-          this.viewResizeFlag = true;
-          this.initializeFilterArr(dimension, filterStr);
-          this.scrollTop = true;
-        } else if (!this.filterArr.length && dimension && filterStr) {
-          this.initializeFilterArr(dimension, filterStr);
-        }
-        if (newDataFlag || this.statistics.overall_max === undefined) {
-          this.statistics = statistics;
-        }
-        this.formateGridArray();
-        this.formateColumnsData();
-        if (!this.incorrectData) {
-          this.updateGrid();
-        }
-      });
+    updateGridData() {
+      this.formatGridArray();
+      this.formatColumnsData();
+      if (!this.incorrectData) {
+        this.updateGrid();
+      }
     },
     /**
      * Update the view Size
      */
     resizeView() {
-      if (this.gridObj) {
-        if (this.incorrectData || this.requestError) {
-          this.viewResizeFlag = true;
-        } else {
-          this.$nextTick(() => {
-            this.gridObj.resizeCanvas();
-            this.gridObj.render();
-          });
-        }
-      }
+      this.$nextTick(() => {
+        switch (this.displayMode) {
+          case CHART:
+            this.chartInstance && this.chartInstance.resize();
+            break;
+          case TABLE:
+            if (this.gridObj) {
+              if (this.incorrectData || this.requestError) {
+                this.viewResizeFlag = true;
+              } else {
+                this.$nextTick(() => {
+                  this.gridObj.resizeCanvas();
+                  this.gridObj.render();
+                });
+              }
+            }
+            break;
+        }     
+      });
+
     },
     /**
      * Expand/Collapse in full screen
@@ -636,6 +862,49 @@ export default {
 };
 </script>
 <style>
+.cl-slickgrid-container .operators-container {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.cl-slickgrid-container .operators-container .operators {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.cl-slickgrid-container .operators-container .operators .filter-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+.cl-slickgrid-container .operators-container .operators .long-input {
+  width: 100px;
+}
+.cl-slickgrid-container .operators-container .operators .long-input input {
+  text-align: center;
+}
+.cl-slickgrid-container .operators-container .operators .error-border input {
+  border-color: red;
+}
+.cl-slickgrid-container .operators-container .filter-incorrect-text {
+  color: red;
+}
+.cl-slickgrid-container .operators-container .operators .filter-item {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+.cl-slickgrid-container .operators-container .operators .mode-selector {
+  width: 100px;
+}
+.cl-slickgrid-container .operators-container .operators .category-selector {
+  width: 100px;
+}
+.cl-slickgrid-container .operators-container .operators .accuracy-selector {
+  width: 65px;
+}
 .cl-slickgrid-container {
   width: 100%;
   height: 100%;
@@ -645,6 +914,9 @@ export default {
 .cl-slickgrid-container .data-show-container {
   width: 100%;
   flex: 1;
+}
+.cl-slickgrid-container .data-show-container .heatmap {
+  height: 100%;
 }
 .cl-slickgrid-container .data-show-container .grid-item {
   width: 100%;
@@ -710,48 +982,6 @@ export default {
 }
 .cl-slickgrid-container .operate-container .active-color {
   color: #00a5a7;
-}
-.cl-slickgrid-container .operate-container .filter-container {
-  float: left;
-  flex-wrap: wrap;
-  display: flex;
-}
-.cl-slickgrid-container .operate-container .filter-container .filter-input-title {
-  line-height: 34px;
-  margin-right: 10px;
-}
-.cl-slickgrid-container .operate-container .filter-container .error-border input {
-  border-color: red;
-}
-.cl-slickgrid-container .operate-container .filter-container .filter-input {
-  text-align: center;
-}
-.cl-slickgrid-container .operate-container .filter-container .long-input {
-  width: 120px;
-}
-.cl-slickgrid-container .operate-container .filter-container .input-behind {
-  padding: 0 5px;
-}
-.cl-slickgrid-container .operate-container .filter-container .filter-incorrect-text {
-  margin-left: 10px;
-  line-height: 32px;
-  color: red;
-}
-.cl-slickgrid-container .operate-container .shape-wrap {
-  float: left;
-  line-height: 34px;
-  margin-left: 10px;
-}
-.cl-slickgrid-container .operate-container .accuracy-container {
-  float: right;
-}
-.cl-slickgrid-container .operate-container .accuracy-container .select-item-debugger {
-  width: 65px;
-  margin-left: 5px;
-}
-.cl-slickgrid-container .operate-container .accuracy-container .select-category {
-  width: 105px;
-  margin-left: 5px;
 }
 
 .slick-cell,

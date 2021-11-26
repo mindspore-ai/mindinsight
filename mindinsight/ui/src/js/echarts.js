@@ -33,6 +33,7 @@ import {
   CustomChart,
   ScatterChart,
   SankeyChart,
+  HeatmapChart,
 } from 'echarts/charts';
 
 import {
@@ -56,6 +57,7 @@ echarts.use([
   CustomChart,
   ScatterChart,
   SankeyChart,
+  HeatmapChart,
   GridComponent,
   LegendComponent,
   TooltipComponent,
