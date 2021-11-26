@@ -40,6 +40,14 @@ limitations under the License.
           </div>
         </template>
       </div>
+      <div class="suggested-items-style">
+        <div class="helper-icon"></div>
+        <div class="helper-container-title">{{ $t('profiling.common-proposer_type_label.desc') }}</div>
+      </div>
+      <div class="content-style">
+        <div class="content-icon el-icon-caret-right"></div>
+        <div class="helper-content-style"><a :href="$t('profilingCluster.clusterGuideUrl')">{{$t('profilingCluster.clusterPerformanceTest')}}</a></div>
+      </div>
     </div>
   </div>
 </template>
