@@ -117,13 +117,14 @@ class ArgsTranslation:
         val = self.actual_args.get(actual_arg_name)
         if val is None:
             raise ValueError("Unable to convert the actual arg to formal due to missing arg.")
-        formal_arg_name = ('_').join([self.var_name, actual_arg_name])
+        formal_arg_name = '_'.join([self.var_name, actual_arg_name])
         self.actual_args.pop(actual_arg_name)
         self.formal_args[actual_arg_name] = formal_arg_name
         self.formal_args_values[formal_arg_name] = val
         self.make_str()
 
-    def _update_dict_for_upper_level(self, d, upper_level_var_name):
+    @staticmethod
+    def _update_dict_for_upper_level(d, upper_level_var_name):
         """Add upper level var name to key name of selected dictionary."""
         new_d = dict()
         for arg_name, val in d.items():
@@ -176,6 +177,7 @@ class ArgsTranslation:
 
         Args:
             args_translator (ArgsTranslation): submodule's or node's args translator.
+            escalate_sub (Bool): should escalate all formal args. Default: False.
         """
         if escalate_sub:
             sub_args_translator = args_translator.deepcopy()
@@ -197,6 +199,14 @@ class ArgsTranslation:
         """
         for arg_t in args_translators:
             self.take_formal_args_from_args_translator(arg_t, escalate_sub=escalate_sub)
+
+    def recover_args_values_to_formal_args(self):
+        """Recover args values to formal_args."""
+        recovered_formal_args = dict()
+        for arg_name, arg_inst in self.formal_args.items():
+            recovered_formal_args[arg_name] = self.formal_args_values[arg_inst]
+        self.formal_args = recovered_formal_args
+        self.make_str()
 
 
 class ArgsTranslationHelper:
