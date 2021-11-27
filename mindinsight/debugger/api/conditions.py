@@ -14,9 +14,8 @@
 # ==============================================================================
 """Watchpoints."""
 from abc import ABC
-
 from enum import Enum
-from mindinsight.debugger.api.debugger_engine import DebuggerEngine
+
 from mindinsight.debugger.api.debugger_tensor import DebuggerTensor
 from mindinsight.debugger.common.utils import validate_type
 
@@ -180,15 +179,14 @@ class WatchpointHitImpl(WatchpointHit):
 
     def __str__(self):
         if self._error_code:
-            return f"Watchpoint {self._condition.name} check failed on " \
-                   f"slot {self._tensor.slot} of " \
-                   f"node {self._tensor.node.name} in " \
-                   f"rank {self._tensor.rank} at " \
-                   f"iteration {self._tensor.iteration}. " \
-                   f"Error detail: {self.error_msg}"
-
-        return f"Watchpoint {self._condition.name} triggered on " \
-               f"slot {self._tensor.slot} of node {self._tensor.node.name}. " + str(self._hit_detail)
+            msg = f"Watchpoint {self._condition.name} check failed on tensor:\n" \
+                  f"{str(self.tensor)}" \
+                  f"Error detail: {self.error_msg}"
+            return msg
+        msg = f"Watchpoint {self._condition.name} triggered on tensor:\n" \
+              f"{str(self.tensor)}" \
+              f"Hit detail: {str(self._hit_detail)}"
+        return msg
 
 
 class HitDetail(ConditionBase):
@@ -223,34 +221,31 @@ class HitDetail(ConditionBase):
             show_set_value = False
         if self._condition.condition_id == WatchpointConditionId.UNCHANGED_TENSOR.value:
             show_all_settings = True
-        if self._condition.condition_id == WatchpointConditionId.UNCHANGED_TENSOR.value or \
-                self._condition.condition_id == WatchpointConditionId.TENSOR_OVERFLOW.value:
+        if self._condition.condition_id in [WatchpointConditionId.UNCHANGED_TENSOR.value,
+                                            WatchpointConditionId.TENSOR_OVERFLOW.value]:
             show_actual_value = False
         # list of the parameters with disabled = False and hit = 1
         hit_param_list = []
         for param in self._param_list:
             if not param.disabled and (param.hit or show_all_settings):
                 hit_param_list.append(param)
-        idx = 0
-        idx_2 = 0
+
         param_size = len(hit_param_list)
         if show_set_value:
-            for param in hit_param_list:
+            for idx, param in enumerate(hit_param_list):
                 setting_detail += f"{param.name} = {param.value}"
-                if idx is param_size - 1:
+                if idx == param_size - 1:
                     setting_detail += "."
                 else:
                     setting_detail += ", "
-                idx += 1
 
         if show_actual_value:
-            for param in hit_param_list:
+            for idx, param in enumerate(hit_param_list):
                 value_detail += f"{param.name} = {param.actual_value}"
-                if idx_2 is param_size - 1:
+                if idx == param_size - 1:
                     value_detail += "."
                 else:
                     value_detail += ", "
-                idx += 1
 
         result = ""
         if show_set_value:
@@ -763,14 +758,13 @@ class WatchpointHandle:
                 check_node["rank_id"].append(node.rank)
         return check_nodes
 
-    def add_watchpoint(self, iteration):
+    def add_watchpoint(self, iteration, debugger_engine):
         """
         Add watchpoint for the selected iteration.
         """
         check_nodes = self.get_check_nodes(iteration)
         # check if watchpoint must be added for the current iteration
         if check_nodes:
-            debugger_engine = DebuggerEngine.get_instance()
             params = []
             for key, value in self.condition.param_dict.items():
                 param = debugger_engine.dbg_services_module.Parameter(name=key,
@@ -789,14 +783,15 @@ class WatchpointHandle:
         when error_on_no_value =True
         """
         no_value_hit_list = []
-        node_map = self._get_value(self.sorted_tensors, iteration, {})
-        for unique_id in node_map.keys():
-            slot_map = self.sorted_tensors.get(iteration, {}).get(unique_id, {}).get('slot_map')
-            for tensor in slot_map.values():
+        node_map = self.sorted_tensors.get(iteration)
+        if not node_map:
+            return no_value_hit_list
+        for node_info in node_map.values():
+            for tensor in node_info.get('slot_map', {}).values():
                 if tensor.has_value() is False:
                     hit_params = []
                     hit_detail = HitDetail(hit_params, self.condition)
-                    # 32 means there is no valud found
+                    # 32 means there is no value found
                     error_no_value_code = 32
                     no_value_hit = WatchpointHitImpl(tensor=tensor,
                                                      condition=self.condition,

@@ -16,7 +16,6 @@
 import collections
 from abc import ABC
 
-from mindinsight.debugger.api.debugger_engine import DebuggerEngine
 from mindinsight.debugger.api.debugger_tensor import DebuggerTensorImpl
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 from mindinsight.debugger.common.utils import validate_slots, parse_param_to_iterable_obj
@@ -148,6 +147,7 @@ class NodeImpl(Node):
         self._node_type = node_type
         node_feature = self._get_node_feature()
         super(NodeImpl, self).__init__(node_feature)
+        self.debugger_engine = None
         self.input_nodes = []
         self.downstream = []
 
@@ -265,7 +265,7 @@ class NodeImpl(Node):
         Returns:
             list[int], list of iteration.
         """
-        data_loader = DebuggerEngine.get_instance().data_loader
+        data_loader = self.debugger_engine.data_loader
         total_dumped_steps = data_loader.load_dumped_step(self.rank)
         dumped_iterations = total_dumped_steps.get(self.rank, {}).get(self.root_graph_id, [])
         iterations = parse_param_to_iterable_obj(iterations, 'iterations', dumped_iterations, False)

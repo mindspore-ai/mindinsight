@@ -18,7 +18,6 @@ from abc import ABC
 
 import numpy as np
 
-from mindinsight.debugger.api.debugger_engine import DebuggerEngine
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import NUMPY_TYPE_MAP
 from mindinsight.debugger.stream_cache.data_loader import DumpTarget
@@ -118,17 +117,25 @@ class DebuggerTensorImpl(DebuggerTensor):
         iteration = self.iteration
         if iteration is None:
             return False
-        data_loader = DebuggerEngine.get_instance().data_loader
+        data_loader = self.node.debugger_engine.data_loader
         has_dump_output = bool(data_loader.dump_target in [DumpTarget.FULL, DumpTarget.OUTPUT_ONLY])
         if not has_dump_output:
             return False
         if self.node.node_type == NodeType.CONSTANT:
             iteration = 'Constant'
         iter_dirs = data_loader.get_step_iter(rank_id=self.rank, step=iteration)
-        tensor_pattern = self.node.name.split('/')[-1]
+        file_found = self._file_found(iter_dirs)
+        return file_found
+
+    def _file_found(self, iter_dirs):
+        """Check if the tensor file found in specified directory."""
+        node_name_without_scope = self.node.name.split('/')[-1]
+        bin_pattern = node_name_without_scope + r".*.(\d+)$"
+        npy_pattern = f"{node_name_without_scope}.*.output.{self.slot}.*.npy$"
         for iter_dir in iter_dirs:
             for tensor_path in iter_dir.iterdir():
-                if re.search(tensor_pattern, tensor_path.name):
+                file_name = tensor_path.name
+                if re.search(bin_pattern, file_name) or re.search(npy_pattern, file_name):
                     return True
         return False
 
@@ -136,7 +143,7 @@ class DebuggerTensorImpl(DebuggerTensor):
         if self.iteration is None:
             log.warning("The iteration of is not specified, no value returned.")
             return None
-        debugger_engine = DebuggerEngine.get_instance()
+        debugger_engine = self.node.debugger_engine
         tensor_info = debugger_engine.dbg_services_module.TensorInfo(
             node_name=self.node.name,
             slot=self.slot,
