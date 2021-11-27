@@ -94,13 +94,15 @@ class PytorchGraph(Graph):
             else:
                 node.scope_name = self._scope_names[ind]
             inputs = node.input_name_list
+            fake_inputs = node.fake_input_name_list
             # check each input from node or tensors
-            for idx, i in enumerate(inputs):
+            for loc, i in enumerate(inputs):
                 if i in self.dataloader.tensors_dict:
                     tensor = self.dataloader.tensors_dict[i]
                     t_name = tensor.name
                     t_value = tensor.to_array()
-                    node_weights.append(NodeWeight(t_name, t_value, idx))
+                    location = fake_inputs.index(t_name) if t_name in fake_inputs else loc
+                    node_weights.append(NodeWeight(t_name, t_value, location))
             self._nodes_collection[node_name] = PytorchGraphNode(node, node_weights)
             self._nodes_record[node_name] = node_name
 

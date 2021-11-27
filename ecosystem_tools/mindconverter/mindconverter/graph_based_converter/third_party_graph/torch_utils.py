@@ -591,7 +591,7 @@ class PytorchNode(BaseNode):
         self._traced_model = traced_model
         self._model_name = self._traced_model.original_name
         self._param_dict = param_dict
-        self._scope_var_name = raw_node.scopeName().split("/")[-1].replace("__module", self._model_name)
+        self._scope_var_name = self._get_scope_var_name()
         self.scope_name = self._get_scope_class_name()
         self._prim_translation = PrimTranslation(self._constants, self._model_name)
         self._fake_input_name_list = [
@@ -608,6 +608,41 @@ class PytorchNode(BaseNode):
     @property
     def fake_input_name_list(self):
         return self._fake_input_name_list
+
+    def _get_scope_var_name(self):
+        """
+        Get scope var name.
+
+        The format of `self.raw_node.scopeName()` is like `__module/__module.a/__module.a.b`.
+        The scopeName is divided into `scope_step_list`, which is
+        [
+            [`__module`],
+            [`__module`, `a`],
+            [`__module`, `a`, `b`]
+        ]
+        As a result, the valid scope name is `__module.a.b`.
+
+        However, if `self.raw_node.scopeName() is `__module/__module.c/__module.a.b`,
+        the right valid scope name is expected to be `__module.c.b`.
+
+        This function is to get such a right valid scope name for node.
+        """
+        scope_var_list = self.raw_node.scopeName().split("/")
+        # If `self.raw_node.scopeName()` is `__module`, return.
+        if len(scope_var_list) < 2:
+            return scope_var_list[0].replace("__module", self._model_name)
+
+        scope_step_list = [s.split(".") for s in scope_var_list]
+        max_length = max([len(lst) for lst in scope_step_list])
+        scope_step_list = [s + [""] * (max_length - len(s)) for s in scope_step_list]
+
+        scope_var_name = ""
+        for scp in zip(*scope_step_list):
+            scp_set = set(scp)
+            if "" in scp_set:
+                scp_set.remove("")
+            scope_var_name = ".".join((scope_var_name, list(scp_set)[0])) if scope_var_name else list(scp_set)[0]
+        return scope_var_name.replace("__module", self._model_name)
 
     def _get_scope_class_name(self):
         """Get scope class name."""
@@ -638,6 +673,7 @@ class PytorchNode(BaseNode):
                     extend_num = idx
                     if isinstance(filtered_ipt_in, str):
                         self.input_name_list.append(filtered_ipt_in)
+                        self.params.add_attribute(f"{fake_ipt_idx}[{idx}]", "from_input")
                     elif isinstance(filtered_ipt_in, torch.Tensor):
                         scope_trace = self.scope_name.split(".")
                         prefix = scope_trace[0]
@@ -649,10 +685,12 @@ class PytorchNode(BaseNode):
                         self.input_name_list.append(f"{prefix}.constant_{fake_ipt_idx}_{idx}")
                         self.weights[f"{prefix}.constant_{fake_ipt_idx}_{idx}"] = filtered_ipt_in
                         self._fake_input_name_list[fake_ipt_idx] = f"{prefix}.constant_{fake_ipt_idx}_{idx}"
+                        self.params.add_attribute(f"{fake_ipt_idx}[{idx}]", "from_input")
                     else:
-                        self.params.add_attribute(fake_ipt_idx + idx, filtered_ipt_in)
+                        self.params.add_attribute(f"{fake_ipt_idx}[{idx}]", filtered_ipt_in)
             else:
-                self.params.add_attribute(fake_ipt_idx + extend_num, fake_ipt)
+                self.params.add_attribute(f"{fake_ipt_idx}[{extend_num}]", fake_ipt)
+        self.params.parse_attribute(self.fake_input_name_list)
 
     def _filter_inputs(self, ipt):
         """Filter inputs in node."""
@@ -747,18 +785,7 @@ class ParamsAttribute:
         self.attribute_dict = dict()
         self.attribute_name_list = list()
 
-    def _parse_attribute(self, node):
-        """
-        Parse attribute value from torch Node.
-
-        Args:
-            node (torch._C.Node): Torch Node instance.
-        """
-        if not self.attribute_name_list:
-            return
-
-        for attribute_name in self.attribute_name_list:
-            self.attribute_dict[attribute_name] = node[attribute_name]
+        self._packed_params_recoder = dict()
 
     def get_attr(self, name):
         """
@@ -780,8 +807,27 @@ class ParamsAttribute:
             self.attribute_dict.update({f"{idx}": ipt})
             self.attribute_name_list.append(f"{idx}")
         else:
+            pack_id, param_idx = re.findall(r"(.*)\[(.*)]", idx)[0]
+            self._packed_params_recoder.setdefault(pack_id, []).append(param_idx)
             self.attribute_dict.update({f"constant_{idx}": ipt})
             self.attribute_name_list.append(f"constant_{idx}")
+
+    def parse_attribute(self, fake_input_name_list):
+        """Parse attribute name."""
+        for name in self.attribute_name_list:
+            pack_id, param_idx = re.findall(r"constant_(.*)\[(.*)]", name)[0]
+            pack_inst = fake_input_name_list[int(pack_id)]
+            pack_id = int(pack_id)
+            param_idx = int(param_idx)
+            if isinstance(pack_inst, (tuple, list)) and not isinstance(self.attribute_dict[name], (tuple, list)):
+                pattern = ["*" if idx == param_idx else "_" for idx, _ in enumerate(pack_inst)]
+                self.attribute_dict[
+                    f"constant_{pack_id + param_idx}[{pack_id}({','.join(pattern)})]"] = self.attribute_dict.pop(name)
+                self.attribute_name_list[self.attribute_name_list.index(
+                    name)] = f"constant_{pack_id + param_idx}[{pack_id}({','.join(pattern)})]"
+            else:
+                self.attribute_dict[f"constant_{pack_id + param_idx}"] = self.attribute_dict.pop(name)
+                self.attribute_name_list[self.attribute_name_list.index(name)] = f"constant_{pack_id + param_idx}"
 
 
 class FakedTorchCNode:
