@@ -15,12 +15,11 @@
 """The parallel strategy graph classes."""
 import copy
 import sys
+import time
 from enum import Enum
 from typing import List
 
 from mindinsight.profiler.common.log import logger
-from mindinsight.profiler.common.exceptions.exceptions import UnsupportedParallelTypeException
-from mindinsight.profiler.common.exceptions.exceptions import WrongParallelStrategyDataException
 from mindinsight.datavisual.common.enums import PluginNameEnum
 
 
@@ -57,6 +56,8 @@ class DataType(Enum):
     DT_TENSOR = 'DT_TENSOR'
     DT_LIST = 'DT_LIST'
     DT_TUPLE = 'DT_TUPLE'
+    DT_NONE = 'DT_NONE'
+    DT_TYPE = 'DT_TYPE'
 
 
 class Node:
@@ -156,8 +157,12 @@ class Graph:
         self.parameter_nodes = {}
 
     def build_graph(self, graph_proto: dict, rank_id: str):
+        start = time.time()
         self.rank_id = rank_id
         self._parse_graph_proto(graph_proto)
+        logger.info("Parse graph proto success, op node count: %d, parameters count: %d, "
+                    "const count: %d, use time: %s.",
+                    len(self.op_nodes), len(self.parameter_nodes), len(self.const_nodes), (time.time()-start))
 
     def list_op_node_id(self):
         for node_id in self.op_nodes:
@@ -169,8 +174,6 @@ class Graph:
     def _parse_graph_proto(self, graph_proto: dict):
         self._parse_op_nodes(graph_proto['node'])
         self._update_input()
-        logger.info("Parse graph proto success, op node count: %d, parameters count: %d, const count: %d.",
-                    len(self.op_nodes), len(self.parameter_nodes), len(self.const_nodes))
 
     def _update_input(self):
         """Update op node input"""
@@ -223,48 +226,6 @@ class Graph:
 
             self._append_node(node)
 
-    def _parse_parameter_nodes(self, parameter_protos: list):
-        """
-        Parse `anf_ir_pb2.ParameterProto` object, and create a parameter node.
-
-        Args:
-            parameter_protos (list[dict]): The dict object refers to anf_ir_pb2.ParameterProto.
-        """
-        for parameter in parameter_protos:
-            if not parameter['name']:
-                logger.warning("Finding a parameter with an empty name will not save it.")
-                continue
-            node = Node(name=parameter['name'], node_id=parameter['name'])
-            node.type = NodeType.PARAMETER.value
-            node.output_shape = self._get_shape_by_parse_type_proto(parameter['type'])
-            node.output_data_type = self._get_data_type_by_parse_type_proto(parameter['type'])
-            attr = dict(
-                type=self._get_data_type_by_parse_type_proto(parameter['type']),
-                shape=str(self._get_shape_by_parse_type_proto(parameter['type']))
-            )
-            node.add_attr(attr)
-
-            self._append_node(node)
-            logger.debug("Foreach graph proto parameters, node id: %s, node name: %s, "
-                         "node def name: %s", node.node_id, node.name, parameter['name'])
-
-    def _parse_const_nodes(self, consts):
-        """
-        Parse `anf_ir_pb2.NameValueProto` object, and create a const node.
-
-        Args:
-            consts (list[anf_ir_pb2.NameValueProto]): Refer to `anf_ir_pb2.NameValueProto` object.
-        """
-        for const in consts:
-            if 'key' not in const and not const['key']:
-                logger.warning("Finding a const with an empty key will not save it.")
-                continue
-            node = Node(name=const['key'], node_id=const['key'])
-            node.type = NodeType.CONST.value
-            node.add_attr({const['key']: str(const['value'].get('dtype', ''))})
-
-            self._append_node(node)
-
     def _append_node(self, node: Node):
         if node.type == NodeType.PARAMETER.value:
             self.parameter_nodes[node.node_id] = node
@@ -308,7 +269,6 @@ class Graph:
                 continue
 
             value = self._parse_value_proto(attr['value'])
-            # TODO parse attr.value and format it
             node.add_attr({attr['name']: str(value)})
 
     def _parse_value_proto(self, value_proto: dict):
@@ -331,6 +291,10 @@ class Graph:
             actual_value = []
             for value in value_proto.get('values', []):
                 actual_value.append(self._parse_value_proto(value))
+        elif value_proto['dtype'] == DataType.DT_NONE.value:
+            actual_value = value_proto['strVal']
+        elif value_proto['dtype'] == DataType.DT_TYPE.value:
+            actual_value = value_proto.get('typeVal', {}).get('dataType', '')
 
         return actual_value
 
@@ -374,7 +338,9 @@ class Graph:
             shapes = [dim['size'] for dim in tensor_shape_proto['dim']]
         if 'sequenceType' in type_proto and 'elemTypes' in type_proto['sequenceType']:
             for elem_type in type_proto['sequenceType']['elemTypes']:
-                shapes.append(self._get_shape_by_parse_type_proto(elem_type))
+                shape = self._get_shape_by_parse_type_proto(elem_type)
+                if shape:
+                    shapes.append(shape)
         return shapes
 
     def _get_data_type_by_parse_type_proto(self, type_proto: dict):
@@ -442,7 +408,7 @@ class MergedGraph:
 
     def to_dict(self):
         result = dict(
-            rank_ids=self._rank_ids,
+            rank_ids=sorted(map(int, self._rank_ids)),
             op_nodes=[node.to_dict() for node in self._op_nodes.values()],
             const_nodes=[node.to_dict() for node in self._const_nodes.values()],
             parameter_nodes=[node.to_dict() for node in self._parameter_nodes.values()]
@@ -482,23 +448,13 @@ class GraphManager:
     """
 
     def __init__(self, parallel_type: str, stage_devices: list):
-        if parallel_type not in SupportedParallelType.list_members():
-            raise UnsupportedParallelTypeException(f"Only support {SupportedParallelType.list_members()} parallel type,"
-                                                   f" but current parallel type is {parallel_type}.")
         self._parallel_type = parallel_type
         self._stage_devices = self._get_stage_devices(stage_devices)
         self._stage_merged_graphs = {}
         self._rank_graphs = {}
 
-    def add_graph(self, graph_proto: dict, rank_id: str):
-        """Add an original graph proto which is parsed from pb files."""
-        if rank_id in self._rank_graphs:
-            msg = f"The file with the same rank id({rank_id}) was found. " \
-                  f"There should be no file names with the same rank id."
-            logger.error(msg)
-            raise WrongParallelStrategyDataException(msg)
-        graph = Graph()
-        graph.build_graph(graph_proto=graph_proto, rank_id=rank_id)
+    def add_graph(self, graph: Graph, rank_id: str):
+        """Add an original graph object which is parsed from pb files."""
         self._rank_graphs[rank_id] = graph
 
         # If parallel type is data parallel, we can not get stage_devices from proto file.
