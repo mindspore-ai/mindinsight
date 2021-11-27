@@ -607,6 +607,20 @@ class BaseNode(abc.ABC):
         return self.successor_onnx_node_dict
 
 
+class BasePass(metaclass=abc.ABCMeta):
+    """Define base pass for self-defined pass obj."""
+
+    @staticmethod
+    @abc.abstractmethod
+    def generate_init_template_list(**kwargs):
+        """Generate template in init."""
+
+    @staticmethod
+    @abc.abstractmethod
+    def generate_construct_template_list(**kwargs):
+        """Generate template in construct."""
+
+
 class NodeWeight:
     """Node weight struct."""
 
