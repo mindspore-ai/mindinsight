@@ -659,6 +659,10 @@ export default {
         key: '--pipeline-panel-content-bg-color',
         value: '#ffffff',
       },
+      {
+        key: '--grid-preview-bg-color',
+        value: 'rgb(0, 0, 0, 0.1)',
+      },
     ],
     '1': [
       {
@@ -1020,6 +1024,10 @@ export default {
       {
         key: '--echarts-tooltip-font-color',
         value: '#ddd',
+      },
+      {
+        key: '--grid-preview-bg-color',
+        value: 'rgb(255, 255, 255, 0.4)',
       },
     ],
   },
