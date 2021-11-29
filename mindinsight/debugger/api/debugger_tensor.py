@@ -33,6 +33,11 @@ class DebuggerTensor(ABC):
         All APIs in this class are experimental prototypes that are subject to
         change and/or deletion.
 
+    Args:
+        node(Node): The node that outputs this tensor.
+        slot(int): The slot of the tensor on the node.
+        iterations(int): The iteration of the tensor.
+
     Note:
         - Users should not instantiate this class manually.
         - The instances of this class is immutable.
@@ -51,6 +56,15 @@ class DebuggerTensor(ABC):
 
         Returns:
             Node, the node that outputs this tensor.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> tensors = list(my_run.select_tensors("conv"))
+                >>> print(tensors[0].node)
+                rank: 0
+                graph_name: kernel_graph_0
+                node_name: conv5.bias
         """
         return self._node
 
@@ -61,6 +75,13 @@ class DebuggerTensor(ABC):
 
         Returns:
             int, the slot of the tensor on the node.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> tensors = list(my_run.select_tensors("conv"))
+                >>> print(tensors[0].slot)
+                0
         """
         return self._slot
 
@@ -71,6 +92,13 @@ class DebuggerTensor(ABC):
 
         Returns:
             int, the iteration of the tensor.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> tensors = list(my_run.select_tensors("conv"))
+                >>> print(tensors[0].iteration)
+                0
         """
         return self._iteration
 
@@ -82,6 +110,12 @@ class DebuggerTensor(ABC):
         Returns:
             int, the rank for this tensor.
 
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> tensors = list(my_run.select_tensors("conv"))
+                >>> print(tensors[0].rank)
+                0
         """
         return self._node.rank
 
@@ -92,6 +126,12 @@ class DebuggerTensor(ABC):
         Returns:
             Union[numpy.array, None], The value could be None if failed to find data file
             in relative iteration.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> tensors = list(my_run.select_tensors("conv"))
+                >>> value = tensors[0].value()
         """
         raise NotImplementedError
 

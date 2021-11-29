@@ -60,6 +60,38 @@ class WatchpointHit(ABC):
     Note:
         - This class is not meant to be instantiated by user.
         - The instances of this class is immutable.
+
+    Examples:
+        >>> from mindinsight.debugger import DumpAnalyzer
+        >>> from mindinsight.debugger import TensorTooLargeCondition, Watchpoint
+        >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+        >>> tensor_list = my_run.select_tensors(
+        ...                                     query_string="Conv",
+        ...                                     use_regex=True,
+        ...                                     iterations=[0],
+        ...                                     ranks=[0],
+        ...                                     slots=[0]
+        ...                                     )
+        >>> watchpoint = Watchpoint(tensors=tensor_list,
+        ...                         condition=TensorTooLargeCondition(abs_mean_gt=0.0))
+        >>> hits = my_run.check_watchpoints(watchpoints=[watchpoint])
+        >>> hit = list(hits)[0]
+        >>> print(str(hit))
+        Watchpoint TensorTooLarge triggered on slot 0 of node Default/network-WithLossCell/
+        _backbone-AlexNet/conv2-Conv2d/Conv2D-op156.
+        The setting for watchpoint is abs_mean_gt = 0.0.
+        The actual value of the tensor is abs_mean_gt = 0.0665460056158321.
+        >>> print(hit.error_code)
+        0
+        >>> print(hit.tensor)
+        rank: 0
+        graph_name: kernel_graph_0
+        node_name: Default/network-WithLossCell/_backbone-AlexNet/conv2-Conv2d/Conv2D-op156
+        slot: 0
+        iteration: 0
+        >>> print(hit.get_hit_detail())
+        The setting for watchpoint is abs_mean_gt = 0.0.
+        The actual value of the tensor is abs_mean_gt = 0.0665460056158321.
     """
 
     @property
@@ -280,7 +312,14 @@ class TensorTooLargeCondition(ConditionBase):
         mean_gt (float, optional): The threshold for mean of the tensor. When
             the actual value was greater than this threshold, this checking
             condition would be satisfied.
+
+    Examples:
+        >>> from mindinsight.debugger import TensorTooLargeCondition
+        >>> my_condition = TensorTooLargeCondition(abs_mean_gt=0.0)
+        >>> print(my_condition.name)
+        TensorTooLarge
     """
+
 
     def __init__(self,
                  abs_mean_gt=None, max_gt=None, min_gt=None, mean_gt=None):
@@ -335,6 +374,12 @@ class TensorTooSmallCondition(ConditionBase):
         mean_lt (float, optional): The threshold for mean of the tensor. When
             the actual value was less than this threshold, this checking
             condition would be satisfied.
+
+    Examples:
+        >>> from mindinsight.debugger import TensorTooSmallCondition
+        >>> my_condition = TensorTooSmallCondition(abs_mean_lt=0.2)
+        >>> print(my_condition.name)
+        TensorTooSmall
     """
 
     def __init__(self,
@@ -382,18 +427,29 @@ class TensorRangeCondition(ConditionBase):
         change and/or deletion.
 
     Args:
-        range_percentage_lt (int, optional): The threshold for the
+        range_percentage_lt (float, optional): The threshold for the
             percentage of the tensor in the range. The checking condition will be satisfied
             when the percentage of the tensor in the specified range is less than this value.
-        range_percentage_gt (int, optional): The threshold for the
+
+        range_percentage_gt (float, optional): The threshold for the
             percentage of the tensor in the range. The checking condition will be satisfied
             when the percentage of the tensor in the specified range is greater than this value.
-        max_min_lt (int, optional): Threshold for the difference of
-            max and min of a tensor less than this value.
-        max_min_gt (int, optional): Threshold for the difference of
-            max and min of a tensor greater than this value.
-        range_start_inclusive (int, required): The start of the range.
-        range_end_inclusive (int, required): The end of the range.
+
+        max_min_lt (float, optional): Threshold for the difference of
+                                    max and min of a tensor less than this value.
+
+        max_min_gt (float, optional): Threshold for the difference of
+                                              max and min of a tensor greater than this value.
+
+        range_start_inclusive (float, required): The start of the range.
+
+        range_end_inclusive (float, required): The end of the range.
+
+    Examples:
+        >>> from mindinsight.debugger import TensorRangeCondition
+        >>> my_condition = TensorRangeCondition(max_min_gt=0.05)
+        >>> print(my_condition.name)
+        TensorRange
     """
 
     def __init__(self,
@@ -436,15 +492,17 @@ class TensorOverflowCondition(ConditionBase):
     """
     Tensor overflow watchpoint.
 
-    Operator overflow whatchpoint checks whether overflow occurs during operator computation.
-    Only Ascend AI processor is supported.
+    Tensor overflow whatchpoint checks for inf and nan tensors.
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
         change and/or deletion.
 
-    Args:
-        This watchpoint has no arguments.
+    Examples:
+        >>> from mindinsight.debugger import TensorOverflowCondition
+        >>> my_condition = TensorOverflowCondition()
+        >>> print(my_condition.name)
+        TensorOverflow
     """
 
     def __init__(self):
@@ -471,8 +529,14 @@ class TensorAllZeroCondition(ConditionBase):
         change and/or deletion.
 
     Args:
-        zero_percentage_ge (int, required): The threshold to check if the percentage of
+        zero_percentage_ge (float, required): The threshold to check if the percentage of
             zero tensor values are greater than this value.
+
+    Examples:
+        >>> from mindinsight.debugger import TensorAllZeroCondition
+        >>> my_condition = TensorAllZeroCondition(zero_percentage_ge=0.0)
+        >>> print(my_condition.name)
+        TensorAllZero
     """
 
     def __init__(self, zero_percentage_ge=None):
@@ -510,6 +574,12 @@ class TensorUnchangedCondition(ConditionBase):
     Args:
         rtol (float, required): The relative tolerance parameter.
         atol (float, required): The absolute tolerance parameter.
+
+    Examples:
+        >>> from mindinsight.debugger import TensorUnchangedCondition
+        >>> my_condition = TensorUnchangedCondition(rtol=1000.0)
+        >>> print(my_condition.name)
+        TensorUnchanged
     """
 
     def __init__(self, rtol=None, atol=None):
@@ -546,12 +616,18 @@ class TensorInitializationCondition(ConditionBase):
         change and/or deletion.
 
     Args:
-        zero_percentage_ge (int, optional): The threshold to check if the percentage of
+        zero_percentage_ge (float, optional): The threshold to check if the percentage of
             zero values for initial tensor is greater than or equal to this value.
         max_gt (float, optional): The threshold to check if the max value of
             the initial tensor is greater than this value.
         min_lt (float, optional): The threshold to check if the min value of
             the initial tensor is less than this value.
+
+    Examples:
+        >>> from mindinsight.debugger import TensorInitializationCondition
+        >>> my_condition = TensorInitializationCondition(max_gt=0.0)
+        >>> print(my_condition.name)
+        TensorInitialization
     """
 
     def __init__(self, zero_percentage_ge=None, max_gt=None, min_lt=None):
@@ -595,6 +671,12 @@ class TensorChangeBelowThresholdCondition(ConditionBase):
         mean_update_ratio_lt (float, optional): The threshold value for mean update ration,
             if the mean update ratio is less that this value the watchpoint will be triggered.
         epsilon (float, optional): epsilon value.
+
+    Examples:
+        >>> from mindinsight.debugger import TensorChangeBelowThresholdCondition
+        >>> my_condition = TensorChangeBelowThresholdCondition(abs_mean_update_ratio_lt=2.0)
+        >>> print(my_condition.name)
+        TensorChangeBelowThreshold
     """
 
     def __init__(self, abs_mean_update_ratio_lt=None, epsilon=None):
@@ -635,6 +717,12 @@ class TensorChangeAboveThresholdCondition(ConditionBase):
         mean_update_ratio_gt (float, optional): The threshold value for mean update ration,
             if the mean update ratio is greater than this value the watchpoint will be triggered.
         epsilon (float, optional): epsilon value.
+
+    Examples:
+        >>> from mindinsight.debugger import TensorChangeAboveThresholdCondition
+        >>> my_condition = TensorChangeAboveThresholdCondition(abs_mean_update_ratio_gt=0.0)
+        >>> print(my_condition.name)
+        TensorChangeAboveThreshold
     """
 
     def __init__(self, abs_mean_update_ratio_gt=None, epsilon=None):
@@ -670,6 +758,25 @@ class Watchpoint:
     Args:
         tensors (Iterable[DebuggerTensor]): The tensors to check.
         condition (ConditionBase): The condition to apply to tensors.
+
+    Examples:
+        >>> from mindinsight.debugger import DumpAnalyzer
+        >>> from mindinsight.debugger import TensorTooLargeCondition, Watchpoint
+        >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+        >>> tensor_list = my_run.select_tensors(
+        ...                                     query_string="Conv",
+        ...                                     use_regex=True,
+        ...                                     iterations=[0],
+        ...                                     ranks=[0],
+        ...                                     slots=[0]
+        ...                                     )
+        >>> watchpoint = Watchpoint(tensors=tensor_list,
+        ...                         condition=TensorTooLargeCondition(abs_mean_gt=0.0))
+        >>> tensor = list(watchpoint.tensors)[0]
+        >>> print(tensor.node.name)
+        Default/network-WithLossCell/_backbone-AlexNet/conv2-Conv2d/Conv2D-op156
+        >>> print(watchpoint.condition.name)
+        TensorTooLarge
     """
 
     def __init__(self, tensors, condition):
