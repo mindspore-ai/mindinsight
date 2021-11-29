@@ -372,8 +372,8 @@
       "desc": "For operator {n1}, you can increase the prefetch_size value."
     },
     "minddata_device_queue_rate": {
-      "empty_rate": "The current host-side queue empty queue ratio is {empty_rate}%, and the threshold is {empty_warning_threshold}%. There may be room for optimization in the data processing stage. You can adjust the script according to the data processing performance optimization reference recommendation.",
-      "empty_warning_threshold": "The current host-side queue empty queue ratio is {empty_rate}%, the threshold is {empty_warning_threshold}%, and there is an empty queue in the chip-side queue, there may be room for optimization in the data sending stage. It is recommended to submit an issue to the MindSpore community for feedback."
+      "empty_rate": "The ratio of empty queues on a host is {empty_rate}%, and the threshold is {empty_warning_threshold}%. The data processing stage can be optimized. You can adjust the script based on the data processing performance optimization suggestions.",
+      "empty_warning_threshold": "The ratio of empty queues on a host is {empty_rate}%, and the threshold is {empty_warning_threshold}%. There are empty queues on a chip. The data transmission stage can be optimized. You are advised to commit issues in the MindSpore community."
     },
     "minddata-proposer_type_label": {
       "desc": "Step interval profiling"
@@ -385,7 +385,7 @@
       "desc": "The ratio of empty queues on a chip is {n1}/{n2}, and the ratio of non empty queues is {n3}/{n4}."
     },
     "device_queue_warning": {
-      "desc": "According to the data processing performance optimization refer to the recommended optimization script."
+      "desc": "You can optimize the script based on the data processing performance optimization suggestions."
     },
     "millisecond": "ms",
     "curCard": "Number of cards",
@@ -604,7 +604,7 @@
     "host": "Host",
     "peakMem": "Peak Memory Usage",
     "capaCity": "Maximum Available Memory",
-    "maximumPeakRatio": "Maximum Peak Ratio",
+    "maximumPeakRatio": "Peak Memory Usage Ratio",
     "unit": "KIB",
     "timeTitle": "time(ms)",
     "stepChartTitle": "Cluster Step Trace",
@@ -651,20 +651,22 @@
     "computationTimeTip": "The total execution time of AICore operator, used to judge whether there is a slow card. The longer the time, the slower the execution speed of the corresponding card.",
     "collectiveCommunicationAloneTip": "Only the time period during which other communication operators except the receive communication operator are executed, and the calculation operator does not execute. The greater the proportion of this time period, the need to consider whether the segmentation strategy of the operators in the stage can be adjusted to reduce the time-consuming duration of this time period.",
     "flopsRateLabel": "the ratio of the current device FLOPs to the maximum FLOPs of all devices",
-    "step_interval": "The iteration interval of the {rank_id} card is {val}ms, which is {percent}% higher than the average of the cards, which may affect the overall performance. Please go to the card's stand-alone page to focus on the data preparation stage.",
-    "flops_per_second": "The FLOPS (floating point operations per second) value of the {rank_id} card is {val}G/s, which is {percent}% lower than the average of the cards, which may affect the overall performance. Please pay attention to this card.",
-    "cluster_link": "The bandwidth of the communication link ({link_type}) from {src_rank} to {des_rank} card is {val}KB/s, which is {percent}% lower than the average link of {link_type}, which may affect the overall performance. Please pay attention to this link.",
+    "step_interval": "The step interval of the device {rank_id} is {val} ms, which is {percent}% higher than the average value of each device. This may affect the overall performance. Pay attention to the data preparation stage on the single node page of the device.",
+    "flops_per_second": "The FLOPS value of the device {rank_id} is {val} G/s, which is {percent}% lower than the average value of each device. This may affect the overall performance. Pay attention to this device.",
+    "cluster_link": "The bandwidth of the communication link ({link_type}) from device {src_rank} to device {des_rank} is {val} KB/s, which is {percent}% lower than the average bandwidth of the {link_type} link. This may affect the overall performance. Pay attention to this link.",
     "parallel_strategy": {
-      "data_parallel_communication_rate": "The communication time-consuming ratio of this model is {val}%, which exceeds the empirical threshold {threshold}%. You can try to refer to the MindSpore distributed parallel tutorial to set the all_reduce_fusion_config parameter to adjust the gradient AllReduce fusion splitting strategy to reduce the communication time.",
-      "model_parallel_communication_rate": "The communication time-consuming ratio of this model is {val}%, which exceeds the empirical threshold {threshold}%. You can try to optimize the operator segmentation strategy to reduce the communication time.",
-      "pipeline_parallel_between_stage": "The time-consuming ratio of inter-stage communication (only Receive operator) is {val}%, which exceeds the empirical threshold {threshold}%. You can try to focus on the analysis of the time-consuming reason of the Receive operator in combination with the timeline.",
-      "pipeline_parallel_within_stage": "The time-consuming ratio of communication within the stage{stage} (except the Receive operator) is {val}%, which exceeds the empirical threshold {threshold}%. You can analyze the time-consuming reason of the communication operator in combination with the timeline, and try to optimize the segmentation of the operator Strategies or other ways to reduce the time-consuming communication operators.",
-      "pipeline_parallel_flops": "The calculation amount of stage{stage} internal card {rank_id} is {val}M, which is {percent}% higher than the average value. You can try to optimize the stage segmentation strategy to balance the calculation amount of each card."
+      "data_parallel_communication_rate": "From the step tail and step trace, it can be concluded that the ratio of the model communication duration is {val}%, which exceeds the empirical threshold {threshold}%. You can set the all_reduce_fusion_config parameter by referring to the MindSpore parallel distributed tutorial to adjust the AllReduce fusion and shard strategy of a gradient to reduce the communication duration.",
+      "model_parallel_communication_rate": "The ratio of the model communication duration is {val}%, which exceeds the empirical threshold {threshold}%. You can try to analyze and optimize the operator segmentation strategy through the 'policy awareness' page under the cluster to reduce the communication time.",
+      "pipeline_parallel_between_stage": "The ratio of the inter-stage communication (only for the Receive operator) duration is {val}%, which exceeds the empirical threshold {threshold}%. You can analyze the cause of the long time consumed by the Receive operator based on the timeline.",
+      "pipeline_parallel_within_stage": "The ratio of the communication duration (except the Receive operator) in stage {stage} is {val}%, which exceeds the empirical threshold {threshold}%. The ratio of the communication duration (except the Receive operator) in stage {stage} is {val}%, which exceeds the empirical threshold {threshold}%.",
+      "pipeline_parallel_flops": "The average computation amount of the stage{stage} card is {val}M, which is {percent}% higher than the average value of each stage. You can try to optimize the stage segmentation strategy to balance the computation amount of each stage."
     },
-    "step_interval_title": "Step interval performance analysis",
-    "flops_per_second_title": "Card calculation performance analysis",
-    "cluster_link_title": "Performance analysis of link bandwidth between cards",
-    "parallel_strategy_title": "Analysis on the rationality of segmentation of communication operators"
+    "step_interval_title": "Step Interval Profiling",
+    "flops_per_second_title": "Device Computing Profiling",
+    "cluster_link_title": "Inter-Device Link Bandwidth Profiling",
+    "parallel_strategy_title": "Communication Operator Sharding Reasonability Analysis",
+    "clusterPerformanceTest": "How do I use Profiler for cluster performance debugging?",
+    "clusterGuideUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/performance_profiling_ascend_of_cluster.html"
   },
   "components": {
     "summaryTitle": "Training Selection",
@@ -1000,12 +1002,12 @@
     "forward": "Forward",
     "yes": "Yes",
     "no": "No",
-    "hasDataTip": "Indicates that tensor data is saved in this round",
+    "hasDataTip": "Tensor data is saved in this epoch.",
     "currentStepTip": "Indicates the current graph execution epoch",
     "noDistinguish": "All",
     "newGraphName": "New graph received",
     "noExexutionGraph": "The graph execution history file in the execution_order directory is missing.",
-    "graphExecutionHistoryTip":"Graph execution history file: save the history round information of graph execution",
+    "graphExecutionHistoryTip":"Graph execution history file: saves the historical epoch information of the graph execution.",
     "noExecutionHistoryFile": "Graph history file is not available"
   },
   "explain": {
