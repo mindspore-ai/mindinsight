@@ -10,6 +10,7 @@ import {
   _findTopScope,
   _findExistNameScope,
   getSingleNode,
+  resetFirstCntFlag,
 } from '../js/build-graph';
 import {createElkGraph, dataNodeMap} from '../js/create-elk-graph';
 import {
@@ -97,6 +98,7 @@ export default {
     this.elk = new ELK();
   },
   mounted() {
+    resetFirstCntFlag();
     this.getDisplayedGraph();
   },
   destroyed() {

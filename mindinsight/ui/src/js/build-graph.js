@@ -26,7 +26,7 @@ import {
   SCOPE_AGGREGATOR,
 } from './const';
 
-import {genHash} from './util';
+import {genHash, _checkShardMethod} from './util';
 
 let processedGraph = {
   nodeMap: {},
@@ -39,6 +39,7 @@ let nameScopeIds = [];
 const minimumCutMode = true;
 let insertedAttr = [];
 let delNodesSet;
+let firstCntFlag = true;
 
 let rawGraphData = null; // raw graph data
 
@@ -305,15 +306,6 @@ function _compressTrie(node) {
 }
 
 /**
- * Check whether the shard method is valid
- * @param {Array|undefined} value
- * @return {boolean}
- */
-function _checkShardMethod(value) {
-  return value !== undefined && value.length > 0;
-}
-
-/**
  * Finding exist name scope of node.
  * @param {String} id Node id.
  * @return {String}
@@ -385,6 +377,11 @@ function _delTrivialNodes(nodeMap) {
             const curOutputNode = nodeMap[id];
             const targetNodeIdx = curOutputNode.input.indexOf(basicNode.id);
             curOutputNode.input.splice(targetNodeIdx, 1);
+            if (_checkShardMethod(curOutputNode.parallel_shard)) {
+              const newPshard = JSON.parse(curOutputNode.parallel_shard);
+              newPshard.splice(targetNodeIdx, 1);
+              curOutputNode.parallel_shard = JSON.stringify(newPshard);
+            }
           }
         }
         delNodesSet.add(basicNode.id);
@@ -411,6 +408,16 @@ function _delTrivialNodes(nodeMap) {
         const targetNodeIdx = nxtNode.input.indexOf(basicNode.id);
         nxtNode.input.splice(targetNodeIdx, 1);
         nxtNode.input.push(...basicNode.input);
+        if (_checkShardMethod(nxtNode.parallel_shard)) { // reset the parallel shard of the output node
+          const newPshard = JSON.parse(nxtNode.parallel_shard);
+          newPshard.splice(targetNodeIdx, 1);
+          nxtNode.parallel_shard = JSON.stringify(newPshard);
+          if (_checkShardMethod(basicNode.parallel_shard)) {
+            nxtNode.parallel_shard = JSON.stringify(JSON.parse(nxtNode.parallel_shard)
+                .push(...JSON.parse(basicNode.parallel_shard)));
+          }
+        }
+
         delNodesSet.add(basicNode.id);
         delete nodeMap[basicNode.id];
       } else if (inputCnt === 1) {
@@ -419,6 +426,15 @@ function _delTrivialNodes(nodeMap) {
             const nxtNode = nodeMap[id];
             const targetNodeIdx = nxtNode.input.indexOf(basicNode.id);
             nxtNode.input.splice(targetNodeIdx, 1, inputNodes[0]);
+            if (_checkShardMethod(nxtNode.parallel_shard)) { // reset the parallel shard of the output node
+              const newPshard = JSON.parse(nxtNode.parallel_shard);
+              newPshard.splice(targetNodeIdx, 1);
+              nxtNode.parallel_shard = JSON.stringify(newPshard);
+              if (_checkShardMethod(basicNode.parallel_shard)) {
+                nxtNode.parallel_shard = JSON.stringify(JSON.parse(nxtNode.parallel_shard)
+                    .push(...JSON.parse(basicNode.parallel_shard)));
+              }
+            }
           }
         }
         const preNode = nodeMap[inputNodes[0]];
@@ -429,7 +445,7 @@ function _delTrivialNodes(nodeMap) {
         delete nodeMap[basicNode.id];
       }
     }
-    if (basicNode.type === 'Depend') {
+    if (basicNode.type === 'Depend') { // remove mul-to-mul depend operator
       let inputCnt = 0;
       let outputCnt = 0;
       for (const id of basicNode.input) {
@@ -515,7 +531,6 @@ function _processNodesParallel(data) {
         continue;
       }
       source.output.push(basicNode.id);
-      basicNode.input_shape[inputId] = source.output_shape;
     }
   });
 
@@ -560,14 +575,27 @@ function _processNodesParallel(data) {
   }
   _compressTrie(trie); // compress the namescope with only one child
   _delTrivialNodes(nodeMap); // delete trivial nodes
+  // output & input_shape
+  Object.values(nodeMap).forEach((basicNode) => {
+    const inputs = basicNode.input;
+    basicNode.input_shape = {};
+    for (const inputId of inputs) {
+      const source =
+        nodeMap[inputId] || parameterMap[inputId] || constMap[inputId];
+      if (
+        !source ||
+        source.type === NODE_TYPE.parameter ||
+        source.type === NODE_TYPE.const
+      ) {
+        continue;
+      }
+      basicNode.input_shape[inputId] = source.output_shape;
+    }
+  });
   for (const sNode of nodes) {
     if (sNode && Object.keys(sNode).length && !delNodesSet.has(sNode.node_id)) {
-      const node = _createBasicNode(sNode);
-      node.output = nodeMap[node.id].output;
-      node.input_shape = nodeMap[node.id].input_shape;
-
-      if (node.parent && !nameScopeSet.has(node.parent)) {
-        let iterator = node.parent.split(SCOPE_SEPARATOR);
+      if (sNode.scope && !nameScopeSet.has(sNode.scope)) {
+        let iterator = sNode.scope.split(SCOPE_SEPARATOR);
         do {
           const name = iterator.join(SCOPE_SEPARATOR);
           if (nameScopeSet.has(name)) {
@@ -578,7 +606,9 @@ function _processNodesParallel(data) {
           }
         } while (iterator.length);
       }
-      nodeMap[node.id] = node;
+
+      nodeMap[sNode.node_id].scope = sNode.scope;
+      nodeMap[sNode.node_id].parent = sNode.scope;
     }
   }
 
@@ -627,17 +657,26 @@ function _processNodesGlobalCnt() {
 }
 
 /**
+ * reset firstCntFlag
+ */
+function resetFirstCntFlag() {
+  firstCntFlag = true;
+}
+
+/**
  * Get special nodes cnt of all namescopes
  */
 function _processNodesCnt() {
+  if (firstCntFlag) {
+    _processNodesGlobalCnt();
+    firstCntFlag = false;
+  }
+
   const {nodeMap} = processedGraph;
   Object.keys(nodeMap).forEach((id) => {
     if (isNaN(id)) return;
     const node = nodeMap[id];
     const iterator = node.scope.split(SCOPE_SEPARATOR);
-
-    _processNodesGlobalCnt();
-    _processNodesGlobalCnt = () => {};
 
     if (!node.parent) return;
     do {
@@ -1151,7 +1190,7 @@ function buildPipelinedStageInfo(data) {
     }
     for (const [startNodeId, endNodeId] of Object.values(stageInfo)) {
       if (endNodeId === undefined) {
-        return {err: "build failed."};
+        return {err: 'build failed.'};
       }
       pipelineNodeInfo[firstIndex][startSecondIndex].push(startNodeId);
       pipelineNodeInfo[firstIndex][endSecondIndex].push(endNodeId);
@@ -1223,4 +1262,5 @@ export {
   _findTopScope,
   _findExistNameScope,
   getRealNodeName,
+  resetFirstCntFlag,
 };

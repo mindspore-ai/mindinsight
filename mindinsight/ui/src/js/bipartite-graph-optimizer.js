@@ -19,6 +19,7 @@ import {
   EDGE_SEPARATOR,
 } from './const';
 import {showNodeType} from './build-graph';
+import {_checkShardMethod} from './util';
 
 // communication oeperator
 const COMM_LIST = new Set([
@@ -191,15 +192,6 @@ function getProduct(arr) {
   return arr.reduce((prev, cur) => prev * cur);
 }
 
-/**
- * check whether the shard method is valid
- * @param {Array|undefined} value
- * @return {boolean}
- */
-function _checkShardMethod(value) {
-  return value !== undefined && value.length > 0;
-}
-
 const _nodesExtraAttributesMap = {};
 
 /**
@@ -239,7 +231,6 @@ class ExtraAttr {
         .map((arr, i) => {
           const input = node.input[i];
           if (!arr.length) return null; // skip when the matrix is empty
-          if (getProduct(arr) === 1) return null; // skip when only one piece
           // ignore const and parameters
           if (nodeMap[input] === undefined) return null;
 
