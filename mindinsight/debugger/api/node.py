@@ -274,6 +274,7 @@ class NodeImpl(Node):
     def copy(self):
         """Copy Node."""
         node = NodeImpl(self._base_node, self._node_type)
+        node.debugger_engine = self.debugger_engine
         node.input_nodes = self.input_nodes.copy()
         node.downstream = self.downstream.copy()
         return node
