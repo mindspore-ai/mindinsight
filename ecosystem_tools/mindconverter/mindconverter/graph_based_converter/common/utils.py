@@ -663,3 +663,44 @@ def torch_installation_validation(func):
         func(*args, **kwargs)
 
     return _f
+
+
+def api_args_validation(func):
+    """
+    Validate args of func.
+
+    Args:
+        func (type): Function.
+
+    Returns:
+        type, inner function.
+    """
+    torch = import_module("torch")
+
+    def _f(*args, **kwargs):
+        # Check whether type of the arg `model` is torch.nn.Module.
+        model = kwargs.get("model") or args[0]
+        if not isinstance(model, torch.nn.Module):
+            _print_error(BadParamError(
+                f"The arg `model` is expected to be the instantiated PyTorch model, but {type(model)} is gotten."))
+            sys.exit(-1)
+
+        # Check whether type of the arg `dummy_inputs` is tuple<torch.Tensor>.
+        dummy_inputs = kwargs.get("dummy_inputs") or args[1]
+        if not isinstance(dummy_inputs, tuple) or not np.all([isinstance(arg, torch.Tensor) for arg in dummy_inputs]):
+            current_arg_type = type(dummy_inputs) if not isinstance(dummy_inputs, tuple) \
+                else f"tuple({', '.join([type(arg) for arg in dummy_inputs])})"
+            _print_error(BadParamError(f"The type of arg `dummy_inputs` is expected to be tuple<torch.Tensor>, "
+                                       f"but {current_arg_type} is gotten."))
+            sys.exit(-1)
+
+        # If the optional arg `output_dir` is set, check whether type of it is String.
+        output_dir = kwargs.get("output_dir") or args[2] if len(args) > 2 else None
+        if output_dir is not None:
+            if not isinstance(output_dir, str):
+                _print_error(BadParamError(f"If set, the type of arg `output_dir` is expected to be String, "
+                                           f"but {type(output_dir)} is gotten."))
+                sys.exit(-1)
+        func(*args, **kwargs)
+
+    return _f
