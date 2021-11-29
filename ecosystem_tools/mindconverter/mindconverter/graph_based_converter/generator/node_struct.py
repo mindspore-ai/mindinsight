@@ -22,6 +22,7 @@ from mindconverter.graph_based_converter.generator.args_translator import ArgsTr
 from mindconverter.graph_based_converter.third_party_graph.onnx_graph_node import OnnxGraphNode
 from mindconverter.graph_based_converter.common.global_context import GlobalContext
 from mindconverter.common.exceptions import GeneratorError
+from mindconverter.graph_based_converter.third_party_graph.pytorch_graph_node import PytorchGraphNode
 
 
 class NodeStruct:
@@ -90,6 +91,8 @@ class NodeStruct:
             op_name = op_name.replace('nn.', '')
             op_name = op_name.replace('P.', '')
             op_name = op_name.replace('onnx.', '')
+            op_name = op_name.replace('aten.', '')
+            op_name = op_name.replace('self_defined_pattern.', '')
             return op_name
 
         if idx is not None:
@@ -145,7 +148,7 @@ class NodeStruct:
         Args:
             arg (Union[PyTorchGraphNode, OnnxGraphNode, dict]): Node related obj.
         """
-        if isinstance(arg, OnnxGraphNode):
+        if isinstance(arg, (OnnxGraphNode, PytorchGraphNode)):
             self._update_from_onnx_gn(arg)
         elif isinstance(arg, Fragment):
             self._update_from_fragment(arg)

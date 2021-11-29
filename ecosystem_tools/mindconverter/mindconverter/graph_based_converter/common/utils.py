@@ -17,7 +17,9 @@ import os
 import re
 import stat
 import json
+import sys
 import uuid
+from functools import partial
 from importlib import import_module
 from importlib.util import find_spec
 from typing import List, Tuple, Mapping, Counter
@@ -27,11 +29,10 @@ import numpy as np
 from mindconverter.common.log import MindConverterLogger
 from mindconverter.common.exceptions import ScriptGenerationError, ReportGenerationError, \
     CheckPointGenerationError, WeightMapGenerationError, ModelLoadingError, OnnxModelSaveError, \
-    ParamMissingError, BadParamError, NodeTypeNotSupport
-
+    ParamMissingError, BadParamError, NodeTypeNotSupport, RuntimeIntegrityError
 from mindconverter.graph_based_converter.constant import AUTO_DETECT_NODES, SEPARATOR_IN_ONNX_OP, FrameworkType, \
     TENSORFLOW_MODEL_SUFFIX, THIRD_PART_VERSION, ONNX_MODEL_SUFFIX, DTYPE_MAP, WRITE_FLAGS, RW_MODE_FOR_OWNER, \
-    RWX_MODE_FOR_OWNER
+    RWX_MODE_FOR_OWNER, ExchangeMessageKeywords, TemplateKeywords
 
 
 def is_converted(operation: str):
@@ -267,6 +268,43 @@ def reset_init_or_construct(template, variable_slot, new_data, scope):
     return template
 
 
+def add_init_or_construct(template, variable_slot, new_data, scope, add_location=-1):
+    """Add init or construct statement."""
+    if isinstance(new_data, list):
+        template[variable_slot][scope].extend(new_data)
+        return template
+    if add_location < 0:
+        template[variable_slot][scope].append(new_data)
+    else:
+        template[variable_slot][scope].insert(add_location, new_data)
+    return template
+
+
+def reset_exchange_msg(exchange_msg, variable_slot, new_data, scope):
+    """Reset scope info in exchange_msg."""
+    exchange_msg[variable_slot][scope] = new_data
+    return exchange_msg
+
+
+def reset_template_and_exchange_msg(template, exchange_msg, variable_slot, init_template_list, construct_template_list,
+                                    args, trainable_params, parameters_declared, group_inputs):
+    """Reset template and exchange_msg."""
+    template = reset_init_or_construct(template, variable_slot, init_template_list, TemplateKeywords.INIT.value)
+    template = reset_init_or_construct(template, variable_slot, construct_template_list,
+                                       TemplateKeywords.CONSTRUCT.value)
+    exchange_msg = reset_exchange_msg(exchange_msg, variable_slot, args,
+                                      ExchangeMessageKeywords.VariableScope.value.ARGS.value)
+    exchange_msg = reset_exchange_msg(exchange_msg, variable_slot, trainable_params,
+                                      ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value)
+    if parameters_declared:
+        exchange_msg = reset_exchange_msg(exchange_msg, variable_slot, parameters_declared,
+                                          ExchangeMessageKeywords.VariableScope.value.PARAMETERS_DECLARED.value)
+    if group_inputs:
+        exchange_msg = reset_exchange_msg(exchange_msg, variable_slot, group_inputs,
+                                          ExchangeMessageKeywords.VariableScope.value.GROUP_INPUTS.value)
+    return template, exchange_msg
+
+
 def replace_string_in_list(str_list: list, original_str: str, target_str: str):
     """
     Replace a string in a list by provided string.
@@ -381,11 +419,13 @@ def get_lib_notice_info():
     """Get current lib information and required lib information."""
     common_lib_list = ['mindspore', 'onnx', 'onnxruntime', 'onnxoptimizer']
     tf_lib_list = ['tensorflow', 'tf2onnx']
-    current_lib_versions = get_current_lib_versions(common_lib_list + tf_lib_list)
-    info = f"Libraries {get_third_part_lib_error_info(common_lib_list)} are required by converter, " \
-           f"{get_third_part_lib_error_info(tf_lib_list)} are required when converted from TF(.pb). " \
+    api_lib_list = ["mindspore", "torch"]
+    current_lib_versions = get_current_lib_versions(common_lib_list + tf_lib_list + api_lib_list)
+    info = f"For command line, libraries {get_third_part_lib_error_info(common_lib_list)} are required by converter, " \
+           f"{get_third_part_lib_error_info(tf_lib_list)} are required when converted from TF(.pb).\n" \
+           f"For API, libraries {get_third_part_lib_error_info(api_lib_list)} are required.\n" \
            f"Current versions are: " \
-           f"{get_third_part_lib_error_info(common_lib_list + tf_lib_list, current_lib_versions)}."
+           f"{get_third_part_lib_error_info(common_lib_list + tf_lib_list + api_lib_list, current_lib_versions)}."
     return info
 
 
@@ -397,8 +437,7 @@ def check_params_exist(params: list, config):
             miss_param_list = ', '.join((miss_param_list, param)) if miss_param_list else param
 
     if miss_param_list:
-        raise ParamMissingError(
-            f"Param(s) missing, {miss_param_list} is(are) required when using graph mode.")
+        raise ParamMissingError(f"Param(s) missing, {miss_param_list} is(are) required when using graph mode.")
 
 
 def extract_from_cli(file_config, check_params):
@@ -495,7 +534,7 @@ def generate_operator_scanning_report(graph_obj, table, framework, out_folder: s
         f.write('operator_name, count, status\n')
         for op, count in opertator_count.items():
             status = 'Supported' if table.get(op, None) is not None \
-                     else 'Unsupported'
+                else 'Unsupported'
             if status == 'Unsupported':
                 supported_status = False
             f.write(f'{op}, {count}, {status}\n')
@@ -505,3 +544,122 @@ def generate_operator_scanning_report(graph_obj, table, framework, out_folder: s
         error = NodeTypeNotSupport('Found unsupported operator, please check the detail report at: {}'.format(out_path))
         MindConverterLogger.error(str(error))
         raise error
+
+
+check_common_dependency_integrity = partial(check_dependency_integrity,
+                                            "onnx", "onnxruntime", "onnxoptimizer", "mindspore")
+
+
+def _print_error(err):
+    """Print error to stdout and record it."""
+    MindConverterLogger.error(str(err))
+
+
+def onnx_installation_validation(func):
+    """
+    Validate args of func.
+
+    Args:
+        func (type): Function.
+
+    Returns:
+        type, inner function.
+    """
+
+    def _f(*args, **kwargs):
+        error_info = \
+            f"{get_third_part_lib_error_info(['mindspore', 'onnx', 'onnxruntime', 'onnxoptimizer'])} " \
+            f"are required when using graph based scripts converter or ONNX conversion."
+
+        # Check whether common dependency integrity is installed.
+        if not onnx_satisfied() or not check_common_dependency_integrity():
+            _print_error(RuntimeIntegrityError(error_info))
+            sys.exit(-1)
+
+        func(*args, **kwargs)
+
+    return _f
+
+
+def _check_tf_installation():
+    """
+    Check whether TensorFlow was installed.
+
+    Returns:
+        bool, true or false.
+    """
+    return find_spec("tensorflow") or find_spec("tensorflow-gpu")
+
+
+def tf_installation_validation(func):
+    """
+    Validate args of func.
+
+    Args:
+        func (type): Function.
+
+    Returns:
+        type, inner function.
+    """
+
+    def _f(*args, **kwargs):
+        not_integral_error = RuntimeIntegrityError(
+            f"TensorFlow, "
+            f"{get_third_part_lib_error_info(['mindspore', 'tf2onnx', 'onnx', 'onnxruntime', 'onnxoptimizer'])} "
+            f"are required when using graph based scripts converter for TensorFlow conversion."
+        )
+        # Check whether tensorflow and common dependency integrity are installed.
+        if not _check_tf_installation() or not onnx_satisfied():
+            _print_error(not_integral_error)
+            sys.exit(-1)
+
+        if not check_common_dependency_integrity("tensorflow"):
+            _print_error(not_integral_error)
+            sys.exit(-1)
+
+        func(*args, **kwargs)
+
+    return _f
+
+
+def extract_model_name(model_path):
+    """
+    Extract model name from model path.
+
+    Args:
+        model_path (str): Path of Converted model.
+
+    Returns:
+        str, name of Converted model.
+    """
+    if isinstance(model_path, str) and model_path:
+        base_path = os.path.basename(model_path)
+        model_name = '.'.join(base_path.split('.')[:-1])
+    else:
+        model_name = 'model'
+    return model_name
+
+
+def torch_installation_validation(func):
+    """
+    Validate args of func.
+
+    Args:
+        func (type): Function.
+
+    Returns:
+        type, inner function.
+    """
+
+    def _f(*args, **kwargs):
+        not_integral_error = RuntimeIntegrityError(
+            f"{get_third_part_lib_error_info(['mindspore', 'torch'])} are required "
+            f"when using `pytorch2mindspore` API for pytorch conversion.")
+
+        # Check whether torch and mindspore are installed correctly.
+        if not check_dependency_integrity("mindspore", "torch"):
+            _print_error(not_integral_error)
+            sys.exit(-1)
+        func(*args, **kwargs)
+
+    return _f

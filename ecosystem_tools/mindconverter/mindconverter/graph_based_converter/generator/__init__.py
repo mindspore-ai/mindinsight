@@ -18,7 +18,7 @@ __all__ = ["batch_add_nodes"]
 import re
 import copy
 
-from mindconverter.graph_based_converter.constant import ExchangeMessageKeywords
+from mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, UNKNOWN_SHAPE_WITHOUT_PRECURSOR_NODES
 from mindconverter.graph_based_converter.common.code_fragment import Fragment
 from mindconverter.graph_based_converter.common.outputs import NodeOutputManager
 from mindconverter.graph_based_converter.generator.generator import Generator
@@ -63,7 +63,7 @@ def batch_add_nodes(graph_obj, mapper) -> Generator:
         node_input = graph_obj.get_input_shape(node_name)
         node_output = graph_obj.get_output_shape(node_name)
         if not node_input:
-            raise ValueError("Unable to get the node's inputs from Graph object.")
+            node_input = UNKNOWN_SHAPE_WITHOUT_PRECURSOR_NODES
         node_name_with_scope = _tf_model_node_name_reformat(node_inst, node_name)
         node_name = node_name_with_scope
 
@@ -147,6 +147,7 @@ def _combine_external_inputs_with_precursor_nodes(node, external_inputs):
         precursor.insert(node_idx, item)
     return precursor
 
+
 def _bind_outputs_edges(exchange_msg, outputs_order_mapping):
     """
     Bind the outputs edges names with the outputs order mapping.
@@ -162,6 +163,6 @@ def _bind_outputs_edges(exchange_msg, outputs_order_mapping):
     if not outputs_edges:
         raise ValueError(f"ONNX Node {exchange_msg.get('metadata').get('source')} has no outputs info.")
     if len(outputs_edges) != len(outputs_order_mapping):
-        raise ValueError(f"ONNX Node {exchange_msg.get('metadata').get('source')} has inconsistent " \
+        raise ValueError(f"ONNX Node {exchange_msg.get('metadata').get('source')} has inconsistent "
                          f"outputs edge number and mapping number")
     return zip(outputs_edges, outputs_order_mapping)

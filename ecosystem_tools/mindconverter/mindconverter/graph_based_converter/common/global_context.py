@@ -87,6 +87,9 @@ class GlobalContext(metaclass=Singleton):
         # Define Module Struct Build Status
         self.build_struct_finished = False
 
+        # Define Hard-code class template.
+        self.hard_template = dict()
+
     def get_onnx_node_from_identifier(self, identifier):
         """Return an OnnxUtils defined node by its identifier."""
         onnx_node_name = self.node_struct_to_onnx_node_map.get(identifier)

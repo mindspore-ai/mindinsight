@@ -17,6 +17,7 @@ from mindconverter.graph_based_converter.generator.node_struct import NodeStruct
 from mindconverter.graph_based_converter.generator.module_struct import ModuleStruct
 from mindconverter.graph_based_converter.common.global_context import GlobalContext
 
+
 class MatcherHelper:
     """
     Helper function for matching processing.
@@ -118,7 +119,6 @@ class MatcherLauncher:
         # 2. Set module returns
         self._register_module_returns()
 
-
     def _register_module_inputs_x_header(self):
         """Recursively register the inputs to module init header."""
         # Use nearest parent module algorithm
@@ -150,7 +150,6 @@ class MatcherLauncher:
                     nd_parent.add_inputs_edge(inp)
                     nd_parent = nd_parent.parent_module_struct
 
-
     def _register_module_returns(self):
         """Recursively register the node outputs to parent modules."""
         # Use nearest parent module algorithm
@@ -181,4 +180,3 @@ class MatcherLauncher:
                     while public_parent.identifier != nd_parent.identifier:
                         nd_parent.add_outputs_edge(base_out.onnx_edge_name)
                         nd_parent = nd_parent.parent_module_struct
-    
