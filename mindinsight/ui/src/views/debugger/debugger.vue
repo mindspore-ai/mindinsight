@@ -649,8 +649,6 @@ limitations under the License.
               <div slot="content">
                 <div class="graph-count-info">
                   <div class="graph-execution-history">{{$t('debugger.graphExecutionHistoryTip')}}</div>
-                  <div class="has-data"></div>{{this.$t('debugger.hasDataTip')}}<br>
-                  <div class="current-step"></div>{{this.$t('debugger.currentStepTip')}}
                 </div>
               </div>
               <i class="el-icon-info"></i>
@@ -674,6 +672,8 @@ limitations under the License.
                 </el-option>
               </el-select>
             </div>
+            <div class="has-data"></div>{{this.$t('debugger.hasDataTip')}}
+            <div class="current-step"></div>{{this.$t('debugger.currentStepTip')}}
             <img :src="require('@/assets/images/all-drop-down.png')"
                  v-show="!showGraphCount"
                  @click="showGraphCount = !showGraphCount"
@@ -705,7 +705,7 @@ limitations under the License.
                               v-if="item.sub_graph_names.length">
                     <div class="graph-name">{{ item.graph_name }}</div>
                   </el-tooltip>
-                  <div class="graph-name" 
+                  <div class="graph-name"
                        v-else>{{ item.graph_name }}</div>
                 </div>
               </div>
@@ -844,8 +844,16 @@ limitations under the License.
               </div>
             </div>
           </el-tab-pane>
-          <el-tab-pane :label="$t('debugger.stackInfo')"
-                       name="stack">
+          <el-tab-pane name="stack">
+            <span slot="label">
+              {{$t('debugger.stackInfo')}}
+              <el-tooltip class="item"
+                          effect="light"
+                          :content="$t('debugger.stackTip')"
+                          placement="top">
+                <i class="el-icon-info"></i>
+              </el-tooltip>
+            </span>
             <div class="table-content">
               <ul class="stack-content">
                 <li class="stack-item"
@@ -1389,7 +1397,7 @@ export default {
           }
           this.scrollGraphCount();
         } else {
-          this.$message.error(this.$t('debugger.noExexutionGraph'));
+          this.$message(this.$t('debugger.noExexutionGraph'));
         }
       });
     },
@@ -1413,7 +1421,9 @@ export default {
     scrollGraphCount() {
       this.$nextTick(() => {
         const countIndex = this.graphIdArr.findIndex((val) => val.count === this.metadata.step);
-        const viewAreaLength = 3;
+        const padding = 20;
+        const viewAreaLength =
+          (document.querySelector('#graph-count-container').clientWidth - padding) / this.graphCountWidth;
         document.querySelector('#graph-count-container').scrollLeft =
           countIndex < viewAreaLength ? 0 : this.graphCountWidth * countIndex;
       });
@@ -2737,7 +2747,7 @@ export default {
 }
 .deb-wrap .right .svg-wrap .graph-count-wrap {
   position: absolute;
-  width: 600px;
+  width: 100%;
   left: 0px;
   top: 0px;
   background-color: var(--graph-legend-bg-color);
@@ -2771,9 +2781,10 @@ export default {
   line-height: 30px;
 }
 .deb-wrap .right .svg-wrap .graph-count-wrap .left {
-  flex: 2;
+  flex: 1;
   text-align: center;
   border-right: 1px solid var(--table-border-color);
+  min-width: 180px;
 }
 .deb-wrap .right .svg-wrap .graph-count-wrap .left .graph-count {
   border-bottom: 1px solid var(--table-border-color);
@@ -2797,7 +2808,7 @@ export default {
   border: 1px solid var(--theme-color);
 }
 .deb-wrap .right .svg-wrap .graph-count-wrap .right .value-wrap.hasData {
-  background-color: #ff9800;
+  background-color: var(--debugger-execution-history-bg-color);
 }
 .deb-wrap .right .svg-wrap .graph-count-wrap .right .value-wrap .count {
   border-bottom: 1px solid var(--table-border-color);
@@ -3166,10 +3177,10 @@ export default {
 .deb-indent {
   padding-left: 40px;
 }
-.graph-count-info .graph-execution-history{
- margin-bottom: 5px;
+.graph-count-info .graph-execution-history {
+  margin-bottom: 5px;
 }
-.graph-count-info .has-data {
+.graph-count-wrap .has-data {
   display: inline-block;
   width: 10px;
   height: 10px;
@@ -3177,13 +3188,15 @@ export default {
   margin-right: 10px;
   margin-bottom: 5px;
   vertical-align: middle;
+  margin-left: 20px;
 }
-.graph-count-info .current-step {
+.graph-count-wrap .current-step {
   display: inline-block;
   width: 10px;
   height: 10px;
   border: 1px solid var(--theme-color);
   margin-right: 10px;
   vertical-align: middle;
+  margin-left: 20px;
 }
 </style>

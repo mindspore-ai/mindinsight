@@ -1001,10 +1001,11 @@
     "hasDataTip": "表示该轮次有张量数据被保存",
     "currentStepTip": "表示当前图执行轮次",
     "noDistinguish": "不区分",
-    "newGraphName": "收到新图",
-    "noExexutionGraph": "execution_order目录下的图执行历史文件缺失。",
+    "newGraphName": "收到新图：{graphNames}。（注意：新图上暂无任何监测点，如有需要，请自行设置。）",
+    "noExexutionGraph": "execution_order目录下的图执行历史文件缺失,无法查看图执行历史。",
     "graphExecutionHistoryTip": "图执行历史文件：保存该图执行的历史轮次信息",
-    "noExecutionHistoryFile": "图执行历史文件缺失"
+    "noExecutionHistoryFile": "图执行历史文件缺失",
+    "stackTip": "有部分算子由框架生成，这些算子可能关联到框架本身的代码，或者没有代码可以关联，均为正常现象。这些算子例如TupleGetItem、Depend、UpdateState等。"
   },
   "explain": {
     "explain": "模型解释",
