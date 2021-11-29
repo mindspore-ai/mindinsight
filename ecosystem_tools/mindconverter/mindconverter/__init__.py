@@ -28,14 +28,9 @@ __version_info__ = tuple(VERSION.split('.'))
 from mindconverter.cli import convert, query_graph
 from mindconverter.graph_based_converter.sub_graph_searcher.built_in_pattern import \
     user_defined_pattern as register_pattern
-from mindconverter.graph_based_converter.framework import convert_api as pytorch2mindspore
+from mindconverter.graph_based_converter.framework import pytorch2mindspore
 
 
 __all__ = [
-    '__version__',
-    '__version_info__',
-    'register_pattern',
-    'convert',
-    'query_graph',
     'pytorch2mindspore'
 ]

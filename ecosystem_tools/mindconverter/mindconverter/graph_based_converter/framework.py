@@ -19,7 +19,8 @@ from google.protobuf.internal import api_implementation
 from mindconverter.graph_based_converter.common.global_context import GlobalContext
 from mindconverter.graph_based_converter.common.utils import save_code_file_and_report, get_framework_type, \
     save_intermediate_graph, extract_in_out_nodes, generate_operator_scanning_report, \
-    onnx_installation_validation, extract_model_name, tf_installation_validation, torch_installation_validation
+    onnx_installation_validation, extract_model_name, tf_installation_validation, torch_installation_validation, \
+    api_args_validation
 from mindconverter.graph_based_converter.constant import FrameworkType
 from mindconverter.graph_based_converter.generator import batch_add_nodes
 from mindconverter.graph_based_converter.mapper import ONNXToMindSporeMapper, PytorchToMindSporeMapper, get_table
@@ -168,19 +169,50 @@ def main_graph_base_converter(file_config):
         raise error
 
 
+@api_args_validation
 @torch_installation_validation
 @FileSaveError.uniform_catcher()
 @GeneratorError.uniform_catcher()
 @SubGraphSearchingError.uniform_catcher()
 @GraphInitError.uniform_catcher()
-def convert_api(model, dummy_inputs, output_dir=None):
+def pytorch2mindspore(model, dummy_inputs, output_dir=None):
     """
-    Api to convert the model.
-    Call the api in model script to run conversion.
-    """
-    if not isinstance(dummy_inputs, tuple):
-        dummy_inputs = (dummy_inputs,)
+    Convert PyTorch model to MindSpore model.
 
+    This function is to transform instantiated PyTorch model with PyTorch pre-trained CheckPoint to MindSpore model
+    scripts and MindSpore CheckPoint file.
+
+    Args:
+        model (torch.nn.Module): The instantiated PyTorch model with pre-trained checkpoint loaded.
+        dummy_inputs (tuple<torch.tensor>): Tuple of input tensors for the PyTorch model. The number of tensors,
+            the shape and the data type of every tensor should be consistent with that of PyTorch model.
+        output_dir (str): The directory path for generated files and migration reports.
+            If not set, all results will be saved in `$PWD/output`. Default: None.
+
+    Raises:
+         BaseConverterError: Unknown error occurred during runtime, please see the detail in `mindconverter.log`.
+         GraphInitFailError: Error in tracing the computational graph.
+         FileSaveError: Error in saving generated results.
+         GeneratorError: Error in generating code.
+         SubGraphSearchingError: Error in finding frequent sub-graph.
+
+    Examples:
+        >>> import torch
+        >>> from transformers import BertModel
+        >>> from mindconverter import pytorch2mindspore
+        >>> model = BertModel.from_pretrained("bert-base-uncased")
+        >>> model.eval()
+        ...
+        >>> input_ids = np.random.uniform(0, 100, (1, 512)).astype(np.int64)
+        >>> attention_mask = np.zeros((1, 512)).astype(np.int64)
+        >>> token_type_ids = np.zeros((1, 512)).astype(np.int64)
+        >>> dummy_inputs = (torch.tensor(input_ids), torch.tensor(attention_mask), torch.tensor(token_type_ids))
+        >>> with torch.no_grad():
+        ...     model(*dummy_inputs)
+        ...
+        >>> output_dir = "./output"
+        >>> pytorch2mindspore(model, dummy_inputs, output_dir)
+    """
     graph_obj = PytorchGraph(model, input_tensors=dummy_inputs)
     default_output_dir = os.path.realpath(os.path.join(os.getcwd(), "output"))
     output_dir = output_dir or default_output_dir
