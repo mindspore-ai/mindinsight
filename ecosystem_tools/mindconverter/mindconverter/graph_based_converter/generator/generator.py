@@ -172,7 +172,7 @@ class Generator:
         self._module_map = OrderedDict()
         self._global_context = GlobalContext()
         self._global_context.node_struct_collections = self._node_struct_collections
-        self._repeated_submodules = set()
+        self._repeated_submodules = dict()
 
     @GeneratorError.check_except("Generator occurs an error when forming base submodules.")
     def _form_bottom_submodule(self):
@@ -300,7 +300,7 @@ class Generator:
         for (_, nd_struct) in nd_struct_list[1:]:
             compared_t_param_data_dict = nd_struct.fragment.default_var["trainable_params"].get(t_param_postfix)
             if not compared_t_param_data_dict:
-                raise ValueError(f"Inconsistent trainable params detected for node " \
+                raise ValueError(f"Inconsistent trainable params detected for node "
                                  f"{nd_struct.topo_idx} with base node {base_nd_struct.topo_idx}")
             compared_t_name = compared_t_param_data_dict.get('onnx_name')
             t_onnx_names.append(compared_t_name)
@@ -358,7 +358,7 @@ class Generator:
         Find all formal args / params from nodes in a module.
 
         Args:
-            module_filter_return (dict): The filtered results from the module_map_filter.
+            module_filter_return (list): The filtered results from the module_map_filter.
 
         Return:
             list, a list of sets or None indicates all formal args of each node in the module in order.
@@ -413,6 +413,12 @@ class Generator:
                     continue
                 checked_module.add(module_num)
                 map_filtered = self.module_map_filter(module_num=module_num)
+
+                # Sort map_filtered according to id.
+                for idx, m in enumerate(map_filtered):
+                    m = sorted(m, key=lambda x: x[0])
+                    map_filtered[idx] = m
+
                 formal_args_in_this_module = self._list_formal_parameters_in_a_module(map_filtered)
                 formal_args_in_each_submodule[module_num] = formal_args_in_this_module
         return formal_args_in_each_submodule
@@ -517,6 +523,10 @@ class Generator:
                     continue
                 # get all md_structs by same pattern
                 md_list = self._global_context.module_structs.get(pattern_id)
+                if len(md_list) == 1:
+                    self._recover_args_values_to_formal_args(md_list[0])
+                    done_submodule.add(pattern_id)
+                    continue
                 self._take_formal_args_from_updated_submodules(md_list)
                 args_translators = self.get_args_translator_from_module_structs_list(md_list)
                 formal_args_list = ArgsTranslationHelper.find_formal_args_in_modules(args_translators)
@@ -525,6 +535,13 @@ class Generator:
                 ArgsTranslationHelper.change_args_to_formal_for_all_translators(
                     formal_args_list, changed_args_translators)
                 done_submodule.add(pattern_id)
+
+    @staticmethod
+    def _recover_args_values_to_formal_args(cur_md):
+        """Recover sub_module args values to formal_args if current module is recalled only once."""
+        for sub_md in cur_md.module_structs:
+            args_translator = sub_md.args_translator
+            args_translator.recover_args_values_to_formal_args()
 
     def _take_formal_args_from_updated_submodules(self, md_list):
         """
@@ -723,6 +740,10 @@ class Generator:
         CodeStruct(self.module_structs.get('[]'), self._repeated_submodules)
 
         outputs = [get_imported_module()]
+
+        for hard_code_line_list in self._global_context.hard_template.values():
+            for line in hard_code_line_list:
+                outputs.append(line)
 
         for code_struct in self._global_context.code_structs.values():
             for line in code_struct.code_line_list:
