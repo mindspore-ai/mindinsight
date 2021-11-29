@@ -20,12 +20,13 @@ limitations under the License.
     @mousemove="isDrag = true"
     class="graph-container"
   >
-    <div id="graph"
+    <div
+      id="graph"
       class="graph"
       v-loading.fullscreen.lock="loading.show"
       element-loading-background="rgba(0, 0, 0, 0.3)"
-      :element-loading-text="this.$t('trainingDashboard.loadingTip')">
-    </div>
+      :element-loading-text="this.$t('trainingDashboard.loadingTip')"
+    ></div>
     <svg-el-container ref="graphContainer" class="elk-graph" id="p-graph">
       <filter
         id="outline_selected_y"
@@ -47,9 +48,9 @@ limitations under the License.
           result="drop"
           in="offset"
           type="matrix"
-          values="0 0 0 0 0.96
-            0 0 0 0 0.76
-            0 0 0 0 0.55
+          values="0 0 0 0 0.93
+            0 0 0 0 0.56
+            0 0 0 0 0.17
             0 0 0 1 0"
         />
         <feBlend in="SourceGraphic" in2="drop" mode="normal" />
@@ -75,9 +76,9 @@ limitations under the License.
           result="drop"
           in="offset"
           type="matrix"
-          values="0 0 0 0 0.82
-            0 0 0 0 0.9
-            0 0 0 0 0.82
+          values="0 0 0 0 0.49
+            0 0 0 0 0.71
+            0 0 0 0 0.49
             0 0 0 1 0"
         />
         <feBlend in="SourceGraphic" in2="drop" mode="normal" />
@@ -541,13 +542,17 @@ limitations under the License.
       <div class="second-title" style="font-size: 10px;">
         {{ this.$t("profiling.redistribution") }}:
         <span style="font-weight: normal;">{{
-          specialNodesMap["Redistribution"] ? specialNodesMap["Redistribution"] : 0
+          specialNodesMap["Redistribution"]
+            ? specialNodesMap["Redistribution"]
+            : 0
         }}</span>
       </div>
       <div class="second-title" style="font-size: 10px;">
         {{ this.$t("profiling.gradientAggregate") }}:
         <span style="font-weight: normal;">{{
-          specialNodesMap["GradientAggregation"] ? specialNodesMap["GradientAggregation"] : 0
+          specialNodesMap["GradientAggregation"]
+            ? specialNodesMap["GradientAggregation"]
+            : 0
         }}</span>
       </div>
     </div>
@@ -564,7 +569,7 @@ limitations under the License.
           {{ selectedNode.name }}
         </div>
         <div class="second-title">Inputs:</div>
-        <div class="list" :style="{ 'max-height': inputInfoHeight }">
+        <div class="list">
           <div
             v-for="(item, index) in selectedNode.input"
             :key="index"
@@ -617,10 +622,24 @@ limitations under the License.
                 selectedNode.input_shape ? selectedNode.input_shape[item] : ""
               }}
             </div>
+            <div
+              v-if="
+                !(
+                  notShowTypes.includes(
+                    getNodeFromID(item) && getNodeFromID(item).type
+                  ) || notShowTypes.includes(selectedNode.type)
+                ) &&
+                  _checkShardMethod(selectedNode.parallel_shard) &&
+                  selectedNode.parallel_shard[index]
+              "
+            >
+              <span style="font-weight: bold">strategy: </span>
+              {{ JSON.parse(selectedNode.parallel_shard)[index] }}
+            </div>
           </div>
         </div>
         <div class="second-title">Outputs:</div>
-        <div class="list" :style="{ 'max-height': outputInfoHeight }">
+        <div class="list">
           <div
             v-for="(item, index) in selectedNode.output"
             :key="index"
@@ -666,7 +685,7 @@ limitations under the License.
           {{ selectedNode.output_shape }}
         </div>
         <div class="second-title">Attributes:</div>
-        <div class="list" :style="{ 'max-height': attributeInfoHeight }">
+        <div class="list">
           <div v-for="(val, key) in selectedNode.attribute" :key="key">
             {{ key }}: {{ val }}
           </div>
@@ -687,7 +706,13 @@ limitations under the License.
         </svg>
         <svg width="190" height="20">
           <g>
-            <text dx="10" dy="14" font-size="11" font-weight="bold">
+            <text
+              dx="10"
+              dy="14"
+              font-size="11"
+              font-weight="bold"
+              fill="var(--font-color)"
+            >
               {{ this.$t("profiling.hasStrategy") }}
             </text>
           </g>
@@ -696,12 +721,18 @@ limitations under the License.
       <div class="second-title" style="block">
         <svg width="20" height="20">
           <g>
-            <rect width="20" height="20" rx="3" fill="rgb(209,229,209)" />
+            <rect width="20" height="20" rx="3" fill="rgb(125,181,125)" />
           </g>
         </svg>
         <svg width="190" height="20">
           <g>
-            <text dx="10" dy="14" font-size="11" font-weight="bold">
+            <text
+              dx="10"
+              dy="14"
+              font-size="11"
+              font-weight="bold"
+              fill="var(--font-color)"
+            >
               {{ this.$t("profiling.redistribution") }}
             </text>
           </g>
@@ -711,12 +742,18 @@ limitations under the License.
       <div class="second-title" style="block">
         <svg width="20" height="20">
           <g>
-            <rect width="20" height="20" rx="3" fill="rgb(245,194,140)" />
+            <rect width="20" height="20" rx="3" fill="rgb(237,142,44)" />
           </g>
         </svg>
         <svg width="190" height="20">
           <g>
-            <text dx="10" dy="14" font-size="11" font-weight="bold">
+            <text
+              dx="10"
+              dy="14"
+              font-size="11"
+              font-weight="bold"
+              fill="var(--font-color)"
+            >
               {{ this.$t("profiling.gradientAggregate") }}
             </text>
           </g>
@@ -785,9 +822,6 @@ export default {
       isClickOperatorNode: new Map(),
       clickTimer: null,
       infoHeight: '82px',
-      inputInfoHeight: '',
-      outputInfoHeight: '',
-      attributeInfoHeight: '',
       selectedNode: null,
       notShowTypes: Object.keys(NODE_TYPE),
 
@@ -861,6 +895,18 @@ export default {
     },
 
     /**
+     * Check whether the shard method is valid
+     * @param {Array|undefined} value
+     * @return {boolean}
+     */
+    _checkShardMethod(value) {
+      if (typeof value === 'string') {
+        value = JSON.parse(value);
+      }
+      return value !== undefined && value.length > 0;
+    },
+
+    /**
      * mouse enter event handler of scope node
      * @param {Object} node
      */
@@ -882,50 +928,25 @@ export default {
      * update node info panel's height depending on the selected node
      */
     updateInfoHeight() {
-      const borderOffset = 2;
-
-      const defaultInfoHeight = 82;
-      const panelTitleHeight = 36;
-      const titleHeight = 24;
-      const nodeNameLineHeight = 18;
-      const lineMarginTop = 5;
-      const lineHeight = 16;
-
-      const maxShowNodeNameCharNumInEachLine = 28;
-      const maxShowInputNum = 5;
-      const maxShowOutputNum = 15;
-      const titleNum = 4;
-
-      const eachInputLineNum = 3;
-      const eachOutputLineNum = 1;
+      const curGraphContainerHeight = document.getElementById('p-graph')
+          .clientHeight;
+      const specialNodePanelHeight = 112;
+      const legendPanelHeight = 114;
+      const panelMargin = 8;
+      const panelPadding = 12;
+      const curNodeAttributePanelHeight =
+        curGraphContainerHeight -
+        specialNodePanelHeight -
+        legendPanelHeight -
+        2 * panelMargin -
+        2 * panelPadding;
 
       if (!this.selectedNode) {
         this.infoHeight = defaultInfoHeight + 'px';
         return;
       }
-      const inputInfoHeight =
-        Math.min(this.selectedNode.input.length, maxShowInputNum) *
-        (lineHeight * eachInputLineNum + lineMarginTop);
-      const outputInfoHeight =
-        Math.min(this.selectedNode.output.length, maxShowOutputNum) *
-        (lineHeight * eachOutputLineNum + lineMarginTop);
-      const outputShapeInfoHeight = lineHeight;
-      const attributeInfoHeight = this.selectedNode.attribute
-        ? Object.keys(this.selectedNode.attribute).length * lineHeight
-        : 0;
-      this.inputInfoHeight = inputInfoHeight + borderOffset + 'px';
-      this.outputInfoHeight = outputInfoHeight + borderOffset + 'px';
-      this.attributeInfoHeight = attributeInfoHeight + borderOffset + 'px';
-      this.infoHeight =
-        inputInfoHeight +
-        outputInfoHeight +
-        outputShapeInfoHeight +
-        attributeInfoHeight +
-        (this.selectedNode.name.length / maxShowNodeNameCharNumInEachLine) *
-          nodeNameLineHeight +
-        panelTitleHeight +
-        titleHeight * titleNum +
-        'px';
+
+      this.infoHeight = curNodeAttributePanelHeight + 'px';
     },
 
     /**
@@ -1482,6 +1503,7 @@ export default {
   text-overflow: ellipsis;
   user-select: none;
   padding: 0 4px;
+  fill: var(--font-color);
 }
 .elk-graph .graph-operator-label {
   transform: scale(0.7);
@@ -1566,7 +1588,7 @@ export default {
   top: 134px;
   right: 12px;
   transition: height 0.3s;
-  padding-bottom: 6px;
+  overflow: auto;
 }
 
 .graph-container .graph-right-info .list {

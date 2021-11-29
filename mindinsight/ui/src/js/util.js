@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 /**
  * Generates a hash value of a string.
  * @param {String} str
@@ -26,5 +27,16 @@ function genHash(str = '') {
   return hash & 0x7fffffff;
 }
 
+/**
+ * check whether the shard method is valid
+ * @param {Array|undefined} value
+ * @return {boolean}
+ */
+function _checkShardMethod(value) {
+  if (typeof value === 'string') {
+    value = JSON.parse(value);
+  }
+  return value !== undefined && value.length > 0;
+}
 
-export {genHash};
+export {genHash, _checkShardMethod};

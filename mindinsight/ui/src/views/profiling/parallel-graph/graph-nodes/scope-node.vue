@@ -91,7 +91,7 @@ limitations under the License.
 
         <svg v-if="specialNodesCnt.hasOwnProperty('Redistribution')"  width="8" height="8">
           <g>
-            <rect width="8" height="8" rx="3" fill="rgb(209,229,209)"/>
+            <rect width="8" height="8" rx="3" fill="rgb(125,181,125)"/>
           </g>
         </svg>
         <svg v-if="specialNodesCnt.hasOwnProperty('Redistribution')"  width="21" height="8">
@@ -102,7 +102,7 @@ limitations under the License.
 
         <svg v-if="specialNodesCnt.hasOwnProperty('GradientAggregation')"  width="8" height="8">
           <g>
-            <rect width="8" height="8" rx="3" fill="rgb(245,194,140)"/>
+            <rect width="8" height="8" rx="3" fill="rgb(237,142,44)"/>
           </g>
         </svg>
         <svg v-if="specialNodesCnt.hasOwnProperty('GradientAggregation')"  width="21" height="8">
