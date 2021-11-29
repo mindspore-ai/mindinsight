@@ -724,10 +724,11 @@ export default {
           nodes.on('click', null);
           nodes.on('dblclick', null);
           this.resetTensor();
-          if (this.preTensorGraphs[this.preTensorGraphs.length-1].name !== this.curRowObj.name) {
-            this.preTensorGraphs.push(JSON.parse(JSON.stringify(this.curRowObj)));
-          }
           this.currentTensorGraphIndex++;
+          if(this.preTensorGraphs.length - 1 >= this.currentTensorGraphIndex){
+            this.preTensorGraphs.splice(this.currentTensorGraphIndex);
+          }
+          this.preTensorGraphs.push(JSON.parse(JSON.stringify(this.curRowObj)));
         }
       });
 

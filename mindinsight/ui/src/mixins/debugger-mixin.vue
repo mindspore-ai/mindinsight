@@ -495,10 +495,6 @@ export default {
      * @param {Boolean} isQuery whether to query tree data
      */
     dealMetadata(metadata) {
-      if (metadata.graph_name && !this.graphFiles.options.includes(metadata.graph_name)) {
-        this.$message.success(this.$t('debugger.newGraphName'));
-        location.reload();
-      }
       if (metadata.graph_name 
           && metadata.graph_name !== this.metadata.graph_name 
           && this.graphFiles.value !== this.$t('debugger.all')     
@@ -618,6 +614,14 @@ export default {
           if (res.data) {
             if (res.data.metadata) {
               this.dealMetadata(res.data.metadata);
+            }
+            if(res.data.graph?.graph_names?.length){
+              let graphNames = res.data.graph.graph_names.filter(val=>!this.graphFiles.options.includes(val));
+              graphNames.filter(val=>!this.graphFiles.options.includes(val))
+              this.$message.success(this.$t('debugger.newGraphName', { graphNames }));
+              setTimeout(() => {
+                location.reload();
+              }, 2000);
             }
             let name = null;
             if (this.selectedNode.name) {
