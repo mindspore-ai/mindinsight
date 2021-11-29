@@ -1064,10 +1064,12 @@ export default {
   tensorThemes: {
     '0': {
       positiveColor: '0, 165, 167',
+      middleColor: '#fff',
       negativeColor: '227, 125, 41',
     },
     '1': {
       positiveColor: '0, 165, 167',
+      middleColor: '#2d2d2d',
       negativeColor: '227, 125, 41',
     },
   },

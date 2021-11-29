@@ -974,7 +974,7 @@ export default {
 
       const grideTable = this.$refs.tensorValue;
       if (grideTable) {
-        grideTable.updateGridData(true, [], {}, '[0,0,:,:]');
+        grideTable.initCommonInfo(true, [], {}, '[0,0,:,:]');
       }
 
       this.tensorGraphData = {};
@@ -1124,7 +1124,7 @@ export default {
               }
 
               this.$nextTick(() => {
-                this.$refs.tensorValue.updateGridData(this.tensorValue, JSON.parse(row.shape), statistics, shape);
+                this.$refs.tensorValue.initCommonInfo(this.tensorValue, JSON.parse(row.shape), statistics, shape);
               });
             } else if (res.data.tensor_status === 'uncached') {
               this.tensorValue = [];
@@ -1222,7 +1222,7 @@ export default {
                 }
                 this.tensorValue = [];
                 this.$nextTick(() => {
-                  this.$refs.tensorValue.showRequestErrorMessage(errorMsg, JSON.parse(row.shape), shape, true);
+                  this.$refs.tensorValue.initCommonInfo(errorMsg, JSON.parse(row.shape), statistics, shape);
                 });
                 this.dealLoading();
                 return;
@@ -1232,7 +1232,7 @@ export default {
               }
               this.tensorValue = value instanceof Array ? value : [value];
               this.$nextTick(() => {
-                this.$refs.tensorValue.updateGridData(this.tensorValue, JSON.parse(row.shape), statistics, shape);
+                this.$refs.tensorValue.initCommonInfo(this.tensorValue, JSON.parse(row.shape), statistics, shape);
               });
               this.curRowObj.bytes = res.data.tensor_value.bytes || 0;
               const [size, unit] = this.$parent.fileSizeConversion(this.curRowObj.bytes);

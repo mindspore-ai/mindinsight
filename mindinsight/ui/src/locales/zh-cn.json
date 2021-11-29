@@ -238,6 +238,9 @@
     "titleText": "数据图"
   },
   "tensors": {
+    "mode": "模式",
+    "tableMode": "表格模式",
+    "chartMode": "图模式",
     "titleText": "张量",
     "dimension": "形状：",
     "tensorType": "数据类型：",
