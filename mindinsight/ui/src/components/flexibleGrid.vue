@@ -743,6 +743,7 @@ export default {
       let rowGapIndex;
       for (let i = 0; i < rowGaps.length; i++) {
         const { start, end } = rowGaps[i];
+        if (this.showFixed && i === 0) continue;
         if (start <= offsetY + start && offsetY + start <= end) {
           rowGapIndex = differIndex * i;
           break;
