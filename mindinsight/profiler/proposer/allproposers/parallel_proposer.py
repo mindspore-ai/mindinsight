@@ -240,26 +240,31 @@ class ParallelProposer(Proposer):
             self._proposal_dict["parallel_strategy"]["pipeline_parallel_within_stage"]["stage"] = stage_id
 
     def _flops_analyze(self):
-        """The total flops of rank, find the device with the most computation."""
+        """The flops of stage analyze, find the stage with the most computation."""
         if not self._analyse_flops:
             return
 
         rank_flops = self._parallel_analyser.get_rank_flops()
-        avg_flop = sum([f["FLOPs"] for f in rank_flops]) / len(rank_flops)
 
-        rank_id = -1
-        val = 0.0
+        stage_rank_avg_flops = {}
+        stage_rank_size = self._rank_size // self._stage_num
+        for rank_flop in rank_flops:
+            stage = int(rank_flop["rank_id"] // stage_rank_size + 1)
+            stage_rank_avg_flops[stage] = stage_rank_avg_flops.get(stage, 0) + rank_flop["FLOPs"] / stage_rank_size
+
+        stage_avg = sum([stage_rank_avg_flops[stage] for stage in stage_rank_avg_flops]) / len(stage_rank_avg_flops)
+
+        warn_stage = -1
         percent = 0.0
-        for flop in rank_flops:
-            proportion = flop["FLOPs"] / avg_flop - 1
+        val = 0.0
+        for stage in stage_rank_avg_flops:
+            proportion = stage_rank_avg_flops[stage] / stage_avg - 1
             if proportion > self._flops_threshold and proportion > percent:
-                rank_id = flop["rank_id"]
+                warn_stage = stage
                 percent = proportion
-                val = flop["FLOPs"]
-        if rank_id >= 0:
-            self._proposal_dict["parallel_strategy"]["pipeline_parallel_flops"]["stage"] = \
-                int(rank_id // (self._rank_size // self._stage_num) + 1)
-            self._proposal_dict["parallel_strategy"]["pipeline_parallel_flops"]["rank_id"] = rank_id
+                val = stage_rank_avg_flops[stage]
+        if warn_stage >= 0:
+            self._proposal_dict["parallel_strategy"]["pipeline_parallel_flops"]["stage"] = warn_stage
             self._proposal_dict["parallel_strategy"]["pipeline_parallel_flops"]["val"] = \
                 round(val, self._VAL_DECIMAL_PLACES)
             self._proposal_dict["parallel_strategy"]["pipeline_parallel_flops"]["percent"] = \
