@@ -251,6 +251,7 @@
   },
   "graph": {
     "titleText": "计算图",
+    "optimizeText": "优化计算图的可读性，降低计算图的复杂度，图中大部分的梯度计算逻辑和优化器计算逻辑将会被移除。",
     "downloadPic": "下载",
     "fitScreen": "适应屏幕",
     "nodeInfo": "节点信息",
@@ -690,7 +691,8 @@
     "scientificCounting": "科学计数",
     "accuracyTips": "如果数值展示不全，可以拖拽表头的分隔线查看",
     "startText": "起",
-    "endText": "终"
+    "endText": "终",
+    "optimize": "优化"
   },
   "debugger": {
     "debugger": "调试器",

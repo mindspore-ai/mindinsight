@@ -252,6 +252,7 @@
   },
   "graph": {
     "titleText": "Computational Graph",
+    "optimizeText": "Optimize the readability of the calculation diagram and reduce the complexity of the calculation diagram. Most of the gradient calculation logic and optimizer calculation logic in the diagram will be removed.",
     "downloadPic": "Download",
     "fitScreen": "Fit to Screen",
     "nodeInfo": "Node Information",
@@ -690,7 +691,8 @@
     "scientificCounting": "Scientific notation",
     "accuracyTips": "If a value is not completely displayed, drag a border of the table header to resize.",
     "startText": "Start",
-    "endText": "End"
+    "endText": "End",
+    "optimize": "optimize"
   },
   "debugger": {
     "debugger": "Debugger",
