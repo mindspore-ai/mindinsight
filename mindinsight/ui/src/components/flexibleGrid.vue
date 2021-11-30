@@ -174,56 +174,6 @@ export default {
     };
   },
   watch: {
-    // Shrink button style of the listening columns
-    columns: {
-      handler(newValue) {
-        newValue.forEach((value) => {
-          if (['left', 'right'].includes(value.hide)) {
-            value.isHide = !Boolean(value.currentWidth);
-            this.areaList.find((area) => area.hide === value.hide).isHide = value.isHide;
-          }
-        });
-      },
-      deep: true,
-    },
-    // Shrink button style of the listening rows
-    rows: {
-      handler(newValue) {
-        const { differIndex, areaList } = this;
-        const rowCount = 1; // The page is laid out in one line
-        if (newValue.length === rowCount) return;
-        const hideAreasIndex = newValue.findIndex((item) => {
-          return Object.keys(this.hideAreas).includes(item.name);
-        });
-        if (!newValue[hideAreasIndex]['currentHeight']) {
-          newValue[hideAreasIndex + differIndex]['hide'] = '';
-          newValue[hideAreasIndex]['hide'] = 'top-center';
-          newValue[hideAreasIndex]['isHide'] = true;
-        } else {
-          newValue[hideAreasIndex + differIndex]['hide'] = 'bottom';
-          newValue[hideAreasIndex]['isHide'] = false;
-        }
-        if (!newValue[hideAreasIndex + differIndex]['currentHeight']) {
-          newValue[hideAreasIndex]['hide'] = '';
-          newValue[hideAreasIndex + differIndex]['hide'] = 'bottom-center';
-          newValue[hideAreasIndex + differIndex]['isHide'] = true;
-        } else {
-          newValue[hideAreasIndex]['hide'] = 'top';
-          newValue[hideAreasIndex + differIndex]['isHide'] = false;
-        }
-        areaList.forEach((area) => {
-          if (newValue[hideAreasIndex].name === area.name) {
-            area.hide = newValue[hideAreasIndex].hide;
-            area.isHide = newValue[hideAreasIndex].isHide;
-          }
-          if (newValue[hideAreasIndex + differIndex].name === area.name) {
-            area.hide = newValue[hideAreasIndex + differIndex].hide;
-            area.isHide = newValue[hideAreasIndex + differIndex].isHide;
-          }
-        });
-      },
-      deep: true,
-    },
   },
   created() {
     this.calGapAreas();
@@ -250,6 +200,51 @@ export default {
     }
   },
   methods: {
+    /**
+     * Change the attributes of whether each area is displayed
+     */
+    changeAreasIsHide() {
+      const { columns, rows, differIndex, areaList } = this;
+      columns.forEach((value) => {
+        if (['left', 'right'].includes(value.hide)) {
+          value.isHide = !Boolean(value.currentWidth);
+          areaList.find((area) => area.hide === value.hide).isHide = value.isHide;
+        }
+      });
+      const rowCount = 1; // The page is laid out in one line
+      if (rows.length === rowCount) return;
+      const hideAreasIndex = rows.findIndex((item) => {
+        return Object.keys(this.hideAreas).includes(item.name);
+      });
+      if (!rows[hideAreasIndex]['currentHeight']) {
+        rows[hideAreasIndex + differIndex]['hide'] = '';
+        rows[hideAreasIndex]['hide'] = 'top-center';
+        rows[hideAreasIndex]['isHide'] = true;
+      } else {
+        rows[hideAreasIndex + differIndex]['hide'] = 'bottom';
+        rows[hideAreasIndex]['isHide'] = false;
+      }
+      if (!rows[hideAreasIndex + differIndex]['currentHeight']) {
+        rows[hideAreasIndex]['hide'] = '';
+        rows[hideAreasIndex + differIndex]['hide'] = 'bottom-center';
+        rows[hideAreasIndex + differIndex]['isHide'] = true;
+      } else {
+        if (!rows[hideAreasIndex]['isHide']) {
+          rows[hideAreasIndex]['hide'] = 'top';
+        }
+        rows[hideAreasIndex + differIndex]['isHide'] = false;
+      }
+      areaList.forEach((area) => {
+        if (rows[hideAreasIndex].name === area.name) {
+          area.hide = rows[hideAreasIndex].hide;
+          area.isHide = rows[hideAreasIndex].isHide;
+        }
+        if (rows[hideAreasIndex + differIndex].name === area.name) {
+          area.hide = rows[hideAreasIndex + differIndex].hide;
+          area.isHide = rows[hideAreasIndex + differIndex].isHide;
+        }
+      });
+    },
     /**
      * Resize the page layout according to the window
      */
@@ -422,6 +417,7 @@ export default {
      */
     updatePreviewStyle(resizeFlag = true) {
       const { previewStyle, rows, columns } = this;
+      this.changeAreasIsHide();
       previewStyle.gridTemplateRows = rows.map((r) => r.currentHeight + 'px').join(' ');
       previewStyle.gridTemplateColumns = columns.map((r) => r.currentWidth + 'px').join(' ');
       if (resizeFlag) {
@@ -431,9 +427,7 @@ export default {
             resizeObj[area.name] = { isHide: area.isHide };
           }
         });
-        this.$nextTick(() => {
-          this.$emit('resizeGridStyle', resizeObj);
-        });
+        this.$emit('resizeGridStyle', resizeObj);
       }
     },
     /**
@@ -923,7 +917,7 @@ export default {
 .mi-flex-grid .grid-item-gap .is-top-center {
   bottom: 0;
   right: 50%;
-  transform: translateX(13px) translateY(57px) rotate(90deg);
+  transform: translateX(13px) translateY(40px) rotate(90deg);
 }
 .mi-flex-grid .grid-item-gap .is-show-0 {
   background-image: url('../assets/images/0/collapse-left.svg');
