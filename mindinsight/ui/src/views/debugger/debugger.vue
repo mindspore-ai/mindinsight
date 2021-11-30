@@ -2827,7 +2827,7 @@ export default {
   text-align: center;
 }
 .deb-wrap .rightTop .svg-wrap .graph-count-wrap .right .value-wrap {
-  width: 80px;
+  width: 120px;
   text-align: center;
   border-right: 1px solid var(--table-border-color);
   float: left;
@@ -3212,7 +3212,7 @@ export default {
   display: inline-block;
   width: 10px;
   height: 10px;
-  background-color: #ff9800;
+  background-color: var(--debugger-execution-history-bg-color);
   margin-right: 10px;
   margin-bottom: 5px;
   vertical-align: middle;

@@ -387,9 +387,7 @@ export default {
       columnLimitNum: 1000, // Maximum number of columns is 1000
       preTensorGraphs: [JSON.parse(JSON.stringify(this.row))],
       activeName: 'tensorMsg',
-      showTensorValue: localStorage.getItem('showTensorValue')
-        ? JSON.parse(localStorage.getItem('showTensorValue'))
-        : true,
+      showTensorValue: true,
       nodeStackContent: [],
       currentTensorGraphIndex: 0,
       areas: [
@@ -437,6 +435,11 @@ export default {
   },
   methods: {
     resizeGridStyle(resizeObj) {
+      if(!this.showTensorValue && !resizeObj.rightTop.isHide && !this.tensorValue.length){
+        this.showTensorValue = !resizeObj.rightTop.isHide;
+        this.foldTensorValue();
+      }
+      this.showTensorValue = !resizeObj.rightTop.isHide;
     },
     init() {
       this.loadingInstance = this.$loading(this.loadingOption);
@@ -453,8 +456,6 @@ export default {
       this.getTensorHitsData();
     },
     foldTensorValue() {
-      this.showTensorValue = !this.showTensorValue;
-      localStorage.setItem('showTensorValue', this.showTensorValue);
       if (this.showTensorValue) {
         if (this.gridType === 'compare') {
           this.tensorComparisons(this.curRowObj, this.dims, true);
