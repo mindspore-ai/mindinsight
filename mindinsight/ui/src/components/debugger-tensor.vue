@@ -15,315 +15,320 @@ limitations under the License.
 -->
 <template>
   <div class="deb-tensor-wrap">
-    <div class="deb-tensor-left"
-         :class="{collapse:leftShow}">
-      <div class="deb-tensor-left-content"
-           v-show="!leftShow">
-        <div class="left-content-title">
-          <span>{{ $t('debugger.optimizationOrientation') }}</span>
-        </div>
-        <div class="left-advice"
-             v-show="leftDataShow">
-          <div class="left-content-list"
-               v-for="item in tensorList"
-               :key="item.id">
-            <div class="detection-judgment">
-              <span>{{ $t('debugger.watchPoint') }}{{item.id}}</span>
-              <span>{{ $t('symbols.colon') }}</span>
-              <span>{{ $parent.transCondition(item.condition) }}</span>
-            </div>
-            <div class="reason"
-                 v-for="(ele,key) in item.params"
-                 :key="key">
-              <div class="tensor-icon icon-secondary"></div>
-              <div class="tensor-content">{{ele.content}}</div>
-            </div>
-            <div class="hit-tip"
-                 v-if="item.tip">
-              <i class="el-icon-warning"></i>{{item.tip}}
-            </div>
-            <div class="tensor-advice"
-                 v-if="!item.tip">
-              <span>{{ $t('debugger.tuningAdvice') }}</span>
-              <div class="advice-list-title">
-                <div class="adviceTitle">{{ item.tuningAdviceTitle }}</div>
-                <div class="advice-list">
-                  <div class="advice-content"
-                       v-for="(element, key) in item.tuningAdvice"
-                       :key="key">{{ element }}</div>
-                </div>
+    <FlexibleGrid :areas="areas"
+                  :rowSize="rowSize"
+                  :columnSize="columnSize"
+                  :hideAreas="hideAreas"
+                  :showFixed="showFixed"
+                  :gridStyleKey="gridStyleKey"
+                  @resizeGridStyle="resizeGridStyle"
+                  @resizeCallback="resizeCallback">
+      <div class="deb-tensor-left"
+           slot="left">
+        <div class="deb-tensor-left-content">
+          <div class="left-content-title">
+            <span>{{ $t('debugger.optimizationOrientation') }}</span>
+          </div>
+          <div class="left-advice"
+               v-show="leftDataShow">
+            <div class="left-content-list"
+                 v-for="item in tensorList"
+                 :key="item.id">
+              <div class="detection-judgment">
+                <span>{{ $t('debugger.watchPoint') }}{{item.id}}</span>
+                <span>{{ $t('symbols.colon') }}</span>
+                <span>{{ $parent.transCondition(item.condition) }}</span>
               </div>
-            </div>
-          </div>
-        </div>
-        <div v-show="!leftDataShow"
-             class="leftNoData">{{ $t('debugger.noWatchPoint') }}</div>
-      </div>
-      <div class="collapse-btn"
-           :class="[leftShow?'collapse':'',`collapse-btn-${$store.state.themeIndex}`]"
-           @click="collapseBtnClick">
-      </div>
-    </div>
-    <div class="deb-tensor-right"
-         :class="{collapse:leftShow}">
-      <div class="deb-con-title">
-        <div class="deb-con-title-left"
-             :title="curRowObj.name">
-          {{ curRowObj.name }}
-        </div>
-        <div class="deb-con-title-right">
-          <div class="close-btn">
-            <img src="@/assets/images/close-page.png"
-                 @click="closeTensor">
-          </div>
-        </div>
-      </div>
-      <div class="deb-compare-detail"
-           v-show="showTensorValue">
-        <div v-for="(statistics,key) in statisticsArr"
-             :key="key">
-          <label v-if="key===0">
-            {{gridType==='preStep'?$t('debugger.preStatisticsLabel'):$t('debugger.curStatisticsLabel')}}
-            <span>{{ gridType==='preStep'?curRowObj.step-1:curRowObj.step}}</span>
-          </label>
-          <label v-if="key===1">{{$t('debugger.preStatisticsLabel')}}<span>{{ curRowObj.step-1 }}</span></label>
-          <label v-if="key===2">{{$t('debugger.diffStatisticsLabel')}}</label>
-          <span>{{ $t('debugger.max') }} {{ statistics.overall_max===undefined?'--':statistics.overall_max }}</span>
-          <span>{{ $t('debugger.min') }} {{ statistics.overall_min===undefined?'--':statistics.overall_min }}</span>
-          <span>{{ $t('debugger.mean') }} {{ statistics.overall_avg===undefined?'--':statistics.overall_avg }}</span>
-          <span>{{ $t('debugger.nan') }}
-            {{ statistics.overall_nan_count===undefined?'--':statistics.overall_nan_count }}
-          </span>
-          <span>{{ $t('debugger.negativeInf') }}
-            {{ statistics.overall_neg_inf_count===undefined?'--':statistics.overall_neg_inf_count }}
-          </span>
-          <span>{{ $t('debugger.inf') }}
-            {{ statistics.overall_pos_inf_count===undefined?'--': statistics.overall_pos_inf_count}}
-          </span>
-          <span>{{ $t('debugger.zero') }}
-            {{ statistics.overall_zero_count===undefined?'--': statistics.overall_zero_count}}</span>
-          <span>{{ $t('debugger.negativeNum') }}
-            {{ statistics.overall_neg_zero_count===undefined?'--':statistics.overall_neg_zero_count }}</span>
-          <span>{{ $t('debugger.positiveNum') }}
-            {{ statistics.overall_pos_zero_count===undefined?'--':statistics.overall_pos_zero_count }}</span>
-          <span>{{ $t('debugger.true') }}
-            {{ statistics.overall_true_count===undefined?'--':statistics.overall_true_count }}</span>
-          <span>{{ $t('debugger.false') }}
-            {{ statistics.overall_false_count===undefined?'--':statistics.overall_false_count }}</span>
-        </div>
-      </div>
-      <div class="deb-con-slide"
-           v-show="showTensorValue">
-        <div class="deb-con-slide-right">
-          <el-button size="mini"
-                     class="custom-btn"
-                     :class="{green:gridType==='value'}"
-                     :disabled="state==='running'"
-                     @click="tabChange('value')">{{ $t('debugger.curStep') }}</el-button>
-          <el-button size="mini"
-                     class="custom-btn"
-                     :class="{green:gridType==='preStep'}"
-                     :disabled="!curRowObj.has_prev_step || state==='running'"
-                     @click="tabChange('preStep')">{{ $t('debugger.preStep') }}</el-button>
-          <el-button size="mini"
-                     class="custom-btn"
-                     :class="{green:gridType==='compare'}"
-                     :disabled="!curRowObj.has_prev_step || state==='running' || curRowObj.tensor_status==='oversize'"
-                     @click="tabChange('compare')">{{ $t('debugger.compareResult') }}</el-button>
-          <el-button size="mini"
-                     class="custom-btn"
-                     :disabled="state==='running' || gridType==='compare' ||
-                     curRowObj.oversized || curRowObj.value==='null'"
-                     @click="$parent.loadTensor(curRowObj,gridType==='preStep')">
-            {{ $t('graph.downloadPic') }}</el-button>
-        </div>
-        <div class="deb-con-slide-left"
-             v-if="gridType === 'compare'">
-          <div class="deb-slide-title">{{ $t('debugger.tolerance') }}</div>
-          <div class="deb-slide-width">
-            <el-slider v-model="tolerance"
-                       :format-tooltip="formatTolenrance"
-                       @change="tensorComparisons(curRowObj,dims,true)"
-                       @input="toleranceInputChange()"></el-slider>
-          </div>
-          <div class="deb-slide-input">
-            <el-input v-model="toleranceInput"
-                      @input="toleranceValueChange"
-                      @keyup.native.enter="tensorComparisons(curRowObj,dims,true)"></el-input>
-          </div>
-        </div>
-        <div class="deb-con-slide-middle">
-          MIN
-          <div class="grident">0</div>
-          MAX
-        </div>
-      </div>
-
-      <div class="deb-con-table"
-           v-show="showTensorValue">
-        <div class="deb-compare-wrap">
-          <debuggerGridTable v-if="gridType==='value'"
-                             :fullData="tensorValue"
-                             :showFilterInput="showFilterInput"
-                             :columnLimitNum="columnLimitNum"
-                             ref="tensorValue"
-                             gridType="value"
-                             @martixFilterChange="tensorFilterChange($event)">
-          </debuggerGridTable>
-          <debuggerGridTable v-else-if="gridType==='preStep'"
-                             :fullData="tensorValue"
-                             :showFilterInput="showFilterInput"
-                             :columnLimitNum="columnLimitNum"
-                             ref="tensorValue"
-                             gridType="value"
-                             @martixFilterChange="tensorFilterChange($event)">
-          </debuggerGridTable>
-          <debuggerGridTable v-else
-                             :fullData="tensorValue"
-                             :showFilterInput="showFilterInput"
-                             :columnLimitNum="columnLimitNum"
-                             ref="tensorValue"
-                             gridType="compare"
-                             @martixFilterChange="tensorFilterChange($event)">
-          </debuggerGridTable>
-        </div>
-      </div>
-      <div class="collapse-btn-wrap">
-        <div class="collapse-btn"
-             :class="[!showTensorValue?'collapse':'',`collapse-btn-${$store.state.themeIndex}`]"
-             @click="foldTensorValue">
-        </div>
-      </div>
-      <div class="deb-graph-container">
-        <div class="graph-title">
-          {{$t('debugger.tensorDiagram')}}
-          <span class="tip">
-            <el-tooltip placement="bottom"
-                        effect="light"
-                        popper-class="legend-tip">
-              <i class="el-icon-info"></i>
-              <div slot="content">
-                <div>{{$t('debugger.selectDetail')}}</div>
-                <div class="legend">
-                  <div class="item">
-                    {{$t('debugger.tensorTip')}}
-                    <img :src="require('@/assets/images/deb-slot.png')"
-                         alt="" />
-                  </div>
-                  <div class="item">
-                    {{$t('debugger.operator')}}
-                    <img :src="require('@/assets/images/deb-operator.png')"
-                         alt="" />
-                  </div>
-                </div>
-              </div>
-            </el-tooltip>
-          </span>
-        </div>
-        <div class="pre-step-graph">
-          <el-button size="mini"
-                     class="custom-btn"
-                     :disabled="currentTensorGraphIndex === 0"
-                     @click="backToPreGraph">{{$t('debugger.back')}}</el-button>
-          <el-button size="mini"
-                     class="custom-btn"
-                     :disabled="preTensorGraphs.length-1 === currentTensorGraphIndex"
-                     @click="goToForwardGraph">{{$t('debugger.forward')}}</el-button>
-        </div>
-        <div id="tensor-graph"
-             class="deb-graph"
-             v-if="graphShow"></div>
-        <div class="nodata"
-             v-else-if="!graphShow">
-          {{ $t('public.noData') }}
-        </div>
-        <div class="deb-tensor-info">
-          <div class="tensor">
-            <el-tabs v-model="activeName">
-              <el-tab-pane :label="$t('debugger.tensorMsg')"
-                           name="tensorMsg">
-                <div class="tensor-detail">
-                  <span>{{ $t('graph.name') + $t('symbols.colon') }} {{ statistics.name }}</span>
-                  <span>{{ $t('debugger.max') }}
-                    {{ statistics.overall_max===undefined?'--':statistics.overall_max }}</span>
-                  <span>{{ $t('debugger.min') }}
-                    {{ statistics.overall_min===undefined?'--':statistics.overall_min }}</span>
-                  <span>{{ $t('debugger.mean') }}
-                    {{ statistics.overall_avg===undefined?'--':statistics.overall_avg }}
-                  </span>
-                  <span>{{ $t('debugger.nan') }}
-                    {{ statistics.overall_nan_count===undefined?'--':statistics.overall_nan_count }}
-                  </span>
-                  <span>{{ $t('debugger.negativeInf') }}
-                    {{ statistics.overall_neg_inf_count===undefined?'--':statistics.overall_neg_inf_count }}
-                  </span>
-                  <span>{{ $t('debugger.inf') }}
-                    {{ statistics.overall_pos_inf_count===undefined?'--': statistics.overall_pos_inf_count}}
-                  </span>
-                  <span>{{ $t('debugger.zero') }}
-                    {{ statistics.overall_zero_count===undefined?'--': statistics.overall_zero_count}}</span>
-                  <span>{{ $t('debugger.negativeNum') }}
-                    {{ statistics.overall_neg_zero_count===undefined?'--':statistics.overall_neg_zero_count }}</span>
-                  <span>{{ $t('debugger.positiveNum') }}
-                    {{ statistics.overall_pos_zero_count===undefined?'--':statistics.overall_pos_zero_count }}</span>
-                  <span>{{ $t('debugger.true') }}
-                    {{ statistics.overall_true_count===undefined?'--':statistics.overall_true_count }}</span>
-                  <span>{{ $t('debugger.false') }}
-                    {{ statistics.overall_false_count===undefined?'--':statistics.overall_false_count }}</span>
-                </div>
-              </el-tab-pane>
-              <el-tab-pane :label="$t('debugger.stackInfo')"
-                           name="stack">
-                <div class="table-content">
-                  <ul class="stack-content">
-                    <li class="stack-item"
-                        v-show="nodeStackContent.length"
-                        v-for="(item, index) in nodeStackContent"
-                        :key="index">
-                      {{item.file_path ? item.file_path + ':' + item.line_no : ''}}
-                      <br v-if="item.file_path">
-                      {{item.code_line}}
-                    </li>
-                    <div class="noData-text"
-                         v-show="!nodeStackContent.length">
-                      {{$t("public.noData")}}
-                    </div>
-                  </ul>
-                </div>
-              </el-tab-pane>
-            </el-tabs>
-          </div>
-          <div class="watch-point">
-            <div class="watchPoint-title">{{ $t('debugger.curHitNode') }}</div>
-            <div class="point-list"
-                 v-show="rightDataShow">
-              <div v-for="(item,key) in watchPoints"
+              <div class="reason"
+                   v-for="(ele,key) in item.params"
                    :key="key">
-                <div class="watch-judgment">
-                  <span>{{ $t('debugger.watchPoint') }}{{item.id}}</span>
-                  <span>{{ $t('symbols.colon') }}</span>
-                  <span>{{ getFormateWatchPoint(item) }}</span>
+                <div class="tensor-icon icon-secondary"></div>
+                <div class="tensor-content">{{ele.content}}</div>
+              </div>
+              <div class="hit-tip"
+                   v-if="item.tip">
+                <i class="el-icon-warning"></i>{{item.tip}}
+              </div>
+              <div class="tensor-advice"
+                   v-if="!item.tip">
+                <span>{{ $t('debugger.tuningAdvice') }}</span>
+                <div class="advice-list-title">
+                  <div class="adviceTitle">{{ item.tuningAdviceTitle }}</div>
+                  <div class="advice-list">
+                    <div class="advice-content"
+                         v-for="(element, key) in item.tuningAdvice"
+                         :key="key">{{ element }}</div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div v-show="!rightDataShow"
-                 class="leftNoData">{{ $t('debugger.noWatchPoint') }}</div>
+          </div>
+          <div v-show="!leftDataShow"
+               class="leftNoData">{{ $t('debugger.noWatchPoint') }}</div>
+        </div>
+      </div>
+      <div class="deb-tensor-rightFixed"
+           slot="rightFixed">
+        <div class="deb-con-title">
+          <div class="deb-con-title-left"
+               :title="curRowObj.name">
+            {{ curRowObj.name }}
+          </div>
+          <div class="deb-con-title-right">
+            <div class="close-btn">
+              <img src="@/assets/images/close-page.png"
+                   @click="closeTensor">
+            </div>
           </div>
         </div>
       </div>
-    </div>
+      <div class="deb-tensor-rightTop"
+           slot="rightTop">
+        <div class="deb-compare-detail"
+             v-show="showTensorValue">
+          <div v-for="(statistics,key) in statisticsArr"
+               :key="key">
+            <label v-if="key===0">
+              {{gridType==='preStep'?$t('debugger.preStatisticsLabel'):$t('debugger.curStatisticsLabel')}}
+              <span>{{ gridType==='preStep'?curRowObj.step-1:curRowObj.step}}</span>
+            </label>
+            <label v-if="key===1">{{$t('debugger.preStatisticsLabel')}}<span>{{ curRowObj.step-1 }}</span></label>
+            <label v-if="key===2">{{$t('debugger.diffStatisticsLabel')}}</label>
+            <span>{{ $t('debugger.max') }} {{ statistics.overall_max===undefined?'--':statistics.overall_max }}</span>
+            <span>{{ $t('debugger.min') }} {{ statistics.overall_min===undefined?'--':statistics.overall_min }}</span>
+            <span>{{ $t('debugger.mean') }} {{ statistics.overall_avg===undefined?'--':statistics.overall_avg }}</span>
+            <span>{{ $t('debugger.nan') }}
+              {{ statistics.overall_nan_count===undefined?'--':statistics.overall_nan_count }}
+            </span>
+            <span>{{ $t('debugger.negativeInf') }}
+              {{ statistics.overall_neg_inf_count===undefined?'--':statistics.overall_neg_inf_count }}
+            </span>
+            <span>{{ $t('debugger.inf') }}
+              {{ statistics.overall_pos_inf_count===undefined?'--': statistics.overall_pos_inf_count}}
+            </span>
+            <span>{{ $t('debugger.zero') }}
+              {{ statistics.overall_zero_count===undefined?'--': statistics.overall_zero_count}}</span>
+            <span>{{ $t('debugger.negativeNum') }}
+              {{ statistics.overall_neg_zero_count===undefined?'--':statistics.overall_neg_zero_count }}</span>
+            <span>{{ $t('debugger.positiveNum') }}
+              {{ statistics.overall_pos_zero_count===undefined?'--':statistics.overall_pos_zero_count }}</span>
+            <span>{{ $t('debugger.true') }}
+              {{ statistics.overall_true_count===undefined?'--':statistics.overall_true_count }}</span>
+            <span>{{ $t('debugger.false') }}
+              {{ statistics.overall_false_count===undefined?'--':statistics.overall_false_count }}</span>
+          </div>
+        </div>
+        <div class="deb-con-slide"
+             v-show="showTensorValue">
+          <div class="deb-con-slide-right">
+            <el-button size="mini"
+                       class="custom-btn"
+                       :class="{green:gridType==='value'}"
+                       :disabled="state==='running'"
+                       @click="tabChange('value')">{{ $t('debugger.curStep') }}</el-button>
+            <el-button size="mini"
+                       class="custom-btn"
+                       :class="{green:gridType==='preStep'}"
+                       :disabled="!curRowObj.has_prev_step || state==='running'"
+                       @click="tabChange('preStep')">{{ $t('debugger.preStep') }}</el-button>
+            <el-button size="mini"
+                       class="custom-btn"
+                       :class="{green:gridType==='compare'}"
+                       :disabled="!curRowObj.has_prev_step || state==='running' || curRowObj.tensor_status==='oversize'"
+                       @click="tabChange('compare')">{{ $t('debugger.compareResult') }}</el-button>
+            <el-button size="mini"
+                       class="custom-btn"
+                       :disabled="state==='running' || gridType==='compare' ||
+                      curRowObj.oversized || curRowObj.value==='null'"
+                       @click="$parent.loadTensor(curRowObj,gridType==='preStep')">
+              {{ $t('graph.downloadPic') }}</el-button>
+          </div>
+          <div class="deb-con-slide-left"
+               v-if="gridType === 'compare'">
+            <div class="deb-slide-title">{{ $t('debugger.tolerance') }}</div>
+            <div class="deb-slide-width">
+              <el-slider v-model="tolerance"
+                         :format-tooltip="formatTolenrance"
+                         @change="tensorComparisons(curRowObj,dims,true)"
+                         @input="toleranceInputChange()"></el-slider>
+            </div>
+            <div class="deb-slide-input">
+              <el-input v-model="toleranceInput"
+                        @input="toleranceValueChange"
+                        @keyup.native.enter="tensorComparisons(curRowObj,dims,true)"></el-input>
+            </div>
+          </div>
+          <div class="deb-con-slide-middle">
+            MIN
+            <div class="grident">0</div>
+            MAX
+          </div>
+        </div>
+
+        <div class="deb-con-table"
+             v-show="showTensorValue">
+          <div class="deb-compare-wrap">
+            <debuggerGridTable v-if="gridType==='value'"
+                               :fullData="tensorValue"
+                               :showFilterInput="showFilterInput"
+                               :columnLimitNum="columnLimitNum"
+                               ref="tensorValue"
+                               gridType="value"
+                               @martixFilterChange="tensorFilterChange($event)">
+            </debuggerGridTable>
+            <debuggerGridTable v-else-if="gridType==='preStep'"
+                               :fullData="tensorValue"
+                               :showFilterInput="showFilterInput"
+                               :columnLimitNum="columnLimitNum"
+                               ref="tensorValue"
+                               gridType="value"
+                               @martixFilterChange="tensorFilterChange($event)">
+            </debuggerGridTable>
+            <debuggerGridTable v-else
+                               :fullData="tensorValue"
+                               :showFilterInput="showFilterInput"
+                               :columnLimitNum="columnLimitNum"
+                               ref="tensorValue"
+                               gridType="compare"
+                               @martixFilterChange="tensorFilterChange($event)">
+            </debuggerGridTable>
+          </div>
+        </div>
+      </div>
+      <div class="deb-tensor-rightBottom"
+           slot="rightBottom">
+        <div class="deb-graph-container">
+          <div class="graph-title">
+            {{$t('debugger.tensorDiagram')}}
+            <span class="tip">
+              <el-tooltip placement="bottom"
+                          effect="light"
+                          popper-class="legend-tip">
+                <i class="el-icon-info"></i>
+                <div slot="content">
+                  <div>{{$t('debugger.selectDetail')}}</div>
+                  <div class="legend">
+                    <div class="item">
+                      {{$t('debugger.tensorTip')}}
+                      <img :src="require('@/assets/images/deb-slot.png')"
+                           alt="" />
+                    </div>
+                    <div class="item">
+                      {{$t('debugger.operator')}}
+                      <img :src="require('@/assets/images/deb-operator.png')"
+                           alt="" />
+                    </div>
+                  </div>
+                </div>
+              </el-tooltip>
+            </span>
+          </div>
+          <div class="pre-step-graph">
+            <el-button size="mini"
+                       class="custom-btn"
+                       :disabled="currentTensorGraphIndex === 0"
+                       @click="backToPreGraph">{{$t('debugger.back')}}</el-button>
+            <el-button size="mini"
+                       class="custom-btn"
+                       :disabled="preTensorGraphs.length-1 === currentTensorGraphIndex"
+                       @click="goToForwardGraph">{{$t('debugger.forward')}}</el-button>
+          </div>
+          <div id="tensor-graph"
+               class="deb-graph"
+               v-if="graphShow"></div>
+          <div class="nodata"
+               v-else-if="!graphShow">
+            {{ $t('public.noData') }}
+          </div>
+          <div class="deb-tensor-info">
+            <div class="tensor">
+              <el-tabs v-model="activeName">
+                <el-tab-pane :label="$t('debugger.tensorMsg')"
+                             name="tensorMsg">
+                  <div class="tensor-detail">
+                    <span>{{ $t('graph.name') + $t('symbols.colon') }} {{ statistics.name }}</span>
+                    <span>{{ $t('debugger.max') }}
+                      {{ statistics.overall_max===undefined?'--':statistics.overall_max }}</span>
+                    <span>{{ $t('debugger.min') }}
+                      {{ statistics.overall_min===undefined?'--':statistics.overall_min }}</span>
+                    <span>{{ $t('debugger.mean') }}
+                      {{ statistics.overall_avg===undefined?'--':statistics.overall_avg }}
+                    </span>
+                    <span>{{ $t('debugger.nan') }}
+                      {{ statistics.overall_nan_count===undefined?'--':statistics.overall_nan_count }}
+                    </span>
+                    <span>{{ $t('debugger.negativeInf') }}
+                      {{ statistics.overall_neg_inf_count===undefined?'--':statistics.overall_neg_inf_count }}
+                    </span>
+                    <span>{{ $t('debugger.inf') }}
+                      {{ statistics.overall_pos_inf_count===undefined?'--': statistics.overall_pos_inf_count}}
+                    </span>
+                    <span>{{ $t('debugger.zero') }}
+                      {{ statistics.overall_zero_count===undefined?'--': statistics.overall_zero_count}}</span>
+                    <span>{{ $t('debugger.negativeNum') }}
+                      {{ statistics.overall_neg_zero_count===undefined?'--':statistics.overall_neg_zero_count }}</span>
+                    <span>{{ $t('debugger.positiveNum') }}
+                      {{ statistics.overall_pos_zero_count===undefined?'--':statistics.overall_pos_zero_count }}</span>
+                    <span>{{ $t('debugger.true') }}
+                      {{ statistics.overall_true_count===undefined?'--':statistics.overall_true_count }}</span>
+                    <span>{{ $t('debugger.false') }}
+                      {{ statistics.overall_false_count===undefined?'--':statistics.overall_false_count }}</span>
+                  </div>
+                </el-tab-pane>
+                <el-tab-pane :label="$t('debugger.stackInfo')"
+                             name="stack">
+                  <div class="table-content">
+                    <ul class="stack-content">
+                      <li class="stack-item"
+                          v-show="nodeStackContent.length"
+                          v-for="(item, index) in nodeStackContent"
+                          :key="index">
+                        {{item.file_path ? item.file_path + ':' + item.line_no : ''}}
+                        <br v-if="item.file_path">
+                        {{item.code_line}}
+                      </li>
+                      <div class="noData-text"
+                           v-show="!nodeStackContent.length">
+                        {{$t("public.noData")}}
+                      </div>
+                    </ul>
+                  </div>
+                </el-tab-pane>
+              </el-tabs>
+            </div>
+            <div class="watch-point">
+              <div class="watchPoint-title">{{ $t('debugger.curHitNode') }}</div>
+              <div class="point-list"
+                   v-show="rightDataShow">
+                <div v-for="(item,key) in watchPoints"
+                     :key="key">
+                  <div class="watch-judgment">
+                    <span>{{ $t('debugger.watchPoint') }}{{item.id}}</span>
+                    <span>{{ $t('symbols.colon') }}</span>
+                    <span>{{ getFormateWatchPoint(item) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div v-show="!rightDataShow"
+                   class="leftNoData">{{ $t('debugger.noWatchPoint') }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </FlexibleGrid>
   </div>
 </template>
 <script>
 import RequestService from '@/services/request-service';
 import debuggerGridTable from './debugger-grid-table-simple.vue';
-import {select, selectAll, zoom} from 'd3';
-import {event as currentEvent} from 'd3-selection';
+import { select, selectAll, zoom } from 'd3';
+import { event as currentEvent } from 'd3-selection';
 import 'd3-graphviz';
-const d3 = {select, selectAll, zoom};
+import FlexibleGrid from '@/components/flexibleGrid.vue';
+const d3 = { select, selectAll, zoom };
 export default {
   mixins: [],
-  components: {debuggerGridTable},
+  components: { debuggerGridTable, FlexibleGrid },
   props: {
     row: {
       type: Object,
@@ -387,6 +392,35 @@ export default {
         : true,
       nodeStackContent: [],
       currentTensorGraphIndex: 0,
+      areas: [
+        ['left', 'rightFixed'],
+        ['left', 'rightTop'],
+        ['left', 'rightBottom'],
+      ],
+      rowSize: [
+        '40px',
+        {
+          defaultHeight: '500px',
+          minHeight: '227px',
+          maxHeight: '1000px',
+        },
+        {
+          defaultHeight: '1fr',
+          minHeight: '210px',
+          maxHeight: '1000px',
+        },
+      ],
+      columnSize: [
+        {
+          defaultWidth: '400px',
+          minWidth: '243px',
+          maxWidth: '700px',
+        },
+        '1fr',
+      ],
+      hideAreas: { left: 'left', rightTop: 'top', rightBottom: 'bottom' },
+      showFixed: true,
+      gridStyleKey: this.$route.query.sessionId ? 'offline-debugger-tensor' : 'debugger-tensor',
     };
   },
   computed: {
@@ -402,6 +436,8 @@ export default {
     });
   },
   methods: {
+    resizeGridStyle(resizeObj) {
+    },
     init() {
       this.loadingInstance = this.$loading(this.loadingOption);
       this.initOver = false;
@@ -444,50 +480,50 @@ export default {
         rank_id: this.curRowObj.rank_id,
       };
       RequestService.getTensorGraphData(params, this.curRowObj.sessionId).then(
-          (res) => {
-            if (res && res.data && res.data.graph && res.data.graph.nodes && res.data.graph.nodes.length) {
-              this.graphShow = true;
-              const nodes = JSON.parse(JSON.stringify(res.data.graph.nodes));
-              this.tensorGraphData = {};
-              nodes.forEach((node) => {
-                this.tensorGraphData[node.name] = {...node, type: 'node'};
-                if (node.slots && node.slots.length) {
-                  node.slots.forEach((slot) => {
-                    const obj = {
-                      ...slot,
-                      name: `${node.name}:${slot.slot}`,
-                      graph_name: node.graph_name,
-                      type: 'slot',
-                    };
-                    this.tensorGraphData[obj.name] = obj;
-                  });
-                }
-              });
-
-              if (initPage) {
-                this.selectedNode.name = this.curRowObj.name;
-                const dot = this.packageData();
-                this.initGraph(dot);
-              } else {
-                if (this.selectedNode.name) {
-                  this.setNodeData();
-                }
+        (res) => {
+          if (res && res.data && res.data.graph && res.data.graph.nodes && res.data.graph.nodes.length) {
+            this.graphShow = true;
+            const nodes = JSON.parse(JSON.stringify(res.data.graph.nodes));
+            this.tensorGraphData = {};
+            nodes.forEach((node) => {
+              this.tensorGraphData[node.name] = { ...node, type: 'node' };
+              if (node.slots && node.slots.length) {
+                node.slots.forEach((slot) => {
+                  const obj = {
+                    ...slot,
+                    name: `${node.name}:${slot.slot}`,
+                    graph_name: node.graph_name,
+                    type: 'slot',
+                  };
+                  this.tensorGraphData[obj.name] = obj;
+                });
               }
+            });
+
+            if (initPage) {
+              this.selectedNode.name = this.curRowObj.name;
+              const dot = this.packageData();
+              this.initGraph(dot);
             } else {
-              this.graphShow = false;
-              this.rightDataShow = false;
-              this.statisticsKeys.forEach((key) => {
-                this.statistics[key] = '--';
-              });
+              if (this.selectedNode.name) {
+                this.setNodeData();
+              }
             }
-          },
-          (err) => {
+          } else {
             this.graphShow = false;
+            this.rightDataShow = false;
             this.statisticsKeys.forEach((key) => {
               this.statistics[key] = '--';
             });
-            this.dealLoading();
-          },
+          }
+        },
+        (err) => {
+          this.graphShow = false;
+          this.statisticsKeys.forEach((key) => {
+            this.statistics[key] = '--';
+          });
+          this.dealLoading();
+        }
       );
     },
     updateGraphData(graphName, tensorName) {
@@ -502,16 +538,16 @@ export default {
         rank_id: this.curRowObj.rank_id,
       };
       RequestService.tensorHitsData(params, this.curRowObj.sessionId).then(
-          (res) => {
-            if (res && res.data && res.data.watch_points && res.data.watch_points.length) {
-              this.leftDataShow = true;
-              this.tensorList = res.data.watch_points.map((val) => {
-                return {
-                  id: val.id,
-                  condition: val.watch_condition.id,
-                  params: val.watch_condition.params || [],
-                  selected: false,
-                  tip:
+        (res) => {
+          if (res && res.data && res.data.watch_points && res.data.watch_points.length) {
+            this.leftDataShow = true;
+            this.tensorList = res.data.watch_points.map((val) => {
+              return {
+                id: val.id,
+                condition: val.watch_condition.id,
+                params: val.watch_condition.params || [],
+                selected: false,
+                tip:
                   val.error_list && val.error_list.length
                     ? val.error_list
                         .map((i) => {
@@ -519,28 +555,28 @@ export default {
                         })
                         .join('') + this.$t('debugger.checkTips').cannotCheck
                     : '',
-                };
-              });
+              };
+            });
 
-              const tensorAdvice = this.$t(`debugger.tensorTuningAdvice`);
-              this.tensorList.forEach((item) => {
-                const tuning = tensorAdvice[item.condition];
-                if (!tuning) {
-                  item.tuningAdviceTitle = this.$t(`debugger.noAdvice`);
-                } else {
-                  item.tuningAdviceTitle = tuning[1];
-                  item.tuningAdvice = tuning[2];
-                }
-                this.formateWatchpointParams(item.params);
-              });
-            } else {
-              this.leftDataShow = false;
-            }
-          },
-          (error) => {
+            const tensorAdvice = this.$t(`debugger.tensorTuningAdvice`);
+            this.tensorList.forEach((item) => {
+              const tuning = tensorAdvice[item.condition];
+              if (!tuning) {
+                item.tuningAdviceTitle = this.$t(`debugger.noAdvice`);
+              } else {
+                item.tuningAdviceTitle = tuning[1];
+                item.tuningAdvice = tuning[2];
+              }
+              this.formateWatchpointParams(item.params);
+            });
+          } else {
             this.leftDataShow = false;
-            this.$parent.showErrorMsg(error);
-          },
+          }
+        },
+        (error) => {
+          this.leftDataShow = false;
+          this.$parent.showErrorMsg(error);
+        }
       );
     },
     getFormateWatchPoint(item) {
@@ -559,8 +595,8 @@ export default {
         const node = this.tensorGraphData[key];
         if (node.type === 'node') {
           nodeStr += `<${node.name}>[id="${node.name}";label="${node.name
-              .split('/')
-              .pop()}";shape="ellipse";class="operator"];`;
+            .split('/')
+            .pop()}";shape="ellipse";class="operator"];`;
         }
         if (node.slots && node.slots.length) {
           nodeStr += this.packageSubGraph(node);
@@ -667,11 +703,11 @@ export default {
     initGraph(dot) {
       try {
         this.tensorGraphviz = d3
-            .select('#tensor-graph')
-            .graphviz({useWorker: false})
-            .dot(dot)
-            .attributer(this.$parent.attributer)
-            .render(this.startApp);
+          .select('#tensor-graph')
+          .graphviz({ useWorker: false })
+          .dot(dot)
+          .attributer(this.$parent.attributer)
+          .render(this.startApp);
       } catch (error) {
         const svg = document.querySelector('#tensor-graph svg');
         if (svg) {
@@ -725,7 +761,7 @@ export default {
           nodes.on('dblclick', null);
           this.resetTensor();
           this.currentTensorGraphIndex++;
-          if(this.preTensorGraphs.length - 1 >= this.currentTensorGraphIndex){
+          if (this.preTensorGraphs.length - 1 >= this.currentTensorGraphIndex) {
             this.preTensorGraphs.splice(this.currentTensorGraphIndex);
           }
           this.preTensorGraphs.push(JSON.parse(JSON.stringify(this.curRowObj)));
@@ -754,10 +790,10 @@ export default {
       if (graphRect.height < containerRect.height / 2) {
         let scale = (containerRect.height - paddingTop * 2) / graphRect.height;
         graphDom.setAttribute(
-            'transform',
-            `translate(${transformData.translate[0]},${transformData.translate[1]}) scale(${
-              scale * transformData.scale[0]
-            })`,
+          'transform',
+          `translate(${transformData.translate[0]},${transformData.translate[1]}) scale(${
+            scale * transformData.scale[0]
+          })`
         );
 
         this.$nextTick(() => {
@@ -777,8 +813,8 @@ export default {
           scale = parseFloat((scale * transformData.scale[0]).toFixed(2));
 
           graphDom.setAttribute(
-              'transform',
-              `translate(${transformData.translate[0] + x},${transformData.translate[1] + y}) scale(${scale})`,
+            'transform',
+            `translate(${transformData.translate[0] + x},${transformData.translate[1] + y}) scale(${scale})`
           );
         });
       }
@@ -799,86 +835,86 @@ export default {
 
       const padding = 4;
       const minDistance = 50;
-      const pointer = {start: {x: 0, y: 0}, end: {x: 0, y: 0}};
+      const pointer = { start: { x: 0, y: 0 }, end: { x: 0, y: 0 } };
 
       const zoom = d3
-          .zoom()
-          .on('start', () => {
-            const event = currentEvent.sourceEvent;
-            if (!event) {
-              return;
-            }
-            pointer.start.x = event.x;
-            pointer.start.y = event.y;
-          })
-          .on('zoom', () => {
-            const event = currentEvent.sourceEvent;
-            if (!event) {
-              return;
-            }
-            const transformData = this.$parent.getTransformData(graphDom);
-            if (!Object.keys(graphTransform).length) {
-              graphTransform = {
-                x: transformData.translate[0],
-                y: transformData.translate[1],
-                k: transformData.scale[0],
-              };
-            }
-
-            let tempStr = '';
-            let change = {};
-            let scale = transformData.scale[0];
-            const graphRect = graphDom.getBoundingClientRect();
-            const transRate = graphBox.width / graphRect.width;
-            if (event.type === 'mousemove') {
-              pointer.end.x = event.x;
-              pointer.end.y = event.y;
-              let tempX = pointer.end.x - pointer.start.x;
-              let tempY = pointer.end.y - pointer.start.y;
-              const paddingTrans = Math.max(padding / transRate / scale, minDistance);
-              if (graphRect.left + paddingTrans + tempX >= svgRect.left + svgRect.width) {
-                tempX = Math.min(tempX, 0);
-              }
-              if (graphRect.left + graphRect.width - paddingTrans + tempX <= svgRect.left) {
-                tempX = Math.max(tempX, 0);
-              }
-              if (graphRect.top + paddingTrans + tempY >= svgRect.top + svgRect.height) {
-                tempY = Math.min(tempY, 0);
-              }
-              if (graphRect.top + graphRect.height - paddingTrans + tempY <= svgRect.top) {
-                tempY = Math.max(tempY, 0);
-              }
-
-              change = {
-                x: tempX * transRate * scale,
-                y: tempY * transRate * scale,
-              };
-              pointer.start.x = pointer.end.x;
-              pointer.start.y = pointer.end.y;
-            } else if (event.type === 'wheel') {
-              const wheelDelta = -event.deltaY;
-              const rate = 1.2;
-              scale = wheelDelta > 0 ? transformData.scale[0] * rate : transformData.scale[0] / rate;
-
-              scale = Math.max(this.$parent.scaleRange[0], scale, minScale);
-              scale = Math.min(this.$parent.scaleRange[1], scale);
-              change = {
-                x: (graphRect.x + padding / transRate - event.x) * transRate * (scale - transformData.scale[0]),
-                y: (graphRect.bottom - padding / transRate - event.y) * transRate * (scale - transformData.scale[0]),
-              };
-            }
-
+        .zoom()
+        .on('start', () => {
+          const event = currentEvent.sourceEvent;
+          if (!event) {
+            return;
+          }
+          pointer.start.x = event.x;
+          pointer.start.y = event.y;
+        })
+        .on('zoom', () => {
+          const event = currentEvent.sourceEvent;
+          if (!event) {
+            return;
+          }
+          const transformData = this.$parent.getTransformData(graphDom);
+          if (!Object.keys(graphTransform).length) {
             graphTransform = {
-              x: transformData.translate[0] + change.x,
-              y: transformData.translate[1] + change.y,
-              k: scale,
+              x: transformData.translate[0],
+              y: transformData.translate[1],
+              k: transformData.scale[0],
             };
+          }
 
-            tempStr = `translate(${graphTransform.x},${graphTransform.y}) scale(${graphTransform.k})`;
-            graphDom.setAttribute('transform', tempStr);
-            event.stopPropagation();
-            event.preventDefault();
-          });
+          let tempStr = '';
+          let change = {};
+          let scale = transformData.scale[0];
+          const graphRect = graphDom.getBoundingClientRect();
+          const transRate = graphBox.width / graphRect.width;
+          if (event.type === 'mousemove') {
+            pointer.end.x = event.x;
+            pointer.end.y = event.y;
+            let tempX = pointer.end.x - pointer.start.x;
+            let tempY = pointer.end.y - pointer.start.y;
+            const paddingTrans = Math.max(padding / transRate / scale, minDistance);
+            if (graphRect.left + paddingTrans + tempX >= svgRect.left + svgRect.width) {
+              tempX = Math.min(tempX, 0);
+            }
+            if (graphRect.left + graphRect.width - paddingTrans + tempX <= svgRect.left) {
+              tempX = Math.max(tempX, 0);
+            }
+            if (graphRect.top + paddingTrans + tempY >= svgRect.top + svgRect.height) {
+              tempY = Math.min(tempY, 0);
+            }
+            if (graphRect.top + graphRect.height - paddingTrans + tempY <= svgRect.top) {
+              tempY = Math.max(tempY, 0);
+            }
+
+            change = {
+              x: tempX * transRate * scale,
+              y: tempY * transRate * scale,
+            };
+            pointer.start.x = pointer.end.x;
+            pointer.start.y = pointer.end.y;
+          } else if (event.type === 'wheel') {
+            const wheelDelta = -event.deltaY;
+            const rate = 1.2;
+            scale = wheelDelta > 0 ? transformData.scale[0] * rate : transformData.scale[0] / rate;
+
+            scale = Math.max(this.$parent.scaleRange[0], scale, minScale);
+            scale = Math.min(this.$parent.scaleRange[1], scale);
+            change = {
+              x: (graphRect.x + padding / transRate - event.x) * transRate * (scale - transformData.scale[0]),
+              y: (graphRect.bottom - padding / transRate - event.y) * transRate * (scale - transformData.scale[0]),
+            };
+          }
+
+          graphTransform = {
+            x: transformData.translate[0] + change.x,
+            y: transformData.translate[1] + change.y,
+            k: scale,
+          };
+
+          tempStr = `translate(${graphTransform.x},${graphTransform.y}) scale(${graphTransform.k})`;
+          graphDom.setAttribute('transform', tempStr);
+          event.stopPropagation();
+          event.preventDefault();
+        });
 
       const svg = d3.select('#tensor-graph svg');
       svg.on('.zoom', null);
@@ -924,7 +960,7 @@ export default {
           this.rightDataShow = false;
         }
         this.nodeStackContent = JSON.parse(
-            JSON.stringify(this.tensorGraphData[this.selectedNode.name.split(':')[0]].stack_info || []),
+          JSON.stringify(this.tensorGraphData[this.selectedNode.name.split(':')[0]].stack_info || [])
         );
       } else {
         this.statisticsKeys.forEach((key) => {
@@ -984,15 +1020,6 @@ export default {
       this.$emit('close', this.selectedNode.name, this.curRowObj.graph_name);
     },
     /**
-     * Collaspe btn click function
-     */
-    collapseBtnClick() {
-      this.leftShow = !this.leftShow;
-      setTimeout(() => {
-        this.resizeCallback();
-      }, 500);
-    },
-    /**
      * Resize callback function
      */
     resizeCallback() {
@@ -1009,7 +1036,7 @@ export default {
      */
     debounce(fn, delay) {
       let timer = null;
-      return function() {
+      return function () {
         if (timer) {
           clearTimeout(timer);
         }
@@ -1077,8 +1104,8 @@ export default {
               } else {
                 return 0;
               }
-            }),
-        ).replace(/"/g, '');
+            })
+          ).replace(/"/g, '');
       const params = {
         name: row.name,
         detail: 'data',
@@ -1091,62 +1118,62 @@ export default {
         this.loadingInstance = this.$loading(this.loadingOption);
       }
       RequestService.tensorComparisons(params, row.sessionId).then(
-          (res) => {
-            if (res && res.data && res.data.tensor_value) {
-              if (row.shape === '[]') {
-                this.showFilterInput = false;
-              } else {
-                this.showFilterInput = true;
-              }
-              const tensorValue = res.data.tensor_value;
-              const statistics = tensorValue.statistics || {};
-              this.statisticsArr = [
-                tensorValue.curr_step_statistics || {},
-                tensorValue.prev_step_statistics || {},
-                tensorValue.statistics || {},
-              ];
-              if (tensorValue.diff === 'Too large to show.') {
-                this.tensorValue = [];
-                this.$nextTick(() => {
-                  this.$refs.tensorValue.showRequestErrorMessage(
-                      this.$t('debugger.largeDataTip'),
-                      JSON.parse(row.shape),
-                      shape,
-                      true,
-                  );
-                });
-                this.dealLoading();
-                return;
-              }
-              this.tensorValue = tensorValue.diff;
-              if (this.tensorValue && this.tensorValue instanceof Array && !(this.tensorValue[0] instanceof Array)) {
-                this.tensorValue = [this.tensorValue];
-              }
-
-              this.$nextTick(() => {
-                this.$refs.tensorValue.initCommonInfo(this.tensorValue, JSON.parse(row.shape), statistics, shape);
-              });
-            } else if (res.data.tensor_status === 'uncached') {
+        (res) => {
+          if (res && res.data && res.data.tensor_value) {
+            if (row.shape === '[]') {
+              this.showFilterInput = false;
+            } else {
+              this.showFilterInput = true;
+            }
+            const tensorValue = res.data.tensor_value;
+            const statistics = tensorValue.statistics || {};
+            this.statisticsArr = [
+              tensorValue.curr_step_statistics || {},
+              tensorValue.prev_step_statistics || {},
+              tensorValue.statistics || {},
+            ];
+            if (tensorValue.diff === 'Too large to show.') {
               this.tensorValue = [];
               this.$nextTick(() => {
                 this.$refs.tensorValue.showRequestErrorMessage(
-                    this.$t('debugger.largeDataLoading'),
-                    JSON.parse(row.shape),
-                    shape,
-                    true,
+                  this.$t('debugger.largeDataTip'),
+                  JSON.parse(row.shape),
+                  shape,
+                  true
                 );
               });
               this.dealLoading();
               return;
             }
+            this.tensorValue = tensorValue.diff;
+            if (this.tensorValue && this.tensorValue instanceof Array && !(this.tensorValue[0] instanceof Array)) {
+              this.tensorValue = [this.tensorValue];
+            }
+
             this.$nextTick(() => {
-              this.dealLoading();
+              this.$refs.tensorValue.initCommonInfo(this.tensorValue, JSON.parse(row.shape), statistics, shape);
             });
-          },
-          (err) => {
-            this.$parent.showErrorMsg(err);
+          } else if (res.data.tensor_status === 'uncached') {
+            this.tensorValue = [];
+            this.$nextTick(() => {
+              this.$refs.tensorValue.showRequestErrorMessage(
+                this.$t('debugger.largeDataLoading'),
+                JSON.parse(row.shape),
+                shape,
+                true
+              );
+            });
             this.dealLoading();
-          },
+            return;
+          }
+          this.$nextTick(() => {
+            this.dealLoading();
+          });
+        },
+        (err) => {
+          this.$parent.showErrorMsg(err);
+          this.dealLoading();
+        }
       );
     },
     /**
@@ -1184,8 +1211,8 @@ export default {
               } else {
                 return 0;
               }
-            }),
-        ).replace(/"/g, '');
+            })
+          ).replace(/"/g, '');
       const params = {
         name: row.name,
         detail: 'data',
@@ -1198,55 +1225,55 @@ export default {
         this.loadingInstance = this.$loading(this.loadingOption);
       }
       RequestService.tensors(params, row.sessionId).then(
-          (res) => {
-            if (row.shape === '[]') {
-              this.showFilterInput = false;
-            } else {
-              this.showFilterInput = true;
-            }
-            if (res.data.tensor_value) {
-              let value = res.data.tensor_value.value;
-              this.curRowObj.value = `${value}`;
-              const statistics = res.data.tensor_value.statistics || {};
-              const tensorStatus = res.data.tensor_value.tensor_status;
-              this.statisticsArr = [statistics];
-              if (value === 'Too large to show.' || tensorStatus === 'uncached' || tensorStatus === 'oversize') {
-                let errorMsg = null;
-                if (tensorStatus === 'uncached') {
-                  errorMsg = this.$t('debugger.largeDataLoading');
-                } else if (tensorStatus === 'oversize') {
-                  errorMsg = this.$t('debugger.overSize');
-                  this.showFilterInput = false;
-                } else {
-                  errorMsg = this.$t('debugger.largeDataTip');
-                }
-                this.tensorValue = [];
-                this.$nextTick(() => {
-                  this.$refs.tensorValue.initCommonInfo(errorMsg, JSON.parse(row.shape), statistics, shape);
-                });
-                this.dealLoading();
-                return;
+        (res) => {
+          if (row.shape === '[]') {
+            this.showFilterInput = false;
+          } else {
+            this.showFilterInput = true;
+          }
+          if (res.data.tensor_value) {
+            let value = res.data.tensor_value.value;
+            this.curRowObj.value = `${value}`;
+            const statistics = res.data.tensor_value.statistics || {};
+            const tensorStatus = res.data.tensor_value.tensor_status;
+            this.statisticsArr = [statistics];
+            if (value === 'Too large to show.' || tensorStatus === 'uncached' || tensorStatus === 'oversize') {
+              let errorMsg = null;
+              if (tensorStatus === 'uncached') {
+                errorMsg = this.$t('debugger.largeDataLoading');
+              } else if (tensorStatus === 'oversize') {
+                errorMsg = this.$t('debugger.overSize');
+                this.showFilterInput = false;
+              } else {
+                errorMsg = this.$t('debugger.largeDataTip');
               }
-              if (value === null) {
-                value = 'null';
-              }
-              this.tensorValue = value instanceof Array ? value : [value];
+              this.tensorValue = [];
               this.$nextTick(() => {
-                this.$refs.tensorValue.initCommonInfo(this.tensorValue, JSON.parse(row.shape), statistics, shape);
+                this.$refs.tensorValue.initCommonInfo(errorMsg, JSON.parse(row.shape), statistics, shape);
               });
-              this.curRowObj.bytes = res.data.tensor_value.bytes || 0;
-              const [size, unit] = this.$parent.fileSizeConversion(this.curRowObj.bytes);
-              this.curRowObj.oversized = unit === this.$parent.maxFileSize[1] && size > this.$parent.maxFileSize[0];
-            }
-
-            this.$nextTick(() => {
               this.dealLoading();
+              return;
+            }
+            if (value === null) {
+              value = 'null';
+            }
+            this.tensorValue = value instanceof Array ? value : [value];
+            this.$nextTick(() => {
+              this.$refs.tensorValue.initCommonInfo(this.tensorValue, JSON.parse(row.shape), statistics, shape);
             });
-          },
-          (err) => {
-            this.$parent.showErrorMsg(err);
+            this.curRowObj.bytes = res.data.tensor_value.bytes || 0;
+            const [size, unit] = this.$parent.fileSizeConversion(this.curRowObj.bytes);
+            this.curRowObj.oversized = unit === this.$parent.maxFileSize[1] && size > this.$parent.maxFileSize[0];
+          }
+
+          this.$nextTick(() => {
             this.dealLoading();
-          },
+          });
+        },
+        (err) => {
+          this.$parent.showErrorMsg(err);
+          this.dealLoading();
+        }
       );
     },
     dealLoading() {
@@ -1265,6 +1292,7 @@ export default {
 <style>
 .deb-tensor-wrap {
   height: 100%;
+  height: 100%;
   background-color: var(--bg-color);
   position: relative;
   overflow: hidden;
@@ -1274,8 +1302,7 @@ export default {
   height: 100%;
 }
 .deb-tensor-wrap .deb-tensor-left {
-  width: 400px;
-  padding-right: 25px;
+  width: 100%;
   height: 100%;
   position: relative;
   transition: width 0.2s;
@@ -1285,6 +1312,7 @@ export default {
   /* Safari and Chrome */
   -o-transition: width 0.2s;
   /* Opera */
+  overflow: hidden;
 }
 .deb-tensor-wrap .deb-tensor-left .left-content-title {
   padding-left: 15px;
@@ -1406,11 +1434,10 @@ export default {
   border-right: 1px solid var(--table-border-color);
   overflow: auto;
 }
-.deb-tensor-wrap .deb-tensor-left.collapse {
-  width: 0px;
-}
-.deb-tensor-wrap .deb-tensor-right {
-  width: calc(100% - 400px);
+.deb-tensor-wrap .deb-tensor-rightFixed,
+.deb-tensor-rightTop,
+.deb-tensor-rightBottom {
+  width: 100%;
   height: 100%;
   transition: width 0.2s;
   -moz-transition: width 0.2s;
@@ -1421,12 +1448,14 @@ export default {
   /* Opera */
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
-.deb-tensor-wrap .deb-tensor-right .collapse-btn-wrap {
+.deb-tensor-wrap .deb-tensor-rightTop .collapse-btn-wrap {
   height: 10px;
   position: relative;
 }
-.deb-tensor-wrap .deb-tensor-right .collapse-btn {
+.deb-tensor-wrap .deb-tensor-rightTop .collapse-btn {
   position: absolute;
   left: calc(50% - 50px);
   top: -43px;
@@ -1436,25 +1465,25 @@ export default {
   cursor: pointer;
   z-index: 1;
 }
-.deb-tensor-wrap .deb-tensor-right .collapse-btn-0 {
+.deb-tensor-wrap .deb-tensor-rightTop .collapse-btn-0 {
   background-image: url('../assets/images/0/collapse-left.svg');
 }
-.deb-tensor-wrap .deb-tensor-right .collapse-btn-1 {
+.deb-tensor-wrap .deb-tensor-rightTop .collapse-btn-1 {
   background-image: url('../assets/images/1/collapse-left.svg');
 }
-.deb-tensor-wrap .deb-tensor-right .collapse-btn-0.collapse {
+.deb-tensor-wrap .deb-tensor-rightTop .collapse-btn-0.collapse {
   background-image: url('../assets/images/0/collapse-right.svg');
 }
-.deb-tensor-wrap .deb-tensor-right .collapse-btn-1.collapse {
+.deb-tensor-wrap .deb-tensor-rightTop .collapse-btn-1.collapse {
   background-image: url('../assets/images/1/collapse-right.svg');
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-title {
+.deb-tensor-wrap .deb-tensor-rightFixed .deb-con-title {
   height: 40px;
   line-height: 40px;
   flex-shrink: 0;
   position: relative;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-title .deb-con-title-left {
+.deb-tensor-wrap .deb-tensor-rightFixed .deb-con-title .deb-con-title-left {
   position: absolute;
   left: 0;
   font-weight: bold;
@@ -1464,11 +1493,11 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-title .deb-con-title-right {
+.deb-tensor-wrap .deb-tensor-rightFixed .deb-con-title .deb-con-title-right {
   position: absolute;
   right: 32px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-title .deb-con-title-right .close-btn {
+.deb-tensor-wrap .deb-tensor-rightFixed .deb-con-title .deb-con-title-right .close-btn {
   width: 20px;
   height: 20px;
   vertical-align: -3px;
@@ -1477,68 +1506,68 @@ export default {
   line-height: 20px;
   margin-left: 32px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-compare-detail {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-compare-detail {
   flex-shrink: 0;
   padding-right: 32px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-compare-detail span {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-compare-detail span {
   margin-right: 10px;
   padding-left: 10px;
   border-left: 1px solid #e4e7ec;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-compare-detail label {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-compare-detail label {
   display: inline-block;
   min-width: 123px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-compare-detail label span {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-compare-detail label span {
   border-left: none;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-slide {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-slide {
   line-height: 40px;
   flex-shrink: 0;
   margin: 5px 0;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-left {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-slide .deb-con-slide-left {
   float: left;
   display: flex;
   margin-left: 10px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-left .deb-slide-title {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-slide .deb-con-slide-left .deb-slide-title {
   margin-right: 20px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-left .deb-slide-width {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-slide .deb-con-slide-left .deb-slide-width {
   width: 160px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-left .deb-slide-input {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-slide .deb-con-slide-left .deb-slide-input {
   width: 60px;
   margin-left: 10px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-right {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-slide .deb-con-slide-right {
   float: left;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-right .custom-btn {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-slide .deb-con-slide-right .custom-btn {
   border: 1px solid var(--theme-color);
   border-radius: 2px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-right .green {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-slide .deb-con-slide-right .green {
   background-color: var(--theme-color);
   color: white;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-right .green:hover {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-slide .deb-con-slide-right .green:hover {
   background-color: #33b7b9;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-right .white {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-slide .deb-con-slide-right .white {
   background-color: white;
   color: var(--theme-color);
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-middle {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-slide .deb-con-slide-middle {
   float: right;
   margin-right: 32px;
   width: 150px;
   padding: 10px 0;
   line-height: 15px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-slide .deb-con-slide-middle .grident {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-slide .deb-con-slide-middle .grident {
   display: inline-block;
   width: calc(100% - 70px);
   background-image: linear-gradient(to right, #e37d29, var(--item-bg-color), var(--theme-color));
@@ -1546,7 +1575,7 @@ export default {
   color: transparent;
   border-radius: 10px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-table {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-table {
   flex: 1;
   flex-grow: 1;
   flex-shrink: 1;
@@ -1554,10 +1583,10 @@ export default {
   flex-shrink: 0;
   background-color: var(--image-sample-bg-color);
 }
-.deb-tensor-wrap .deb-tensor-right .deb-con-table .deb-compare-wrap {
+.deb-tensor-wrap .deb-tensor-rightTop .deb-con-table .deb-compare-wrap {
   height: 100%;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container {
   flex: 1;
   flex-grow: 1;
   flex-shrink: 1;
@@ -1566,144 +1595,160 @@ export default {
   display: flex;
   overflow: hidden;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .graph-title {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .graph-title {
   position: absolute;
   font-weight: bold;
   font-size: 14px;
   margin: 5px 0 0 5px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .pre-step-graph {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .pre-step-graph {
   position: absolute;
   right: 415px;
   top: 15px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .graph-title .tip {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .graph-title .tip {
   font-size: 16px;
   margin-left: 10px;
   cursor: pointer;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .nodata {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .nodata {
   width: calc(100% - 375px);
   text-align: center;
   margin-top: 120px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph {
   width: calc(100% - 375px);
   background-color: var(--graph-bg-color);
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container #graph0 > polygon {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container #graph0 > polygon {
   fill: transparent;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container #graph0 text {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container #graph0 text {
   fill: var(--font-color);
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .edge path {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .edge path {
   stroke: #787878;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .edge polygon {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .edge polygon {
   stroke: #787878;
   fill: #787878;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.operator > ellipse {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .node.operator > ellipse {
   stroke: #e3aa00;
   fill: var(--graph-aggregation-color);
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.slot > polygon {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .node.slot > polygon {
   stroke: #4ea6e6;
   fill: var(--graph-operator-color);
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.slot.current > polygon {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .node.slot.current > polygon {
   stroke: #4ea6e6;
   fill: var(--theme-color);
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.slot.current text {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .node.slot.current text {
   fill: white;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node:hover {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .node:hover {
   cursor: pointer;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node:hover > polygon,
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node:hover > ellipse {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .node:hover > polygon,
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .node:hover > ellipse {
   stroke-width: 2px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .cluster > polygon {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .cluster > polygon {
   stroke: #e4e7ed;
   fill: var(--slot-bg-color);
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.selected polygon,
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .node.selected ellipse {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .node.selected polygon,
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .node.selected ellipse {
   stroke: red !important;
   stroke-width: 2px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .edge.selected path {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .edge.selected path {
   stroke: red;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-graph .edge.selected polygon {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-graph .edge.selected polygon {
   stroke: red;
   fill: red;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-tensor-info {
   width: 375px;
   height: 100%;
   border-left: solid 2px var(--el-select-dropdown-border-color);
   padding-left: 20px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-title {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-tensor-info .tensor .tensor-title {
   font-size: 14px;
   font-weight: bold;
   padding-bottom: 8px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-tensor-info .tensor .tensor-detail {
   overflow: auto;
   height: calc(100% - 30px);
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail span {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-tensor-info .tensor .tensor-detail span {
   display: inline-block;
   padding: 5px 0px;
   min-width: 50%;
   word-break: break-all;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail ul li {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-tensor-info .tensor .tensor-detail ul li {
   padding: 5px 10px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail ul li > div {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-tensor-info .tensor .tensor-detail ul li > div {
   display: inline-block;
   vertical-align: top;
   word-break: break-all;
   line-height: 16px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail ul li .attr-key {
+.deb-tensor-wrap
+  .deb-tensor-rightBottom
+  .deb-graph-container
+  .deb-tensor-info
+  .tensor
+  .tensor-detail
+  ul
+  li
+  .attr-key {
   width: 30%;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail ul li .attr-value {
+.deb-tensor-wrap
+  .deb-tensor-rightBottom
+  .deb-graph-container
+  .deb-tensor-info
+  .tensor
+  .tensor-detail
+  ul
+  li
+  .attr-value {
   width: 70%;
   padding-left: 10px;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor .tensor-detail ul li:hover {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-tensor-info .tensor .tensor-detail ul li:hover {
   background-color: #e9fcf9;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .tensor {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-tensor-info .tensor {
   height: 50%;
   overflow: auto;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .watch-point {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-tensor-info .watch-point {
   height: 50%;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .watch-point .point-list {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-tensor-info .watch-point .point-list {
   height: calc(100% - 35px);
   overflow: auto;
   text-overflow: ellipsis;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .watch-point .watchPoint-title {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-tensor-info .watch-point .watchPoint-title {
   padding: 8px 0;
   font-size: 14px;
   font-weight: bold;
 }
-.deb-tensor-wrap .deb-tensor-right .deb-graph-container .deb-tensor-info .watch-point .watch-judgment {
+.deb-tensor-wrap .deb-tensor-rightBottom .deb-graph-container .deb-tensor-info .watch-point .watch-judgment {
   padding: 5px 0;
 }
 .deb-tensor-wrap
-  .deb-tensor-right
+  .deb-tensor-rightBottom
   .deb-graph-container
   .deb-tensor-info
   .tensor
@@ -1717,7 +1762,7 @@ export default {
   border-bottom: 1px solid var(--table-border-color);
 }
 .deb-tensor-wrap
-  .deb-tensor-right
+  .deb-tensor-rightBottom
   .deb-graph-container
   .deb-tensor-info
   .tensor
@@ -1726,7 +1771,7 @@ export default {
   .stack-item:hover {
   background-color: var(--table-hover-color);
 }
-.deb-tensor-wrap .deb-tensor-right.collapse {
+.deb-tensor-wrap .deb-tensor-rightBottom.collapse {
   width: calc(100% - 25px);
 }
 
