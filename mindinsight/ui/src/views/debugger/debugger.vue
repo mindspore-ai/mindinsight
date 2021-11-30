@@ -15,870 +15,866 @@ limitations under the License.
 -->
 <template>
   <div class="deb-wrap">
-    <div class="left-wrap"
-         :class="{collapse:leftShow}">
-      <div class="left"
-           v-show="!leftShow">
-        <div class="header">
-          {{radio1==='tree' ? $t('debugger.nodeList') : (
-            radio1==='stack' ? $t('debugger.stackList') :
-          ($t('debugger.curHitNode') + '(' + pagination.total + ')'))}}
-          <div class="outdate-tip"
-               v-if="hitsOutdated && radio1==='hit'">
-            <el-tooltip class="item"
-                        effect="light"
-                        :content="$t('debugger.outdateTip')"
-                        placement="top">
-              <i class="el-icon-warning"></i>
-            </el-tooltip>
-          </div>
-          <div class="radio-tabs">
-            <el-radio-group v-model="radio1"
-                            size='mini'
-                            @change="searchWatchpointHits(true)">
-              <el-radio-button label="hit">
-                <i class="el-icon-s-fold"></i>
-              </el-radio-button>
-              <el-radio-button label="tree">
-                <i class="el-icon-s-grid"></i>
-              </el-radio-button>
-              <el-radio-button label="stack">
-                <i class="el-icon-s-unfold"></i>
-              </el-radio-button>
-            </el-radio-group>
-          </div>
-        </div>
-        <div class="content"
-             v-show="radio1==='tree'">
-          <div class="search-conditions"
-               :class="collapseConditions ? 'collapse-top':''">
-            <div class="condition-title">
-              {{$t('debugger.searchConditions')}}
-              <div class="img-btn"
-                   :class="collapseConditions ? 'collapse':''"
-                   @click="collapseConditions=!collapseConditions"></div>
+    <FlexibleGrid :areas="areas"
+                  :rowSize="rowSize"
+                  :columnSize="columnSize"
+                  :hideAreas="hideAreas"
+                  :showFixed="showFixed"
+                  :gridStyleKey="gridStyleKey"
+                  @resizeGridStyle="resizeGridStyle">
+      <div class="left-wrap"
+           slot="left">
+        <div class="left">
+          <div class="header">
+            {{radio1==='tree' ? $t('debugger.nodeList') : (
+              radio1==='stack' ? $t('debugger.stackList') :
+            ($t('debugger.curHitNode') + '(' + pagination.total + ')'))}}
+            <div class="outdate-tip"
+                 v-if="hitsOutdated && radio1==='hit'">
+              <el-tooltip class="item"
+                          effect="light"
+                          :content="$t('debugger.outdateTip')"
+                          placement="top">
+                <i class="el-icon-warning"></i>
+              </el-tooltip>
             </div>
-            <div class="condition-container"
-                 v-show="!collapseConditions">
-              <div class="node-type">
-                <div class="label">{{ $t('debugger.logicCard') }}</div>
-                <el-select v-model="logicCard.value"
-                           @change="logicCardChange"
-                           :disabled="!trainId">
-                  <el-option v-for="item in logicCard.options"
-                             :key="item"
-                             :value="item">
-                  </el-option>
-                </el-select>
-              </div>
-              <div class="node-type">
-                <div class="label">{{ $t('debugger.graphName') }}</div>
-                <el-select v-model="graphFiles.value"
-                           @change="queryGraphByFile">
-                  <el-option v-for="item in graphFiles.options"
-                             :key="item"
-                             :value="item">
-                  </el-option>
-                </el-select>
-              </div>
-              <div class="node-type">
-                <div class="label">{{$t('debugger.nodeTypes')}}</div>
-                <el-select v-model="nodeTypes.value"
-                           @change="nodeTypesChange">
-                  <el-option v-for="item in nodeTypes.options"
-                             :key="item"
-                             :label="nodeTypes.label[item]"
-                             :value="item"
-                             :class="{'deb-indent': item != 'all'}">
-                  </el-option>
-                </el-select>
-              </div>
-              <div class="select-wrap">
-                <div class="label">{{$t('debugger.nodeName')}}</div>
-                <el-input :placeholder="$t('graph.inputNodeName')"
-                          v-model="searchWord"
-                          :title="searchWord"
-                          class="input-with-select"
-                          @input="filterChange"
-                          @keyup.enter.native="filter"
-                          @clear="filter"
-                          clearable>
-                </el-input>
-              </div>
-              <div class="select-wrap">
-                <div class="label">{{$t('debugger.stackInfo')}}</div>
-                <el-input :placeholder="$t('debugger.inputStack')"
-                          v-model="searchStackContent"
-                          :title="searchStackContent"
-                          class="input-with-select"
-                          @input="filterChange"
-                          @keyup.enter.native="filter"
-                          @clear="filter"
-                          clearable>
-                </el-input>
-              </div>
+            <div class="radio-tabs">
+              <el-radio-group v-model="radio1"
+                              size='mini'
+                              @change="searchWatchpointHits(true)">
+                <el-radio-button label="hit">
+                  <i class="el-icon-s-fold"></i>
+                </el-radio-button>
+                <el-radio-button label="tree">
+                  <i class="el-icon-s-grid"></i>
+                </el-radio-button>
+                <el-radio-button label="stack">
+                  <i class="el-icon-s-unfold"></i>
+                </el-radio-button>
+              </el-radio-group>
             </div>
           </div>
+          <div class="content"
+               v-show="radio1==='tree'">
+            <div class="search-conditions"
+                 :class="collapseConditions ? 'collapse-top':''">
+              <div class="condition-title">
+                {{$t('debugger.searchConditions')}}
+                <div class="img-btn"
+                     :class="collapseConditions ? 'collapse':''"
+                     @click="collapseConditions=!collapseConditions"></div>
+              </div>
+              <div class="condition-container"
+                   v-show="!collapseConditions">
+                <div class="node-type">
+                  <div class="label">{{ $t('debugger.logicCard') }}</div>
+                  <el-select v-model="logicCard.value"
+                             @change="logicCardChange"
+                             :disabled="!trainId">
+                    <el-option v-for="item in logicCard.options"
+                               :key="item"
+                               :value="item">
+                    </el-option>
+                  </el-select>
+                </div>
+                <div class="node-type">
+                  <div class="label">{{ $t('debugger.graphName') }}</div>
+                  <el-select v-model="graphFiles.value"
+                             @change="queryGraphByFile">
+                    <el-option v-for="item in graphFiles.options"
+                               :key="item"
+                               :value="item">
+                    </el-option>
+                  </el-select>
+                </div>
+                <div class="node-type">
+                  <div class="label">{{$t('debugger.nodeTypes')}}</div>
+                  <el-select v-model="nodeTypes.value"
+                             @change="nodeTypesChange">
+                    <el-option v-for="item in nodeTypes.options"
+                               :key="item"
+                               :label="nodeTypes.label[item]"
+                               :value="item"
+                               :class="{'deb-indent': item != 'all'}">
+                    </el-option>
+                  </el-select>
+                </div>
+                <div class="select-wrap">
+                  <div class="label">{{$t('debugger.nodeName')}}</div>
+                  <el-input :placeholder="$t('graph.inputNodeName')"
+                            v-model="searchWord"
+                            :title="searchWord"
+                            class="input-with-select"
+                            @input="filterChange"
+                            @keyup.enter.native="filter"
+                            @clear="filter"
+                            clearable>
+                  </el-input>
+                </div>
+                <div class="select-wrap">
+                  <div class="label">{{$t('debugger.stackInfo')}}</div>
+                  <el-input :placeholder="$t('debugger.inputStack')"
+                            v-model="searchStackContent"
+                            :title="searchStackContent"
+                            class="input-with-select"
+                            @input="filterChange"
+                            @keyup.enter.native="filter"
+                            @clear="filter"
+                            clearable>
+                  </el-input>
+                </div>
+              </div>
+            </div>
 
-          <div class="tree-wrap"
-               :class="!collapseConditions ? 'collapse':''">
-            <div class="select-all-files"
-                 v-if="curWatchPointId && treeFlag">
-              <el-button type="primary"
-                         size="mini"
-                         class="custom-btn"
-                         :disabled="metadata.state === state.running || metadata.state === state.sending"
-                         @click="selectAllFiles(true)">{{ $t('public.selectAll') }}</el-button>
-              <el-button type="primary"
-                         size="mini"
-                         class="custom-btn"
-                         :disabled="metadata.state === state.running || metadata.state === state.sending"
-                         @click="selectAllFiles(false)">{{ $t('public.deselectAll') }}</el-button>
-            </div>
-            <tree v-show="treeFlag"
-                  :props="props"
-                  :load="loadNode"
-                  @node-collapse="nodeCollapse"
-                  @node-click="handleNodeClick"
-                  node-key="name"
-                  :expand-on-click-node="false"
-                  :lazy="lazy"
-                  :highlight-current="true"
-                  ref="tree"
-                  @check="check"
-                  :show-checkbox="!!curWatchPointId"
-                  :disabled="treeDisabled">
-              <span class="custom-tree-node"
-                    slot-scope="{ node ,data }">
-                <span :class="{const:data.type==='Const' && curWatchPointId}">
-                  <img v-if="data.type ==='name_scope'"
-                       :src="require('@/assets/images/name-scope.svg')"
-                       class="image-type" />
-                  <img v-else-if="data.type ==='Const'"
-                       :src="require('@/assets/images/constant-node.svg')"
-                       class="image-type" />
-                  <img v-else-if="data.type ==='aggregation_scope'"
-                       :src="require('@/assets/images/polymetric.svg')"
-                       class="image-type" />
-                  <img v-else
-                       :src="require('@/assets/images/operator-node.svg')"
-                       class="image-type" />
-                </span>
+            <div class="tree-wrap"
+                 :class="!collapseConditions ? 'collapse':''">
+              <div class="select-all-files"
+                   v-if="curWatchPointId && treeFlag">
+                <el-button type="primary"
+                           size="mini"
+                           class="custom-btn"
+                           :disabled="metadata.state === state.running || metadata.state === state.sending"
+                           @click="selectAllFiles(true)">{{ $t('public.selectAll') }}</el-button>
+                <el-button type="primary"
+                           size="mini"
+                           class="custom-btn"
+                           :disabled="metadata.state === state.running || metadata.state === state.sending"
+                           @click="selectAllFiles(false)">{{ $t('public.deselectAll') }}</el-button>
+              </div>
+              <tree v-show="treeFlag"
+                    :props="props"
+                    :load="loadNode"
+                    @node-collapse="nodeCollapse"
+                    @node-click="handleNodeClick"
+                    node-key="name"
+                    :expand-on-click-node="false"
+                    :lazy="lazy"
+                    :highlight-current="true"
+                    ref="tree"
+                    @check="check"
+                    :show-checkbox="!!curWatchPointId"
+                    :disabled="treeDisabled">
                 <span class="custom-tree-node"
-                      :title="node.label">{{ node.label }}</span>
-              </span>
-            </tree>
-            <tree v-show="!treeFlag"
-                  :props="defaultProps"
-                  :load="loadSearchNode"
-                  :lazy="true"
-                  node-key="name"
-                  :expand-on-click-node="false"
-                  @node-click="handleNodeClick"
-                  :show-checkbox="!!curWatchPointId"
-                  @check="searchCheck"
-                  :disabled="treeDisabled"
-                  ref="searchTree">
-              <span class="custom-tree-node"
-                    slot-scope="{ node ,data }">
-                <span :class="{const:data.type==='Const' && curWatchPointId}">
-                  <img v-if="data.type ==='name_scope'"
-                       :src="require('@/assets/images/name-scope.svg')"
-                       class="image-type" />
-                  <img v-else-if="data.type ==='Const'"
-                       :src="require('@/assets/images/constant-node.svg')"
-                       class="image-type" />
-                  <img v-else-if="data.type ==='aggregation_scope'"
-                       :src="require('@/assets/images/polymetric.svg')"
-                       class="image-type" />
-                  <img v-else
-                       :src="require('@/assets/images/operator-node.svg')"
-                       class="image-type" />
+                      slot-scope="{ node ,data }">
+                  <span :class="{const:data.type==='Const' && curWatchPointId}">
+                    <img v-if="data.type ==='name_scope'"
+                         :src="require('@/assets/images/name-scope.svg')"
+                         class="image-type" />
+                    <img v-else-if="data.type ==='Const'"
+                         :src="require('@/assets/images/constant-node.svg')"
+                         class="image-type" />
+                    <img v-else-if="data.type ==='aggregation_scope'"
+                         :src="require('@/assets/images/polymetric.svg')"
+                         class="image-type" />
+                    <img v-else
+                         :src="require('@/assets/images/operator-node.svg')"
+                         class="image-type" />
+                  </span>
+                  <span class="custom-tree-node"
+                        :title="node.label">{{ node.label }}</span>
                 </span>
+              </tree>
+              <tree v-show="!treeFlag"
+                    :props="defaultProps"
+                    :load="loadSearchNode"
+                    :lazy="true"
+                    node-key="name"
+                    :expand-on-click-node="false"
+                    @node-click="handleNodeClick"
+                    :show-checkbox="!!curWatchPointId"
+                    @check="searchCheck"
+                    :disabled="treeDisabled"
+                    ref="searchTree">
                 <span class="custom-tree-node"
-                      :title="node.label">{{ node.label }}</span>
-              </span>
-            </tree>
-          </div>
-          <div class="watch-point-wrap">
-            <div class="title-wrap">
-              {{$t('debugger.watchList')}}
-
-              <div class="check-wrap">
-                <i class="el-icon-circle-check"
-                   :title="$t('debugger.recheck')"
-                   :class="{disable: !enableRecheck}"
-                   @click="recheckWatchpoint()"></i>
-              </div>
-
-              <div class="delete-wrap">
-                <i class="el-icon-delete"
-                   :title="$t('debugger.clearWatchpoint')"
-                   :class="{disable: !(watchPointArr.length && metadata.state !== state.running &&
-                   metadata.state !== state.sending)}"
-                   @click="deleteWatchpoint()"></i>
-              </div>
-              <div class="add-wrap">
-                <i class="el-icon-circle-plus"
-                   :title="$t('debugger.createWP')"
-                   :class="{disable: metadata.state === state.running || metadata.state === state.sending}"
-                   @click="initCondition"></i>
-              </div>
+                      slot-scope="{ node ,data }">
+                  <span :class="{const:data.type==='Const' && curWatchPointId}">
+                    <img v-if="data.type ==='name_scope'"
+                         :src="require('@/assets/images/name-scope.svg')"
+                         class="image-type" />
+                    <img v-else-if="data.type ==='Const'"
+                         :src="require('@/assets/images/constant-node.svg')"
+                         class="image-type" />
+                    <img v-else-if="data.type ==='aggregation_scope'"
+                         :src="require('@/assets/images/polymetric.svg')"
+                         class="image-type" />
+                    <img v-else
+                         :src="require('@/assets/images/operator-node.svg')"
+                         class="image-type" />
+                  </span>
+                  <span class="custom-tree-node"
+                        :title="node.label">{{ node.label }}</span>
+                </span>
+              </tree>
             </div>
-            <div class="content-wrap">
-              <ul id="watch-point-list"
-                  class="list-wrap"
-                  v-show="allWatchPointFlag">
-                <li class="list"
-                    v-for="(item,key) in watchPointArr"
-                    :key="key"
-                    :title="getWatchPointContent(item)">
-                  <div class="name"
-                       :class="{selected:item.selected}"
-                       @click="selectWatchPoint(key)">
-                    <div class="item-content">
-                      {{getWatchPointContent(item)}}
+            <div class="watch-point-wrap">
+              <div class="title-wrap">
+                {{$t('debugger.watchList')}}
+
+                <div class="check-wrap">
+                  <i class="el-icon-circle-check"
+                     :title="$t('debugger.recheck')"
+                     :class="{disable: !enableRecheck}"
+                     @click="recheckWatchpoint()"></i>
+                </div>
+
+                <div class="delete-wrap">
+                  <i class="el-icon-delete"
+                     :title="$t('debugger.clearWatchpoint')"
+                     :class="{disable: !(watchPointArr.length && metadata.state !== state.running &&
+                    metadata.state !== state.sending)}"
+                     @click="deleteWatchpoint()"></i>
+                </div>
+                <div class="add-wrap">
+                  <i class="el-icon-circle-plus"
+                     :title="$t('debugger.createWP')"
+                     :class="{disable: metadata.state === state.running || metadata.state === state.sending}"
+                     @click="initCondition"></i>
+                </div>
+              </div>
+              <div class="content-wrap">
+                <ul id="watch-point-list"
+                    class="list-wrap"
+                    v-show="allWatchPointFlag">
+                  <li class="list"
+                      v-for="(item,key) in watchPointArr"
+                      :key="key"
+                      :title="getWatchPointContent(item)">
+                    <div class="name"
+                         :class="{selected:item.selected}"
+                         @click="selectWatchPoint(key)">
+                      <div class="item-content">
+                        {{getWatchPointContent(item)}}
+                      </div>
+                      <i class="el-icon-check icon"
+                         v-if="item.selected"
+                         @click.stop="showOrigin()"></i>
+                      <i class="el-icon-close icon"
+                         :class="{disabled:metadata.state === state.running ||
+                          metadata.state === state.sending}"
+                         v-if="item.selected"
+                         @click.stop="deleteWatchpoint(item)"></i>
                     </div>
-                    <i class="el-icon-check icon"
-                       v-if="item.selected"
-                       @click.stop="showOrigin()"></i>
-                    <i class="el-icon-close icon"
-                       :class="{disabled:metadata.state === state.running ||
-                        metadata.state === state.sending}"
-                       v-if="item.selected"
-                       @click.stop="deleteWatchpoint(item)"></i>
-                  </div>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div class="content"
-             v-show="radio1==='hit'">
-          <div class="node-type">
-            <div class="label">{{ $t('debugger.logicCard') }}</div>
-            <el-select v-model="logicCard.value"
-                       :disabled="!trainId || metadata.state === state.running || metadata.state === state.sending"
-                       @change="logicCardChange();searchWatchpointHits(true,true);">
-              <el-option v-for="item in logicCard.options"
-                         :key="item"
-                         :value="item">
-              </el-option>
-            </el-select>
-          </div>
-          <div class="node-type">
-            <div class="label">{{ $t('debugger.graphName') }}</div>
-            <el-select v-model="hitWpCondition.graphFile"
-                       :disabled="metadata.state === state.running || metadata.state === state.sending"
-                       @change="searchWatchpointHits(true,true);">
-              <el-option v-for="item in graphFiles.options"
-                         :key="item"
-                         :value="item">
-              </el-option>
-            </el-select>
-          </div>
-          <div class="node-type">
-            <div class="label">{{ $t('debugger.watchPoint') }}</div>
-            <el-select v-model="hitWpCondition.watchPoint"
-                       :disabled="metadata.state === state.running || metadata.state === state.sending"
-                       @change="searchWatchpointHits(true,true);">
-              <el-option v-for="item in hitWatchPointArr"
-                         :key="item.value"
-                         :label="item.label"
-                         :value="item.value">
-              </el-option>
-            </el-select>
-          </div>
-          <div class="hit-list-wrap">
-            <el-table class="watchpoint-table"
-                      :data="watchPointHits"
-                      row-key="id"
-                      :expand-row-keys="expandKeys">
-              <el-table-column type="expand"
-                               width="40">
-                <template slot-scope="props">
-                  <ul>
-                    <li v-for="(i, index) in props.row.lists"
-                        :key="index">{{i.name}}
-                      <div v-for="(j, ind) in i.params"
-                           :key="ind"
-                           class="param">
-                        <div class="tensor-icon"></div>
-                        {{j.content}}
-                      </div>
-                      <div class="hit-tip"
-                           v-if="i.tip">
-                        <i class="el-icon-warning"></i>{{i.tip}}
-                      </div>
-                    </li>
-                  </ul>
-                </template>
-              </el-table-column>
-              <el-table-column prop="name"
-                               :label="$t('graph.name')">
-                <template slot-scope="scope">
-                  <div class="hit-item"
-                       :class="{selected:scope.row.selected}"
-                       @click="updateTensorValue(scope.$index)">
-                    {{scope.row.graph_name}}/{{scope.row.name}}
-                  </div>
-                </template>
-              </el-table-column>
-            </el-table>
-            <el-pagination class="watchpoint-page"
-                           small
-                           @current-change="handleCurrentChange"
-                           :current-page="pagination.currentPage"
-                           :page-size="pagination.pageSize"
-                           :pager-count="pagination.pageCount"
-                           layout="prev, pager, next, jumper"
-                           :total="pagination.total"
-                           v-show="pagination.total">
-            </el-pagination>
-          </div>
-        </div>
-        <div class="content"
-             v-show="radio1==='stack'">
-          <div class="stack-search">
-            <div class="label">{{$t('debugger.stackInfo')}}</div>
-            <el-input :placeholder="$t('debugger.inputStack')"
-                      v-model="stacks.searchContent"
-                      :title="stacks.searchContent"
-                      @keyup.enter.native="queryStacks"
-                      clearable
-                      @clear="stackPageChange(1)">
-            </el-input>
-          </div>
-
-          <div class="hit-list-wrap">
-            <el-table class="watchpoint-table"
-                      :data="stacks.list">
-              <el-table-column type="expand">
-                <template slot-scope="props">
-                  <ul class="stack-info">
-                    <li v-for="i in props.row.items"
-                        :key="i.line_no">
-                      {{i.line_no}}: {{i.code_line}}
-                      <el-button type="text"
-                                 class="btn"
-                                 @click="stackOperator(i)">{{$t('debugger.search')}}</el-button>
-                    </li>
-                  </ul>
-                </template>
-              </el-table-column>
-              <el-table-column prop="file_path"
-                               :label="$t('graph.name')">
-              </el-table-column>
-            </el-table>
-            <el-pagination class="watchpoint-page"
-                           small
-                           @current-change="stackPageChange"
-                           :current-page="stacks.currentPage"
-                           :page-size="stacks.pageSize.size"
-                           :pager-count="pagination.pageCount"
-                           layout="prev, pager, next, jumper"
-                           :total="stacks.total"
-                           v-show="stacks.total">
-            </el-pagination>
-          </div>
-        </div>
-        <div class="btn-wrap">
-          <div class="step">
-            <el-tooltip class="item"
-                        effect="light"
-                        :content="$t('debugger.inputTip',{total_step_num:metadata.total_step_num})"
-                        placement="top-start">
-              <el-input v-model="step"
-                        :placeholder="$t('debugger.inputStep')"
-                        :disabled="metadata.step === metadata.total_step_num && !!trainId"
-                        @input="stepChange"
-                        @keyup.native.enter="control(0)">
-              </el-input>
-            </el-tooltip>
-            <el-button type="primary"
-                       size="mini"
-                       class="custom-btn green"
-                       :disabled="!(step && metadata.state === state.waiting)
-                       || (metadata.step === metadata.total_step_num && !!trainId)"
-                       @click="control(0)">{{ $t('public.sure') }}</el-button>
-          </div>
-          <div class="btn-two">
-            <el-button size="mini"
-                       class="custom-btn white"
-                       :disabled="metadata.state !== state.waiting
-                       || (metadata.step === metadata.total_step_num && !!trainId)"
-                       @click="control(1)">{{$t('debugger.continue')}}</el-button>
-            <el-button size="mini"
-                       class="custom-btn white"
-                       :disabled="metadata.state !== state.running"
-                       @click="control(3)">{{$t('debugger.pause')}}</el-button>
-            <el-button size="mini"
-                       class="custom-btn white"
-                       :disabled="metadata.state === state.pending || metadata.state === state.sending"
-                       @click="terminate">{{$t('debugger.terminate')}}</el-button>
-          </div>
-        </div>
-      </div>
-      <div class="collapse-btn"
-           :class="[leftShow?'collapse':'',`collapse-btn-${$store.state.themeIndex}`]"
-           @click="collapseBtnClick">
-      </div>
-    </div>
-    <div class="right"
-         :class="{collapse:leftShow}">
-      <div class="header">
-        <span class="item">
-          {{$t('debugger.clientIp') + $t('symbols.colon')}}
-          <span class="content">
-            {{ metadata.ip !== undefined ? metadata.ip : '--' }}
-          </span>
-        </span>
-        <span class="item">{{$t('debugger.deviceId') + $t('symbols.colon')}}
-          <span class="content">
-            {{ metadata.device_name !== undefined ? metadata.device_name : '--' }}
-          </span>
-        </span>
-        <span class="item">{{$t('debugger.currentStep') + $t('symbols.colon')}}
-          <span class="content">
-            {{ metadata.step !== undefined ? metadata.step : '--'}}
-          </span>
-          <i class="el-icon-edit"
-             :class="{disabled:metadata.state === state.running || metadata.state === state.sending}"
-             v-if="trainId && !isShowInp"
-             :title="$t('debugger.inpStepTip',{total_step_num:metadata.total_step_num})"
-             @click="editStep"></i>
-          <el-tooltip class="item"
-                      effect="light"
-                      :content="$t('debugger.inputTip',{total_step_num:metadata.total_step_num})"
-                      placement="top-start"
-                      v-if="trainId && isShowInp">
-            <el-input v-model="newStep"
-                      type="text"
-                      @input="newStepChange"></el-input>
-          </el-tooltip>
-          <i class="el-icon-check"
-             v-if="trainId && isShowInp"
-             @click="saveStepValue"></i>
-          <i class="el-icon-close"
-             v-if="trainId && isShowInp"
-             @click="isShowInp=false"></i>
-          <el-tooltip class="tooltip"
-                      effect="light"
-                      :content="$t('debugger.stepTip') + (trainId ? $t('debugger.stepTipOffline') : '')"
-                      placement="top">
-            <i class="el-icon-info"></i>
-          </el-tooltip>
-        </span>
-
-        <span class="item">{{$t('debugger.state') + $t('symbols.colon')}}
-          <span class="content">
-            <i class="el-icon-loading"
-               v-show="metadata.state === state.running"></i>
-            <i class="el-icon-time"
-               v-show="metadata.state === state.sending"></i>
-            {{ metadata.state ? $t('debugger.stateTips.' + metadata.state) : ''}}
-          </span>
-          <el-tooltip class="tooltip"
-                      effect="light"
-                      placement="right">
-            <div slot="content">
-              <div class="tooltip-item">
-                <div class="item">
-                  <span>1.</span>
-                  <span>{{$t('debugger.stateInfo.waiting')}}</span>
-                </div>
-                <div class="item">
-                  <span>2.</span>
-                  <span>{{$t('debugger.stateInfo.running')}}</span>
-                </div>
-                <div class="item">
-                  <span>3.</span>
-                  <span>{{$t('debugger.stateInfo.sending')}}</span>
-                </div>
-                <div class="item">
-                  <span>4.</span>
-                  <span>{{$t('debugger.stateInfo.pending')}}</span>
-                </div>
-              </div>
-            </div>
-            <i class="el-icon-info"></i>
-          </el-tooltip>
-        </span>
-      </div>
-      <div class="svg-wrap"
-           :class="{collapse: collapseTable}">
-        <div class="graph-container">
-          <div id="graph"></div>
-          <div id="contextMenu">
-            <ul>
-              <li>{{ $t('debugger.continueTo')}}</li>
-            </ul>
-          </div>
-        </div>
-        <div class="btn-wrap">
-          <el-button v-if="version==='Ascend'"
-                     type="primary"
-                     size="mini"
-                     class="custom-btn green notShow"
-                     @click="getNodeByBfs(false)">
-            {{ $t('debugger.previousNode')}}
-          </el-button>
-          <el-button v-if="version==='GPU' && !trainId"
-                     type="primary"
-                     size="mini"
-                     class="custom-btn green"
-                     :disabled="!currentNodeName"
-                     :class="{disabled:!currentNodeName}"
-                     @click="getCurrentNodeInfo">
-            {{ $t('debugger.currentNode')}}
-          </el-button>
-          <el-button v-if="version==='Ascend'"
-                     type="primary"
-                     size="mini"
-                     class="custom-btn white notShow"
-                     @click="getNodeByBfs(true)">
-            {{ $t('debugger.nextNode')}}
-          </el-button>
-          <el-button v-if="version==='GPU' && !trainId"
-                     type="primary"
-                     size="mini"
-                     class="custom-btn white"
-                     :disabled="metadata.state === state.running ||
-                     metadata.state === state.sending"
-                     :class="{disabled: metadata.state === state.running ||
-                     metadata.state === state.sending}"
-                     @click="getNextNodeInfo">
-            {{ $t('debugger.nextNode')}}
-          </el-button>
-        </div>
-        <!-- Legend -->
-        <div class="legend">
-          <div class="title">
-            {{ $t('graph.legend') }}
-            <img :src="require('@/assets/images/all-drop-down.png')"
-                 v-show="!showLegend"
-                 @click="showLegend = !showLegend"
-                 alt="" />
-            <img :src="require('@/assets/images/all-uptake.png')"
-                 v-show="showLegend"
-                 @click="showLegend = !showLegend"
-                 alt="" />
-          </div>
-          <div v-show="showLegend"
-               class="legend-content">
-            <div class="legend-item">
-              <div class="pic">
-                <img :src="require('@/assets/images/name-scope.svg')"
-                     alt="" />
-              </div>
-              <div class="legend-text"
-                   :title="$t('graph.nameSpace')">
-                {{ $t('graph.nameSpace') }}
-              </div>
-            </div>
-            <div class="legend-item">
-              <div class="pic">
-                <img :src="require('@/assets/images/polymetric.svg')"
-                     alt="" />
-              </div>
-              <div class="legend-text"
-                   :title="$t('graph.polymetric')">
-                {{ $t('graph.polymetric') }}
-              </div>
-            </div>
-            <div class="legend-item">
-              <div class="pic">
-                <img :src="require('@/assets/images/virtual-node.svg')"
-                     alt="" />
-              </div>
-              <div class="legend-text"
-                   :title="$t('graph.virtualNode')">
-                {{ $t('graph.virtualNode') }}
-              </div>
-            </div>
-            <div class="legend-item">
-              <div class="pic">
-                <img :src="require('@/assets/images/operator-node.svg')"
-                     alt="" />
-              </div>
-              <div class="legend-text"
-                   :title="$t('graph.operatorNode')">
-                {{ $t('graph.operatorNode') }}
-              </div>
-            </div>
-            <div class="legend-item">
-              <div class="pic">
-                <img :src="require('@/assets/images/constant-node.svg')"
-                     alt="" />
-              </div>
-              <div class="legend-text"
-                   :title="$t('graph.constantNode')">
-                {{ $t('graph.constantNode') }}
-              </div>
-            </div>
-            <br>
-            <div class="legend-item">
-              <div class="pic">
-                <img :src="require('@/assets/images/data-flow.png')"
-                     alt="" />
-              </div>
-              <div class="legend-text"
-                   :title="$t('graph.dataFlowEdge')">
-                {{ $t('graph.dataFlowEdge') }}
-              </div>
-            </div>
-            <div class="legend-item">
-              <div class="pic">
-                <img :src="require('@/assets/images/control-dep.png')"
-                     alt="" />
-              </div>
-              <div class="legend-text"
-                   :title="$t('graph.controllDepEdge')">
-                {{ $t('graph.controllDepEdge') }}
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
-        </div>
-        <div class="graph-count-wrap"
-             v-if="trainId">
-          <div class="title">
-            {{ $t('debugger.graphExecutionHistory') }}
-            <el-tooltip class="tooltip"
-                        effect="light"
-                        placement="right">
-              <div slot="content">
-                <div class="graph-count-info">
-                  <div class="graph-execution-history">{{$t('debugger.graphExecutionHistoryTip')}}</div>
-                </div>
-              </div>
-              <i class="el-icon-info"></i>
-            </el-tooltip>
-            <div class="select-wrap">
-              <div class="label">{{ $t('debugger.hasData') }}</div>
-              <el-select v-model="hasDataObj.value"
-                         @change="graphExecutionSelect">
-                <el-option v-for="item in hasDataObj.options"
-                           :key="item.value"
-                           :label="item.label"
-                           :value="item.value">
-                </el-option>
-              </el-select>
-              <div class="label">{{ $t('debugger.graphName') }}</div>
-              <el-select v-model="graphNameObj.value"
-                         @change="graphExecutionSelect">
-                <el-option v-for="item in graphNameObj.options"
+          <div class="content"
+               v-show="radio1==='hit'">
+            <div class="node-type">
+              <div class="label">{{ $t('debugger.logicCard') }}</div>
+              <el-select v-model="logicCard.value"
+                         :disabled="!trainId || metadata.state === state.running || metadata.state === state.sending"
+                         @change="logicCardChange();searchWatchpointHits(true,true);">
+                <el-option v-for="item in logicCard.options"
                            :key="item"
                            :value="item">
                 </el-option>
               </el-select>
             </div>
-            <div class="has-data"></div>{{this.$t('debugger.hasDataTip')}}
-            <div class="current-step"></div>{{this.$t('debugger.currentStepTip')}}
-            <img :src="require('@/assets/images/all-drop-down.png')"
-                 v-show="!showGraphCount"
-                 @click="showGraphCount = !showGraphCount"
-                 alt="" />
-            <img :src="require('@/assets/images/all-uptake.png')"
-                 v-show="showGraphCount"
-                 @click="showGraphCount = !showGraphCount"
-                 alt="" />
+            <div class="node-type">
+              <div class="label">{{ $t('debugger.graphName') }}</div>
+              <el-select v-model="hitWpCondition.graphFile"
+                         :disabled="metadata.state === state.running || metadata.state === state.sending"
+                         @change="searchWatchpointHits(true,true);">
+                <el-option v-for="item in graphFiles.options"
+                           :key="item"
+                           :value="item">
+                </el-option>
+              </el-select>
+            </div>
+            <div class="node-type">
+              <div class="label">{{ $t('debugger.watchPoint') }}</div>
+              <el-select v-model="hitWpCondition.watchPoint"
+                         :disabled="metadata.state === state.running || metadata.state === state.sending"
+                         @change="searchWatchpointHits(true,true);">
+                <el-option v-for="item in hitWatchPointArr"
+                           :key="item.value"
+                           :label="item.label"
+                           :value="item.value">
+                </el-option>
+              </el-select>
+            </div>
+            <div class="hit-list-wrap">
+              <el-table class="watchpoint-table"
+                        :data="watchPointHits"
+                        row-key="id"
+                        :expand-row-keys="expandKeys">
+                <el-table-column type="expand"
+                                 width="40">
+                  <template slot-scope="props">
+                    <ul>
+                      <li v-for="(i, index) in props.row.lists"
+                          :key="index">{{i.name}}
+                        <div v-for="(j, ind) in i.params"
+                             :key="ind"
+                             class="param">
+                          <div class="tensor-icon"></div>
+                          {{j.content}}
+                        </div>
+                        <div class="hit-tip"
+                             v-if="i.tip">
+                          <i class="el-icon-warning"></i>{{i.tip}}
+                        </div>
+                      </li>
+                    </ul>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="name"
+                                 :label="$t('graph.name')">
+                  <template slot-scope="scope">
+                    <div class="hit-item"
+                         :class="{selected:scope.row.selected}"
+                         @click="updateTensorValue(scope.$index)">
+                      {{scope.row.graph_name}}/{{scope.row.name}}
+                    </div>
+                  </template>
+                </el-table-column>
+              </el-table>
+              <el-pagination class="watchpoint-page"
+                             small
+                             @current-change="handleCurrentChange"
+                             :current-page="pagination.currentPage"
+                             :page-size="pagination.pageSize"
+                             :pager-count="pagination.pageCount"
+                             layout="prev, pager, next, jumper"
+                             :total="pagination.total"
+                             v-show="pagination.total">
+              </el-pagination>
+            </div>
           </div>
           <div class="content"
-               v-show="showGraphCount">
-            <div class="left">
-              <div class="graph-count">{{$t('debugger.graphExecutionStep')}}</div>
-              <div class="graph-id">{{$t('debugger.graphName')}}</div>
+               v-show="radio1==='stack'">
+            <div class="stack-search">
+              <div class="label">{{$t('debugger.stackInfo')}}</div>
+              <el-input :placeholder="$t('debugger.inputStack')"
+                        v-model="stacks.searchContent"
+                        :title="stacks.searchContent"
+                        @keyup.enter.native="queryStacks"
+                        clearable
+                        @clear="stackPageChange(1)">
+              </el-input>
             </div>
-            <div class="right"
-                 id="graph-count-container">
-              <div :style="{width:`${graphIdArr.length*graphCountWidth}px`}"
-                   v-if="graphIdArr.length">
-                <div class="value-wrap"
-                     v-for="(item,index) in graphIdArr"
-                     :key="index"
-                     :class="{highLight:metadata.step===item.count,hasData:item.has_data}">
-                  <div class="count">{{item.count}}</div>
-                  <el-tooltip class="item"
-                              effect="light"
-                              :content="`sub(${item.sub_graph_names.join()})`"
-                              placement="top"
-                              v-if="item.sub_graph_names.length">
-                    <div class="graph-name">{{ item.graph_name }}</div>
-                  </el-tooltip>
-                  <div class="graph-name"
-                       v-else>{{ item.graph_name }}</div>
+
+            <div class="hit-list-wrap">
+              <el-table class="watchpoint-table"
+                        :data="stacks.list">
+                <el-table-column type="expand">
+                  <template slot-scope="props">
+                    <ul class="stack-info">
+                      <li v-for="i in props.row.items"
+                          :key="i.line_no">
+                        {{i.line_no}}: {{i.code_line}}
+                        <el-button type="text"
+                                   class="btn"
+                                   @click="stackOperator(i)">{{$t('debugger.search')}}</el-button>
+                      </li>
+                    </ul>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="file_path"
+                                 :label="$t('graph.name')">
+                </el-table-column>
+              </el-table>
+              <el-pagination class="watchpoint-page"
+                             small
+                             @current-change="stackPageChange"
+                             :current-page="stacks.currentPage"
+                             :page-size="stacks.pageSize.size"
+                             :pager-count="pagination.pageCount"
+                             layout="prev, pager, next, jumper"
+                             :total="stacks.total"
+                             v-show="stacks.total">
+              </el-pagination>
+            </div>
+          </div>
+          <div class="btn-wrap">
+            <div class="step">
+              <el-tooltip class="item"
+                          effect="light"
+                          :content="$t('debugger.inputTip',{total_step_num:metadata.total_step_num})"
+                          placement="top-start">
+                <el-input v-model="step"
+                          :placeholder="$t('debugger.inputStep')"
+                          :disabled="metadata.step === metadata.total_step_num && !!trainId"
+                          @input="stepChange"
+                          @keyup.native.enter="control(0)">
+                </el-input>
+              </el-tooltip>
+              <el-button type="primary"
+                         size="mini"
+                         class="custom-btn green"
+                         :disabled="!(step && metadata.state === state.waiting)
+                        || (metadata.step === metadata.total_step_num && !!trainId)"
+                         @click="control(0)">{{ $t('public.sure') }}</el-button>
+            </div>
+            <div class="btn-two">
+              <el-button size="mini"
+                         class="custom-btn white"
+                         :disabled="metadata.state !== state.waiting
+                        || (metadata.step === metadata.total_step_num && !!trainId)"
+                         @click="control(1)">{{$t('debugger.continue')}}</el-button>
+              <el-button size="mini"
+                         class="custom-btn white"
+                         :disabled="metadata.state !== state.running"
+                         @click="control(3)">{{$t('debugger.pause')}}</el-button>
+              <el-button size="mini"
+                         class="custom-btn white"
+                         :disabled="metadata.state === state.pending || metadata.state === state.sending"
+                         @click="terminate">{{$t('debugger.terminate')}}</el-button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="rightTop"
+           slot="rightTop">
+        <div class="header">
+          <span class="item">
+            {{$t('debugger.clientIp') + $t('symbols.colon')}}
+            <span class="content">
+              {{ metadata.ip !== undefined ? metadata.ip : '--' }}
+            </span>
+          </span>
+          <span class="item">{{$t('debugger.deviceId') + $t('symbols.colon')}}
+            <span class="content">
+              {{ metadata.device_name !== undefined ? metadata.device_name : '--' }}
+            </span>
+          </span>
+          <span class="item">{{$t('debugger.currentStep') + $t('symbols.colon')}}
+            <span class="content">
+              {{ metadata.step !== undefined ? metadata.step : '--'}}
+            </span>
+            <i class="el-icon-edit"
+               :class="{disabled:metadata.state === state.running || metadata.state === state.sending}"
+               v-if="trainId && !isShowInp"
+               :title="$t('debugger.inpStepTip',{total_step_num:metadata.total_step_num})"
+               @click="editStep"></i>
+            <el-tooltip class="item"
+                        effect="light"
+                        :content="$t('debugger.inputTip',{total_step_num:metadata.total_step_num})"
+                        placement="top-start"
+                        v-if="trainId && isShowInp">
+              <el-input v-model="newStep"
+                        type="text"
+                        @input="newStepChange"></el-input>
+            </el-tooltip>
+            <i class="el-icon-check"
+               v-if="trainId && isShowInp"
+               @click="saveStepValue"></i>
+            <i class="el-icon-close"
+               v-if="trainId && isShowInp"
+               @click="isShowInp=false"></i>
+            <el-tooltip class="tooltip"
+                        effect="light"
+                        :content="$t('debugger.stepTip') + (trainId ? $t('debugger.stepTipOffline') : '')"
+                        placement="top">
+              <i class="el-icon-info"></i>
+            </el-tooltip>
+          </span>
+
+          <span class="item">{{$t('debugger.state') + $t('symbols.colon')}}
+            <span class="content">
+              <i class="el-icon-loading"
+                 v-show="metadata.state === state.running"></i>
+              <i class="el-icon-time"
+                 v-show="metadata.state === state.sending"></i>
+              {{ metadata.state ? $t('debugger.stateTips.' + metadata.state) : ''}}
+            </span>
+            <el-tooltip class="tooltip"
+                        effect="light"
+                        placement="right">
+              <div slot="content">
+                <div class="tooltip-item">
+                  <div class="item">
+                    <span>1.</span>
+                    <span>{{$t('debugger.stateInfo.waiting')}}</span>
+                  </div>
+                  <div class="item">
+                    <span>2.</span>
+                    <span>{{$t('debugger.stateInfo.running')}}</span>
+                  </div>
+                  <div class="item">
+                    <span>3.</span>
+                    <span>{{$t('debugger.stateInfo.sending')}}</span>
+                  </div>
+                  <div class="item">
+                    <span>4.</span>
+                    <span>{{$t('debugger.stateInfo.pending')}}</span>
+                  </div>
                 </div>
               </div>
-              <div class="no-data"
-                   v-else>
-                {{ `${$t('public.noData')}(${$t('debugger.noExecutionHistoryFile')})` }}
+              <i class="el-icon-info"></i>
+            </el-tooltip>
+          </span>
+        </div>
+        <div class="svg-wrap"
+             :class="{collapse: collapseTable}">
+          <div class="graph-container">
+            <div id="graph"></div>
+            <div id="contextMenu">
+              <ul>
+                <li>{{ $t('debugger.continueTo')}}</li>
+              </ul>
+            </div>
+          </div>
+          <div class="btn-wrap">
+            <el-button v-if="version==='Ascend'"
+                       type="primary"
+                       size="mini"
+                       class="custom-btn green notShow"
+                       @click="getNodeByBfs(false)">
+              {{ $t('debugger.previousNode')}}
+            </el-button>
+            <el-button v-if="version==='GPU' && !trainId"
+                       type="primary"
+                       size="mini"
+                       class="custom-btn green"
+                       :disabled="!currentNodeName"
+                       :class="{disabled:!currentNodeName}"
+                       @click="getCurrentNodeInfo">
+              {{ $t('debugger.currentNode')}}
+            </el-button>
+            <el-button v-if="version==='Ascend'"
+                       type="primary"
+                       size="mini"
+                       class="custom-btn white notShow"
+                       @click="getNodeByBfs(true)">
+              {{ $t('debugger.nextNode')}}
+            </el-button>
+            <el-button v-if="version==='GPU' && !trainId"
+                       type="primary"
+                       size="mini"
+                       class="custom-btn white"
+                       :disabled="metadata.state === state.running ||
+                      metadata.state === state.sending"
+                       :class="{disabled: metadata.state === state.running ||
+                      metadata.state === state.sending}"
+                       @click="getNextNodeInfo">
+              {{ $t('debugger.nextNode')}}
+            </el-button>
+          </div>
+          <!-- Legend -->
+          <div class="legend">
+            <div class="title">
+              {{ $t('graph.legend') }}
+              <img :src="require('@/assets/images/all-drop-down.png')"
+                   v-show="!showLegend"
+                   @click="showLegend = !showLegend"
+                   alt="" />
+              <img :src="require('@/assets/images/all-uptake.png')"
+                   v-show="showLegend"
+                   @click="showLegend = !showLegend"
+                   alt="" />
+            </div>
+            <div v-show="showLegend"
+                 class="legend-content">
+              <div class="legend-item">
+                <div class="pic">
+                  <img :src="require('@/assets/images/name-scope.svg')"
+                       alt="" />
+                </div>
+                <div class="legend-text"
+                     :title="$t('graph.nameSpace')">
+                  {{ $t('graph.nameSpace') }}
+                </div>
+              </div>
+              <div class="legend-item">
+                <div class="pic">
+                  <img :src="require('@/assets/images/polymetric.svg')"
+                       alt="" />
+                </div>
+                <div class="legend-text"
+                     :title="$t('graph.polymetric')">
+                  {{ $t('graph.polymetric') }}
+                </div>
+              </div>
+              <div class="legend-item">
+                <div class="pic">
+                  <img :src="require('@/assets/images/virtual-node.svg')"
+                       alt="" />
+                </div>
+                <div class="legend-text"
+                     :title="$t('graph.virtualNode')">
+                  {{ $t('graph.virtualNode') }}
+                </div>
+              </div>
+              <div class="legend-item">
+                <div class="pic">
+                  <img :src="require('@/assets/images/operator-node.svg')"
+                       alt="" />
+                </div>
+                <div class="legend-text"
+                     :title="$t('graph.operatorNode')">
+                  {{ $t('graph.operatorNode') }}
+                </div>
+              </div>
+              <div class="legend-item">
+                <div class="pic">
+                  <img :src="require('@/assets/images/constant-node.svg')"
+                       alt="" />
+                </div>
+                <div class="legend-text"
+                     :title="$t('graph.constantNode')">
+                  {{ $t('graph.constantNode') }}
+                </div>
+              </div>
+              <br>
+              <div class="legend-item">
+                <div class="pic">
+                  <img :src="require('@/assets/images/data-flow.png')"
+                       alt="" />
+                </div>
+                <div class="legend-text"
+                     :title="$t('graph.dataFlowEdge')">
+                  {{ $t('graph.dataFlowEdge') }}
+                </div>
+              </div>
+              <div class="legend-item">
+                <div class="pic">
+                  <img :src="require('@/assets/images/control-dep.png')"
+                       alt="" />
+                </div>
+                <div class="legend-text"
+                     :title="$t('graph.controllDepEdge')">
+                  {{ $t('graph.controllDepEdge') }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="graph-count-wrap"
+               v-if="trainId">
+            <div class="title">
+              {{ $t('debugger.graphExecutionHistory') }}
+              <el-tooltip class="tooltip"
+                          effect="light"
+                          placement="right">
+                <div slot="content">
+                  <div class="graph-count-info">
+                    <div class="graph-execution-history">{{$t('debugger.graphExecutionHistoryTip')}}</div>
+                  </div>
+                </div>
+                <i class="el-icon-info"></i>
+              </el-tooltip>
+              <div class="select-wrap">
+                <div class="label">{{ $t('debugger.hasData') }}</div>
+                <el-select v-model="hasDataObj.value"
+                           @change="graphExecutionSelect">
+                  <el-option v-for="item in hasDataObj.options"
+                             :key="item.value"
+                             :label="item.label"
+                             :value="item.value">
+                  </el-option>
+                </el-select>
+                <div class="label">{{ $t('debugger.graphName') }}</div>
+                <el-select v-model="graphNameObj.value"
+                           @change="graphExecutionSelect">
+                  <el-option v-for="item in graphNameObj.options"
+                             :key="item"
+                             :value="item">
+                  </el-option>
+                </el-select>
+              </div>
+              <div class="has-data"></div>{{this.$t('debugger.hasDataTip')}}
+              <div class="current-step"></div>{{this.$t('debugger.currentStepTip')}}
+              <img :src="require('@/assets/images/all-drop-down.png')"
+                   v-show="!showGraphCount"
+                   @click="showGraphCount = !showGraphCount"
+                   alt="" />
+              <img :src="require('@/assets/images/all-uptake.png')"
+                   v-show="showGraphCount"
+                   @click="showGraphCount = !showGraphCount"
+                   alt="" />
+            </div>
+            <div class="content"
+                 v-show="showGraphCount">
+              <div class="left">
+                <div class="graph-count">{{$t('debugger.graphExecutionStep')}}</div>
+                <div class="graph-id">{{$t('debugger.graphName')}}</div>
+              </div>
+              <div class="right"
+                   id="graph-count-container">
+                <div :style="{width:`${graphIdArr.length*graphCountWidth}px`}"
+                     v-if="graphIdArr.length">
+                  <div class="value-wrap"
+                       v-for="(item,index) in graphIdArr"
+                       :key="index"
+                       :class="{highLight:metadata.step===item.count,hasData:item.has_data}">
+                    <div class="count">{{item.count}}</div>
+                    <el-tooltip class="item"
+                                effect="light"
+                                :content="`sub(${item.sub_graph_names.join()})`"
+                                placement="top"
+                                v-if="item.sub_graph_names.length">
+                      <div class="graph-name">{{ item.graph_name }}</div>
+                    </el-tooltip>
+                    <div class="graph-name"
+                         v-else>{{ item.graph_name }}</div>
+                  </div>
+                </div>
+                <div class="no-data"
+                     v-else>
+                  {{ `${$t('public.noData')}(${$t('debugger.noExecutionHistoryFile')})` }}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="table-container"
-           :class="{collapse: collapseTable}">
-        <img :src="require('@/assets/images/all-drop-down.png')"
-             v-show="collapseTable"
-             @click="rightCollapse()"
-             alt="" />
-        <img :src="require('@/assets/images/all-uptake.png')"
-             v-show="!collapseTable"
-             @click="rightCollapse()"
-             alt="" />
-
-        <el-tabs v-model="tabs.activeName"
-                 @tab-click="tabsChange">
-          <el-tab-pane name="tensor">
-            <span slot="label">
-              {{$t('debugger.tensorMsg')}}
-              <el-tooltip class="item"
-                          effect="dark"
-                          :content="$t('public.dataLoading')"
-                          placement="top"
-                          v-if="tableData.length && tableData.find(val=>val.value===undefined)">
-                <i class="el-icon-loading"></i>
-              </el-tooltip>
-            </span>
-            <div class="table-content">
-              <div class="table-wrap">
-                <el-table ref="singleTable"
-                          :data="tableData"
-                          :header-cell-style="discountHeaderStyle"
-                          :span-method="objectSpanMethod"
-                          :row-class-name="tableRowClassName"
-                          tooltip-effect="light">
-                  <el-table-column :label="$t('graph.name')">
-                    <el-table-column property="type"
-                                     width="80"></el-table-column>
-                    <el-table-column label=""
-                                     show-overflow-tooltip>
+      <div class="rightBottom"
+           slot="rightBottom">
+        <div class="table-container">
+          <el-tabs v-model="tabs.activeName"
+                   @tab-click="tabsChange">
+            <el-tab-pane name="tensor">
+              <span slot="label">
+                {{$t('debugger.tensorMsg')}}
+                <el-tooltip class="item"
+                            effect="dark"
+                            :content="$t('public.dataLoading')"
+                            placement="top"
+                            v-if="tableData.length && tableData.find(val=>val.value===undefined)">
+                  <i class="el-icon-loading"></i>
+                </el-tooltip>
+              </span>
+              <div class="table-content">
+                <div class="table-wrap">
+                  <el-table ref="singleTable"
+                            :data="tableData"
+                            :header-cell-style="discountHeaderStyle"
+                            :span-method="objectSpanMethod"
+                            :row-class-name="tableRowClassName"
+                            tooltip-effect="light">
+                    <el-table-column :label="$t('graph.name')">
+                      <el-table-column property="type"
+                                       width="80"></el-table-column>
+                      <el-table-column label=""
+                                       show-overflow-tooltip>
+                        <template slot-scope="scope">
+                          <span class="value"
+                                @click="queryAllTreeData(scope.row.name,false,scope.row.graph_name, true)">
+                            {{ scope.row.name }}
+                          </span>
+                        </template>
+                      </el-table-column>
+                    </el-table-column>
+                    <el-table-column property="step"
+                                     :label="$t('debugger.step')"
+                                     width="80">
+                    </el-table-column>
+                    <el-table-column property="dtype"
+                                     :label="$t('debugger.dType')"
+                                     width="200">
+                    </el-table-column>
+                    <el-table-column property="shape"
+                                     :label="$t('debugger.shape')"
+                                     width="120">
+                    </el-table-column>
+                    <el-table-column :label="$t('debugger.value')"
+                                     width="260">
+                      <template slot="header">
+                        <span class="center">{{ $t('debugger.value')}}</span>
+                      </template>
                       <template slot-scope="scope">
-                        <span class="value"
-                              @click="queryAllTreeData(scope.row.name,false,scope.row.graph_name, true)">
-                          {{ scope.row.name }}
-                        </span>
+                        <div class="value-wrap">
+                          <el-button size="mini"
+                                     type="text"
+                                     :disabled="metadata.state === state.running || metadata.state === state.sending"
+                                     v-if="scope.row.value === 'click to view'"
+                                     @click="showTensor(scope.row,'value')">
+                            {{ $t('debugger.view') }}
+                          </el-button>
+                          <el-button v-else
+                                     class="value-tip"
+                                     size="mini"
+                                     type="text"
+                                     :disabled="metadata.state===state.running || metadata.state === state.sending"
+                                     :title="isNaN(scope.row.value)?'':scope.row.value"
+                                     @click="showTensor(scope.row,'value')">
+                            {{ scope.row.value }}</el-button>
+                          <el-button size="mini"
+                                     type="text"
+                                     :disabled="metadata.state === state.running || metadata.state === state.sending ||
+                                    scope.row.value === 'null' || !scope.row.value || scope.row.oversized"
+                                     @click="loadTensor(scope.row)">
+                            {{ $t('graph.downloadPic') }}
+                          </el-button>
+                          <el-button size="mini"
+                                     type="text"
+                                     :disabled="metadata.state===state.running || metadata.state === state.sending ||
+                                    !scope.row.has_prev_step || scope.row.tensor_status==='oversize'"
+                                     @click="showTensor(scope.row,'compare')">
+                            {{ $t('debugger.compareToPre') }}
+                          </el-button>
+                        </div>
                       </template>
                     </el-table-column>
-                  </el-table-column>
-                  <el-table-column property="step"
-                                   :label="$t('debugger.step')"
-                                   width="80">
-                  </el-table-column>
-                  <el-table-column property="dtype"
-                                   :label="$t('debugger.dType')"
-                                   width="200">
-                  </el-table-column>
-                  <el-table-column property="shape"
-                                   :label="$t('debugger.shape')"
-                                   width="120">
-                  </el-table-column>
-                  <el-table-column :label="$t('debugger.value')"
-                                   width="260">
-                    <template slot="header">
-                      <span class="center">{{ $t('debugger.value')}}</span>
-                    </template>
-                    <template slot-scope="scope">
-                      <div class="value-wrap">
-                        <el-button size="mini"
-                                   type="text"
-                                   :disabled="metadata.state === state.running || metadata.state === state.sending"
-                                   v-if="scope.row.value === 'click to view'"
-                                   @click="showTensor(scope.row,'value')">
-                          {{ $t('debugger.view') }}
-                        </el-button>
-                        <el-button v-else
-                                   class="value-tip"
-                                   size="mini"
-                                   type="text"
-                                   :disabled="metadata.state===state.running || metadata.state === state.sending"
-                                   :title="isNaN(scope.row.value)?'':scope.row.value"
-                                   @click="showTensor(scope.row,'value')">
-                          {{ scope.row.value }}</el-button>
-                        <el-button size="mini"
-                                   type="text"
-                                   :disabled="metadata.state === state.running || metadata.state === state.sending ||
-                                   scope.row.value === 'null' || !scope.row.value || scope.row.oversized"
-                                   @click="loadTensor(scope.row)">
-                          {{ $t('graph.downloadPic') }}
-                        </el-button>
-                        <el-button size="mini"
-                                   type="text"
-                                   :disabled="metadata.state===state.running || metadata.state === state.sending ||
-                                  !scope.row.has_prev_step || scope.row.tensor_status==='oversize'"
-                                   @click="showTensor(scope.row,'compare')">
-                          {{ $t('debugger.compareToPre') }}
-                        </el-button>
-                      </div>
-                    </template>
-                  </el-table-column>
-                </el-table>
-              </div>
-            </div>
-          </el-tab-pane>
-          <el-tab-pane :label="$t('graph.nodeInfo')"
-                       name="detail">
-            <div class="table-content">
-              <div class="table-wrap">
-                <el-table ref="nodeInfo"
-                          :data="selectedNode.IOInfo"
-                          :header-cell-style="discountHeaderStyle"
-                          :span-method="objectSpanMethod"
-                          :row-class-name="tableRowClassName"
-                          tooltip-effect="light">
-                  <el-table-column :label="$t('graph.name')">
-                    <el-table-column property="IOType"
-                                     width="80"></el-table-column>
-                    <el-table-column label=""
-                                     show-overflow-tooltip>
-                      <template slot-scope="scope">
-                        <span class="value"
-                              @click="queryAllTreeData(scope.row.name,false,scope.row.graph_name, true)">
-                          {{ scope.row.name }}
-                        </span>
-                      </template>
-                    </el-table-column>
-                  </el-table-column>
-                </el-table>
-              </div>
-            </div>
-          </el-tab-pane>
-          <el-tab-pane name="stack">
-            <span slot="label">
-              {{$t('debugger.stackInfo')}}
-              <el-tooltip class="item"
-                          effect="light"
-                          :content="$t('debugger.stackTip')"
-                          placement="top">
-                <i class="el-icon-info"></i>
-              </el-tooltip>
-            </span>
-            <div class="table-content">
-              <ul class="stack-content">
-                <li class="stack-item"
-                    v-show="nodeStackContent.length"
-                    v-for="(item, index) in nodeStackContent"
-                    :key="index">
-                  {{item.file_path ? item.file_path + ':' + item.line_no : ''}}
-                  <br v-if="item.file_path">
-                  {{item.code_line}}
-                  <div class="operator-btns">
-                    <el-button type="text"
-                               v-if="item.file_path"
-                               @click="stackOperator(item)">{{$t('debugger.search')}}</el-button>
-                  </div>
-                </li>
-                <div class="noData-text"
-                     v-show="!nodeStackContent.length">
-                  {{$t("public.noData")}}
+                  </el-table>
                 </div>
-              </ul>
-            </div>
-          </el-tab-pane>
-        </el-tabs>
+              </div>
+            </el-tab-pane>
+            <el-tab-pane :label="$t('graph.nodeInfo')"
+                         name="detail">
+              <div class="table-content">
+                <div class="table-wrap">
+                  <el-table ref="nodeInfo"
+                            :data="selectedNode.IOInfo"
+                            :header-cell-style="discountHeaderStyle"
+                            :span-method="objectSpanMethod"
+                            :row-class-name="tableRowClassName"
+                            tooltip-effect="light">
+                    <el-table-column :label="$t('graph.name')">
+                      <el-table-column property="IOType"
+                                       width="80"></el-table-column>
+                      <el-table-column label=""
+                                       show-overflow-tooltip>
+                        <template slot-scope="scope">
+                          <span class="value"
+                                @click="queryAllTreeData(scope.row.name,false,scope.row.graph_name, true)">
+                            {{ scope.row.name }}
+                          </span>
+                        </template>
+                      </el-table-column>
+                    </el-table-column>
+                  </el-table>
+                </div>
+              </div>
+            </el-tab-pane>
+            <el-tab-pane name="stack">
+              <span slot="label">
+                {{$t('debugger.stackInfo')}}
+                <el-tooltip class="item"
+                            effect="light"
+                            :content="$t('debugger.stackTip')"
+                            placement="top">
+                  <i class="el-icon-info"></i>
+                </el-tooltip>
+              </span>
+              <div class="table-content">
+                <ul class="stack-content">
+                  <li class="stack-item"
+                      v-show="nodeStackContent.length"
+                      v-for="(item, index) in nodeStackContent"
+                      :key="index">
+                    {{item.file_path ? item.file_path + ':' + item.line_no : ''}}
+                    <br v-if="item.file_path">
+                    {{item.code_line}}
+                    <div class="operator-btns">
+                      <el-button type="text"
+                                 v-if="item.file_path"
+                                 @click="stackOperator(item)">{{$t('debugger.search')}}</el-button>
+                    </div>
+                  </li>
+                  <div class="noData-text"
+                       v-show="!nodeStackContent.length">
+                    {{$t("public.noData")}}
+                  </div>
+                </ul>
+              </div>
+            </el-tab-pane>
+          </el-tabs>
+        </div>
       </div>
-    </div>
+    </FlexibleGrid>
     <div class="deb-con"
          v-if="tensorCompareFlag">
       <debugger-tensor :row="curRowObj"
@@ -1114,6 +1110,7 @@ import commonGraph from '../../mixins/common-graph.vue';
 import debuggerMixin from '../../mixins/debugger-mixin.vue';
 import debuggerTensor from '@/components/debugger-tensor.vue';
 import tree from '../../components/tree.vue';
+import FlexibleGrid from '@/components/flexibleGrid.vue';
 
 export default {
   mixins: [commonGraph, debuggerMixin],
@@ -1297,9 +1294,36 @@ export default {
         ],
       },
       noOfflineGraphName: false,
+      areas: [
+        ['left', 'rightTop'],
+        ['left', 'rightBottom'],
+      ],
+      rowSize: [
+        {
+          defaultHeight: '550px',
+          minHeight: '219px',
+          maxHeight: '1000px',
+        },
+        {
+          defaultHeight: '1fr',
+          minHeight: '140px',
+          maxHeight: '1000px',
+        },
+      ],
+      columnSize: [
+        {
+          defaultWidth: '400px',
+          minWidth: '243px',
+          maxWidth: '1fr',
+        },
+        '1fr',
+      ],
+      hideAreas: { left: 'left', rightTop: 'top', rightBottom: 'bottom' },
+      showFixed: false,
+      gridStyleKey: this.$route.query.sessionId ? 'offline-debugger' : 'debugger',
     };
   },
-  components: { debuggerTensor, tree },
+  components: { debuggerTensor, tree, FlexibleGrid },
   mounted() {
     document.title = `${this.$t('debugger.debugger')}-MindInsight`;
     this.nodeTypes.label = this.$t('debugger.nodeType');
@@ -1374,6 +1398,8 @@ export default {
     },
   },
   methods: {
+    resizeGridStyle(resizeObj) {
+    },
     initDebugger() {
       if (this.trainId) {
         document.title = `${this.trainId}-${this.$t('debugger.debugger')}-MindInsight`;
@@ -2100,7 +2126,11 @@ export default {
         `translate(${this.graph.transform.x},` + `${this.graph.transform.y}) scale(${this.graph.transform.k})`
       );
 
-      const transitionTime = Math.min(Math.abs(screenChange.x) * 2, Math.abs(screenChange.y) * 2, needDelay ? 800 : 0);
+      const transitionTime = Math.min(
+        Math.abs(screenChange.x) * 2,
+        Math.abs(screenChange.y) * 2,
+        needDelay ? 800 : 0
+      );
 
       this.graph.dom.style.transition = `${transitionTime / 1000}s`;
       this.graph.dom.style['transition-timing-function'] = 'linear';
@@ -2189,7 +2219,10 @@ export default {
             // Normal expansion
             const nodes = JSON.parse(JSON.stringify(data.nodes));
             this.packageDataToObject(data.scope_name, true, nodes);
-            if (this.allGraphData[data.scope_name] && this.allGraphData[data.scope_name].type === 'aggregation_scope') {
+            if (
+              this.allGraphData[data.scope_name] &&
+              this.allGraphData[data.scope_name].type === 'aggregation_scope'
+            ) {
               this.dealAggregationNodes(data.scope_name);
               const aggregationNode = this.allGraphData[data.scope_name];
               if (aggregationNode) {
@@ -2261,10 +2294,6 @@ export default {
         path: '/summary-manage',
       });
     },
-    rightCollapse() {
-      this.collapseTable = !this.collapseTable;
-      this.initSvgSize();
-    },
     initSvgSize(immediate = false) {
       const setData = () => {
         const svgRect = document.querySelector('#graph svg').getBoundingClientRect();
@@ -2292,6 +2321,7 @@ export default {
 <style>
 .deb-wrap {
   height: 100%;
+  width: 100%;
   background-color: var(--bg-color);
   position: relative;
   overflow: hidden;
@@ -2301,8 +2331,7 @@ export default {
   height: 100%;
 }
 .deb-wrap .left-wrap {
-  width: 400px;
-  padding-right: 25px;
+  width: 100%;
   height: 100%;
   position: relative;
   transition: width 0.2s;
@@ -2312,6 +2341,7 @@ export default {
   /* Safari and Chrome */
   -o-transition: width 0.2s;
   /* Opera */
+  overflow: hidden;
 }
 .deb-wrap .left-wrap .left {
   height: 100%;
@@ -2677,11 +2707,9 @@ export default {
 .deb-wrap .left-wrap .collapse-btn-1.collapse {
   background-image: url('../../assets/images/1/collapse-right.svg');
 }
-.deb-wrap .left-wrap.collapse {
-  width: 0px;
-}
-.deb-wrap .right {
-  width: calc(100% - 400px);
+.deb-wrap .rightTop,
+.rightBottom {
+  width: 100%;
   height: 100%;
   padding-right: 20px;
   transition: width 0.2s;
@@ -2691,45 +2719,46 @@ export default {
   /* Safari and Chrome */
   -o-transition: width 0.2s;
   /* Opera */
+  overflow: hidden;
 }
-.deb-wrap .right .header {
+.deb-wrap .rightTop .header {
   line-height: 51px;
   border-bottom: 1px solid var(--table-border-color);
   position: relative;
 }
-.deb-wrap .right .header .link {
+.deb-wrap .rightTop .header .link {
   color: var(--theme-color);
 }
-.deb-wrap .right .header .host {
+.deb-wrap .rightTop .header .host {
   margin-left: 25px;
 }
-.deb-wrap .right .header .item + .item {
+.deb-wrap .rightTop .header .item + .item {
   margin-left: 15px;
 }
-.deb-wrap .right .header .el-icon-edit {
+.deb-wrap .rightTop .header .el-icon-edit {
   margin-left: 5px;
 }
-.deb-wrap .right .header .el-icon-edit.disabled::before {
+.deb-wrap .rightTop .header .el-icon-edit.disabled::before {
   cursor: not-allowed;
   color: #adb0b8;
 }
-.deb-wrap .right .header i {
+.deb-wrap .rightTop .header i {
   font-size: 18px;
   margin: 0 2px;
   color: #00a5a7;
   cursor: pointer;
 }
-.deb-wrap .right .header .el-icon-close {
+.deb-wrap .rightTop .header .el-icon-close {
   color: #f56c6c;
 }
-.deb-wrap .right .header .el-input {
+.deb-wrap .rightTop .header .el-input {
   width: 45px;
 }
-.deb-wrap .right .header .el-input input {
+.deb-wrap .rightTop .header .el-input input {
   padding: 0;
   text-align: center;
 }
-.deb-wrap .right .header .tooltip {
+.deb-wrap .rightTop .header .tooltip {
   margin-left: 5px;
   cursor: pointer;
 }
@@ -2740,12 +2769,12 @@ export default {
   width: 20px;
   flex-shrink: 0;
 }
-.deb-wrap .right .svg-wrap {
-  height: 50%;
+.deb-wrap .rightTop .svg-wrap {
+  height: calc(100% - 51px);
   border-bottom: 1px solid var(--table-border-color);
   position: relative;
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap {
   position: absolute;
   width: 100%;
   left: 0px;
@@ -2753,67 +2782,67 @@ export default {
   background-color: var(--graph-legend-bg-color);
   border: 1px solid var(--table-border-color);
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .title {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .title {
   padding: 10px 0 10px 10px;
   font-size: 14px;
   border-bottom: 1px solid var(--table-border-color);
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .select-wrap {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .select-wrap {
   display: inline-block;
   margin-left: 15px;
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .select-wrap > div {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .select-wrap > div {
   display: inline-block;
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .select-wrap .label {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .select-wrap .label {
   margin: 0 10px;
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .select-wrap > div .el-input__inner {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .select-wrap > div .el-input__inner {
   width: 100px;
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .title img {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .title img {
   float: right;
   margin-right: 10px;
   cursor: pointer;
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .content {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .content {
   display: flex;
   line-height: 30px;
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .left {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .left {
   flex: 1;
   text-align: center;
   border-right: 1px solid var(--table-border-color);
   min-width: 180px;
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .left .graph-count {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .left .graph-count {
   border-bottom: 1px solid var(--table-border-color);
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .right {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .right {
   flex: 5;
   overflow: auto;
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .right .no-data {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .right .no-data {
   line-height: 60px;
   text-align: center;
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .right .value-wrap {
-  width: 120px;
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .right .value-wrap {
+  width: 80px;
   text-align: center;
   border-right: 1px solid var(--table-border-color);
   float: left;
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .right .value-wrap.highLight {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .right .value-wrap.highLight {
   color: var(--theme-color);
   border: 1px solid var(--theme-color);
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .right .value-wrap.hasData {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .right .value-wrap.hasData {
   background-color: var(--debugger-execution-history-bg-color);
 }
-.deb-wrap .right .svg-wrap .graph-count-wrap .right .value-wrap .count {
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .right .value-wrap .count {
   border-bottom: 1px solid var(--table-border-color);
 }
-.deb-wrap .right .svg-wrap .legend {
+.deb-wrap .rightTop .svg-wrap .legend {
   width: 400px;
   position: absolute;
   bottom: 0px;
@@ -2821,40 +2850,40 @@ export default {
   background-color: var(--graph-legend-bg-color);
   border: 1px solid var(--table-border-color);
 }
-.deb-wrap .right .svg-wrap .legend .title {
+.deb-wrap .rightTop .svg-wrap .legend .title {
   padding: 10px 0 10px 10px;
   font-size: 14px;
 }
-.deb-wrap .right .svg-wrap .legend .title img {
+.deb-wrap .rightTop .svg-wrap .legend .title img {
   float: right;
   margin-right: 10px;
   cursor: pointer;
 }
-.deb-wrap .right .svg-wrap .legend .legend-content {
+.deb-wrap .rightTop .svg-wrap .legend .legend-content {
   padding: 0 10px;
   border: 1px solid var(--table-border-color);
 }
-.deb-wrap .right .svg-wrap .legend .legend-item {
+.deb-wrap .rightTop .svg-wrap .legend .legend-item {
   padding: 5px 0;
   display: inline-block;
   width: 50%;
   font-size: 14px;
   line-height: 20px;
 }
-.deb-wrap .right .svg-wrap .legend .legend-item .pic {
+.deb-wrap .rightTop .svg-wrap .legend .legend-item .pic {
   width: 45px;
   text-align: center;
   display: inline-block;
   padding-left: 20px;
   vertical-align: middle;
 }
-.deb-wrap .right .svg-wrap .legend .legend-item .pic img {
+.deb-wrap .rightTop .svg-wrap .legend .legend-item .pic img {
   max-width: 45px;
   max-height: 15px;
   margin-left: -20px;
   vertical-align: middle;
 }
-.deb-wrap .right .svg-wrap .legend .legend-item .legend-text {
+.deb-wrap .rightTop .svg-wrap .legend .legend-item .legend-text {
   display: inline-block;
   padding-left: 20px;
   width: calc(100% - 45px);
@@ -2863,173 +2892,172 @@ export default {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.deb-wrap .right .svg-wrap .legend .legend-item .legend-text:hover {
+.deb-wrap .rightTop .svg-wrap .legend .legend-item .legend-text:hover {
   cursor: default;
 }
 
-.deb-wrap .right .svg-wrap .btn-wrap {
+.deb-wrap .rightTop .svg-wrap .btn-wrap {
   position: absolute;
   top: 10px;
   right: 10px;
 }
-.deb-wrap .right .svg-wrap .graph-container {
+.deb-wrap .rightTop .svg-wrap .graph-container {
   height: 100%;
   width: 100%;
   position: relative;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph {
   height: 100%;
   background-color: var(--graph-bg-color);
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .node:hover > path,
-.deb-wrap .right .svg-wrap .graph-container #graph .node:hover > ellipse,
-.deb-wrap .right .svg-wrap .graph-container #graph .node:hover > polygon,
-.deb-wrap .right .svg-wrap .graph-container #graph .node:hover > rect {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .node:hover > path,
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .node:hover > ellipse,
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .node:hover > polygon,
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .node:hover > rect {
   stroke-width: 2px;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .node.cluster > rect:hover {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .node.cluster > rect:hover {
   stroke: #8df1f2;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .selected {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .selected {
   stroke: red !important;
   stroke-width: 2px;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph #graph0 > polygon {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph #graph0 > polygon {
   fill: transparent;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .node {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .node {
   cursor: pointer;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .edge path {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .edge path {
   stroke: #787878;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .edge polygon {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .edge polygon {
   fill: #787878;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .edge.highlighted path {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .edge.highlighted path {
   stroke: red;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .edge.highlighted polygon {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .edge.highlighted polygon {
   stroke: red;
   fill: red;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .edge.highlighted marker path {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .edge.highlighted marker path {
   fill: red;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .node.aggregation > polygon {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .node.aggregation > polygon {
   stroke: #e3aa00;
   fill: var(--graph-aggregation-color);
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .node.cluster.aggregation > rect {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .node.cluster.aggregation > rect {
   stroke: #e3aa00;
   stroke-dasharray: 3, 3;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .node > polygon {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .node > polygon {
   stroke: var(--theme-color);
   fill: var(--graph-polygon-color);
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .node > ellipse {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .node > ellipse {
   stroke: #4ea6e6;
   fill: var(--graph-operator-color);
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .plain > path,
-.deb-wrap .right .svg-wrap .graph-container #graph .plain ellipse {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .plain > path,
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .plain ellipse {
   stroke: #e6a23c;
   fill: var(--graph-plain-color);
   stroke-dasharray: 1.5, 1.5;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph .edge-point ellipse {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .edge-point ellipse {
   stroke: #a7a7a7;
   fill: #a7a7a7;
 }
-.deb-wrap .right .svg-wrap .graph-container #graph text {
+.deb-wrap .rightTop .svg-wrap .graph-container #graph text {
   fill: var(--font-color);
 }
-.deb-wrap .right .svg-wrap .graph-container #contextMenu {
+.deb-wrap .rightTop .svg-wrap .graph-container #contextMenu {
   display: none;
   position: absolute;
   min-width: 150px;
   border: 1px solid #d4d4d4;
 }
-.deb-wrap .right .svg-wrap .graph-container #contextMenu ul {
+.deb-wrap .rightTop .svg-wrap .graph-container #contextMenu ul {
   background-color: #e2e2e2;
   border-radius: 2px;
 }
-.deb-wrap .right .svg-wrap .graph-container #contextMenu ul li {
+.deb-wrap .rightTop .svg-wrap .graph-container #contextMenu ul li {
   padding: 5px 18px;
   cursor: pointer;
 }
-.deb-wrap .right .svg-wrap .graph-container #contextMenu ul li:hover {
+.deb-wrap .rightTop .svg-wrap .graph-container #contextMenu ul li:hover {
   background-color: #787878;
   color: white;
 }
-.deb-wrap .right .table-container {
-  height: calc(50% - 60px);
+.deb-wrap .rightBottom .table-container {
+  height: 100%;
   position: relative;
 }
-.deb-wrap .right .table-container > img {
+.deb-wrap .rightBottom .table-container > img {
   position: absolute;
   right: 10px;
   top: 12px;
   cursor: pointer;
   z-index: 99;
 }
-.deb-wrap .right .table-container .el-tabs.el-tabs--top {
+.deb-wrap .rightBottom .table-container .el-tabs.el-tabs--top {
   height: 100%;
 }
-.deb-wrap .right .table-container .el-tabs.el-tabs--top .el-tabs__content {
+.deb-wrap .rightBottom .table-container .el-tabs.el-tabs--top .el-tabs__content {
   height: calc(100% - 60px);
 }
-.deb-wrap .right .table-container .el-tabs.el-tabs--top .el-tabs__content .el-tab-pane {
+.deb-wrap .rightBottom .table-container .el-tabs.el-tabs--top .el-tabs__content .el-tab-pane {
   height: 100%;
 }
-.deb-wrap .right .table-container .table-content {
+.deb-wrap .rightBottom .table-container .table-content {
   height: 100%;
   overflow: hidden;
   position: relative;
 }
-.deb-wrap .right .table-container .table-content .stack-content {
+.deb-wrap .rightBottom .table-container .table-content .stack-content {
   background-color: var(--bg-color);
   height: 100%;
   overflow: auto;
 }
-.deb-wrap .right .table-container .table-content .stack-content .stack-item {
+.deb-wrap .rightBottom .table-container .table-content .stack-content .stack-item {
   line-height: 18px;
   padding: 5px 60px 5px 10px !important;
   position: relative;
   word-break: break-all;
   border-bottom: 1px solid var(--table-border-color);
 }
-.deb-wrap .right .table-container .table-content .stack-content .stack-item:hover {
+.deb-wrap .rightBottom .table-container .table-content .stack-content .stack-item:hover {
   background-color: var(--table-hover-color);
 }
-.deb-wrap .right .table-container .table-content .stack-content .operator-btns {
+.deb-wrap .rightBottom .table-container .table-content .stack-content .operator-btns {
   position: absolute;
   right: 10px;
   top: calc(50% - 20px);
 }
-
-.deb-wrap .right .table-container .table-content .stack-content .noData-text {
+.deb-wrap .rightBottom .table-container .table-content .stack-content .noData-text {
   text-align: center;
   line-height: 60px;
   color: #909399;
 }
-.deb-wrap .right .table-container .table-content .table-wrap {
+.deb-wrap .rightBottom .table-container .table-content .table-wrap {
   height: 100%;
   overflow-y: auto;
 }
-.deb-wrap .right .table-container .table-content .table-wrap .el-table .success-row {
+.deb-wrap .rightBottom .table-container .table-content .table-wrap .el-table .success-row {
   background: var(--table-success-row-bg-color);
 }
-.deb-wrap .right .table-container .table-content .value-wrap {
+.deb-wrap .rightBottom .table-container .table-content .value-wrap {
   text-align: right;
 }
-.deb-wrap .right .table-container .table-content .center {
+.deb-wrap .rightBottom .table-container .table-content .center {
   display: inline-block;
   text-align: center;
   width: 100%;
 }
-.deb-wrap .right .table-container .table-content .value {
+.deb-wrap .rightBottom .table-container .table-content .value {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3038,7 +3066,7 @@ export default {
   display: inline-block;
   width: 100%;
 }
-.deb-wrap .right .table-container .table-content .value-tip {
+.deb-wrap .rightBottom .table-container .table-content .value-tip {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3047,41 +3075,41 @@ export default {
   vertical-align: middle;
   text-align: right;
 }
-.deb-wrap .right .table-container .table-content .el-table--border {
+.deb-wrap .rightBottom .table-container .table-content .el-table--border {
   border-right: none;
   border-left: none;
 }
-.deb-wrap .right .table-container .table-content .el-table--border td {
+.deb-wrap .rightBottom .table-container .table-content .el-table--border td {
   border-right: none;
   border-left: none;
 }
-.deb-wrap .right .table-container .table-content .el-table--border th {
+.deb-wrap .rightBottom .table-container .table-content .el-table--border th {
   border-right: none;
   border-left: none;
 }
-.deb-wrap .right .table-container .table-content .el-table th > .cell {
+.deb-wrap .rightBottom .table-container .table-content .el-table th > .cell {
   border-left: 1px solid #d9d8dd;
   word-break: keep-all;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.deb-wrap .right .table-container .table-content .el-table-column--selection .cell {
+.deb-wrap .rightBottom .table-container .table-content .el-table-column--selection .cell {
   border-left: none !important;
 }
-.deb-wrap .right .svg-wrap.collapse {
+.deb-wrap .rightTop .svg-wrap.collapse {
   height: calc(100% - 100px);
 }
-.deb-wrap .right .table-container.collapse {
+.deb-wrap .rightBottom .table-container.collapse {
   height: 35px;
 }
-.deb-wrap .right .table-container.collapse .el-tabs__header {
+.deb-wrap .rightBottom .table-container.collapse .el-tabs__header {
   margin: 0;
 }
-.deb-wrap .right .table-container.collapse .table-content {
+.deb-wrap .rightBottom .table-container.collapse .table-content {
   display: none;
 }
-.deb-wrap .right.collapse {
+.deb-wrap .rightBottom.collapse {
   width: calc(100% - 25px);
 }
 .deb-wrap .custom-btn {

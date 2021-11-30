@@ -21,7 +21,7 @@ limitations under the License.
        @mousemove="handleMouseMove"
        @mouseleave="handleMouseLeave"
        @mouseup="handleMouseUp">
-    <div v-for="area in areaList"
+    <div v-for="(area, index) in areaList"
          :key="area.name"
          :class="[(gapAreas['columnGap'].includes(area.name)
            || gapAreas['rowGap'].includes(area.name)) ? 'grid-item-gap' : 'grid-item']"
@@ -34,13 +34,21 @@ limitations under the License.
       <div v-if="gapAreas['rowGap'].includes(area.name)"
            class="grid-rowGap"
            @mousedown="handleMouseDown"></div>
-      <div v-if="area.hide"
+      <div v-if="index > 0 && areaList[index - 1].hide"
            :class="[
              'hide-button',
-             `is-${area.hide}`,
+             `is-${areaList[index - 1].hide}`,
            ]">
-        <img @click="isDisplayView(area.name)"
-             :src="require(`@/assets/images/${theme}/collapse-${area.isHide ? 'right' : 'left'}.svg`)">
+        <img @click="isDisplayView(areaList[index - 1].name)"
+             :src="require(`@/assets/images/${theme}/collapse-${areaList[index - 1].isHide ? 'right' : 'left'}.svg`)">
+      </div>
+      <div v-if="index === areaList.length - 2 && areaList[index + 1].hide"
+           :class="[
+             'hide-button',
+             `is-${areaList[index + 1].hide}`,
+           ]">
+        <img @click="isDisplayView(areaList[index + 1].name)"
+             :src="require(`@/assets/images/${theme}/collapse-${areaList[index + 1].isHide ? 'right' : 'left'}.svg`)">
       </div>
     </div>
     <div class="mi-flex-grid-preview"
@@ -51,9 +59,9 @@ limitations under the License.
            :style="{gridArea: area.name}"
            class="grid-preview-item">
         <div v-if="gapAreas['columnGap'].includes(area.name)"
-            class="grid-columnGap"></div>
+             class="grid-columnGap"></div>
         <div v-if="gapAreas['rowGap'].includes(area.name)"
-            class="grid-rowGap"></div>
+             class="grid-rowGap"></div>
       </div>
     </div>
   </div>
@@ -92,7 +100,7 @@ export default {
     columnSize: Array, // Such as Array<Column>
     hideAreas: Object, // Configuration item area hidden
     showFixed: Boolean, // Whether to display a fixed area
-    gridStyleKey: String // Display different page grid styles according to the key
+    gridStyleKey: String, // Display different page grid styles according to the key
   },
   data() {
     return {
@@ -117,75 +125,74 @@ export default {
       width: '', // The total width of the page
       viewResizeTimer: null, // Page resize time
       callBackTimer: null, // Slickgrid layout resize time
-      resizeTimer: null, // Svg layout resize time
       gapAreas: {
         columnGap: [],
-        rowGap: []
+        rowGap: [],
       }, // Gap areas object
       saveGridStyleObj: [
         {
           key: 'debugger',
-          value: null
+          value: null,
         },
         {
           key: 'debugger-tensor',
-          value: null
+          value: null,
         },
         {
           key: 'debugger-tensor-inner',
-          value: null
+          value: null,
         },
         {
           key: 'offline-debugger',
-          value: null
+          value: null,
         },
         {
           key: 'offline-debugger-tensor',
-          value: null
+          value: null,
         },
         {
           key: 'offline-debugger-tensor-inner',
-          value: null
+          value: null,
         },
         {
           key: 'step-trace',
-          value: null
+          value: null,
         },
         {
           key: 'profiling-gpu',
-          value: null
+          value: null,
         },
         {
           key: 'model-traceback',
-          value: null
+          value: null,
         },
         {
           key: 'graph',
-          value: null
-        }
-      ] // Save an array of grid styles for different pages
+          value: null,
+        },
+      ], // Save an array of grid styles for different pages
     };
   },
   watch: {
     // Shrink button style of the listening columns
     columns: {
       handler(newValue) {
-        newValue.forEach(value => {
+        newValue.forEach((value) => {
           if (['left', 'right'].includes(value.hide)) {
             value.isHide = !Boolean(value.currentWidth);
-            this.areaList.find(area => area.hide === value.hide).isHide = value.isHide;
+            this.areaList.find((area) => area.hide === value.hide).isHide = value.isHide;
           }
         });
       },
-      deep: true
+      deep: true,
     },
     // Shrink button style of the listening rows
     rows: {
       handler(newValue) {
-        const {differIndex, areaList} = this;
+        const { differIndex, areaList } = this;
         const rowCount = 1; // The page is laid out in one line
         if (newValue.length === rowCount) return;
-        const hideAreasIndex = newValue.findIndex(item => {
+        const hideAreasIndex = newValue.findIndex((item) => {
           return Object.keys(this.hideAreas).includes(item.name);
         });
         if (!newValue[hideAreasIndex]['currentHeight']) {
@@ -204,7 +211,7 @@ export default {
           newValue[hideAreasIndex]['hide'] = 'top';
           newValue[hideAreasIndex + differIndex]['isHide'] = false;
         }
-        areaList.forEach(area => {
+        areaList.forEach((area) => {
           if (newValue[hideAreasIndex].name === area.name) {
             area.hide = newValue[hideAreasIndex].hide;
             area.isHide = newValue[hideAreasIndex].isHide;
@@ -215,8 +222,8 @@ export default {
           }
         });
       },
-      deep: true
-    }
+      deep: true,
+    },
   },
   created() {
     this.calGapAreas();
@@ -225,7 +232,7 @@ export default {
   mounted() {
     this.calFRValue();
     this.calTriggerPosition();
-    this.updateResizeGridStyle();
+    this.updatePreviewStyle();
     // Window resize to add a listener
     window.addEventListener('resize', this.resizeGridStyle, false);
   },
@@ -241,10 +248,6 @@ export default {
       clearTimeout(this.callBackTimer);
       this.callBackTimer = null;
     }
-    if (this.resizeTimer) {
-      clearTimeout(this.resizeTimer);
-      this.resizeTimer = null;
-    }
   },
   methods: {
     /**
@@ -255,7 +258,7 @@ export default {
         this.getSaveGridStyle();
         this.calFRValue();
         this.calTriggerPosition();
-        this.updateResizeGridStyle();
+        this.updatePreviewStyle(false);
       }, this.resizeDelayTime);
     },
     /**
@@ -264,7 +267,7 @@ export default {
      * @param {Boolean} storageFlag
      */
     isDisplayView(areaName, storageFlag = true) {
-      const {columns, rows, differIndex, gridStyleKey, areaList} = this;
+      const { columns, rows, differIndex, gridStyleKey, areaList } = this;
       columns.forEach((column, index) => {
         if (column.name === areaName && column.hide === 'left') {
           if (!column.isHide) {
@@ -317,7 +320,7 @@ export default {
           row.isHide = !row.isHide;
         }
       });
-      areaList.filter(area => {
+      areaList.filter((area) => {
         area.isHide = area.name === areaName ? !area.isHide : area.isHide;
       });
       this.updatePreviewStyle();
@@ -327,7 +330,7 @@ export default {
      * Calculate the location of all page gaps
      */
     calTriggerPosition() {
-      const {rows, rowGaps, columns, columnGaps, differIndex} = this;
+      const { rows, rowGaps, columns, columnGaps, differIndex } = this;
       const factor = 1; // Used to determine the location of the gap
       let rowPoint = 0; // Used to calculate the position of the row gap
       let rowGapNum = 0; // To count the number of row gaps
@@ -336,7 +339,7 @@ export default {
         if (i % differIndex === factor) {
           rowGaps[rowGapNum] = {
             start: rowPoint - rows[i].currentHeight,
-            end: rowPoint
+            end: rowPoint,
           };
           rowGapNum++;
         }
@@ -348,7 +351,7 @@ export default {
         if (i % differIndex === factor) {
           columnGaps[columnGapNum] = {
             start: columnPoint - columns[i].currentWidth,
-            end: columnPoint
+            end: columnPoint,
           };
           columnGapNum++;
         }
@@ -358,15 +361,15 @@ export default {
      * Calculate fr as the page value size
      */
     calFRValue() {
-      const {rowStructure, columnStructure, rows, columns, gridStyleKey} = this;
-      const {width, height} = this.$refs.grid.getBoundingClientRect();
+      const { rowStructure, columnStructure, rows, columns, gridStyleKey } = this;
+      const { width, height } = this.$refs.grid.getBoundingClientRect();
       const ratio = 2; // Set the maximum width of the page to half of the screen
       this.width = width;
       // Column
       this.columnFR = (width - columnStructure.px) / columnStructure.fr;
       // Row
       this.rowFR = (height - rowStructure.px) / rowStructure.fr;
-      rows.forEach(row => {
+      rows.forEach((row) => {
         const currentHeight = row.currentHeight;
         const value = parseInt(currentHeight);
         if (currentHeight.includes('fr')) {
@@ -375,7 +378,7 @@ export default {
           row.currentHeight = value;
         }
       });
-      columns.forEach(column => {
+      columns.forEach((column) => {
         const currentWidth = column.currentWidth;
         const value = parseInt(currentWidth);
         if (currentWidth.includes('fr')) {
@@ -417,19 +420,21 @@ export default {
     /**
      * Update mask layer style
      */
-    updatePreviewStyle() {
-      const {previewStyle, rows, columns} = this;
-      previewStyle.gridTemplateRows = rows.map(r => r.currentHeight + 'px').join(' ');
-      previewStyle.gridTemplateColumns = columns.map(r => r.currentWidth + 'px').join(' ');
-    },
-    /**
-     * Updated grid layout style after page resize
-     */
-    updateResizeGridStyle() {
-      const {previewStyle, gridStyle} = this;
-      this.updatePreviewStyle();
-      gridStyle.gridTemplateRows = previewStyle.gridTemplateRows;
-      gridStyle.gridTemplateColumns = previewStyle.gridTemplateColumns;
+    updatePreviewStyle(resizeFlag = true) {
+      const { previewStyle, rows, columns } = this;
+      previewStyle.gridTemplateRows = rows.map((r) => r.currentHeight + 'px').join(' ');
+      previewStyle.gridTemplateColumns = columns.map((r) => r.currentWidth + 'px').join(' ');
+      if (resizeFlag) {
+        const resizeObj = {};
+        this.areaList.forEach((area) => {
+          if (!this.gapAreas.columnGap.includes(area.name) && !this.gapAreas.rowGap.includes(area.name)) {
+            resizeObj[area.name] = { isHide: area.isHide };
+          }
+        });
+        this.$nextTick(() => {
+          this.$emit('resizeGridStyle', resizeObj);
+        });
+      }
     },
     /**
      * Initialize dimension selection
@@ -437,10 +442,10 @@ export default {
      * @param {Boolean} click Make a shrink button click
      */
     updateGridStyle(first = false, click = false) {
-      const {gridStyle, previewStyle, columns, rows, gridStyleKey, saveGridStyleObj} = this;
+      const { gridStyle, previewStyle, columns, rows, gridStyleKey, saveGridStyleObj } = this;
       if (!first && !click) {
         // When dragging the page, it is automatically hidden if it is less than the minimum width or height
-        columns.forEach(column => {
+        columns.forEach((column) => {
           if (['left', 'right'].includes(column.hide)) {
             if (column.currentWidth < parseInt(column.minWidth) && !column.isHide) {
               localStorage.setItem(`${gridStyleKey}${column.name}Width`, parseInt(column.minWidth));
@@ -448,7 +453,7 @@ export default {
             }
           }
         });
-        rows.forEach(row => {
+        rows.forEach((row) => {
           if (['top', 'bottom'].includes(row.hide)) {
             if (row.currentHeight < parseInt(row.minHeight) && !row.isHide) {
               localStorage.setItem(`${gridStyleKey}${row.name}Height`, parseInt(row.minHeight));
@@ -465,10 +470,10 @@ export default {
       // Store the grid layout style of the page in localstorage
       if (localStorage.saveGridStyle) {
         const saveGridStyle = JSON.parse(localStorage.saveGridStyle);
-        saveGridStyle.find(item => item.key === gridStyleKey).value = gridStyle;
+        saveGridStyle.find((item) => item.key === gridStyleKey).value = gridStyle;
         localStorage.setItem('saveGridStyle', JSON.stringify(saveGridStyle));
       } else {
-        saveGridStyleObj.find(item => item.key === gridStyleKey).value = gridStyle;
+        saveGridStyleObj.find((item) => item.key === gridStyleKey).value = gridStyle;
         localStorage.setItem('saveGridStyle', JSON.stringify(saveGridStyleObj));
       }
       // Resize the layout of slickgrid in debugger-tensor and offline-debugger-tensor pages
@@ -477,25 +482,16 @@ export default {
           this.$emit('resizeCallback');
         }, this.resizeDelayTime);
       }
-      // Resize the layout of svg in debugger and offline-debugger pages
-      if (['debugger', 'offline-debugger'].includes(gridStyleKey) && !first) {
-        this.resizeTimer = setTimeout(() => {
-          this.$emit('startApp');
-        }, this.resizeDelayTime);
-      }
       this.calTriggerPosition();
-      this.$nextTick(() => {
-        this.$emit('resize');
-      });
     },
     /**
      * Save grid styles of different pages
      */
     getSaveGridStyle() {
-      const {gridStyle, gridStyleKey} = this;
+      const { gridStyle, gridStyleKey } = this;
       let gridStyleData = '';
-      gridStyleData = JSON.parse(localStorage.saveGridStyle).find(item => item.key === gridStyleKey).value;
-      const {gridTemplateAreas, gridTemplateColumns, gridTemplateRows} = gridStyleData;
+      gridStyleData = JSON.parse(localStorage.saveGridStyle).find((item) => item.key === gridStyleKey).value;
+      const { gridTemplateAreas, gridTemplateColumns, gridTemplateRows } = gridStyleData;
       gridStyle.gridTemplateAreas = gridTemplateAreas;
       gridStyle.gridTemplateColumns = this.calValueToFR(gridTemplateColumns, 'column');
       gridStyle.gridTemplateRows = this.calValueToFR(gridTemplateRows, 'row');
@@ -516,15 +512,12 @@ export default {
           row.currentHeight = gridTemplateRowsArray[index];
         }
       });
-      this.$nextTick(() => {
-        this.$emit('resize');
-      });
     },
     /**
      * Calculate the gap area
      */
     calGapAreas() {
-      const {areas, differIndex, gapAreas, rowSize, columnSize, rowGap, columnGap, showFixed} = this;
+      const { areas, differIndex, gapAreas, rowSize, columnSize, rowGap, columnGap, showFixed } = this;
       const factor = 1; // Used to determine where to add
       let columnGapNum = 1; // Used to define the column gap name
       let areaIndex = 1; // Add the position of the column gap
@@ -534,7 +527,7 @@ export default {
       let rowSizeIndex = 1; // Add the position of the row gap size
       let columnSizeIndex = 1; // Add the position of the column gap size
       // Add column gap
-      areas.forEach(area => {
+      areas.forEach((area) => {
         area.forEach((item, index) => {
           if (index >= factor && index !== columnIndex) {
             columnIndex = index;
@@ -593,7 +586,7 @@ export default {
      * Initialize grid layout style
      */
     parseGridInfo() {
-      const {areas, rowSize, columnSize, areaMap, previewStyle, hideAreas} = this;
+      const { areas, rowSize, columnSize, areaMap, previewStyle, hideAreas } = this;
       const rowDescription = this.generateGridDescription(rowSize, 'row');
       this.rows = rowDescription.info;
       this.rowStructure = rowDescription.structure;
@@ -612,7 +605,7 @@ export default {
               rowIndex: [rowIndex],
               columnIndex: [columnIndex],
               hide: hideAreas[areaName],
-              isHide: false
+              isHide: false,
             };
           }
           const areaInfo = areaMap[areaName];
@@ -654,7 +647,7 @@ export default {
       // Determine whether there is a saved page layout in localstroage
       if (
         localStorage.saveGridStyle &&
-        JSON.parse(localStorage.saveGridStyle).find(item => item.key === this.gridStyleKey).value
+        JSON.parse(localStorage.saveGridStyle).find((item) => item.key === this.gridStyleKey).value
       ) {
         this.getSaveGridStyle();
       } else {
@@ -673,13 +666,13 @@ export default {
       const infoList = [];
       if (type === 'row') {
         // Row
-        array.forEach(item => {
+        array.forEach((item) => {
           if (typeof item === 'string') {
             templateList.push(this.handleGridSize(item, structure));
             infoList.push({
               defaultHeight: item,
               currentHeight: item,
-              minHeight: 0
+              minHeight: 0,
             });
           } else {
             if (typeof item === 'object' && item.hasOwnProperty('defaultHeight')) {
@@ -689,20 +682,20 @@ export default {
                 defaultHeight,
                 currentHeight: defaultHeight,
                 minHeight: item.minHeight,
-                maxHeight: item.maxHeight
+                maxHeight: item.maxHeight,
               });
             }
           }
         });
       } else {
         // Column
-        array.forEach(item => {
+        array.forEach((item) => {
           if (typeof item === 'string') {
             templateList.push(this.handleGridSize(item, structure));
             infoList.push({
               defaultWidth: item,
               currentWidth: item,
-              minWidth: 0
+              minWidth: 0,
             });
           } else {
             if (item.hasOwnProperty('defaultWidth')) {
@@ -712,7 +705,7 @@ export default {
                 defaultWidth,
                 currentWidth: defaultWidth,
                 minWidth: item.minWidth,
-                maxWidth: item.maxWidth
+                maxWidth: item.maxWidth,
               });
             }
           }
@@ -721,7 +714,7 @@ export default {
       return {
         info: infoList,
         structure,
-        template: templateList.join(' ')
+        template: templateList.join(' '),
       };
     },
     /**
@@ -751,11 +744,11 @@ export default {
      */
     handleMouseDown(event) {
       this.showPreview = true;
-      const {rowGaps, columnGaps, differIndex} = this;
-      let {offsetX, offsetY} = event;
+      const { rowGaps, columnGaps, differIndex } = this;
+      let { offsetX, offsetY } = event;
       let rowGapIndex;
       for (let i = 0; i < rowGaps.length; i++) {
-        const {start, end} = rowGaps[i];
+        const { start, end } = rowGaps[i];
         if (start <= offsetY + start && offsetY + start <= end) {
           rowGapIndex = differIndex * i;
           break;
@@ -763,7 +756,7 @@ export default {
       }
       let columnGapIndex;
       for (let i = 0; i < columnGaps.length; i++) {
-        const {start, end} = columnGaps[i];
+        const { start, end } = columnGaps[i];
         if (start <= offsetX + start && offsetX + start <= end) {
           columnGapIndex = differIndex * i;
           break;
@@ -779,20 +772,19 @@ export default {
         this.dragColumn = columnGapIndex;
         offsetX += columnGaps[this.dragColumn / differIndex]['start'];
       }
-      this.mouseEvent = {offsetX, offsetY};
-      this.$emit('mousedown');
+      this.mouseEvent = { offsetX, offsetY };
     },
     /**
      * Mouse move event when dragging the page
      * @param {Object} event
      */
     handleMouseMove(event) {
-      const {differIndex, columns, areaList, rows, width, columnGap} = this;
+      const { differIndex, columns, areaList, rows, width, columnGap } = this;
       const dragColumn = typeof this.dragColumn === 'number';
       const dragRow = typeof this.dragRow === 'number';
       if (!dragColumn && !dragRow) return;
-      const {pageX, pageY} = event;
-      const {top, left} = this.$refs.grid.getBoundingClientRect();
+      const { pageX, pageY } = event;
+      const { top, left } = this.$refs.grid.getBoundingClientRect();
       const offsetX = pageX - left;
       const offsetY = pageY - top;
       if (dragColumn) {
@@ -832,7 +824,7 @@ export default {
         rows[rowTopIndex].currentHeight += offset;
         rows[rowBottomIndex].currentHeight -= offset;
       }
-      this.mouseEvent = {offsetX, offsetY};
+      this.mouseEvent = { offsetX, offsetY };
       this.updatePreviewStyle();
     },
     /**
@@ -841,9 +833,6 @@ export default {
     handleMouseLeave() {
       if (!this.showPreview) return;
       this.acceptChange();
-      this.$nextTick(() => {
-        this.$emit('mouseleave');
-      });
     },
     /**
      * Mouse up event when dragging the page
@@ -851,9 +840,6 @@ export default {
     handleMouseUp() {
       if (!this.showPreview) return;
       this.acceptChange();
-      this.$nextTick(() => {
-        this.$emit('mouseup');
-      });
     },
     /**
      * When the page is dragged and dropped, the page changes
@@ -871,8 +857,8 @@ export default {
      */
     stopPropagation(event) {
       event.stopPropagation();
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -889,6 +875,7 @@ export default {
 .mi-flex-grid .grid-item {
   position: relative;
   z-index: 3;
+  overflow: hidden;
 }
 .mi-flex-grid .grid-item-gap {
   position: relative;
@@ -904,50 +891,50 @@ export default {
   height: 100%;
   cursor: row-resize;
 }
-.mi-flex-grid .grid-item .hide-button {
+.mi-flex-grid .grid-item-gap .hide-button {
   position: absolute;
   cursor: pointer;
 }
-.mi-flex-grid .grid-item .is-right {
+.mi-flex-grid .grid-item-gap .is-right {
   top: 50%;
   left: 0;
-  transform: translateX(-23px) translateY(-50%) rotate(-180deg);
+  transform: translateX(-7px) translateY(-50%) rotate(-180deg);
 }
-.mi-flex-grid .grid-item .is-top {
+.mi-flex-grid .grid-item-gap .is-top {
   bottom: 0;
   right: 50%;
-  transform: translateX(-30px) translateY(56px) rotate(90deg);
+  transform: translateX(-30px) translateY(41px) rotate(90deg);
 }
-.mi-flex-grid .grid-item .is-bottom {
+.mi-flex-grid .grid-item-gap .is-bottom {
   top: 0;
   left: 50%;
-  transform: translateX(40%) translateY(-59px) rotate(-90deg);
+  transform: translateX(40%) translateY(-41px) rotate(-90deg);
 }
-.mi-flex-grid .grid-item .is-left {
+.mi-flex-grid .grid-item-gap .is-left {
   top: 50%;
   right: 0;
-  transform: translateX(22px) translateY(-50%);
+  transform: translateX(6px) translateY(-50%);
 }
-.mi-flex-grid .grid-item .is-bottom-center {
+.mi-flex-grid .grid-item-gap .is-bottom-center {
   top: 0;
   left: 50%;
-  transform: translateX(-50%) translateY(-57px) rotate(-90deg);
+  transform: translateX(-50%) translateY(-42px) rotate(-90deg);
 }
-.mi-flex-grid .grid-item .is-top-center {
+.mi-flex-grid .grid-item-gap .is-top-center {
   bottom: 0;
   right: 50%;
   transform: translateX(13px) translateY(57px) rotate(90deg);
 }
-.mi-flex-grid .grid-item .is-show-0 {
+.mi-flex-grid .grid-item-gap .is-show-0 {
   background-image: url('../assets/images/0/collapse-left.svg');
 }
-.mi-flex-grid .grid-item .is-show-1 {
+.mi-flex-grid .grid-item-gap .is-show-1 {
   background-image: url('../assets/images/1/collapse-left.svg');
 }
-.mi-flex-grid .grid-item .is-hide-0 {
+.mi-flex-grid .grid-item-gap .is-hide-0 {
   background-image: url('../assets/images/0/collapse-right.svg');
 }
-.mi-flex-grid .grid-item .is-hide-1 {
+.mi-flex-grid .grid-item-gap .is-hide-1 {
   background-image: url('../assets/images/1/collapse-right.svg');
 }
 .mi-flex-grid-preview {
