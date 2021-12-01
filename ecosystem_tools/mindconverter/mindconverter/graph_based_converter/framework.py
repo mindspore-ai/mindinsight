@@ -175,7 +175,7 @@ def main_graph_base_converter(file_config):
 @GeneratorError.uniform_catcher()
 @SubGraphSearchingError.uniform_catcher()
 @GraphInitError.uniform_catcher()
-def pytorch2mindspore(model, dummy_inputs, output_dir=None):
+def convert_api(model, dummy_inputs, output_dir=None):
     """
     Convert PyTorch model to MindSpore model.
 
@@ -217,3 +217,44 @@ def pytorch2mindspore(model, dummy_inputs, output_dir=None):
     default_output_dir = os.path.realpath(os.path.join(os.getcwd(), "output"))
     output_dir = output_dir or default_output_dir
     convert_according_to_user_selections(graph_obj, output_folder=output_dir, user_operations=graph_obj.patterns)
+
+
+def pytorch2mindspore(model, dummy_inputs, output_dir=None):
+    """
+    Convert PyTorch model to MindSpore model.
+
+    This function is to transform instantiated PyTorch model with PyTorch pre-trained CheckPoint to MindSpore model
+    scripts and MindSpore CheckPoint file.
+
+    Args:
+        model (torch.nn.Module): The instantiated PyTorch model with pre-trained checkpoint loaded.
+        dummy_inputs (tuple<torch.tensor>): Tuple of input tensors for the PyTorch model. The number of tensors,
+            the shape and the data type of every tensor should be consistent with that of PyTorch model.
+        output_dir (str): The directory path for generated files and migration reports.
+            If not set, all results will be saved in `$PWD/output`. Default: None.
+
+    Raises:
+         BaseConverterError: Unknown error occurred during runtime, please see the detail in `mindconverter.log`.
+         GraphInitFailError: Error in tracing the computational graph.
+         FileSaveError: Error in saving generated results.
+         GeneratorError: Error in generating code.
+         SubGraphSearchingError: Error in finding frequent sub-graph.
+
+    Examples:
+        >>> import torch
+        >>> from transformers import BertModel
+        >>> from mindconverter import pytorch2mindspore
+        >>> model = BertModel.from_pretrained("bert-base-uncased")
+        >>> model.eval()
+        ...
+        >>> input_ids = np.random.uniform(0, 100, (1, 512)).astype(np.int64)
+        >>> attention_mask = np.zeros((1, 512)).astype(np.int64)
+        >>> token_type_ids = np.zeros((1, 512)).astype(np.int64)
+        >>> dummy_inputs = (torch.tensor(input_ids), torch.tensor(attention_mask), torch.tensor(token_type_ids))
+        >>> with torch.no_grad():
+        ...     model(*dummy_inputs)
+        ...
+        >>> output_dir = "./output"
+        >>> pytorch2mindspore(model, dummy_inputs, output_dir)
+    """
+    convert_api(model, dummy_inputs, output_dir=output_dir)
