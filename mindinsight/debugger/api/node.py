@@ -33,6 +33,23 @@ class Node(ABC):
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
         change and/or deletion.
+
+    Args:
+        node_feature(namedtuple): The node feature.
+
+            - name (str): The node name.
+            - rank (int): The rank id.
+            - stack (iterable[dict]): The format of each item is like:
+
+                ..code-block::
+                    {
+                        'file_path': str,
+                        'line_no': int,
+                        'code_line': str
+                    }
+
+            - graph_name (str): The graph name.
+            - root_graph_id (int): The root graph id.
     """
 
     def __init__(self, node_feature):
@@ -45,6 +62,13 @@ class Node(ABC):
 
         Returns:
             str, the full name of the node.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> node = list(my_run.select_nodes("conv"))[0]
+                >>> print(node.name)
+                conv5.bias
         """
         return self._node_feature.name
 
@@ -57,12 +81,19 @@ class Node(ABC):
             iterable[dict], each item format like:
 
             ..code-block::
+
                 {
                     'file_path': str,
                     'line_no': int,
                     'code_line': str
                 }
 
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> node = list(my_run.select_nodes("Conv2D-op156"))[0]
+                >>> print(node.stack)
+                [{'file_path': '/path', 'line_no': 266, 'code_line': 'output = self.conv2d(x, self.weight)'}]
         """
         return self._node_feature.stack
 
@@ -73,6 +104,13 @@ class Node(ABC):
 
         Returns:
             int, the rank id to which the node belong.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> node = list(my_run.select_nodes("conv"))[0]
+                >>> print(node.rank)
+                0
         """
         return self._node_feature.rank
 
@@ -113,6 +151,11 @@ class Node(ABC):
 
         Returns:
             Iterable[DebuggerTensor], the input tensors of the node.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> node = list(my_run.select_nodes("Conv2D-op156"))[0]
         """
 
     def get_output_tensors(
@@ -130,6 +173,11 @@ class Node(ABC):
 
         Returns:
             Iterable[DebuggerTensor], the output tensors of the node.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> node = list(my_run.select_nodes("Conv2D-op156"))[0]
         """
 
     def __str__(self):

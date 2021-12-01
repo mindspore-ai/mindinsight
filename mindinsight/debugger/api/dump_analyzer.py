@@ -44,6 +44,10 @@ class DumpAnalyzer:
         dump_dir (str): The path of the dump folder.
         mem_limit (int, optional): The memory limit for checking watchpoints in
             MB. Default: None, which means no limit.
+
+    Examples:
+            >>> from mindinsight.debugger import DumpAnalyzer
+            >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
     """
 
     def __init__(self, dump_dir, mem_limit=None):
@@ -130,6 +134,11 @@ class DumpAnalyzer:
 
         Returns:
             str, The path of the generated file.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> my_run.export_graphs()
         """
         return self._parser.export_xlsx(output_dir)
 
@@ -165,6 +174,11 @@ class DumpAnalyzer:
 
         Returns:
             Iterable[Node], the matched nodes.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> nodes = my_run.select_nodes("Conv2D-op156")
         """
         validate_type(query_string, 'query_string', str, 'str')
         validate_type(use_regex, 'use_regex', bool, 'bool')
@@ -240,6 +254,11 @@ class DumpAnalyzer:
 
         Returns:
           Iterable[DebuggerTensor], the matched tensors.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> tensors = my_run.select_tensors("Conv2D-op156")
         """
         validate_type(query_string, 'query_string', str, 'str')
         validate_type(use_regex, 'use_regex', bool, 'bool')
@@ -269,6 +288,13 @@ class DumpAnalyzer:
 
         Returns:
             Iterable[int], sorted dumped iteration list.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> iterations = my_run.get_iterations()
+                >>> print(list(iterations))
+                [0, 1, 2]
         """
         total_dumped_steps = self._data_loader.load_dumped_step()
         ranks = self._get_iterable_ranks(ranks)
@@ -284,6 +310,13 @@ class DumpAnalyzer:
 
         Returns:
             Iterable[int], the list of rank id in current dump directory.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> ranks = my_run.get_ranks()
+                >>> print(list(ranks))
+                [0]
         """
         return [rank_dir.rank_id for rank_dir in self._data_loader.rank_dirs]
 
@@ -310,6 +343,29 @@ class DumpAnalyzer:
             sorted so that the user can see the most import hit on the top of
             the list. When there are many many watchpoint hits, we will
             display the list in a designed clear way.
+
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> from mindinsight.debugger import (
+                ...                                                  TensorTooLargeCondition,
+                ...                                                  Watchpoint)
+
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> tensors = my_run.select_tensors(
+                ...                                     query_string="Conv2D-op156",
+                ...                                     use_regex=True,
+                ...                                     iterations=[0],
+                ...                                     ranks=[0],
+                ...                                     slots=[0]
+                ...                                     )
+                >>> watchpoint = Watchpoint(tensors=tensors,
+                ...                         condition=TensorTooLargeCondition(abs_mean_gt=0.0))
+                >>> hit = list(my_run.check_watchpoints(watchpoints=[watchpoint]))[0]
+                >>> print(str(hit))
+                Watchpoint TensorTooLarge triggered on slot 0 of node Default/network-WithLossCell/
+                _backbone-AlexNet/conv2-Conv2d/Conv2D-op156. The setting for watchpoint is abs_mean_gt = 0.0.
+                The actual value of the tensor is abs_mean_gt = 0.0665460056158321.
         """
         wp_hit_list = []
         # key is watchpoint_id, value is a dict with iteration as the key and check_nodes as values
@@ -374,6 +430,12 @@ class DumpAnalyzer:
 
         Returns:
             Iterable[Node], the affected nodes of the given tensor.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> tensor_list = list(my_run.select_tensors(query_string="Conv2D-op156"))
+                >>> affected_nodes = my_run.list_affected_nodes(tensor_list[0])
         """
         self._validate_node(tensor.node)
         affected_nodes = [affected_node.copy() for affected_node in tensor.node.downstream]
@@ -388,6 +450,12 @@ class DumpAnalyzer:
 
         Returns:
             Iterable[Node], the input nodes of the given node.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> node_list = list(my_run.select_nodes(query_string="Conv2D-op156"))
+                >>> input_nodes = my_run.get_input_nodes(node_list[0])
         """
         self._validate_node(node)
         input_nodes = node.input_nodes.copy()
@@ -402,6 +470,12 @@ class DumpAnalyzer:
 
         Returns:
             Iterable[Node], the output nodes of this node.
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> node_list = list(my_run.select_nodes(query_string="Conv2D-op156"))
+                >>> out_nodes = my_run.get_output_nodes(node_list[0])
         """
         self._validate_node(node)
         output_nodes = node.downstream.copy()
