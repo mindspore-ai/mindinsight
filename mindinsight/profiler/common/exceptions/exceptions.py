@@ -258,3 +258,14 @@ class NotFoundParallelStrategyDataException(MindInsightException):
             message=ProfilerErrorMsg.NOT_FOUND_PARALLEL_STRATEGY_DATA_ERROR.value,
             http_code=400
         )
+
+
+class ParseParallelStrategyDataException(MindInsightException):
+    """Parse parallel file failed with unknown error."""
+
+    def __init__(self, detail):
+        super(ParseParallelStrategyDataException, self).__init__(
+            error=ProfilerErrors.PARSE_PARALLEL_STRATEGY_DATA_ERROR,
+            message=ProfilerErrorMsg.PARSE_PARALLEL_STRATEGY_DATA_ERROR.value.format(detail),
+            http_code=500
+        )

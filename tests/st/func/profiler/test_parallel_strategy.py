@@ -79,4 +79,4 @@ class TestParallelStrategy:
             ret_json = response.get_json()
 
         file_path = os.path.join(self.RESULT_DIR, 'parallel_strategy.json')
-        compare_result_with_file(response.get_json(), file_path)
+        compare_result_with_file(ret_json, file_path)
