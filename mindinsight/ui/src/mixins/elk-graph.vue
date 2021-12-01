@@ -11,6 +11,7 @@ import {
   _findExistNameScope,
   getSingleNode,
   resetFirstCntFlag,
+  _buildTopScopeSet,
 } from '../js/build-graph';
 import {createElkGraph, dataNodeMap} from '../js/create-elk-graph';
 import {
@@ -30,6 +31,7 @@ const UNCONNECTED_OPACITY = 0.4;
 export default {
   data() {
     return {
+      graphData: null,
       trainInfo: {
         id: this.$route.query.id,
         path: this.$route.query.path,
@@ -89,7 +91,7 @@ export default {
       lastStackedParentID: '',
       loading: {
         show: true,
-        info: "",
+        info: '',
       },
     };
   },
@@ -99,95 +101,98 @@ export default {
   },
   mounted() {
     resetFirstCntFlag();
-    this.getDisplayedGraph();
+    this.fetchData();
   },
   destroyed() {
     this.timer && clearInterval(this.timer);
   },
   methods: {
-    // The logic of get displayedGraph
-    async getDisplayedGraph(
-        showNodeType = null,
-        showRankId = null,
-    ) {
+    // The logic of fetching data from server
+    async fetchData() {
       const params = {
         profile: this.trainInfo.dir,
         train_id: this.trainInfo.id,
       };
-      const fetch = () => {
-        RequestService.getGraphData(params)
-          .catch(err => {
+      const fetchFunc = async () => {
+        const res = await (
+          await RequestService.getGraphData(params).catch((err) => {
             this.loading.show = false;
-            clearInterval(this.timer);
             throw err;
           })
-          .then(res => res.data)
-          .then(async (res) => {
-            if (res.status === "loading" || res.status === "pending") { // continue loading
-              return;
-            } else if(res.status === "finish") {
-              const {graphs, metadata} = res;
-              // pipelined stage
-              const pipelineInfoRes = buildPipelinedStageInfo(graphs);
-              if (pipelineInfoRes.err) {
-                this.showPipelinePanel = false;
-              } else {
-                const {
-                  pipelinedStageInfo,
-                  pipelineNodeInfo,
-                  pipelineEdgeInfo,
-                } = pipelineInfoRes;
-                this.pipelinedStageInfo = pipelinedStageInfo;
-                this.pipelineNodeInfo = pipelineNodeInfo;
-                this.pipelineEdgeInfo = pipelineEdgeInfo;
-              }
-              // rank selector
-              let stageCnt = -1;
-              this.showRankIdOptions = Object.keys(graphs).map((key) => {
-                const ranks = graphs[key].rank_ids;
-                stageCnt += 1;
-                return {
-                  value: key,
-                  label: 'Stage ' + stageCnt + ': ' + JSON.stringify(ranks),
-                };
-              });
-              if (!showRankId) showRankId = 0;
-              const visGraph = buildGraph(
-                  graphs[showRankId],
-                  this.bipartite,
-              );
-              const topScopeSet = getTopScopeSet();
-              this.showNodeTypeOptions = [];
-              for (const topScope of topScopeSet) {
-                let label;
-                if (topScope.indexOf('Recompute') != -1) {
-                  label = this.$t('profiling.recomputeGraph');
-                } else if (topScope.indexOf('Gradients') != -1) {
-                  label = this.$t('profiling.backwardGraph');
-                } else if (topScope.indexOf('Default') != -1) {
-                  label = this.$t('profiling.forwardGraph');
-                }
-                this.showNodeTypeOptions.push({
-                  value: topScope,
-                  label: label,
-                });
-              }
-              this.showNodeType = showNodeType || this.showNodeTypeOptions[0].label;
-              this.showRankId = showRankId || this.showRankIdOptions[0].value;
-              this.parallelStrategy = metadata.parallel_type;
-              const elkGraph = createElkGraph(visGraph, true, this.$store.state.themeIndex);
-              await this.elk.layout(elkGraph, this.option).then((res) => {
-                this.processDisplayedGraph(res.getDisplayedGraph());
-                this.nodeAttrMap = visGraph.nodeAttrMap;
-              });
-              this.loading.show = false;
-              clearInterval(this.timer);
+        ).data;
+        if (res.status === 'loading' || res.status === 'pending') {
+          // continue loading
+          setTimeout(fetchFunc, 1500);
+          return;
+        } else if (res.status === 'finish') {
+          const {graphs, metadata} = res;
+          // pipelined stage
+          const pipelineInfoRes = buildPipelinedStageInfo(graphs);
+          if (pipelineInfoRes.err) {
+            this.showPipelinePanel = false;
+          } else {
+            const {
+              pipelinedStageInfo,
+              pipelineNodeInfo,
+              pipelineEdgeInfo,
+            } = pipelineInfoRes;
+            this.pipelinedStageInfo = pipelinedStageInfo;
+            this.pipelineNodeInfo = pipelineNodeInfo;
+            this.pipelineEdgeInfo = pipelineEdgeInfo;
+          }
+          // rank selector
+          let stageCnt = -1;
+          this.showRankIdOptions = Object.keys(graphs).map((key) => {
+            const ranks = graphs[key].rank_ids;
+            stageCnt += 1;
+            return {
+              value: key,
+              label: 'Stage ' + stageCnt + ': ' + JSON.stringify(ranks),
+            };
+          });
+          this.graphData = graphs;
+          const topScopeSet = _buildTopScopeSet(graphs['0']);
+          this.showNodeTypeOptions = [];
+          for (const topScope of topScopeSet) {
+            let label;
+            if (topScope.startsWith('recompute')) {
+              label = this.$t('profiling.recomputeGraph');
+            } else if (topScope.startsWith('Gradients')) {
+              label = this.$t('profiling.backwardGraph');
+            } else if (topScope.startsWith('Default')) {
+              label = this.$t('profiling.forwardGraph');
             }
-          })
-        return fetch;
+            this.showNodeTypeOptions.push({
+              value: topScope,
+              label: label,
+            });
+          }
+          this.parallelStrategy = metadata.parallel_type;
+          this.showNodeType = this.showNodeTypeOptions[0].value;
+          this.showRankId = this.showRankIdOptions[0].value;
+          await this.getDisplayedGraph();
+        }
       };
+      await fetchFunc();
+    },
 
-      this.timer = setInterval(fetch(), 3000);
+    // the logic of getting displayed graph
+    async getDisplayedGraph(showNodeType = null, showRankId = null) {
+      if (!showRankId) showRankId = '0';
+      const visGraph = buildGraph(
+          JSON.parse(JSON.stringify(this.graphData[showRankId])),
+          this.bipartite,
+      );
+      const elkGraph = createElkGraph(
+          visGraph,
+          true,
+          this.$store.state.themeIndex,
+      );
+      await this.elk.layout(elkGraph, this.option).then((res) => {
+        this.processDisplayedGraph(res.getDisplayedGraph());
+        this.nodeAttrMap = visGraph.nodeAttrMap;
+      });
+      this.loading.show = false;
     },
 
     /**
@@ -205,6 +210,7 @@ export default {
     enterScope(node) {
       if (!node) return;
       const hoverEdges = [];
+      if (!dataNodeMap.get(node.id)) return;
       dataNodeMap.get(node.id).hoverEdges.forEach((id) => {
         if (this.visEdgeMap.has(id)) {
           hoverEdges.push(this.visEdgeMap.get(id));
@@ -218,6 +224,7 @@ export default {
      * @param {DisplayedNode} node
      */
     leaveScope(node) {
+      if (!node) return;
       this.hoverEdges = [];
       node.hover = false;
     },
@@ -239,7 +246,11 @@ export default {
     },
 
     async updateVisGraph(visGraph) {
-      const elkGraph = createElkGraph(visGraph, false, this.$store.state.themeIndex);
+      const elkGraph = createElkGraph(
+          visGraph,
+          false,
+          this.$store.state.themeIndex,
+      );
 
       await this.elk.layout(elkGraph, this.option).then((res) => {
         this.processDisplayedGraph(res.getDisplayedGraph());
@@ -285,48 +296,64 @@ export default {
       const hiddenPolylineEdges = [];
       const targetRootSet = new Set();
       // Keep source and source root port opacity
-      this.visNodeMap.get(root).opacity = this.visNodeMap.get(port.owner).opacity = CONNECTED_OPACITY;
+      this.visNodeMap.get(root).opacity = this.visNodeMap.get(
+          port.owner,
+      ).opacity = CONNECTED_OPACITY;
       // Add 'source -> source root' hiddenEdges
 
       const partEdges = this.createHiddenEdge(port.owner, port.isInput);
       partEdges && hiddenEdges.push(partEdges);
-      dataNodeMap.get(port.owner)[port.isInput ? INPUT : OUTPUT].forEach((nodeId) => {
-        if (isNaN(nodeId)) return;
-        nodeId = _findExistNameScope(nodeId);
-        // to construct cross-comm edges
-        if (!isNaN(nodeId) || nodeId.indexOf(SCOPE_SEPARATOR) !== -1) {
-          // operator or scopenode to construct hidden edges
-          const outputNode = dataNodeMap.get(nodeId);
-          if (
-            outputNode &&
-            dataNodeMap.get(port.owner).parent.split(SCOPE_SEPARATOR)[0] !==
-              outputNode.parent.split(SCOPE_SEPARATOR)[0] &&
-            outputNode.parent.length !== 0
-          ) {
-            // OutputNode/InputNode under different scope node && is not comm node
-            const outputPartEdges = this.createHiddenEdge(nodeId, !port.isInput);
-            hiddenEdges.push(outputPartEdges);
-          }
-        }
-      });
-      dataNodeMap.get(port.owner).hiddenEdges[port.isInput ? INPUT : OUTPUT].forEach((edge) => {
-        const targetRoot = dataNodeMap.get(edge).root === '' ? edge : dataNodeMap.get(edge).root;
-        if (targetRoot) {
-          // the parent of comm nodes is empty string
-          if (!targetRootSet.has(targetRoot)) {
-            targetRootSet.add(targetRoot);
-            // Keep target root port opacity
-            if (targetRoot.length !== 0) this.visNodeMap.get(targetRoot).opacity = CONNECTED_OPACITY;
-          }
-          // Keep target port opacity
-          this.visNodeMap.get(edge).opacity = CONNECTED_OPACITY;
-        }
-      });
+      dataNodeMap
+          .get(port.owner)
+          [port.isInput ? INPUT : OUTPUT].forEach((nodeId) => {
+            if (isNaN(nodeId)) return;
+            nodeId = _findExistNameScope(nodeId);
+            // to construct cross-comm edges
+            if (!isNaN(nodeId) || nodeId.indexOf(SCOPE_SEPARATOR) !== -1) {
+            // operator or scopenode to construct hidden edges
+              const outputNode = dataNodeMap.get(nodeId);
+              if (
+                outputNode &&
+              dataNodeMap.get(port.owner).parent.split(SCOPE_SEPARATOR)[0] !==
+                outputNode.parent.split(SCOPE_SEPARATOR)[0] &&
+              outputNode.parent.length !== 0
+              ) {
+              // OutputNode/InputNode under different scope node && is not comm node
+                const outputPartEdges = this.createHiddenEdge(
+                    nodeId,
+                    !port.isInput,
+                );
+                hiddenEdges.push(outputPartEdges);
+              }
+            }
+          });
+      dataNodeMap
+          .get(port.owner)
+          .hiddenEdges[port.isInput ? INPUT : OUTPUT].forEach((edge) => {
+            const targetRoot =
+            dataNodeMap.get(edge).root === ''
+              ? edge
+              : dataNodeMap.get(edge).root;
+            if (targetRoot) {
+            // the parent of comm nodes is empty string
+              if (!targetRootSet.has(targetRoot)) {
+                targetRootSet.add(targetRoot);
+                // Keep target root port opacity
+                if (targetRoot.length !== 0) {
+                  this.visNodeMap.get(targetRoot).opacity = CONNECTED_OPACITY;
+                }
+              }
+              // Keep target port opacity
+              this.visNodeMap.get(edge).opacity = CONNECTED_OPACITY;
+            }
+          });
       // Add 'source root -> target root' polyline and cross comm edges
       targetRootSet.forEach((target) => {
         if (strategyTarget !== undefined && target !== strategyTarget) return;
         // dataNodeMap.get(target).parent === ""
-        const edgeTemp = port.isInput ? `${target}${EDGE_SEPARATOR}${root}` : `${root}${EDGE_SEPARATOR}${target}`;
+        const edgeTemp = port.isInput
+          ? `${target}${EDGE_SEPARATOR}${root}`
+          : `${root}${EDGE_SEPARATOR}${target}`;
         if (this.visEdgeMap.has(edgeTemp)) {
           hiddenPolylineEdges.push(this.visEdgeMap.get(edgeTemp));
         } else {
@@ -427,7 +454,11 @@ export default {
         isStacked = true;
       }
 
-      const elkGraph = createElkGraph(visGraph, false, this.$store.state.themeIndex);
+      const elkGraph = createElkGraph(
+          visGraph,
+          false,
+          this.$store.state.themeIndex,
+      );
       await this.elk.layout(elkGraph, this.option).then((res) => {
         this.processDisplayedGraph(res.getDisplayedGraph());
         if (isStacked) {
@@ -447,7 +478,9 @@ export default {
       if (this.focusedNode) {
         this.focusedNode.focused = false;
       }
-      const {width, height} = getComputedStyle(this.$refs.graphContainer.$vnode.elm);
+      const {width, height} = getComputedStyle(
+          this.$refs.graphContainer.$vnode.elm,
+      );
       const scale = this.$refs.graphContainer.scale;
       this.$refs.graphContainer.moveTo(
           parseInt(width) / 2 - (node.x + node.width / 2) * scale,

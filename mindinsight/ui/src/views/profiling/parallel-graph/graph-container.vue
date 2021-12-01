@@ -266,8 +266,6 @@ limitations under the License.
             :x="visNodeMap.get(nodeId).x"
             :y="visNodeMap.get(nodeId).y"
             :height="visNodeMap.get(nodeId).height"
-            @hover="hoverStrategyNode($event, nodeId)"
-            @hoverOut="hoverOutStrategyNode"
           />
         </template>
       </template>
@@ -415,6 +413,13 @@ limitations under the License.
                 <g
                   v-for="(node, index) in col"
                   :key="`${node}_pipeline_node`"
+                  @dblclick="
+                    clickPipelineRect(
+                      node,
+                      Math.floor((colIndex + 1) / 2),
+                      (blockIndex + colIndex) % 2 ? 'receive' : 'send'
+                    )
+                  "
                   @click="
                     clickPipelineRect(
                       node,
@@ -442,6 +447,7 @@ limitations under the License.
                         `${lastClickPipelineNodeID}`
                           ? 'red'
                           : 'black',
+                      cursor: 'pointer',
                     }"
                     :x="
                       colIndex % 2
@@ -481,13 +487,19 @@ limitations under the License.
         size="mini"
       ></el-button>
     </el-tooltip>
-    <div class="selector-title" style="width: 120px;">
+    <div class="selector-title" style="width: 120px; user-select: none;">
       {{ this.$t("profiling.parallelStrategy") }}
     </div>
-    <div class="selector-title" style="width: 120px; top: 52px;">
+    <div
+      class="selector-title"
+      style="width: 120px; top: 52px; user-select: none;"
+    >
       {{ this.$t("profiling.rankSelector") }}
     </div>
-    <div class="selector-title" style="width: 130px; top: 92px;">
+    <div
+      class="selector-title"
+      style="width: 130px; top: 92px; user-select: none;"
+    >
       <el-tooltip
         class="item"
         effect="dark"
@@ -536,22 +548,24 @@ limitations under the License.
       <div class="second-title" style="font-size: 10px;">
         {{ this.$t("profiling.hasStrategy") }}:
         <span style="font-weight: normal;">{{
-          specialNodesMap["hasStrategy"] ? specialNodesMap["hasStrategy"] : 0
+          getSpecialNodesMap()["hasStrategy"]
+            ? getSpecialNodesMap()["hasStrategy"]
+            : 0
         }}</span>
       </div>
       <div class="second-title" style="font-size: 10px;">
         {{ this.$t("profiling.redistribution") }}:
         <span style="font-weight: normal;">{{
-          specialNodesMap["Redistribution"]
-            ? specialNodesMap["Redistribution"]
+          getSpecialNodesMap()["Redistribution"]
+            ? getSpecialNodesMap()["Redistribution"]
             : 0
         }}</span>
       </div>
       <div class="second-title" style="font-size: 10px;">
         {{ this.$t("profiling.gradientAggregate") }}:
         <span style="font-weight: normal;">{{
-          specialNodesMap["GradientAggregation"]
-            ? specialNodesMap["GradientAggregation"]
+          getSpecialNodesMap()["GradientAggregation"]
+            ? getSpecialNodesMap()["GradientAggregation"]
             : 0
         }}</span>
       </div>
@@ -770,8 +784,9 @@ import {
   changeShowNodeType,
   changeShowRankId,
   edgeIdMap,
-  specialNodesMap,
   getRealNodeName,
+  resetFirstCntFlag,
+  getSpecialNodesMap,
 } from '../../../js/build-graph';
 import {
   IN_PORT_SUFFIX,
@@ -822,6 +837,7 @@ export default {
       isClickOperatorNode: new Map(),
       clickTimer: null,
       infoHeight: '82px',
+      defaultInfoHeight: 82,
       selectedNode: null,
       notShowTypes: Object.keys(NODE_TYPE),
 
@@ -845,7 +861,6 @@ export default {
       lastFocusPanelNodeID: '', // focused node's id in the right panel
 
       themeIndex: this.$store.state.themeIndex, // Index of theme color
-      specialNodesMap: specialNodesMap,
     };
   },
 
@@ -877,6 +892,14 @@ export default {
   },
 
   methods: {
+    /**
+     * Get special nodes map.
+     * @return {Object}
+     */
+    getSpecialNodesMap() {
+      return getSpecialNodesMap();
+    },
+
     /**
      * determine the css class depending on node's type
      * @param {Object} extraAttr
@@ -942,7 +965,7 @@ export default {
         2 * panelPadding;
 
       if (!this.selectedNode) {
-        this.infoHeight = defaultInfoHeight + 'px';
+        this.infoHeight = this.defaultInfoHeight + 'px';
         return;
       }
 
@@ -1118,6 +1141,7 @@ export default {
      */
     showNodeTypeChange() {
       changeShowNodeType(this.showNodeType);
+      resetFirstCntFlag();
       this.getDisplayedGraph(this.showNodeType, this.showRankId);
       this.resetSelectStatus();
     },
@@ -1127,48 +1151,9 @@ export default {
      */
     showRankIdChange() {
       changeShowRankId(this.showRankId);
+      resetFirstCntFlag();
       this.getDisplayedGraph(this.showNodeType, this.showRankId);
       this.resetSelectStatus();
-    },
-
-    /**
-     * mouse hover event handler of strategy node
-     * @param {String} name
-     * @param {String} nodeId
-     */
-    hoverStrategyNode(name, nodeId) {
-      const hoverEdges = [];
-      const key = name + '->' + nodeId;
-      const id = edgeIdMap[key];
-      if (this.visEdgeMap.has(id)) {
-        hoverEdges.push(this.visEdgeMap.get(id));
-      } else {
-        const [source, target] = id.split('->');
-        const edges = getEdge(source, target);
-        if (edges === 'HIDDEN') {
-          this.showHiddenEdges(
-              this.visPortMap.get(target + IN_PORT_SUFFIX),
-              source,
-          );
-        } else {
-          edges.forEach((edge) => {
-            if (this.visEdgeMap.has(edge)) {
-              hoverEdges.push(this.visEdgeMap.get(edge));
-            }
-          });
-        }
-      }
-
-      this.hoverEdges = hoverEdges;
-    },
-
-    /**
-     * mouse hover out event handler of strategy node
-     */
-    hoverOutStrategyNode() {
-      this.hoverEdges = [];
-      this.hiddenEdges = [];
-      this.hiddenPolylineEdges = [];
     },
 
     /**
@@ -1331,6 +1316,7 @@ export default {
      * @param {String} nodeType
      */
     async clickPipelineRect(nodeID, stageID, nodeType) {
+      if (this.selectedNode?.id === nodeID) return;
       this.showRankId = stageID + '';
       changeShowRankId(this.showRankId);
       // first clear selected node in graph
@@ -1541,6 +1527,7 @@ export default {
   position: absolute;
   top: 12px;
   right: 260px;
+  user-select: none;
 }
 
 .strategy-title {
@@ -1579,6 +1566,7 @@ export default {
   padding-bottom: 6px;
   background-color: var(--attribute-panel-bg-color);
   width: 240px;
+  user-select: none;
 }
 
 .graph-container .graph-right-info {
@@ -1655,6 +1643,7 @@ export default {
   top: 12px;
   left: -660px;
   transition: left 1s;
+  z-index: 99;
 }
 
 .training-pipeline-title {
@@ -1692,6 +1681,7 @@ export default {
   left: 30px;
   transition: left 1s;
   cursor: pointer;
+  z-index: 99;
 }
 
 .cls-1 {
@@ -1717,5 +1707,9 @@ export default {
 
 .el-input__inner::placeholder {
   color: var(--el-input-font-color) !important;
+}
+
+.training-pipeline-container svg text {
+  user-select: none;
 }
 </style>
