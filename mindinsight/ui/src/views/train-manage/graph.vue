@@ -964,7 +964,7 @@ export default {
               this.initOver = true;
               return;
             }
-            const tags = this.graphMode === NORMAL_MODE ? res.data.plugins.graph : res.data.plugins.optimize_graph;
+            const tags = this.graphMode === NORMAL_MODE ? res.data.plugins.graph : res.data.plugins.optimized_graph;
             let hasFileSearchValue = false;
             tags.forEach((k) => {
               this.fileSearchBox.suggestions.push({
