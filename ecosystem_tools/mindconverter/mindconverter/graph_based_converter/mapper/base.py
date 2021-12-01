@@ -449,7 +449,7 @@ class AtenToMindSporeMapper(Mapper, abc.ABC):
                     extend_num_ = len(existing_pack_inst_)
                     name_list[int(existing_pack_id_)] = [f"{pack_name_}{extend_idx}" for extend_idx in
                                                          range(extend_num_)]
-            return flatten_list(name_list)
+            return name_list
 
         args_name = kwargs.get("args_name")
         if isinstance(args_name, list):
@@ -460,10 +460,12 @@ class AtenToMindSporeMapper(Mapper, abc.ABC):
                 raise ValueError(
                     f"Number of params is required to be one of "
                     f"[{', '.join([str(num) for num in args_name])}], but {num_aten_inputs} is gotten.")
-            args_name_list = get_extend_args_name_list(args_name_list)
+            args_name_list = get_extend_args_name_list(args_name_list.copy())
         else:
             raise ValueError(f"Type of args_name should be Union<list, tuple>, but {type(args_name)} is gotten.")
-        return args_name_list
+        if kwargs.get("return_raw"):
+            return args_name_list
+        return flatten_list(args_name_list)
 
     @staticmethod
     def _params_parser(raw_params, args_name, trainable_params):
