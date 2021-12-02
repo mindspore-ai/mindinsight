@@ -4,13 +4,13 @@ import {layoutOptions} from '../js/config';
 import {
   buildGraph,
   toggleExpanded,
-  getTopScopeSet,
   buildPipelinedStageInfo,
   querySingleNode,
   _findTopScope,
   _findExistNameScope,
   getSingleNode,
   resetFirstCntFlag,
+  resetData,
   _buildTopScopeSet,
 } from '../js/build-graph';
 import {createElkGraph, dataNodeMap} from '../js/create-elk-graph';
@@ -100,7 +100,9 @@ export default {
     this.elk = new ELK();
   },
   mounted() {
+    this.pipelineStageNum = 0;
     resetFirstCntFlag();
+    resetData();
     this.fetchData();
   },
   destroyed() {
@@ -127,6 +129,7 @@ export default {
         } else if (res.status === 'finish') {
           const {graphs, metadata} = res;
           // pipelined stage
+          this.pipelineStageNum = Object.keys(graphs).length;
           const pipelineInfoRes = buildPipelinedStageInfo(graphs);
           if (pipelineInfoRes.err) {
             this.showPipelinePanel = false;

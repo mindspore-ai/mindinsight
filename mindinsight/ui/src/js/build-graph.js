@@ -35,6 +35,7 @@ let processedGraph = {
   root: {},
 };
 
+
 let nameScopeIds = [];
 const minimumCutMode = true;
 let insertedAttr = [];
@@ -52,6 +53,8 @@ const COMM_LIST = new Set([
 
 export let showNodeType = ''; // graph selector label
 export let showRankId = ''; // rank selector label
+export let instanceTypeFlag = false;
+
 const topScopeSet = new Set();
 let pipelinedStageInfo = {};
 let pipelineNodeInfo = [[], []];
@@ -64,6 +67,7 @@ let specialNodesMap = {};
  * Reset data.
  */
 function _resetData() {
+  instanceTypeFlag = false;
   nameScopeIds = [];
   processedGraph = {
     nodeMap: {},
@@ -461,11 +465,20 @@ function _processNodesParallel(data) {
     constMap[con.node_id] = _createConst(con);
   }
 
+  let commNodesCnt = 0;
+  for (const sNode of nodes) {
+    if (COMM_LIST.has(sNode.type) && sNode.scope.startsWith(showNodeType)) {
+      commNodesCnt++;
+    }
+  }
+  // for nodes cnt > 5000 and comm nodes cnt > 30, we only extract comm nodes with special type
+  if (nodes.length > 5000 && commNodesCnt > 30) instanceTypeFlag = true;
+
   // nodeMap
   for (const sNode of nodes) {
     if (sNode && Object.keys(sNode).length) {
       const node = _createBasicNode(sNode);
-      if (COMM_LIST.has(node.type) && node.scope.startsWith(showNodeType)) {
+      if (COMM_LIST.has(node.type) && node.scope.startsWith(showNodeType) && (!instanceTypeFlag || node.instance_type !== '')) {
         sNode.parent = '';
         sNode.scope = '';
       }
@@ -619,6 +632,16 @@ function _processNodesGlobalCnt() {
  */
 function resetFirstCntFlag() {
   firstCntFlag = true;
+}
+
+/**
+ * reset pipeline and special nodes cnt data
+ */
+function resetData() {
+  specialNodesMap = {};
+  pipelinedStageInfo = {};
+  pipelineNodeInfo = [[], []];
+  pipelineEdgeInfo = [];
 }
 
 /**
@@ -1189,6 +1212,7 @@ export {
   _findExistNameScope,
   getRealNodeName,
   resetFirstCntFlag,
+  resetData,
   _buildTopScopeSet,
   getSpecialNodesMap,
 };

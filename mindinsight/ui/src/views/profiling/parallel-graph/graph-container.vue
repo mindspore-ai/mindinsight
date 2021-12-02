@@ -348,7 +348,7 @@ limitations under the License.
             :key="`${textObj.text}_pipeline_text`"
             :x="textObj.x"
             :y="textObj.y"
-            font-size="10px"
+            font-size="12px"
           >
             {{ textObj.text }}
           </text>
@@ -803,12 +803,6 @@ import {dataNodeMap, getEdge} from '../../../js/create-elk-graph';
 import StrategyMatrix from './graph-nodes/strategy-matrix.vue';
 const CONNECTED_OPACITY = 1;
 const UNCONNECTED_OPACITY = 0.4;
-const COMM_LIST = new Set([
-  'AllReduce',
-  'AllGather',
-  'AllToAll',
-  'ReduceScatter',
-]);
 
 export default {
   name: 'graph-conatiner',
@@ -871,7 +865,7 @@ export default {
      */
     pipelineStageText() {
       const res = [];
-      const y = this.getPipelineNodePosition(1, 0, 0)[1] - 10;
+      const y = this.getPipelineNodePosition(1, 0, 0)[1] - 8;
       for (let i = 0; i < this.pipelineStageNum; ++i) {
         let x;
         if (i === 0) {
@@ -1046,7 +1040,6 @@ export default {
     mouseEnterOperatorNode(event, {id}) {
       event.stopPropagation();
       if (this.selectedNode) return;
-      if (!COMM_LIST.has(getSingleNode(id).type)) return;
       if (!this.isClickOperatorNode.get(id)) return;
       if (!this.visNodeMap.has(id)) {
         this.isClickOperatorNode.set(id, false);
@@ -1132,7 +1125,6 @@ export default {
      */
     mouseLeaveOperatorNode(event, {id}) {
       event.stopPropagation();
-      if (!COMM_LIST.has(getSingleNode(id).type)) return;
       this.hideHiddenEdges();
     },
 
