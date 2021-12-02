@@ -18,7 +18,7 @@ import {
   NODE_TYPE,
   EDGE_SEPARATOR,
 } from './const';
-import {showNodeType} from './build-graph';
+import {showNodeType, instanceTypeFlag} from './build-graph';
 import {_checkShardMethod} from './util';
 
 // communication oeperator
@@ -39,7 +39,7 @@ let processedGraph = {};
 function processBipartite(nodeMap, cutEdges = null) {
   Object.keys(nodeMap).forEach((nodeid) => {
     const node = nodeMap[nodeid];
-    if (COMM_LIST.has(node.type) && node.scope.startsWith(showNodeType)) {
+    if (COMM_LIST.has(node.type) && node.scope.startsWith(showNodeType) && (!instanceTypeFlag || node.instance_type !== '')) {
       // Traverse from the comm node as the source node
       let v = [];
       const preNxtNodeDict = {
@@ -82,7 +82,8 @@ function processBipartite(nodeMap, cutEdges = null) {
       for (const id of preNxtNodeDict['pre']) {
         if (
           COMM_LIST.has(nodeMap[id].type) &&
-            nodeMap[id].scope.startsWith(showNodeType)
+            nodeMap[id].scope.startsWith(showNodeType) &&
+            (!instanceTypeFlag || nodeMap[id].instance_type !== '')
         ) {
           continue;
         }
@@ -96,7 +97,8 @@ function processBipartite(nodeMap, cutEdges = null) {
           if (cutEdges.has(cur + EDGE_SEPARATOR + nxtId)) continue;
           if (
             COMM_LIST.has(nodeMap[nxtId].type) &&
-              nodeMap[nxtId].scope.startsWith(showNodeType)
+              nodeMap[nxtId].scope.startsWith(showNodeType) &&
+              (!instanceTypeFlag || nodeMap[nxtId].instance_type !== '')
           ) {
             continue;
           }
@@ -114,7 +116,8 @@ function processBipartite(nodeMap, cutEdges = null) {
           if (
             !nodeMap[nxtId] ||
               (COMM_LIST.has(nodeMap[nxtId].type) &&
-                nodeMap[nxtId].scope.startsWith(showNodeType))
+                nodeMap[nxtId].scope.startsWith(showNodeType)) &&
+                (!instanceTypeFlag || nodeMap[nxtId].instance_type !== '')
           ) {
             continue;
           }
@@ -138,7 +141,7 @@ function processBipartite(nodeMap, cutEdges = null) {
       if (
         !isNaN(key) &&
         !v[key] &&
-        !(COMM_LIST.has(node.type) && node.scope.startsWith(showNodeType))
+        !(COMM_LIST.has(node.type) && node.scope.startsWith(showNodeType) && (!instanceTypeFlag || node.instance_type !== ''))
       ) {
         const curConnectedComponent = [];
         curConnectedComponent.push(key);
@@ -152,7 +155,8 @@ function processBipartite(nodeMap, cutEdges = null) {
               !v[nid] &&
               !(
                 COMM_LIST.has(nodeMap[nid].type) &&
-                nodeMap[nid].scope.startsWith(showNodeType)
+                nodeMap[nid].scope.startsWith(showNodeType) &&
+                (!instanceTypeFlag || nodeMap[nid].instance_type !== '')
               )
             ) {
               curConnectedComponent.push(nid);
@@ -167,7 +171,8 @@ function processBipartite(nodeMap, cutEdges = null) {
               !v[nid] &&
               !(
                 COMM_LIST.has(nodeMap[nid].type) &&
-                nodeMap[nid].scope.startsWith(showNodeType)
+                nodeMap[nid].scope.startsWith(showNodeType) &&
+                (!instanceTypeFlag || nodeMap[nid].instance_type !== '')
               )
             ) {
               curConnectedComponent.push(nid);
@@ -467,7 +472,9 @@ function findRelateNodes(commNodeID, allNodes, nodeMap) {
     queue.pop();
 
     nodeMap[top].input.forEach((inputID) => {
-      if (!isVisit.get(inputID) && !isNaN(inputID) && !COMM_LIST.has(nodeMap[inputID].type)) {
+      if (!isVisit.get(inputID) && !isNaN(inputID) && !(COMM_LIST.has(nodeMap[inputID].type)
+      && (!instanceTypeFlag || nodeMap[inputID].instance_type !== '') && nodeMap[inputID].scope.startsWith(showNodeType))
+      ) {
         queue.push(inputID);
         preNodes.add(inputID);
         isVisit.set(inputID, true);
@@ -492,7 +499,9 @@ function findRelateNodes(commNodeID, allNodes, nodeMap) {
     queue.pop();
 
     nodeMap[top].output.forEach((outputID) => {
-      if (!isVisit.get(outputID) && !isNaN(outputID) && !COMM_LIST.has(nodeMap[outputID].type)) {
+      if (!isVisit.get(outputID) && !isNaN(outputID) && !(COMM_LIST.has(nodeMap[outputID].type)
+        && (!instanceTypeFlag || nodeMap[outputID].instance_type !== '') && nodeMap[outputID].scope.startsWith(showNodeType))
+      ) {
         queue.push(outputID);
         nextNodes.add(outputID);
         isVisit.set(outputID, true);
@@ -523,7 +532,7 @@ function calcMinCut(nodeMap) {
     if (isNaN(key)) {
       return;
     }
-    if (COMM_LIST.has(node.type) && node.scope.indexOf(showNodeType) === 0) {
+    if (COMM_LIST.has(node.type) && node.scope.startsWith(showNodeType) && node.instance_type !== '') {
       commNodes.push(key);
       return;
     } else {
@@ -532,7 +541,8 @@ function calcMinCut(nodeMap) {
     }
     node.input.forEach((inputID) => {
       const inputNode = nodeMap[inputID];
-      if (!isNaN(inputID) && !COMM_LIST.has(inputNode.type)) {
+      if (!isNaN(inputID) && !(COMM_LIST.has(inputNode.type) && inputNode.scope.startsWith(showNodeType)
+        && (!instanceTypeFlag || inputNode.instance_type !== ''))) {
         allNodes.add(inputID);
         if (!(inputID in allEdges)) {
           allEdges[inputID] = {};
@@ -542,7 +552,8 @@ function calcMinCut(nodeMap) {
     });
     node.output.forEach((outputID) => {
       const outputNode = nodeMap[outputID];
-      if (!isNaN(outputID) && !COMM_LIST.has(outputNode.type)) {
+      if (!isNaN(outputID) && !(COMM_LIST.has(outputNode.type) && outputNode.scope.startsWith(showNodeType)
+        && (!instanceTypeFlag || outputNode.instance_type !== ''))) {
         allNodes.add(outputID);
         allEdges[key][outputID] = 1;
       }
