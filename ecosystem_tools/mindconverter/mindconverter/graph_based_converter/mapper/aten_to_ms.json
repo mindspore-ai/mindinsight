@@ -27,7 +27,9 @@
   "aten::size": "mindconverter.graph_based_converter.mapper.aten.ops.shape_mapper.ShapeMapper",
   "aten::slice": "mindconverter.graph_based_converter.mapper.aten.prim.slice_mapper.SliceMapper",
   "aten::softmax": "mindconverter.graph_based_converter.mapper.aten.nn.softmax_mapper.SoftmaxMapper",
+  "aten::split": "mindconverter.graph_based_converter.mapper.aten.ops.split_mapper.SplitMapper",
   "aten::squeeze": "mindconverter.graph_based_converter.mapper.aten.ops.squeeze_mapper.SqueezeMapper",
+  "aten::sub": "mindconverter.graph_based_converter.mapper.aten.prim.sub_mapper.SubMapper",
   "aten::t": "mindconverter.graph_based_converter.mapper.aten.prim.t_mapper.TMapper",
   "aten::tanh": "mindconverter.graph_based_converter.mapper.aten.nn.tanh_mapper.TanhMapper",
   "aten::to": "mindconverter.graph_based_converter.mapper.aten.ops.cast_mapper.CastMapper",
@@ -35,5 +37,6 @@
   "aten::type_as": "mindconverter.graph_based_converter.mapper.aten.ops.cast_mapper.CastMapper",
   "aten::unsqueeze": "mindconverter.graph_based_converter.mapper.aten.ops.expanddims_mapper.ExpandDimsMapper",
   "aten::view": "mindconverter.graph_based_converter.mapper.aten.prim.view_mapper.ViewMapper",
+  "aten::where": "mindconverter.graph_based_converter.mapper.aten.prim.where_mapper.WhereMapper",
   "aten::zeros": "mindconverter.graph_based_converter.mapper.aten.prim.zeros_mapper.ZerosMapper"
 }

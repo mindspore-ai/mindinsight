@@ -516,6 +516,22 @@ class AtenToMindSporeMapper(Mapper, abc.ABC):
         """The node has precursor nodes or not."""
         return not isinstance(input_shape, int) or input_shape != UNKNOWN_SHAPE_WITHOUT_PRECURSOR_NODES
 
+    @staticmethod
+    def generate_parameters_declared(variable_slot, init_template_list, args, trainable_params):
+        """Generate parameters_declared."""
+        parameters_declared = dict()
+        for name, trainable_param in trainable_params.copy().items():
+            value = trainable_param["data"]
+            if AtenToMindSporeMapper.is_tensor(value):
+                variable_slot_param_name = f"{variable_slot}/{name}"
+                init_template_list.append(f"self.{{{variable_slot}}}_{name} = {{{variable_slot_param_name}}}")
+                parameters_declared[name] = ""
+            else:
+                args[name] = value.tolist()
+                init_template_list.append(f"self.{{{variable_slot}}}_{name} = {{{name}}}")
+                trainable_params.pop(name)
+        return parameters_declared
+
 
 class SelfDefinedPatternToMindSporeMapper(Mapper, abc.ABC):
     """Self-defined-pattern operation to MindSpore."""
