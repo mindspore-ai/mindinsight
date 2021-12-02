@@ -34,9 +34,9 @@ class DebuggerTensor(ABC):
         change and/or deletion.
 
     Args:
-        node(Node): The node that outputs this tensor.
-        slot(int): The slot of the tensor on the node.
-        iterations(int): The iteration of the tensor.
+        node (Node): The node that outputs this tensor.
+        slot (int): The slot of the tensor on the node.
+        iterations (int): The iteration of the tensor.
 
     Note:
         - Users should not instantiate this class manually.

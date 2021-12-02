@@ -347,10 +347,9 @@ class DumpAnalyzer:
 
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
-                >>> from mindinsight.debugger import (
-                ...                                                  TensorTooLargeCondition,
-                ...                                                  Watchpoint)
-
+                >>> from mindinsight.debugger import (TensorTooLargeCondition,
+                ...                                    Watchpoint)
+                >>>
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
                 >>> tensors = my_run.select_tensors(
                 ...                                     query_string="Conv2D-op156",

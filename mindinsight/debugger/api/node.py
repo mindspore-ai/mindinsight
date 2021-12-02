@@ -156,6 +156,7 @@ class Node(ABC):
                 >>> from mindinsight.debugger import DumpAnalyzer
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
                 >>> node = list(my_run.select_nodes("Conv2D-op156"))[0]
+                >>> input_tensors = node.get_input_tensors(iterations=[0], slots=[0])
         """
 
     def get_output_tensors(
@@ -178,6 +179,7 @@ class Node(ABC):
                 >>> from mindinsight.debugger import DumpAnalyzer
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
                 >>> node = list(my_run.select_nodes("Conv2D-op156"))[0]
+                >>> output_tensors = node.get_output_tensors(iterations=[0], slots=[0])
         """
 
     def __str__(self):
