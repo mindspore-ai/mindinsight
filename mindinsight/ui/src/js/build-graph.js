@@ -204,7 +204,6 @@ function _createConst(con) {
     name: con.name,
     type: NODE_TYPE.const,
     parent: '',
-    value: con.attr[con.node_id] || {},
   };
 }
 
@@ -790,13 +789,12 @@ function _getNodeHash(node, nodeMap, parameterMap, constMap) {
   const attrs = {
     input: node.input,
     output: node.output,
-    parameters: Object.keys(node.parameters),
-    consts: Object.keys(node.consts),
   };
 
   for (const attr of Object.keys(attrs)) {
     const ids = attrs[attr];
     for (const id of ids) {
+      if (isNaN(id)) continue;
       genHashValues.push(
           attr + '-' + (nodeMap[id] || parameterMap[id] || constMap[id]).type,
       );

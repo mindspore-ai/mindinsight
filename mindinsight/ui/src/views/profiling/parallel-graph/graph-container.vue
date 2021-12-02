@@ -626,7 +626,7 @@ limitations under the License.
                     getNodeFromID(item).name.slice(
                       getNodeFromID(item).name.lastIndexOf("/") + 1
                     )
-                }}
+                }}{{getNodeFromID(item) && getNodeFromID(item).type === 'const' ? ' (Const)' : ''}}
               </span>
             </div>
             <div
@@ -634,7 +634,7 @@ limitations under the License.
                 !(
                   notShowTypes.includes(
                     getNodeFromID(item) && getNodeFromID(item).type
-                  ) || notShowTypes.includes(selectedNode.type)
+                  ) || getNodeFromID(item).type === 'const' || notShowTypes.includes(selectedNode.type)
                 )
               "
             >
@@ -651,7 +651,7 @@ limitations under the License.
                   ) || notShowTypes.includes(selectedNode.type)
                 ) &&
                   _checkShardMethod(selectedNode.parallel_shard) &&
-                  selectedNode.parallel_shard[index]
+                  JSON.parse(selectedNode.parallel_shard)[index]
               "
             >
               <span style="font-weight: bold">strategy: </span>
@@ -800,6 +800,7 @@ import {
   OUT_PORT_SUFFIX,
   EDGE_SEPARATOR,
   NODE_TYPE,
+  NOT_SHOW_NODE_TYPE,
 } from '../../../js/const';
 import SvgElContainer from '@/components/svg-el-container.vue';
 import scopeNode from './graph-nodes/scope-node.vue';
@@ -840,7 +841,7 @@ export default {
       infoHeight: '82px',
       defaultInfoHeight: 82,
       selectedNode: null,
-      notShowTypes: Object.keys(NODE_TYPE),
+      notShowTypes: Object.keys(NOT_SHOW_NODE_TYPE),
 
       pipelineRectWidth: 12,
       pipelineRectMargin: 2,

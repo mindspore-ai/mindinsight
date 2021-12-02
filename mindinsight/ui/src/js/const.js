@@ -34,6 +34,12 @@ export const NODE_TYPE = {
   comm: 'communication',
 };
 
+export const NOT_SHOW_NODE_TYPE = {
+  basic_scope: 'basic_scope',
+  name_scope: 'name_scope',
+  aggregate_scope: 'aggregate_scope',
+}
+
 // attributes to insert
 export const INSERTED_ATTR = {
   'parallel_shard': 'parallel_shard',
