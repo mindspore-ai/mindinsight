@@ -1314,7 +1314,7 @@ export default {
         {
           defaultWidth: '400px',
           minWidth: '243px',
-          maxWidth: '1fr',
+          maxWidth: '700px',
         },
         '1fr',
       ],
