@@ -45,7 +45,7 @@ axios.interceptors.request.use(
 
 const ignoreCode = {
   ignoreError: ['50545005', '50546083'],
-  regardError: ['50545013', '50545014', '50545016', '5054500D', '50546084'],
+  regardError: ['50545013', '50545014', '50545016', '5054500D', '50546084', '5054618B'],
 };
 
 // Add a response interceptor

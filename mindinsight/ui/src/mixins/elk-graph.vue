@@ -93,6 +93,8 @@ export default {
         show: true,
         info: '',
       },
+      // paralle strategy api has no return then show noData
+      noDataGraphShow: true
     };
   },
 
@@ -125,6 +127,8 @@ export default {
           setTimeout(fetchFunc, 1500);
           return;
         } else if (res.status === 'finish') {
+          // change noData graph  show status
+          this.noDataGraphShow = false
           const {graphs, metadata} = res;
           // pipelined stage
           const pipelineInfoRes = buildPipelinedStageInfo(graphs);
