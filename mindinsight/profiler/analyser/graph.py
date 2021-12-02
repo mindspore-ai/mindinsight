@@ -129,7 +129,7 @@ class Node:
 
     def to_dict(self):
         return dict(
-            node_id=str(self.topo_index),
+            node_id=str(self.topo_index) if self.type != NodeType.CONST.value else self._node_id,
             name=self.name,
             scope=self.scope,
             type=self.type,
@@ -181,6 +181,10 @@ class Graph:
             inputs = list(op_node.input)
             new_inputs = []
             for input_name in inputs:
+                if input_name in self.const_nodes:
+                    new_inputs.append(input_name)
+                    continue
+
                 if input_name not in self.op_nodes:
                     op_node.remove_input(input_name)
                     continue
@@ -223,6 +227,23 @@ class Graph:
                 node.instance_type = NodeInstanceType.REDISTRIBUTION.value
             else:
                 node.instance_type = ''
+
+            self._append_node(node)
+
+    def _parse_const_nodes(self, consts):
+        """
+        Parse `anf_ir_pb2.NameValueProto` object, and create a const node.
+
+        Args:
+            consts (list[anf_ir_pb2.NameValueProto]): Refer to `anf_ir_pb2.NameValueProto` object.
+        """
+        for const in consts:
+            if 'key' not in const and not const['key']:
+                logger.warning("Finding a const with an empty key will not save it.")
+                continue
+
+            node = Node(name=const['key'], node_id=const['key'])
+            node.type = NodeType.CONST.value
 
             self._append_node(node)
 
