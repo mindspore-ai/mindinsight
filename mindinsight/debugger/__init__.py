@@ -22,7 +22,7 @@ script.
 
 from mindinsight.debugger.api.conditions import \
     Watchpoint, WatchpointHit, TensorTooLargeCondition, TensorUnchangedCondition, TensorAllZeroCondition, \
-    TensorOverflowCondition, TensorRangeCondition, TensorTooSmallCondition, \
+    TensorOverflowCondition, OperatorOverflowCondition, TensorRangeCondition, TensorTooSmallCondition, \
     TensorChangeBelowThresholdCondition, TensorChangeAboveThresholdCondition
 from mindinsight.debugger.api.debugger_tensor import DebuggerTensor
 from mindinsight.debugger.api.dump_analyzer import DumpAnalyzer
@@ -35,6 +35,7 @@ __all__ = ["DumpAnalyzer", "Node", "DebuggerTensor", "Watchpoint",
            "TensorTooSmallCondition",
            "TensorRangeCondition",
            "TensorOverflowCondition",
+           "OperatorOverflowCondition",
            "TensorAllZeroCondition",
            "TensorUnchangedCondition",
            "TensorChangeBelowThresholdCondition",
