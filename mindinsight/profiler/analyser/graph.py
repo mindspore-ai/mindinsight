@@ -172,6 +172,7 @@ class Graph:
         return self.op_nodes[node_id]
 
     def _parse_graph_proto(self, graph_proto: dict):
+        self._parse_const_nodes(graph_proto['constVals'])
         self._parse_op_nodes(graph_proto['node'])
         self._update_input()
 
