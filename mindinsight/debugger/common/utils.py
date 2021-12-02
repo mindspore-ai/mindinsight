@@ -29,6 +29,7 @@ from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
 from mindinsight.domain.graph.proto.ms_graph_pb2 import DataType
 from mindinsight.utils.tensor import Statistics
 
+
 # translate the MindSpore type to numpy type.
 NUMPY_TYPE_MAP = {
     'DT_BOOL': np.bool,

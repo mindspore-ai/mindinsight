@@ -18,7 +18,8 @@ from enum import Enum
 
 from mindinsight.debugger.api.debugger_tensor import DebuggerTensor
 from mindinsight.debugger.common.utils import validate_type
-from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
+from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
+    DebuggerParamTypeError
 
 
 class ConditionBase(ABC):
@@ -67,6 +68,17 @@ class ConditionBase(ABC):
     def param_dict(self):
         """Get the parameters list."""
         return {}
+
+    def __str__(self):
+        setting_detail = "The setting for watchpoint is "
+        param_size = len(self.param_dict)
+        for idx, param in enumerate(self.param_dict):
+            setting_detail += f"{param.name} = {param.value}"
+            if idx == param_size - 1:
+                setting_detail += "."
+            else:
+                setting_detail += ", "
+        return setting_detail
 
 
 class WatchpointHit(ABC):
@@ -154,7 +166,8 @@ class WatchpointHit(ABC):
         If error_code is not zero or None, None will be returned.
 
         Returns:
-            ConditionBase, the condition with hit detail, see info with str(ConditionBase).
+            Union[ConditionBase, None], the condition with hit detail, If error_code is not zero or None,
+            None will be returned, see info with str(ConditionBase).
         """
         raise NotImplementedError
 
@@ -237,11 +250,11 @@ class WatchpointHitImpl(WatchpointHit):
 
     def __str__(self):
         if self._error_code:
-            msg = f"Watchpoint {self._condition.name} check failed on tensor:\n" \
+            msg = f"Watchpoint {self._condition.name}: {self.get_threshold()} check failed on tensor:\n" \
                   f"{str(self.tensor)}" \
                   f"Error detail: {self.error_msg}"
             return msg
-        msg = f"Watchpoint {self._condition.name} triggered on tensor:\n" \
+        msg = f"Watchpoint {self._condition.name}: {self.get_threshold()} triggered on tensor:\n" \
               f"{str(self.tensor)}" \
               f"Hit detail: {str(self._hit_detail)}"
         return msg
@@ -316,7 +329,7 @@ class HitDetail(ConditionBase):
 
 class TensorTooLargeCondition(ConditionBase):
     """
-    Tensor too large watchpoint.
+    Tensor too large watchpoint. At least one parameter should be specified.
 
     When all specified checking conditions were satisfied, this watchpoint would
     be hit after a check.
@@ -346,7 +359,6 @@ class TensorTooLargeCondition(ConditionBase):
         TensorTooLarge
     """
 
-
     def __init__(self,
                  abs_mean_gt=None, max_gt=None, min_gt=None, mean_gt=None):
         self._abs_mean_gt = abs_mean_gt
@@ -367,12 +379,16 @@ class TensorTooLargeCondition(ConditionBase):
     def param_dict(self):
         param_dict = {}
         if self._abs_mean_gt is not None:
+            validate_type(self._abs_mean_gt, 'abs_mean_gt', [int, float], 'int, float or None')
             param_dict["abs_mean_gt"] = float(self._abs_mean_gt)
         if self._max_gt is not None:
+            validate_type(self._max_gt, 'max_gt', [int, float], 'int, float or None')
             param_dict["max_gt"] = float(self._max_gt)
         if self._min_gt is not None:
+            validate_type(self._min_gt, 'min_gt', [int, float], 'int, float or None')
             param_dict["min_gt"] = float(self._min_gt)
         if self._mean_gt is not None:
+            validate_type(self._mean_gt, 'mean_gt', [int, float], 'int, float or None')
             param_dict["mean_gt"] = float(self._mean_gt)
         return param_dict
 
@@ -388,7 +404,7 @@ class TensorTooLargeCondition(ConditionBase):
 
 class TensorTooSmallCondition(ConditionBase):
     """
-    Tensor too small watchpoint.
+    Tensor too small watchpoint. At least one parameter should be specified.
 
     When all specified checking conditions were satisfied, this watchpoint would
     be hit after a check.
@@ -438,12 +454,16 @@ class TensorTooSmallCondition(ConditionBase):
     def param_dict(self):
         param_dict = {}
         if self._abs_mean_lt is not None:
+            validate_type(self._abs_mean_lt, 'abs_mean_lt', [int, float], 'int, float or None')
             param_dict["abs_mean_lt"] = float(self._abs_mean_lt)
         if self._max_lt is not None:
+            validate_type(self._max_lt, 'max_lt', [int, float], 'int, float or None')
             param_dict["max_lt"] = float(self._max_lt)
         if self._min_lt is not None:
+            validate_type(self._min_lt, 'min_lt', [int, float], 'int, float or None')
             param_dict["min_lt"] = float(self._min_lt)
         if self._mean_lt is not None:
+            validate_type(self.mean_lt, 'mean_lt', [int, float], 'int, float or None')
             param_dict["mean_lt"] = float(self._mean_lt)
         return param_dict
 
@@ -463,6 +483,7 @@ class TensorRangeCondition(ConditionBase):
 
     Set a threshold to check the tensor value range. There are four options:
     range_percentage_lt, range_percentage_gt,  max_min_lt and max_min_gt.
+    At least one of the four options should be specified.
     If the threshold is set to one of the first two options,
     then both range_start_inclusive and range_end_inclusive must be set.
     When all specified checking conditions were satisfied, this watchpoint would
@@ -476,20 +497,15 @@ class TensorRangeCondition(ConditionBase):
         range_percentage_lt (float, optional): The threshold for the
             percentage of the tensor in the range. The checking condition will be satisfied
             when the percentage of the tensor in the specified range is less than this value.
-
         range_percentage_gt (float, optional): The threshold for the
             percentage of the tensor in the range. The checking condition will be satisfied
             when the percentage of the tensor in the specified range is greater than this value.
-
         max_min_lt (float, optional): Threshold for the difference of
             max and min of a tensor less than this value.
-
         max_min_gt (float, optional): Threshold for the difference of
             max and min of a tensor greater than this value.
-
-        range_start_inclusive (float, required): The start of the range.
-
-        range_end_inclusive (float, required): The end of the range.
+        range_start_inclusive (float, optional): The start of the range.
+        range_end_inclusive (float, optional): The end of the range.
 
     Examples:
         >>> from mindinsight.debugger import TensorRangeCondition
@@ -521,16 +537,22 @@ class TensorRangeCondition(ConditionBase):
     def param_dict(self):
         param_dict = {}
         if self._range_start_inclusive is not None:
+            validate_type(self._range_start_inclusive, 'range_start_inclusive', [int, float], 'int, float or None')
             param_dict["range_start_inclusive"] = float(self._range_start_inclusive)
         if self._range_end_inclusive is not None:
+            validate_type(self._range_end_inclusive, 'range_end_inclusive', [int, float], 'int, float or None')
             param_dict["range_end_inclusive"] = float(self._range_end_inclusive)
         if self._range_percentage_lt is not None:
+            validate_type(self._range_percentage_lt, 'range_percentage_lt', [int, float], 'int, float or None')
             param_dict["range_percentage_lt"] = float(self._range_percentage_lt)
         if self._range_percentage_gt is not None:
+            validate_type(self._range_percentage_gt, 'range_range_percentage_gt', [int, float], 'int, float or None')
             param_dict["range_percentage_gt"] = float(self._range_percentage_gt)
         if self._max_min_lt is not None:
+            validate_type(self._max_min_lt, 'max_min_lt', [int, float], 'int, float or None')
             param_dict["max_min_lt"] = float(self._max_min_lt)
         if self._max_min_gt is not None:
+            validate_type(self._max_min_gt, 'max_min_gt', [int, float], 'int, float or None')
             param_dict["max_min_gt"] = float(self._max_min_gt)
         return param_dict
 
@@ -539,22 +561,21 @@ class TensorRangeCondition(ConditionBase):
         Checks if the parameters of the condition are valid.
         Raises exception for invalid.
         """
-        if not self.param_dict:
-            msg = "Please specify at least one of the parameters for TensorRangeCondition."
+        if ("range_percentage_lt" not in self.param_dict.keys() and
+                "range_percentage_gt" not in self.param_dict.keys() and
+                "max_min_lt" not in self.param_dict.keys() and
+                "max_min_gt" not in self.param_dict.keys()):
+            msg = "Please specify at least one of the parameters " \
+                  "[range_percentage_lt, range_percentage_gt, max_min_lt, max_min_gt] " \
+                  "for TensorRangeCondition."
             raise DebuggerParamValueError(msg)
+
         if ("range_percentage_lt" in self.param_dict.keys() or
                 "range_percentage_gt" in self.param_dict.keys()):
             if ("range_start_inclusive" not in self.param_dict.keys() or
                     "range_end_inclusive" not in self.param_dict.keys()):
                 msg = ("Please specify both range_start_inclusive and "
                        "range_end_inclusive parameters for TensorRangeCondition.")
-                raise DebuggerParamValueError(msg)
-        if ("range_start_inclusive" in self.param_dict.keys() or
-                "range_end_inclusive" in self.param_dict.keys()):
-            if ("range_percentage_lt" not in self.param_dict.keys() and
-                    "range_percentage_gt" not in self.param_dict.keys()):
-                msg = ("Please specify range_percentage_lt and/or "
-                       "range_percentage_gt parameters for TensorRangeCondition.")
                 raise DebuggerParamValueError(msg)
 
 
@@ -639,9 +660,9 @@ class TensorAllZeroCondition(ConditionBase):
         TensorAllZero
     """
 
-    def __init__(self, zero_percentage_ge=None):
+    def __init__(self, zero_percentage_ge):
+        validate_type(zero_percentage_ge, 'zero_percentage_ge', [int, float], 'int or float')
         self._zero_percentage_ge = zero_percentage_ge
-        self.param_validate()
 
     @property
     def name(self):
@@ -653,19 +674,8 @@ class TensorAllZeroCondition(ConditionBase):
 
     @property
     def param_dict(self):
-        param_dict = {}
-        if self._zero_percentage_ge is not None:
-            param_dict["zero_percentage_ge"] = float(self._zero_percentage_ge)
+        param_dict = {"zero_percentage_ge": float(self._zero_percentage_ge)}
         return param_dict
-
-    def param_validate(self):
-        """
-        Checks if the parameters of the condition are valid.
-        Raises exception for invalid.
-        """
-        if not self.param_dict:
-            msg = "Please specify zero_percentage_ge parameter for TensorAllZeroCondition."
-            raise DebuggerParamValueError(msg)
 
 
 class TensorUnchangedCondition(ConditionBase):
@@ -682,8 +692,8 @@ class TensorUnchangedCondition(ConditionBase):
         change and/or deletion.
 
     Args:
-        rtol (float, required): The relative tolerance parameter.
-        atol (float, required): The absolute tolerance parameter.
+        rtol (float, optional): The relative tolerance parameter, default: 1e-5.
+        atol (float, optional): The absolute tolerance parameter, default: 1e-8.
 
     Examples:
         >>> from mindinsight.debugger import TensorUnchangedCondition
@@ -692,10 +702,11 @@ class TensorUnchangedCondition(ConditionBase):
         TensorUnchanged
     """
 
-    def __init__(self, rtol=None, atol=None):
+    def __init__(self, rtol=1e-5, atol=1e-8):
+        validate_type(rtol, 'rtol', [float, int], 'float or int')
+        validate_type(atol, 'atol', [float, int], 'float or int')
         self._rtol = rtol
         self._atol = atol
-        self.param_validate()
 
     @property
     def name(self):
@@ -707,82 +718,8 @@ class TensorUnchangedCondition(ConditionBase):
 
     @property
     def param_dict(self):
-        param_dict = {}
-        if self._rtol is not None:
-            param_dict["rtol"] = float(self._rtol)
-        if self._atol is not None:
-            param_dict["atol"] = float(self._atol)
+        param_dict = {"rtol": float(self._rtol), "atol": float(self._atol)}
         return param_dict
-
-    def param_validate(self):
-        """
-        Checks if the parameters of the condition are valid.
-        Raises exception for invalid.
-        """
-        if not self.param_dict:
-            msg = "Please specify rtol or atol parameter for TensorUnchangedCondition."
-            raise DebuggerParamValueError(msg)
-
-
-class TensorInitializationCondition(ConditionBase):
-    """
-    Tensor initialization watchpoint.
-
-    When all specified checking conditions were satisfied, this watchpoint would
-    be hit after a check.
-
-    .. warning::
-        All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
-
-    Args:
-        zero_percentage_ge (float, optional): The threshold to check if the percentage of
-            zero values for initial tensor is greater than or equal to this value.
-        max_gt (float, optional): The threshold to check if the max value of
-            the initial tensor is greater than this value.
-        min_lt (float, optional): The threshold to check if the min value of
-            the initial tensor is less than this value.
-
-    Examples:
-        >>> from mindinsight.debugger import TensorInitializationCondition
-        >>> my_condition = TensorInitializationCondition(max_gt=0.0)
-        >>> print(my_condition.name)
-        TensorInitialization
-    """
-
-    def __init__(self, zero_percentage_ge=None, max_gt=None, min_lt=None):
-        self._zero_percentage_ge = zero_percentage_ge
-        self._max_gt = max_gt
-        self._min_lt = min_lt
-        self.param_validate()
-
-    @property
-    def name(self):
-        return "TensorInitialization"
-
-    @property
-    def condition_id(self):
-        return WatchpointConditionId.INITIAL_WEIGHT.value
-
-    @property
-    def param_dict(self):
-        param_dict = {}
-        if self._zero_percentage_ge is not None:
-            param_dict["zero_percentage_ge"] = float(self._zero_percentage_ge)
-        if self._max_gt is not None:
-            param_dict["max_gt"] = float(self._max_gt)
-        if self._min_lt is not None:
-            param_dict["min_lt"] = float(self._min_lt)
-        return param_dict
-
-    def param_validate(self):
-        """
-        Checks if the parameters of the condition are valid.
-        Raises exception for invalid.
-        """
-        if not self.param_dict:
-            msg = "Please specify at least one of the parameters for TensorInitializationCondition."
-            raise DebuggerParamValueError(msg)
 
 
 class TensorChangeBelowThresholdCondition(ConditionBase):
@@ -798,9 +735,9 @@ class TensorChangeBelowThresholdCondition(ConditionBase):
         change and/or deletion.
 
     Args:
-        mean_update_ratio_lt (float, optional): The threshold value for mean update ration,
+        abs_mean_update_ratio_lt (float, required): The threshold value for mean update ration,
             if the mean update ratio is less that this value the watchpoint will be triggered.
-        epsilon (float, optional): epsilon value.
+        epsilon (float, optional): Epsilon value.
 
     Examples:
         >>> from mindinsight.debugger import TensorChangeBelowThresholdCondition
@@ -809,10 +746,11 @@ class TensorChangeBelowThresholdCondition(ConditionBase):
         TensorChangeBelowThreshold
     """
 
-    def __init__(self, abs_mean_update_ratio_lt=None, epsilon=None):
+    def __init__(self, abs_mean_update_ratio_lt, epsilon=1e-9):
+        validate_type(abs_mean_update_ratio_lt, 'abs_mean_update_ratio_lt', [float, int], 'float or int')
+        validate_type(epsilon, 'epsilon', float, 'float')
         self._abs_mean_update_ratio_lt = abs_mean_update_ratio_lt
         self._epsilon = epsilon
-        self.param_validate()
 
     @property
     def name(self):
@@ -824,21 +762,9 @@ class TensorChangeBelowThresholdCondition(ConditionBase):
 
     @property
     def param_dict(self):
-        param_dict = {}
-        if self._abs_mean_update_ratio_lt is not None:
-            param_dict["abs_mean_update_ratio_lt"] = float(self._abs_mean_update_ratio_lt)
-        if self._epsilon is not None:
-            param_dict["epsilon"] = float(self._epsilon)
+        param_dict = {"abs_mean_update_ratio_lt": float(self._abs_mean_update_ratio_lt),
+                      "epsilon": float(self._epsilon)}
         return param_dict
-
-    def param_validate(self):
-        """
-        Checks if the parameters of the condition are valid.
-        Raises exception for invalid.
-        """
-        if "abs_mean_update_ratio_lt" not in self.param_dict.keys():
-            msg = "Please specify abs_mean_update_ratio_lt parameter for TensorChangeBelowThresholdCondition."
-            raise DebuggerParamValueError(msg)
 
 
 class TensorChangeAboveThresholdCondition(ConditionBase):
@@ -854,9 +780,9 @@ class TensorChangeAboveThresholdCondition(ConditionBase):
         change and/or deletion.
 
     Args:
-        mean_update_ratio_gt (float, optional): The threshold value for mean update ration,
+        mean_update_ratio_gt (float, required): The threshold value for mean update ratio,
             if the mean update ratio is greater than this value the watchpoint will be triggered.
-        epsilon (float, optional): epsilon value.
+        epsilon (float, optional): epsilon value, default: 1e-9.
 
     Examples:
         >>> from mindinsight.debugger import TensorChangeAboveThresholdCondition
@@ -865,10 +791,11 @@ class TensorChangeAboveThresholdCondition(ConditionBase):
         TensorChangeAboveThreshold
     """
 
-    def __init__(self, abs_mean_update_ratio_gt=None, epsilon=None):
+    def __init__(self, abs_mean_update_ratio_gt, epsilon=1e-9):
+        validate_type(abs_mean_update_ratio_gt, 'abs_mean_update_ratio_gt', [float, int], 'float or int')
+        validate_type(epsilon, 'epsilon', float, 'float')
         self._abs_mean_update_ratio_gt = abs_mean_update_ratio_gt
         self._epsilon = epsilon
-        self.param_validate()
 
     @property
     def name(self):
@@ -880,21 +807,9 @@ class TensorChangeAboveThresholdCondition(ConditionBase):
 
     @property
     def param_dict(self):
-        param_dict = {}
-        if self._abs_mean_update_ratio_gt is not None:
-            param_dict["abs_mean_update_ratio_gt"] = float(self._abs_mean_update_ratio_gt)
-        if self._epsilon is not None:
-            param_dict["epsilon"] = float(self._epsilon)
+        param_dict = {"abs_mean_update_ratio_gt": float(self._abs_mean_update_ratio_gt),
+                      "epsilon": float(self._epsilon)}
         return param_dict
-
-    def param_validate(self):
-        """
-        Checks if the parameters of the condition are valid.
-        Raises exception for invalid.
-        """
-        if "abs_mean_update_ratio_gt" not in self.param_dict.keys():
-            msg = "Please specify abs_mean_update_ratio_gt parameter for TensorChangeAboveThresholdCondition."
-            raise DebuggerParamValueError(msg)
 
 
 class Watchpoint:
@@ -906,8 +821,8 @@ class Watchpoint:
         change and/or delete.
 
     Args:
-        tensors (Iterable[DebuggerTensor]): The tensors to check.
-        condition (ConditionBase): The condition to apply to tensors.
+        tensors (Iterable[DebuggerTensor], required): The tensors to check.
+        condition (ConditionBase, required): The condition to apply to tensors.
 
     Examples:
         >>> from mindinsight.debugger import DumpAnalyzer
@@ -930,6 +845,8 @@ class Watchpoint:
     """
 
     def __init__(self, tensors, condition):
+        validate_tensor_list(tensors, 'tensors')
+        validate_type(condition, 'condition', ConditionBase, 'ConditionBase')
         self._tensors = tensors
         self._condition = condition
 
@@ -1070,3 +987,14 @@ class WatchpointConditionId(Enum):
     TENSOR_CHANGE_TOO_SMALL = 19
     UNCHANGED_TENSOR = 20
     TENSOR_RANGE = 21
+
+
+def validate_tensor_list(param, param_name):
+    """Validate list."""
+    if not isinstance(param, list):
+        raise DebuggerParamTypeError(f"The type of {param_name} should be list of DebuggerTensor. "
+                                     f"But the actual type is {type(param)}")
+    for i, value in enumerate(param):
+        if not isinstance(value, DebuggerTensor):
+            raise DebuggerParamTypeError(f"The type of {param_name} should be list of DebuggerTensor. "
+                                         f"But the {i} value is {type(value)}.")
