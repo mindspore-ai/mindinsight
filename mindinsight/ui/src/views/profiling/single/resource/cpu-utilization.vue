@@ -510,6 +510,8 @@ export default {
             'click',
             (target, index, nodeslist) => {
               this.clickEvent(nodeslist[index]);
+              nodes.classed('selected', false);
+              d3.select(`g[id="${nodeslist[index].id}"]`).classed('selected', true);
             },
             false,
         );
@@ -955,6 +957,9 @@ export default {
 .cpu-info .cpu-detail .detail-item-graph svg path {
   fill: var(--data-process-operator-color);
   stroke: #e6ebf5;
+}
+.cpu-info .cpu-detail .detail-item-graph svg g.selected path{
+  stroke: red;
 }
 .cpu-info .cpu-detail .detail-item-graph svg text {
   fill: var(--font-color);
