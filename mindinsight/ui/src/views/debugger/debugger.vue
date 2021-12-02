@@ -713,7 +713,7 @@ limitations under the License.
                 </div>
                 <div class="no-data"
                      v-else>
-                  {{ `${$t('public.noData')}(${$t('debugger.noExecutionHistoryFile')})` }}
+                  {{ `${$t('public.noData')}${allGraphIdArr.length?'':`(${$t('debugger.noExecutionHistoryFile')})`}` }}
                 </div>
               </div>
             </div>

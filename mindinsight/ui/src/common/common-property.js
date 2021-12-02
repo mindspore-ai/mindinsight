@@ -660,6 +660,10 @@ export default {
         value: '#ffffff',
       },
       {
+        key: '--debugger-execution-history-bg-color',
+        value: '#f5dbb5',
+      },
+      {
         key: '--grid-preview-bg-color',
         value: 'rgb(0, 0, 0, 0.1)',
       },
@@ -1024,6 +1028,10 @@ export default {
       {
         key: '--echarts-tooltip-font-color',
         value: '#ddd',
+      },
+      {
+        key: '--debugger-execution-history-bg-color',
+        value: '#d69129',
       },
       {
         key: '--grid-preview-bg-color',
