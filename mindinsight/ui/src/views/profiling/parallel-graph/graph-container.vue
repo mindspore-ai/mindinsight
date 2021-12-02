@@ -271,6 +271,13 @@ limitations under the License.
       </template>
     </svg-el-container>
 
+    <div class="noData-content" v-show="this.noDataGraphShow">
+      <div>
+        <img :src="require('@/assets/images/nodata.png')"/>
+      </div>
+      <div class="noData-text">{{$t('public.noData')}}</div>
+    </div>
+
     <div
       v-if="showPipelinePanel"
       class="pipeline-button"
@@ -1703,5 +1710,15 @@ export default {
 
 .training-pipeline-container svg text {
   user-select: none;
+}
+
+.graph-container .noData-content {
+  width:100%;
+  height:100%;
+  margin-left: -100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
 </style>
