@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """The minddata pipeline proposer."""
+import os
 from collections import OrderedDict
 
 from mindinsight.profiler.common.exceptions.exceptions import \
@@ -57,10 +58,11 @@ class MinddataPipelineProposer(Proposer):
                 'threshold': threshold
             }
         }
-        analyser_result = self.get_analyser_result(
-            self.__proposer_type, condition=condition
-        )
-        self._organize_proposal_result(analyser_result)
+        if os.path.exists(os.path.join(self.profiling_path, "minddata_pipeline_raw_{}.csv".format(self.rank_id))):
+            analyser_result = self.get_analyser_result(
+                self.__proposer_type, condition=condition
+            )
+            self._organize_proposal_result(analyser_result)
 
         return self.__proposal_dict if self.__proposal_dict else None
 
