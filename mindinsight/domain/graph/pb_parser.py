@@ -246,6 +246,9 @@ class PBParser(Parser):
         Raises:
             UnknownDataTypeError: If data type of protobuf value can not be recognized.
         """
+        if pb_operator.name == '':
+            return
+
         operator = Operator(pb_operator.name, pb_operator.op_type)
         operator.full_name = pb_operator.full_name
         operator.raw = str(pb_operator)
