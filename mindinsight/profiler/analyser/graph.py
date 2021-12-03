@@ -173,6 +173,7 @@ class Graph:
 
     def _parse_graph_proto(self, graph_proto: dict):
         self._parse_const_nodes(graph_proto['constVals'])
+        self._parse_parameter_nodes(graph_proto['parameters'])
         self._parse_op_nodes(graph_proto['node'])
         self._update_input()
 
@@ -246,6 +247,22 @@ class Graph:
             node = Node(name=const['key'], node_id=const['key'])
             node.type = NodeType.CONST.value
 
+            self._append_node(node)
+
+    def _parse_parameter_nodes(self, parameter_protos: list):
+        """
+        Parse `anf_ir_pb2.ParameterProto` object, and create a const node.
+
+        Args:
+            parameter_protos (list[dict]): The dict object refers to anf_ir_pb2.ParameterProto.
+        """
+        for parameter in parameter_protos:
+            if not parameter['name']:
+                logger.warning("Finding a parameter with an empty name will not be saved.")
+                continue
+            node = Node(name=parameter['name'], node_id=parameter['name'])
+            # Note: Display parameter as Const
+            node.type = NodeType.CONST.value
             self._append_node(node)
 
     def _append_node(self, node: Node):
