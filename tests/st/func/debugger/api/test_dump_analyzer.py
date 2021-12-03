@@ -25,7 +25,9 @@ from unittest import mock
 
 import pytest
 
-from mindinsight.debugger import DumpAnalyzer, Watchpoint, TensorTooLargeCondition
+from mindinsight.debugger import DumpAnalyzer, Watchpoint, TensorTooLargeCondition, TensorTooSmallCondition, \
+    TensorUnchangedCondition, TensorRangeCondition, TensorOverflowCondition, OperatorOverflowCondition, \
+    TensorAllZeroCondition, TensorChangeBelowThresholdCondition, TensorChangeAboveThresholdCondition
 from mindinsight.debugger.debugger_services.debugger_offline_server import DebuggerOfflineManager
 from tests.st.func.debugger.utils import build_multi_net_dump_structure
 from tests.st.func.debugger.debugger_services import mock_dbg_services
@@ -91,8 +93,20 @@ class TestDumpAnalyzer:
         tensors = self.dump_analyzer.select_tensors('Conv', iterations=0, case_sensitive=True)
         assert len(tensors) == 72
 
-    def test_watchpoint(self):
+    @pytest.mark.parametrize("watchpoint", [
+        TensorTooLargeCondition(abs_mean_gt=0.0),
+        TensorTooSmallCondition(max_lt=-1, min_lt=1),
+        TensorUnchangedCondition(0, 1),
+        TensorRangeCondition(range_percentage_gt=0, range_start_inclusive=0, range_end_inclusive=4),
+        TensorOverflowCondition(),
+        OperatorOverflowCondition(),
+        TensorAllZeroCondition(0),
+        TensorChangeBelowThresholdCondition(0.0),
+        TensorChangeAboveThresholdCondition(0.0)
+    ])
+    def test_watchpoint(self, watchpoint):
+        """Test watchpoint."""
         tensors = self.dump_analyzer.select_tensors('Conv2DBackpropFilter', iterations=0, case_sensitive=True, ranks=0)
-        watchpoint = Watchpoint(tensors, TensorTooLargeCondition(abs_mean_gt=0.0))
+        watchpoint = Watchpoint(tensors, watchpoint)
         hits = self.dump_analyzer.check_watchpoints([watchpoint])
         assert len(hits) == 6
