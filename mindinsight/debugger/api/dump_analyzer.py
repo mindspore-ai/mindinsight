@@ -93,7 +93,7 @@ class DumpAnalyzer:
             nonlocal id_to_name_map
             dst_node_name = id_to_name_map[cur_node.rank].get(dst_id)
             if not dst_node_name:
-                log.info("Failed to find %s in id_to_name_map", dst_node_name)
+                log.info("Failed to find %s in id_to_name_map", dst_id)
                 return
             unique_id = NodeUniqueId(name=dst_node_name,
                                      rank=cur_node.rank, graph_name=cur_node.graph_name)
