@@ -25,8 +25,7 @@ limitations under the License.
          :key="area.name"
          :class="[(gapAreas['columnGap'].includes(area.name)
            || gapAreas['rowGap'].includes(area.name)) ? 'grid-item-gap' : 'grid-item']"
-         :style="{gridArea: area.name}"
-         @mousedown="stopPropagation">
+         :style="{gridArea: area.name}">
       <slot :name="area.name"></slot>
       <div v-if="gapAreas['columnGap'].includes(area.name)"
            class="grid-columnGap"
@@ -173,8 +172,7 @@ export default {
       ], // Save an array of grid styles for different pages
     };
   },
-  watch: {
-  },
+  watch: {},
   created() {
     this.calGapAreas();
     this.parseGridInfo();
@@ -250,7 +248,7 @@ export default {
      */
     resizeGridStyle() {
       this.viewResizeTimer = setTimeout(() => {
-        this.getSaveGridStyle();
+        this.getSaveGridStyle(true);
         this.calFRValue();
         this.calTriggerPosition();
         this.updatePreviewStyle(false);
@@ -464,11 +462,17 @@ export default {
       // Store the grid layout style of the page in localstorage
       if (localStorage.saveGridStyle) {
         const saveGridStyle = JSON.parse(localStorage.saveGridStyle);
-        saveGridStyle.find((item) => item.key === gridStyleKey).value = gridStyle;
-        localStorage.setItem('saveGridStyle', JSON.stringify(saveGridStyle));
+        const gridStyleData = saveGridStyle.find((item) => item.key === gridStyleKey);
+        if (gridStyleData !== undefined && gridStyleData.value) {
+          gridStyleData.value = gridStyle;
+          localStorage.setItem('saveGridStyle', JSON.stringify(saveGridStyle));
+        }
       } else {
-        saveGridStyleObj.find((item) => item.key === gridStyleKey).value = gridStyle;
-        localStorage.setItem('saveGridStyle', JSON.stringify(saveGridStyleObj));
+        const gridStyleData = saveGridStyleObj.find((item) => item.key === gridStyleKey);
+        if (gridStyleData !== undefined && !gridStyleData.value) {
+          gridStyleData.value = gridStyle;
+          localStorage.setItem('saveGridStyle', JSON.stringify(saveGridStyleObj));
+        }
       }
       // Resize the layout of slickgrid in debugger-tensor and offline-debugger-tensor pages
       if (['debugger-tensor', 'offline-debugger-tensor'].includes(gridStyleKey) && !first) {
@@ -480,15 +484,23 @@ export default {
     },
     /**
      * Save grid styles of different pages
+     * @param {Boolean} resizeFlag Whether the page is resize
      */
-    getSaveGridStyle() {
+    getSaveGridStyle(resizeFlag = false) {
       const { gridStyle, gridStyleKey } = this;
-      let gridStyleData = '';
-      gridStyleData = JSON.parse(localStorage.saveGridStyle).find((item) => item.key === gridStyleKey).value;
-      const { gridTemplateAreas, gridTemplateColumns, gridTemplateRows } = gridStyleData;
-      gridStyle.gridTemplateAreas = gridTemplateAreas;
-      gridStyle.gridTemplateColumns = this.calValueToFR(gridTemplateColumns, 'column');
-      gridStyle.gridTemplateRows = this.calValueToFR(gridTemplateRows, 'row');
+      if (localStorage.saveGridStyle) {
+        const gridStyleData = JSON.parse(localStorage.saveGridStyle).find((item) => item.key === gridStyleKey);
+        if (gridStyleData !== undefined && gridStyleData.value) {
+          const { gridTemplateAreas, gridTemplateColumns, gridTemplateRows } = gridStyleData.value;
+          gridStyle.gridTemplateAreas = gridTemplateAreas;
+          gridStyle.gridTemplateColumns = this.calValueToFR(gridTemplateColumns, 'column');
+          gridStyle.gridTemplateRows = this.calValueToFR(gridTemplateRows, 'row');
+        } else {
+          this.initDefaultGridStyle(resizeFlag);
+        }
+      } else {
+        this.initDefaultGridStyle(resizeFlag);
+      }
       const gridTemplateColumnsArray = gridStyle.gridTemplateColumns.split(' ');
       const gridTemplateRowsArray = gridStyle.gridTemplateRows.split(' ');
       // According to changing column and row, columnsize configuration items, recalculate the page layout
@@ -506,6 +518,27 @@ export default {
           row.currentHeight = gridTemplateRowsArray[index];
         }
       });
+    },
+    /**
+     * Initial Default grid style
+     * @param {Boolean} resizeFlag Whether the page is resize
+     */
+    initDefaultGridStyle(resizeFlag) {
+      const areaName = [];
+      this.areas.forEach((area) => {
+        areaName.push(`"${area.join(' ')}"`);
+      });
+      this.gridStyle.gridTemplateAreas = areaName.join(' ');
+      if (resizeFlag) {
+        this.gridStyle.gridTemplateColumns = this.calValueToFR(this.gridStyle.gridTemplateColumns, 'column');
+        this.gridStyle.gridTemplateRows = this.calValueToFR(this.gridStyle.gridTemplateRows, 'row');
+      } else {
+        this.gridStyle.gridTemplateColumns = this.calValueToFR(
+          this.columns.map((r) => r.defaultWidth).join(' '),
+          'column'
+        );
+        this.gridStyle.gridTemplateRows = this.calValueToFR(this.rows.map((r) => r.defaultHeight).join(' '), 'row');
+      }
     },
     /**
      * Calculate the gap area
@@ -639,11 +672,13 @@ export default {
       previewStyle.gridTemplateRows = rowDescription.template;
       previewStyle.gridTemplateColumns = columnDescription.template;
       // Determine whether there is a saved page layout in localstroage
-      if (
-        localStorage.saveGridStyle &&
-        JSON.parse(localStorage.saveGridStyle).find((item) => item.key === this.gridStyleKey).value
-      ) {
-        this.getSaveGridStyle();
+      if (localStorage.saveGridStyle) {
+        const gridStyleData = JSON.parse(localStorage.saveGridStyle).find((item) => item.key === this.gridStyleKey);
+        if (gridStyleData !== undefined && gridStyleData.value) {
+          this.getSaveGridStyle();
+        } else {
+          this.updateGridStyle(true);
+        }
       } else {
         this.updateGridStyle(true);
       }
@@ -846,13 +881,6 @@ export default {
       this.dragColumn = null;
       this.mouseEvent = null;
     },
-    /**
-     * Prevent further propagation of mouse down events in the capture and bubbling phase
-     * @param {Object} event
-     */
-    stopPropagation(event) {
-      event.stopPropagation();
-    },
   },
 };
 </script>
@@ -863,9 +891,6 @@ export default {
   width: 100%;
   height: 100%;
   position: relative;
-  -moz-user-select: none;
-  -khtml-user-select: none;
-  user-select: none;
 }
 .mi-flex-grid .grid-item {
   position: relative;
@@ -875,6 +900,9 @@ export default {
 .mi-flex-grid .grid-item-gap {
   position: relative;
   z-index: 1;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  user-select: none;
 }
 .mi-flex-grid .grid-item-gap .grid-columnGap {
   width: 100%;
