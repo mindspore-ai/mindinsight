@@ -666,7 +666,7 @@
       "model_parallel_communication_rate": "该模型的通信耗时占比为{val}%，超过经验阈值{threshold}%，可以尝试通过集群下面的“策略感知”页面分析并优化算子切分策略，降低通信耗时。",
       "pipeline_parallel_between_stage": "stage间通信(仅Receive算子)耗时占比为{val}%，超过经验阈值{threshold}%，可以尝试结合时间线重点分析Receive算子耗时长的原因。",
       "pipeline_parallel_within_stage": "stage{stage}内通信(除Receive算子外)耗时占比为{val}%，超过经验阈值{threshold}%，可以结合时间线分析通信算子耗时长的原因，尝试优化算子切分策略或其他方式降低通信算子耗时。",
-      "pipeline_parallel_flops": "stage{stage}内卡的平均计算量为{val}M，，比各stage平均值高{percent}%，可以尝试优化stage切分策略，使各stage计算量达到均衡。"
+      "pipeline_parallel_flops": "stage{stage}内卡的平均计算量为{val}M，比各stage平均值高{percent}%，可以尝试优化stage切分策略，使各stage计算量达到均衡。"
     },
     "step_interval_title": "数据准备性能分析",
     "flops_per_second_title": "卡计算性能分析",

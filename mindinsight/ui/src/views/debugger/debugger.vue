@@ -2531,7 +2531,7 @@ export default {
 }
 .deb-wrap .left-wrap .left .content .watch-point-wrap .content-wrap .list-wrap .list .name .item-content {
   display: inline-block;
-  width: 300px;
+  width: calc(100% - 50px);
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
@@ -2672,6 +2672,8 @@ export default {
 }
 .deb-wrap .left-wrap .left .btn-wrap .btn-two {
   width: 100%;
+  height: 40px;
+  overflow: auto;
 }
 .deb-wrap .left-wrap .left .btn-wrap .btn-two .custom-btn {
   height: 30px;
