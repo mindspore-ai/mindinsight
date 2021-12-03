@@ -40,6 +40,7 @@ class Status(Enum):
 
 
 FileData = namedtuple('FileData', ['graph_proto', 'rank_id'])
+STRATEGY_FILE_PATTERN = "parallel_strategy*.json"
 
 
 class ParallelStrategyAnalyser(BaseAnalyser):
@@ -55,7 +56,7 @@ class ParallelStrategyAnalyser(BaseAnalyser):
 
         self._status = Status.PENDING.value
         super(ParallelStrategyAnalyser, self).__init__(*args, **kwargs)
-        self._profiler_dir_mtime = os.path.getmtime(self._profiling_dir)
+        self._profiler_dir_mtime = self._get_strategy_file_mtime(self._profiling_dir)
         self._exception = None
 
     def __new__(cls, *args):
@@ -84,9 +85,19 @@ class ParallelStrategyAnalyser(BaseAnalyser):
             return False
         if getattr(cls._instance, '_profiling_dir') != profiler_dir:
             return True
-        if getattr(cls._instance, '_profiler_dir_mtime') != os.path.getmtime(getattr(cls._instance, '_profiling_dir')):
+        if getattr(cls._instance, '_profiler_dir_mtime') != cls._get_strategy_file_mtime(profiler_dir):
             return True
         return False
+
+    @staticmethod
+    def _get_strategy_file_mtime(profiling_dir):
+        """Get strategy file mtime from profiling dir."""
+        path = Path(profiling_dir)
+        strategy_files = sorted(path.rglob(STRATEGY_FILE_PATTERN), key=lambda file: os.path.getmtime(file))
+        if strategy_files:
+            file_path = os.path.join(profiling_dir, strategy_files[-1])
+            return os.path.getmtime(file_path)
+        return -1
 
     @property
     def data(self):
@@ -112,7 +123,7 @@ class ParallelStrategyAnalyser(BaseAnalyser):
         if self._status in (Status.LOADING.value, Status.FINISH.value):
             return
 
-        thread = threading.Thread(target=self._load_data_with_catch_exception)
+        thread = threading.Thread(target=self._load_data_with_catch_exception, name='parallel_strategy_analyser')
         thread.start()
 
     def _load_data_with_catch_exception(self):
@@ -136,7 +147,7 @@ class ParallelStrategyAnalyser(BaseAnalyser):
         logger.info("Start to load data, status: %s.", self._status)
         self._status = Status.LOADING.value
         path = Path(self._profiling_dir)
-        files = sorted(path.rglob("parallel_strategy*.json"),
+        files = sorted(path.rglob(STRATEGY_FILE_PATTERN),
                        key=lambda filepath: int(filepath.name.split('.')[0].split('_')[-1]))
         if not files:
             logger.error("Can not find any data in path %s", path.name)
