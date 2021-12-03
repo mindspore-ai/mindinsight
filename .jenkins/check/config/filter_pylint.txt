@@ -5,6 +5,7 @@
 "mindinsight/mindinsight/optimizer/common/validator/optimizer_config.py"               "unused-argument"
 "mindinsight/mindinsight/backend/auth.py"                                              "unused-argument"
 "mindinsight/mindinsight/profiler/analyser/parallel_strategy_analyser.py"              "broad-except"
+"mindinsight/mindinsight/profiler/analyser/parallel_strategy_analyser.py"              "unnecessary-lambda"
 
 # MindConverter
 "mindinsight/ecosystem_tools/mindconverter/mindconverter/forward_call.py"              "invalid-name"
