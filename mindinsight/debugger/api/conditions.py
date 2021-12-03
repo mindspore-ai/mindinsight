@@ -70,15 +70,7 @@ class ConditionBase(ABC):
         return {}
 
     def __str__(self):
-        setting_detail = "The setting for watchpoint is "
-        param_size = len(self.param_dict)
-        for idx, param in enumerate(self.param_dict):
-            setting_detail += f"{param.name} = {param.value}"
-            if idx == param_size - 1:
-                setting_detail += "."
-            else:
-                setting_detail += ", "
-        return setting_detail
+        return str(self.param_dict)
 
 
 class WatchpointHit(ABC):
@@ -250,12 +242,14 @@ class WatchpointHitImpl(WatchpointHit):
 
     def __str__(self):
         if self._error_code:
-            msg = f"Watchpoint {self._condition.name}: {self.get_threshold()} check failed on tensor:\n" \
+            msg = f"Watchpoint {self._condition.name} check failed on tensor:\n" \
                   f"{str(self.tensor)}" \
+                  f"Threshold: {self.get_threshold()}\n" \
                   f"Error detail: {self.error_msg}"
             return msg
-        msg = f"Watchpoint {self._condition.name}: {self.get_threshold()} triggered on tensor:\n" \
+        msg = f"Watchpoint {self._condition.name} triggered on tensor:\n" \
               f"{str(self.tensor)}" \
+              f"Threshold: {self.get_threshold()}\n" \
               f"Hit detail: {str(self._hit_detail)}"
         return msg
 
@@ -748,7 +742,7 @@ class TensorChangeBelowThresholdCondition(ConditionBase):
 
     def __init__(self, abs_mean_update_ratio_lt, epsilon=1e-9):
         validate_type(abs_mean_update_ratio_lt, 'abs_mean_update_ratio_lt', [float, int], 'float or int')
-        validate_type(epsilon, 'epsilon', float, 'float')
+        validate_type(epsilon, 'epsilon', [float, int], 'float or int')
         self._abs_mean_update_ratio_lt = abs_mean_update_ratio_lt
         self._epsilon = epsilon
 
@@ -793,7 +787,7 @@ class TensorChangeAboveThresholdCondition(ConditionBase):
 
     def __init__(self, abs_mean_update_ratio_gt, epsilon=1e-9):
         validate_type(abs_mean_update_ratio_gt, 'abs_mean_update_ratio_gt', [float, int], 'float or int')
-        validate_type(epsilon, 'epsilon', float, 'float')
+        validate_type(epsilon, 'epsilon', [float, int], 'float or int')
         self._abs_mean_update_ratio_gt = abs_mean_update_ratio_gt
         self._epsilon = epsilon
 
