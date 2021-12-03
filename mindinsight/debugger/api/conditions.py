@@ -117,9 +117,14 @@ class WatchpointHit(ABC):
         >>> hits = my_run.check_watchpoints(watchpoints=[watchpoint])
         >>> hit = list(hits)[0]
         >>> print(str(hit))
-        Watchpoint TensorTooLarge triggered on slot 0 of node Default/network-WithLossCell/
-        _backbone-AlexNet/conv2-Conv2d/Conv2D-op156.
-        The setting for watchpoint is abs_mean_gt = 0.0.
+        Watchpoint TensorTooLarge triggered on tensor:
+        rank: 0
+        graph_name: kernel_graph_0
+        node_name: Default/network-WithLossCell/_backbone-AlexNet/conv2-Conv2d/Conv2D-op156
+        slot: 0
+        iteration: 0
+        Threshold: {'abs_mean_gt': 0.0}
+        Hit detail: The setting for watchpoint is abs_mean_gt = 0.0.
         The actual value of the tensor is abs_mean_gt = 0.0665460056158321.
         >>> print(hit.error_code)
         0
@@ -298,47 +303,33 @@ class HitDetail(ConditionBase):
         return self._param_list
 
     def __str__(self):
-        setting_detail = "The setting for watchpoint is "
-        value_detail = " The actual value of the tensor is "
-        show_set_value = bool(self._condition.param_dict)
-        show_actual_value = bool(self._param_list)
-        show_all_settings = False
-        if self._condition.condition_id == WatchpointConditionId.TENSOR_OVERFLOW.value:
-            show_set_value = False
+        show_actual_value = bool(self._condition.param_dict)
         if self._condition.condition_id == WatchpointConditionId.UNCHANGED_TENSOR.value:
-            show_all_settings = True
-        if self._condition.condition_id in [WatchpointConditionId.UNCHANGED_TENSOR.value,
-                                            WatchpointConditionId.TENSOR_OVERFLOW.value]:
             show_actual_value = False
         # list of the parameters with disabled = False and hit = 1
         hit_param_list = []
         for param in self._param_list:
-            if not param.disabled and (param.hit or show_all_settings):
+            if not param.disabled and param.hit:
                 hit_param_list.append(param)
 
+        result = ""
         param_size = len(hit_param_list)
-        if show_set_value:
+        if show_actual_value and hit_param_list:
+            setting_detail = "The setting for watchpoint is "
+            value_detail = " The actual value of the tensor is "
             for idx, param in enumerate(hit_param_list):
                 setting_detail += f"{param.name} = {param.value}"
-                if idx == param_size - 1:
-                    setting_detail += "."
-                else:
-                    setting_detail += ", "
-
-        if show_actual_value:
-            for idx, param in enumerate(hit_param_list):
                 value_detail += f"{param.name} = {param.actual_value}"
                 if idx == param_size - 1:
+                    setting_detail += "."
                     value_detail += "."
                 else:
+                    setting_detail += ", "
                     value_detail += ", "
+            result = setting_detail + value_detail
 
-        result = ""
-        if show_set_value:
-            result += setting_detail
-        if show_actual_value:
-            result += value_detail
-
+        if not result:
+            result = "None."
         return result
 
 
@@ -1105,7 +1096,7 @@ class WatchpointHandle:
             if set_value is not None:
                 param = parameter_class(name=param_name, disabled=False, value=set_value)
             else:
-                param = parameter_class(name=param_name, disabled=True, value=None)
+                param = parameter_class(name=param_name, disabled=True, value=0.0)
             params.append(param)
         return params
 
