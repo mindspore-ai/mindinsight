@@ -202,6 +202,27 @@ class NodeImpl(Node):
         self.downstream = []
 
     @property
+    def name(self):
+        """
+        Get the full name of this node.
+
+        Returns:
+            str, the full name of the node.
+
+        Examples:
+            >>> from mindinsight.debugger import DumpAnalyzer
+            >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+            >>> node = list(my_run.select_nodes("conv"))[0]
+            >>> print(node.name)
+            conv5.bias
+        """
+        if hasattr(self._base_node, 'type') and self._base_node.type == "Load":
+            scope = self._node_feature.name.rsplit('/')
+            name = f'Load-op{self._base_node.name}'
+            return f'{scope[0]}/{name}' if len(scope) > 1 else name
+        return self._node_feature.name
+
+    @property
     def node_type(self):
         """Get the node type."""
         return self._node_type

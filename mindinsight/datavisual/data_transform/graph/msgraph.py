@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """This file is used to define the MindSpore graph."""
+from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.data_transform.graph.graph import EdgeTypeEnum, Graph, check_invalid_character
 from mindinsight.datavisual.data_transform.graph.node import Node
@@ -65,8 +66,14 @@ class MSGraph(Graph):
         node_id = name.split('op')[-1]
         name = f'{node_proto.op_type}-op{node_id}'
         node_name = Node.create_node_name(node_proto.scope, name)
-        if node_proto.full_name:
+
+        if node_proto.full_name and node_proto.op_type != NodeTypeEnum.LOAD.value:
             node_name = node_proto.full_name
+
+        if node_proto.full_name and any(
+                node_proto.full_name.lower().endswith(f'[:{plugin.value.lower()}]') for plugin in PluginNameEnum):
+            node_name = Node.create_node_name(scope=node_proto.scope,
+                                              base_name=f'{node_proto.op_type}{node_proto.name}')
 
         # The Graphviz plug-in that the UI USES can't handle these special characters.
         check_invalid_character(node_name)
