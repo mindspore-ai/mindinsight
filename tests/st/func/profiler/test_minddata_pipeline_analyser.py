@@ -59,7 +59,7 @@ class TestMinddataPipelineAnalyser:
                 [1, 'Shuffle', 20.0, 64, 0.3125, 10, 0, [2, 3]],
                 [2, 'TFReader', 20.0, 64, 0.3125, 10, 1, None],
                 [3, 'TFReader', 20.0, 64, 0.3125, 10, 1, None],
-                [0, 'Batch', None, None, None, 10, None, [1]]
+                [0, 'Batch', None, None, 0, 10, None, [1]]
             ],
             'size': 4
         }

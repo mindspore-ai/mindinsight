@@ -182,8 +182,6 @@ class MinddataPipelineAnalyser(BaseAnalyser):
         maximum_cur_child_differance = 0.1
         result = []
         for item in data:
-            if item[self._index_output_queue_usage_rate] is None:
-                item[self._index_output_queue_usage_rate] = 0
             parent_id = item[self._index_parent_id]
             if parent_id is None:
                 root_node = item
@@ -191,8 +189,6 @@ class MinddataPipelineAnalyser(BaseAnalyser):
 
             # current usage rate compared to the threshold
             cur_usage_rate = item[self._index_output_queue_usage_rate]
-            if cur_usage_rate is None:
-                cur_usage_rate = 0
             if cur_usage_rate < high_threshold:
                 all_higher_high_threshold = False
 
@@ -205,15 +201,11 @@ class MinddataPipelineAnalyser(BaseAnalyser):
                 self._get_usage_rate_by_op_id(op_id) for op_id in child_ids
             ]
             for usage_rate in child_usage_rates:
-                if usage_rate is None:
-                    usage_rate = 0
                 if usage_rate - cur_usage_rate > maximum_cur_child_differance:
                     if item not in result:
                         result.append(item)
 
         for leaf_node in leaf_nodes:
-            if leaf_node[self._index_output_queue_usage_rate] is None:
-                leaf_node[self._index_output_queue_usage_rate] = 0
             if leaf_node[self._index_output_queue_usage_rate] < low_threshold:
                 result.append(leaf_node)
 
@@ -269,7 +261,7 @@ class MinddataPipelineAnalyser(BaseAnalyser):
             int(row[self._index_output_queue_length])
             if row[self._index_output_queue_length] else None,
             float(row[self._index_output_queue_usage_rate])
-            if row[self._index_output_queue_usage_rate] else None,
+            if row[self._index_output_queue_usage_rate] else 0,
             int(row[self._index_sample_interval]),
             int(row[self._index_parent_id])
             if row[self._index_parent_id] else None,
