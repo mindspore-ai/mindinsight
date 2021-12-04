@@ -16,7 +16,7 @@ limitations under the License.
 <template>
   <div class="cl-diagram-container">
     <empty v-if="seriesArr.length <= 1 || allEmptyData"
-           :state="over ? 'noData' : 'dataLoading'"
+           :state="over ? 'noData' : 'dataSelectTip'"
            :fontSize="16"></empty>
     <!-- Function Area -->
     <div class="operateContainer top-operate"

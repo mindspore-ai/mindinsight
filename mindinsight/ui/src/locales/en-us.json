@@ -1139,7 +1139,8 @@
     "selectedInterval": "Selected Range",
     "step_per_epoch": "Step/Epoch",
     "lossValue": "loss value",
-    "trainingStep": "training\nstep"
+    "trainingStep": "training\nstep",
+    "dataSelectTip": "Please select the graph to be compared on the right"
   },
   "lossCompare": {
     "titleText": "Loss Graph Comparison",

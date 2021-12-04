@@ -1135,7 +1135,8 @@
     "selectedInterval": "已选区间",
     "step_per_epoch": "每个epoch中的迭代",
     "lossValue": "损失值",
-    "trainingStep": "训练\n步数"
+    "trainingStep": "训练\n步数",
+    "dataSelectTip": "请选择右侧需要对比的图形"
   },
   "lossCompare": {
     "titleText": "损失函数图形对比",
