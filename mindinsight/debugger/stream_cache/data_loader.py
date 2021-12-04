@@ -288,6 +288,30 @@ class DataLoader:
             all_graph_history[rank_dir.rank_id] = graph_history
         return all_graph_history
 
+    def has_data(self, step, rank_id=None):
+        """
+        Check if the step has data dumped.
+
+        Args:
+            step (int): Step id to check.
+            rank_id (int): The rank id of the step. If None, check same step in all ranks.
+
+        Returns:
+            bool, has data or not.
+        """
+        rank_dirs = [self.get_rank_dir(rank_id)] if rank_id is not None else self._rank_dirs
+        for rank_dir in rank_dirs:
+            rank_id, rank_path = rank_dir.rank_id, rank_dir.path
+            net_path = rank_path / self._net_name
+            if not net_path.is_dir():
+                log.info("No net directory under rank dir: %s", str(rank_dir))
+                return False
+            for graph_dir in net_path.iterdir():
+                target_step_dir = graph_dir / str(step)
+                if target_step_dir.is_dir():
+                    return True
+        return False
+
 
 def read_graph_history(file_path):
     """

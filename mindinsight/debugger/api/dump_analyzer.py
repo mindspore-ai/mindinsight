@@ -379,6 +379,9 @@ class DumpAnalyzer:
         # check all the watchpoint for the iterations
         for iteration in iterations:
             log.info("Check watchpoints for iteration %s", iteration)
+            if not self._data_loader.has_data(iteration):
+                log.info("No data dumped with iteration id: %s. Ignore checking watchpoint.", iteration)
+                continue
             # adding the watchpoint for current iteration
             for wp_handle in wp_handles.values():
                 wp_handle.add_watchpoint(iteration, self._debugger_engine)

@@ -184,3 +184,19 @@ class TestMultiNetDataLoader:
         expect = {0: {0: [0, 2, 4], 3: [1, 3, 5, 6]},
                   1: {0: [0, 2, 4], 3: [1, 3, 5, 6]}}
         assert res == expect
+
+    @pytest.mark.level
+    @pytest.mark.env_single
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    @pytest.mark.parametrize("step, rank, result", [
+        (0, None, True),
+        (1, 0, True),
+        (7, 1, False),
+    ])
+    def test_has_data(self, step, rank, result):
+        """Test has data in specific step."""
+        res = self.data_loader.has_data(step, rank)
+        assert res == result
