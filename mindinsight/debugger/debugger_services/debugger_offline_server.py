@@ -520,6 +520,9 @@ class DebuggerOfflineManager:
             return
         # the iteration number in dump structure which starts from 0.
         iteration_id = step - 1
+        if not self._data_loader.has_data(iteration_id):
+            log.info("No data dumped with iteration id: %s. Ignore checking watchpoint.", iteration_id)
+            return
         hits = Manager().list()
         check_watchpoints_process = Process(target=self._check_watchpoint_work, args=(hits, iteration_id,))
         check_watchpoints_process.start()
