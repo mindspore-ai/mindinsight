@@ -829,7 +829,7 @@ class DebuggerSession:
                 "sub_graph_names": List[str]
             }
         """
-        if self.cache_store.get_stream_handler(Streams.METADATA).state != ServerStatus.WAITING.value:
-            log.error("Failed to get tensor hits as the MindSpore is not in waiting state.")
+        if self.cache_store.get_stream_handler(Streams.METADATA).state == ServerStatus.PENDING.value:
+            log.error("Failed to get graph runs as the MindSpore is in pending state.")
             return {}
         return GraphRunsOperator(self.cache_store).get_graph_runs(rank_id)
