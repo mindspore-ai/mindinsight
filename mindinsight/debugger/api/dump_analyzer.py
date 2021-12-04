@@ -87,7 +87,7 @@ class DumpAnalyzer:
                 new_node = NodeImpl(b_node, node_type)
                 new_node.debugger_engine = self._debugger_engine
                 nodes[new_node.rank][new_node.unique_id] = new_node
-                id_to_name_map[new_node.rank][b_node.name] = new_node.name
+                id_to_name_map[new_node.rank][(b_node.graph_name, b_node.name)] = new_node.name
 
         def _update_node_list(node_list, dst_id, cur_node, cur_node_map):
             nonlocal id_to_name_map
@@ -118,9 +118,12 @@ class DumpAnalyzer:
                 if hasattr(base_node, 'inputs'):
                     # parameter or const node has no inputs
                     for node_input in base_node.inputs:
-                        _update_node_list(node.input_nodes, node_input.name, node, node_map)
-                for node_id in base_node.downstream:
-                    _update_node_list(node.downstream, node_id, node, node_map)
+                        _update_node_list(node.input_nodes, (base_node.graph_name, node_input.name), node, node_map)
+
+        for node_map in self._nodes.values():
+            for node in node_map.values():
+                for node_input in node.input_nodes:
+                    node_input.downstream.append(node)
 
     def export_graphs(self, output_dir=None):
         """
