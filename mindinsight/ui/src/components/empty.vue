@@ -22,9 +22,9 @@ limitations under the License.
 
 <script>
 export const [
-  NO_DATA, EMPTY_DATA, LOADING_DATA, COMING_SOON, HETEROGENEOUS,
+  NO_DATA, EMPTY_DATA, LOADING_DATA, COMING_SOON, HETEROGENEOUS, DATA_SELECT_TIP
 ] = [
-  'noData', 'emptyData', 'dataLoading', 'stayTuned', 'heterogeneous',
+  'noData', 'emptyData', 'dataLoading', 'stayTuned', 'heterogeneous', 'dataSelectTip',
 ];
 export default {
   props: {
@@ -40,6 +40,7 @@ export default {
       dataLoading: this.$t('public.dataLoading'),
       stayTuned: this.$t('public.stayTuned'),
       heterogeneous: this.$t('profiling.isHeterogeneous'),
+      dataSelectTip: this.$t('lossAnalysis.dataSelectTip'),
     };
   },
   computed: {

@@ -827,6 +827,9 @@ export default {
               width: 2,
             },
           },
+          nameTextStyle: {
+            padding: [0, 0, 7, 0]
+          },
           axisLabel: {
             formatter(value) {
               const symbol = Math.abs(value);
