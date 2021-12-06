@@ -152,7 +152,7 @@ class OptimizedGraph(MSGraph):
                 if src_node.type in (NodeTypeEnum.LOAD.value,
                                      NodeTypeEnum.TUPLE_GET_ITEM.value,
                                      NodeTypeEnum.MAKETUPLE.value,
-                                     NodeTypeEnum.UPDATE_STATE):
+                                     NodeTypeEnum.UPDATE_STATE.value):
                     node.delete_inputs(src_node_name)
                     for source_node_name, source_attr in dict(src_node.inputs).items():
                         source_node = self._get_normal_node(node_name=source_node_name)
@@ -178,7 +178,7 @@ class OptimizedGraph(MSGraph):
                 if src_node.type in (NodeTypeEnum.LOAD.value,
                                      NodeTypeEnum.TUPLE_GET_ITEM.value,
                                      NodeTypeEnum.MAKETUPLE.value,
-                                     NodeTypeEnum.UPDATE_STATE):
+                                     NodeTypeEnum.UPDATE_STATE.value):
                     node.delete_outputs(src_node_name)
                     for source_node_name, source_attr in dict(src_node.outputs).items():
                         source_node = self._get_normal_node(node_name=source_node_name)
@@ -196,7 +196,7 @@ class OptimizedGraph(MSGraph):
             if node.type in (NodeTypeEnum.LOAD.value,
                              NodeTypeEnum.TUPLE_GET_ITEM.value,
                              NodeTypeEnum.MAKETUPLE.value,
-                             NodeTypeEnum.UPDATE_STATE):
+                             NodeTypeEnum.UPDATE_STATE.value):
                 delete_names.append(node.name)
 
         self._delete_nodes_of_cache(delete_names)

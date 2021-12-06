@@ -364,7 +364,7 @@ class NodeOutput:
             self.slot_size = 0
         else:
             self.info = None
-            self.slot_size = 0
+            self.slot_size = 1
 
     def __repr__(self):
         return str({
