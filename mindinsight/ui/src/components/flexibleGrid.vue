@@ -463,13 +463,13 @@ export default {
       if (localStorage.saveGridStyle) {
         const saveGridStyle = JSON.parse(localStorage.saveGridStyle);
         const gridStyleData = saveGridStyle.find((item) => item.key === gridStyleKey);
-        if (gridStyleData !== undefined && gridStyleData.value) {
+        if (gridStyleData !== undefined) {
           gridStyleData.value = gridStyle;
           localStorage.setItem('saveGridStyle', JSON.stringify(saveGridStyle));
         }
       } else {
         const gridStyleData = saveGridStyleObj.find((item) => item.key === gridStyleKey);
-        if (gridStyleData !== undefined && !gridStyleData.value) {
+        if (gridStyleData !== undefined) {
           gridStyleData.value = gridStyle;
           localStorage.setItem('saveGridStyle', JSON.stringify(saveGridStyleObj));
         }
