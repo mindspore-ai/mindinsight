@@ -31,6 +31,7 @@ from mindinsight.debugger.conditionmgr.condition import ParamNameEnum
 from mindinsight.debugger.debugger_services.debugger_server_base import DebuggerServerBase, debugger_server_wrap
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
 from mindinsight.debugger.stream_cache.data_loader import DataLoader
+from mindinsight.debugger.dump.convert import get_msaccucmp_path
 from mindinsight.domain.graph.proto.ms_graph_pb2 import TensorProto
 from mindinsight.utils.exceptions import MindInsightException
 
@@ -127,6 +128,16 @@ class DebuggerOfflineManager:
             log.error("Failed to find module dbg_services. %s", err)
             raise DebuggerModuleNotFoundError("dbg_services")
         return dbg_services_module
+
+    @staticmethod
+    def check_toolkit(data_loader):
+        """Check if the toolkit file exist."""
+        if not data_loader.get_sync_flag and data_loader.device_target == "Ascend":
+            try:
+                get_msaccucmp_path()
+            except FileNotFoundError as err:
+                log.error("File not found. %s", err)
+                raise DebuggerModuleNotFoundError(err)
 
     @staticmethod
     def get_dbg_service(dbg_services_module, data_loader, mem_limit):

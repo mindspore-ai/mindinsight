@@ -322,3 +322,14 @@ class DebuggerHistoryValueError(MindInsightException):
             message=DebuggerErrorMsg.DEBUGGER_STEP_VALUE_ERROR.value.format(graph_id),
             http_code=500
         )
+
+
+class DebuggerToolkitNotFoundError(MindInsightException):
+    """The error of that the module is not found."""
+
+    def __init__(self, msg):
+        super(DebuggerToolkitNotFoundError, self).__init__(
+            error=DebuggerErrors.TOOLKIT_NOT_FOUND_ERROR,
+            message=DebuggerErrorMsg.TOOLKIT_NOT_FOUND_ERROR.value.format(msg),
+            http_code=500
+        )

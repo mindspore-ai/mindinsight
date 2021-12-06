@@ -59,6 +59,11 @@ class DataLoader:
         self._initialize()
 
     @property
+    def device_target(self):
+        """The property of device target."""
+        return self._device_target
+
+    @property
     def dump_dir(self):
         """The property of dump directory."""
         return str(self._debugger_base_dir)

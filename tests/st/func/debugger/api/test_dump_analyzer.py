@@ -69,7 +69,7 @@ class TestDumpAnalyzer:
     def test_select_tensors(self):
         """Get debugger online server"""
         tensors = self.dump_analyzer.select_tensors('o', iterations=1)
-        assert len(tensors) == 284
+        assert len(tensors) == 286
         assert tensors[0].value() is not None
 
     @pytest.mark.level0
