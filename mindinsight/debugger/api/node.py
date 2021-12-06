@@ -32,7 +32,7 @@ class Node(ABC):
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
+        change or deletion.
 
     Args:
         node_feature(namedtuple): The node feature.
