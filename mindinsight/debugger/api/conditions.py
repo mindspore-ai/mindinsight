@@ -29,7 +29,7 @@ class ConditionBase(ABC):
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
+        change or deletion.
 
     Note:
         - If multiple checking parameters is specified for one condition instance,
@@ -95,7 +95,7 @@ class WatchpointHit(ABC):
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
+        change or deletion.
 
     Note:
         - This class is not meant to be instantiated by user.
@@ -342,7 +342,7 @@ class TensorTooLargeCondition(ConditionBase):
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
+        change or deletion.
 
     Args:
         abs_mean_gt (float, optional): The threshold for mean of the absolute
@@ -431,7 +431,7 @@ class TensorTooSmallCondition(ConditionBase):
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
+        change or deletion.
 
     Args:
         abs_mean_lt (float, optional): The threshold for mean of the absolute
@@ -525,7 +525,7 @@ class TensorRangeCondition(ConditionBase):
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
+        change or deletion.
 
     Args:
         range_percentage_lt (float, optional): The threshold for the
@@ -648,7 +648,7 @@ class TensorOverflowCondition(ConditionBase):
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
+        change or deletion.
 
     Examples:
         >>> from mindinsight.debugger import TensorOverflowCondition
@@ -688,7 +688,7 @@ class OperatorOverflowCondition(ConditionBase):
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
+        change or deletion.
 
     Examples:
         >>> from mindinsight.debugger import OperatorOverflowCondition
@@ -728,7 +728,7 @@ class TensorAllZeroCondition(ConditionBase):
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
+        change or deletion.
 
     Args:
         zero_percentage_ge (float): The threshold to check if the percentage of
@@ -780,7 +780,7 @@ class TensorUnchangedCondition(ConditionBase):
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
+        change or deletion.
 
     Args:
         rtol (float, optional): The relative tolerance parameter. Default: 1e-5.
@@ -840,7 +840,7 @@ class TensorChangeBelowThresholdCondition(ConditionBase):
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
+        change or deletion.
 
     Args:
         abs_mean_update_ratio_lt (float): The threshold value for mean update ration.
@@ -901,7 +901,7 @@ class TensorChangeAboveThresholdCondition(ConditionBase):
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
+        change or deletion.
 
     Args:
         abs_mean_update_ratio_gt (float): The threshold value for mean update ratio,
@@ -958,7 +958,7 @@ class Watchpoint:
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or delete.
+        change or delete.
 
     Args:
         tensors (Iterable[DebuggerTensor]): The tensors to check.

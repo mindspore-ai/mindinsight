@@ -31,7 +31,7 @@ class DebuggerTensor(ABC):
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
-        change and/or deletion.
+        change or deletion.
 
     Args:
         node (Node): The node that outputs this tensor.
