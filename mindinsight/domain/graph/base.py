@@ -402,9 +402,10 @@ class Source:
         return str(self.to_dict())
 
     def __str__(self):
-        if self.file_path:
-            return f'{"-" if self.has_substack else " "} {self.file_path}:{self.line_no}\n{self.code_line}'
-        return self.code_line
+        if not self.file_path:
+            return self.code_line
+        substack_symbol = '-' if self.has_substack else ' '
+        return f'# {substack_symbol} {self.file_path}:{self.line_no}  {self.code_line}'
 
     @classmethod
     def build_stack_from_source_address(cls, source_address):
@@ -443,18 +444,22 @@ class Node:
     Graph node.
 
     Args:
-        name (str): Node name.
+        raw (NodeProto): Node Proto.
     """
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, raw):
+        self.raw = raw
+        self.name = ''
         self.output = None
         self.downstream = []
-        self.raw = ''
 
 
 class Constant(Node):
     """Constant node within graph."""
+
+    def __init__(self, raw):
+        super().__init__(raw)
+        self.name = raw.key
 
     def __repr__(self):
         return str({
@@ -467,6 +472,10 @@ class Constant(Node):
 class Parameter(Node):
     """Parameter node within graph."""
 
+    def __init__(self, raw):
+        super().__init__(raw)
+        self.name = raw.name
+
     def __repr__(self):
         return str({
             'name': self.name,
@@ -476,31 +485,17 @@ class Parameter(Node):
 
 
 class Operator(Node):
-    """
-    Operator node within graph.
+    """Operator node within graph."""
 
-    Args:
-        op_name (str): Operator name.
-        op_type (str): Operator type.
-    """
-
-    def __init__(self, op_name, op_type):
-        super().__init__(op_name)
-        self.type = op_type
+    def __init__(self, raw):
+        super().__init__(raw)
+        self.name = raw.name
+        self.type = raw.op_type
+        self.scope = raw.scope or os.path.dirname(raw.full_name)
+        self.full_name = raw.full_name
         self.inputs = []
         self.attrs = {}
-        self.full_name = ''
         self.stack = []
-
-    @property
-    def scope(self):
-        """
-        Scope property.
-
-        Returns:
-            str, scope.
-        """
-        return os.path.dirname(self.full_name)
 
     @property
     def op_id(self):
@@ -512,7 +507,7 @@ class Operator(Node):
         """
         pattern = re.search(r'-op(?P<op_id>\d+)$', self.full_name)
         if not pattern:
-            return self.full_name
+            return self.name
 
         info = pattern.groupdict()
         return info['op_id']
@@ -525,6 +520,7 @@ class Operator(Node):
             'output': self.output,
             'downstream': self.downstream,
             'attrs': self.attrs,
+            'scope': self.scope,
             'full_name': self.full_name,
             'op_id': self.op_id,
         })
