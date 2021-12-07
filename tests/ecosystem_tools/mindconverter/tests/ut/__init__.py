@@ -12,8 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Import the mocked mindspore."""
-import sys
-from tests.utils import mindspore
-
-sys.modules['mindspore'] = mindspore
+"""UT for mindconverter."""
