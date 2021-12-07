@@ -506,10 +506,7 @@ class Toolkit:
         for operator in self.operators:
             if not operator.stack:
                 continue
-            stack = [
-                f'{source.file_path}:{source.line_no}\n{source.code_line}'
-                for source in operator.stack if source.file_path
-            ]
+            stack = [str(source) for source in operator.stack if source.file_path]
             key = '\n'.join(stack)
             if key in source_mapping:
                 source_mapping[key].append(operator)
