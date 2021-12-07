@@ -286,13 +286,7 @@ class Toolkit:
         Returns:
             str, stack content.
         """
-        content = ''
-        for source in operator.stack:
-            if source.file_path:
-                source_content = f'{source.file_path}:{source.line_no}\n{source.code_line}\n'
-            else:
-                source_content = f'{source.code_line}\n'
-            content += source_content
+        content = '\n'.join([str(source) for source in operator.stack])
         return content.strip()
 
     def _add_operator_worksheet(self, workbook, styles):

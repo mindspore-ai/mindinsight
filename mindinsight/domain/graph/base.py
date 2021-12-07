@@ -383,10 +383,11 @@ class Source:
         code_line (int): Code line content.
     """
 
-    def __init__(self, file_path, line_no, code_line):
+    def __init__(self, file_path, line_no, code_line, has_substack):
         self.file_path = file_path
         self.line_no = line_no
         self.code_line = code_line
+        self.has_substack = has_substack
 
     def to_dict(self):
         """Parse to dict."""
@@ -394,13 +395,16 @@ class Source:
             'file_path': self.file_path,
             'line_no': self.line_no,
             'code_line': self.code_line,
+            'has_substack': self.has_substack,
         }
 
     def __repr__(self):
         return str(self.to_dict())
 
     def __str__(self):
-        return f'{self.file_path}:{self.line_no}\n{self.code_line}' if self.file_path else self.code_line
+        if self.file_path:
+            return f'{"-" if self.has_substack else " "} {self.file_path}:{self.line_no}\n{self.code_line}'
+        return self.code_line
 
     @classmethod
     def build_stack_from_source_address(cls, source_address):
@@ -415,18 +419,20 @@ class Source:
         """
         stack = []
         for line in source_address.strip().split('\n'):
-            regex = r'#\sIn\sfile\s(?P<file_path>.+)\((?P<line_no>\d+)\)/(?P<code_line>.+)/'
+            regex = r'#\s\s(?P<has_substack>\s|-)\sIn\sfile\s(?P<file_path>.+)\((?P<line_no>\d+)\)/(?P<code_line>.+)/'
             pattern = re.search(regex, line.strip())
             if pattern is None:
                 source = {
                     'file_path': '',
                     'line_no': 0,
                     'code_line': line.strip(),
+                    'has_substack': False,
                 }
             else:
                 source = pattern.groupdict()
                 source['line_no'] = int(source['line_no'])
                 source['code_line'] = source['code_line'].strip()
+                source['has_substack'] = source['has_substack'] == '-'
             stack.append(cls(**source))
 
         return stack
