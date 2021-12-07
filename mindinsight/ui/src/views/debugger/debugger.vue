@@ -713,7 +713,7 @@ limitations under the License.
                 </div>
                 <div class="no-data"
                      v-else>
-                  {{ `${$t('public.noData')}${allGraphIdArr.length?'':`(${$t('debugger.noExecutionHistoryFile')})`}` }}
+                  {{ isGraphRunsInit?`${$t('public.noData')}${allGraphIdArr.length?'':`(${$t('debugger.noExecutionHistoryFile')})`}`:$t('public.dataLoading') }}
                 </div>
               </div>
             </div>
@@ -1321,6 +1321,7 @@ export default {
       hideAreas: { left: 'left', rightTop: 'top', rightBottom: 'bottom' },
       showFixed: false,
       gridStyleKey: this.$route.query.sessionId ? 'offline-debugger' : 'debugger',
+      isGraphRunsInit: false,
     };
   },
   components: { debuggerTensor, tree, FlexibleGrid },
@@ -1411,21 +1412,27 @@ export default {
       }
     },
     getGraphRuns() {
-      RequestService.getGraphRuns(this.sessionId, this.logicCard.value).then((res) => {
-        if (res.data.graph_runs?.length) {
-          this.allGraphIdArr = res.data.graph_runs;
-          this.graphIdArr = JSON.parse(JSON.stringify(this.allGraphIdArr));
-          const graphNames = [...new Set(this.allGraphIdArr.map((val) => val.graph_name))];
-          if (graphNames.length > 1) {
-            this.graphNameObj.options = [this.$t('debugger.all'), ...graphNames];
+      RequestService.getGraphRuns(this.sessionId, this.logicCard.value).then(
+        (res) => {
+          this.isGraphRunsInit = true;
+          if (res.data.graph_runs?.length) {
+            this.allGraphIdArr = res.data.graph_runs;
+            this.graphIdArr = JSON.parse(JSON.stringify(this.allGraphIdArr));
+            const graphNames = [...new Set(this.allGraphIdArr.map((val) => val.graph_name))];
+            if (graphNames.length > 1) {
+              this.graphNameObj.options = [this.$t('debugger.all'), ...graphNames];
+            } else {
+              this.graphNameObj.options = graphNames;
+            }
+            this.scrollGraphCount();
           } else {
-            this.graphNameObj.options = graphNames;
+            this.$message(this.$t('debugger.noExexutionGraph'));
           }
-          this.scrollGraphCount();
-        } else {
-          this.$message(this.$t('debugger.noExexutionGraph'));
+        },
+        () => {
+          this.isGraphRunsInit = true;
         }
-      });
+      );
     },
     graphExecutionSelect() {
       this.graphIdArr = this.allGraphIdArr
@@ -1483,6 +1490,9 @@ export default {
       );
       if (this.graphFiles.options.length > 1) {
         this.graphFiles.options.unshift(this.$t('debugger.all'));
+      }
+      if(this.graphFiles.value !== this.graphFiles.options[0]){
+        this.isCurrentGraph = false;
       }
       this.graphFiles.value = this.graphFiles.options[0];
       const device = this.devices.find((val) => val.rank_id === this.logicCard.value);
