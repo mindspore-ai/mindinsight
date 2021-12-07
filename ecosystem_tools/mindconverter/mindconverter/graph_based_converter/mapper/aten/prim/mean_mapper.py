@@ -60,9 +60,9 @@ class MeanMapper(AtenToMindSporeMapper):
         }
         inputs, args, group_inputs = MeanMapper._params_parser(raw_params, args_name_list_mapper, trainable_params)
 
+        args["dtype"] = None if args.get("dtype") is None else PYTORCH_MS_MAP[args.get("dtype")]
         init_template_list = [f"self.{{{variable_slot}}}_{arg_name} = {{{arg_name}}}" for arg_name in args
                               if arg_name != "keep_dims"]
-        args["dtype"] = None if args.get("dtype") is None else PYTORCH_MS_MAP[args.get("dtype")]
         parameters_declared = dict()
         for name, trainable_param in trainable_params.copy().items():
             value = trainable_param["data"]
