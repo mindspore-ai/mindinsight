@@ -64,15 +64,17 @@ class ZerosMapper(AtenToMindSporeMapper):
             5: ["shape", "dtype", "unused", "unused", "unused"],
             6: ["shape", "unused", "dtype", "unused", "unused", "unused"]
         }
-        raw_arg_name_list = ZerosMapper.get_args_name_list(raw_params=raw_params.copy(),
+        raw_arg_name_list = ZerosMapper.get_args_name_list(params=raw_params,
                                                            args_name=args_name_list_mapper,
                                                            return_raw=True)
-        inputs, args, group_inputs = ZerosMapper._params_parser(raw_params, args_name_list_mapper, trainable_params)
+        inputs, args, group_inputs = ZerosMapper._params_parser(raw_params=raw_params,
+                                                                args_name=args_name_list_mapper,
+                                                                trainable_params=trainable_params)
 
-        init_template_list = [f"self.{{{variable_slot}}}_{arg_name} = {{{arg_name}}}" for arg_name in args
-                              if arg_name != "unused"]
         dtype = args.get("dtype")
         args["dtype"] = PYTORCH_MS_MAP["default"] if dtype is None else PYTORCH_MS_MAP[dtype]
+        init_template_list = [f"self.{{{variable_slot}}}_{arg_name} = {{{arg_name}}}" for arg_name in args
+                              if arg_name != "unused"]
         parameters_declared = dict()
         for name, trainable_param in trainable_params.copy().items():
             value = trainable_param["data"]
@@ -88,7 +90,7 @@ class ZerosMapper(AtenToMindSporeMapper):
         diff = len(inputs) - len(raw_arg_name_list)
         if diff > 0:
             construct_template = f"opt_{{{variable_slot}}} = ms_np.{op}" \
-                                 f"(({' ,'.join(inputs[:diff + 1])}), " \
+                                 f"(({', '.join(inputs[:diff + 1])}), " \
                                  f"self.{{{variable_slot}}}_dtype)"
         else:
             construct_template = f"opt_{{{variable_slot}}} = ms_np.{op}" \
