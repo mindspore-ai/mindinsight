@@ -25,7 +25,7 @@ from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum
 from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum
 from mindinsight.debugger.conditionmgr.condition import ActivationFuncEnum
 from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
-from mindinsight.debugger.conditionmgr.log import logger
+from mindinsight.debugger.common.log import LOGGER as logger
 from mindinsight.conf import settings
 from mindinsight.debugger.stream_cache.watchpoint import WatchNodeTree
 

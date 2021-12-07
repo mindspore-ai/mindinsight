@@ -29,7 +29,6 @@ from mindinsight.debugger.dump.parser import DebuggerParser
 from mindinsight.debugger.stream_cache.data_loader import DataLoader
 from mindinsight.domain.graph.base import NodeType
 from mindinsight.domain.graph.query import construct_filter_func
-from mindinsight.scripts.start import MIN_MEM_LIMIT_VALUE, MAX_MEM_LIMIT_VALUE
 
 
 class DumpAnalyzer:
@@ -42,8 +41,8 @@ class DumpAnalyzer:
 
     Args:
         dump_dir (str): The path of the dump folder.
-        mem_limit (int, optional): The memory limit for checking watchpoints in
-            MB. Default: None, which means no limit.
+        mem_limit (int, optional): The memory limit for checking watchpoints in MB.
+            Default: None, which means no limit. Optional values: from 2048 MB to 2147483647 MB.
 
     Examples:
             >>> from mindinsight.debugger import DumpAnalyzer
@@ -74,7 +73,7 @@ class DumpAnalyzer:
         # The unit is MB, from 2G to max value of int32 MB
         min_limit_value = 2 * 1024
         max_limit_value = 2147483647
-        if mem_limit and mem_limit < MIN_MEM_LIMIT_VALUE or mem_limit >= MAX_MEM_LIMIT_VALUE:
+        if mem_limit and mem_limit < min_limit_value or mem_limit > max_limit_value:
             msg = f"If mem_limit is not None, it should be set in [{min_limit_value}, {max_limit_value}]."
             raise DebuggerParamValueError(msg)
 

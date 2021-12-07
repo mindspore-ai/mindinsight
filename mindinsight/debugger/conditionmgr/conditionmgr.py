@@ -20,7 +20,7 @@ This module provide condition manager function.
 from mindinsight.debugger.conditionmgr.condition import Condition
 from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum
 from mindinsight.debugger.conditionmgr.condition_list import CONDITION_LIST
-from mindinsight.debugger.conditionmgr.log import logger
+from mindinsight.debugger.common.log import LOGGER as logger
 
 
 class ConditionMgr:

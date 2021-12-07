@@ -23,6 +23,7 @@ class DebuggerEngine:
     def __init__(self, data_loader, mem_limit):
         """Initialization."""
         self._data_loader = data_loader
+        DebuggerOfflineManager.check_toolkit(self._data_loader)
         self._dbg_services_module = DebuggerOfflineManager.get_dbg_service_module()
         self._dbg_service = DebuggerOfflineManager.get_dbg_service(self.dbg_services_module,
                                                                    data_loader,
