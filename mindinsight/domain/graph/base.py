@@ -419,7 +419,7 @@ class Source:
         """
         stack = []
         for line in source_address.strip().split('\n'):
-            regex = r'#\s\s(?P<has_substack>\s|-)\sIn\sfile\s(?P<file_path>.+)\((?P<line_no>\d+)\)/(?P<code_line>.+)/'
+            regex = r'#(\s\s(?P<has_substack>\s|-))?\sIn\sfile\s(?P<file_path>.+)\((?P<line_no>\d+)\)/(?P<code_line>.+)/'
             pattern = re.search(regex, line.strip())
             if pattern is None:
                 source = {
