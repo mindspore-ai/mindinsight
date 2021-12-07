@@ -634,6 +634,10 @@ export default {
                 this.chartInfo = lossdata.metadata;
                 this.chartInfo.ratio = ratio;
                 this.$nextTick(() => {
+                  if (this.chartOption.series) {
+                    this.formatMarkArea(this.chartOption.series[0]);
+                    this.chartObj.setOption(this.chartOption, false);
+                  }
                   this.updateTabsChart();
                 });
               }
@@ -1006,8 +1010,6 @@ export default {
         }
       });
       if (this.chartObj) {
-        this.formatMarkArea(this.chartOption.series[0]);
-        this.chartObj.setOption(this.chartOption, false);
         const params = {
           train_id: this.trainInfo.id,
           type: 'interval',
