@@ -16,7 +16,7 @@ limitations under the License.
 <template>
   <div class="cl-diagram-container">
     <empty v-if="seriesArr.length <= 1 || allEmptyData"
-           :state="over ? 'noData' : 'dataSelectTip'"
+           :state="over ? 'noData' : isCompareLoss ? 'dataSelectTip' : 'dataLoading'"
            :fontSize="16"></empty>
     <!-- Function Area -->
     <div class="operateContainer top-operate"
@@ -65,6 +65,8 @@ export default {
     empty,
   },
   props: {
+    // determine whether the component is used by compare loss module
+    isCompareLoss: false,
     over: Boolean,
     oriData: {
       type: Object,

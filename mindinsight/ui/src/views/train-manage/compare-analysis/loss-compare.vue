@@ -111,7 +111,8 @@ limitations under the License.
                        ref="mixedDiagram3D"
                        :styleSetting="diagram3DSetting"
                        :componentConfigOptions="diagram3DMaintoolsShow"
-                       :mergeGraphproperties="true"></diagram3D>
+                       :mergeGraphproperties="true"
+                       :isCompareLoss="true"></diagram3D>
           </div>
           <div class="superimposedView-con">
             <div :class="[
