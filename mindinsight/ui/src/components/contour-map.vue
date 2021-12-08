@@ -49,78 +49,6 @@ limitations under the License.
 
 <script>
 /**
- * Class of echarts custom text item
- */
-class ContourLabel {
-  type = 'text';
-  x;
-  y;
-  z2 = chartZIndexMap[CONTOUR_LABEL];
-  rotation;
-  transition = [];
-  style = {
-    x: null,
-    y: null,
-    text: null,
-    fill: null,
-  };
-  /**
-   * @param {string} value
-   * @param {string} color
-   * @param {Array} prev [x, y]
-   * @param {Array} next [x, y]
-   */
-  constructor(value, color, prev, next) {
-    this.style.text = value;
-    this.style.fill = color;
-    this.x = (prev[0] + next[0]) / 2;
-    this.y = (prev[1] + next[1]) / 2;
-    const {rotation, x, y} = calLabelTransform(prev, next);
-    if (rotation) this.rotation = rotation;
-    if (x) this.style.x = x;
-    if (y) this.style.y = y;
-  }
-}
-
-/**
- * Calculate label transform
- * @param {number} x1
- * @param {number} y1
- * @param {number} x2
- * @param {number} y2
- * @return {Object} {rotation, x, y}
- */
-function calLabelTransform([x1, y1], [x2, y2]) {
-  const x1Large = x1 >= x2;
-  const y1Large = y1 >= y2;
-  let rotation;
-  let x;
-  const y = -5;
-  if (x1Large === y1Large) {
-    /**
-     * x1Large && y1Large      !x1Large && !y1Large
-     *         2                        1
-     *          \                        \
-     *         label                    label
-     *            \                        \
-     *             1                        2
-     */
-    rotation = Math.atan((x1 - x2) / (y1 - y2)) - (Math.PI / 2);
-  } else {
-    /**
-     * x1Large && !y1Large      !x1Large && y1Large
-     *         1                        2
-     *        /                        /
-     *     label                    label
-     *      /                        /
-     *     2                        1
-     */
-    rotation = Math.atan((y2 - y1) / (x1 - x2));
-  }
-  return {rotation, x, y};
-}
-
-/**
  * Generate path lines series of contour map chart
  * @param {Array} data
  * @param {Array} lines
@@ -167,9 +95,10 @@ function usePathLines(data, lines, width, color, transition = false) {
  * @param {Array} markPoints
  * @param {Array} points
  * @param {number} size
+ * @param {number} unit
  * @return {Object} path points series
  */
-function usePathPoints(markPoints, points, size) {
+function usePathPoints(markPoints, points, size, unit) {
   return {
     type: 'scatter',
     zlevel: 1,
@@ -189,9 +118,9 @@ function usePathPoints(markPoints, points, size) {
     data: points,
     tooltip: {
       formatter: (params) => {
-        const [x, y, z, epoch] = params.data;
+        const [x, y, z, order] = params.data;
         return `
-          epoch: ${epoch}<br>
+          ${unit}: ${order}<br>
           x: ${x}<br>
           y: ${y}<br>
           z: ${z}<br>
@@ -207,28 +136,29 @@ function usePathPoints(markPoints, points, size) {
  * @param {Array} data
  * @param {number} width
  * @param {string} color
+ * @param {string} unit
  * @return {Object} path series
  */
-function usePathSeries(path, data, width, color) {
+function usePathSeries(path, data, width, color, unit) {
   const {intervals, x, y, z} = path;
   const lines = [];
   const lastIndex = intervals.length - 1;
   const markPoints = [];
   const points = [];
-  intervals.forEach((epoch, index) => {
+  intervals.forEach((order, index) => {
     if (index === 0) {
       markPoints.push({value: start, xAxis: x[index], yAxis: y[index]});
     }
     if (index === lastIndex) {
       markPoints.push({value: end, xAxis: x[index], yAxis: y[index]});
     }
-    points.push([x[index], y[index], z[index], epoch]);
+    points.push([x[index], y[index], z[index], order]);
     if (index < lastIndex) {
       lines.push([x[index], y[index], x[index + 1], y[index + 1]]);
     }
   });
   return [
-    usePathPoints(markPoints, points, width * 3),
+    usePathPoints(markPoints, points, width * 3, unit),
     usePathLines(data, lines, width, color),
   ];
 }
@@ -259,10 +189,9 @@ function calTooltipPosition(rowIndex, columnIndex, lastIndex) {
  * Generate points series of contour map chart
  * @param {Array} pointMatrix
  * @param {Object} chartInstance
- * @param {Array} convergencePoint
  * @return {Object} points series
  */
-function usePointSeries(pointMatrix, chartInstance, convergencePoint, pointColor) {
+function usePointSeries(pointMatrix, chartInstance) {
   const points = [];
   const lastIndex = pointMatrix.length - 1;
   pointMatrix.forEach((row, r) => {
@@ -291,22 +220,42 @@ function usePointSeries(pointMatrix, chartInstance, convergencePoint, pointColor
       opacity: 0,
     },
     animation: false,
-    markPoint: convergencePoint ? {
-      symbol: 'circle',
-      symbolSize: 12,
-      itemStyle: {
-        color: pointColor,
-      },
-      data: [
-        {
-          name: conPoint,
-          xAxis: convergencePoint[0],
-          yAxis: convergencePoint[1],
-        },
-      ],
-    } : {},
     tooltip: {
       formatter: () => '',
+    },
+  };
+}
+
+/**
+ * Generate convergence point series of contour map chart
+ * @param {Array} convergencePoint
+ * @param {string} pointColor
+ * @return {Object}
+ */
+function useConvergencePoint(convergencePoint, pointColor) {
+  return {
+    name: CONVERGENCE_POINT,
+    type: 'scatter',
+    symbol: 'circle',
+    symbolSize: 10,
+    z: chartZIndexMap[CONVERGENCE_POINT],
+    data: [convergencePoint],
+    itemStyle: {
+      color: pointColor,
+    },
+    tooltip: {
+      padding: [2, 8],
+      textStyle: {
+        fontSize: 8,
+      },
+      formatter: (params) => {
+        const [x, y] = params.data;
+        return `
+        ${conPoint}<br>
+        x: ${x}<br>
+        y: ${y}<br>
+        `;
+      },
     },
   };
 }
@@ -329,7 +278,7 @@ function usePointTooltip(pointMatrix) {
     name: 'pointsTooltip',
     type: 'scatter',
     z: chartZIndexMap[POINTS],
-    zlevel: 2,
+    zlevel: 1,
     data: points,
     symbol: 'circle',
     symbolSize: 0,
@@ -352,130 +301,18 @@ function usePointTooltip(pointMatrix) {
 }
 
 /**
- * Generate labels on contour line of contour map chart
- * @param {number} z
- * @param {Array} line
- * @return {Array} Array of labels
- */
-function useLineLabels(z, line) {
-  const labels = [];
-  const pointCount = line.length;
-  const maxLabelCount = ~~Math.sqrt(pointCount);
-  if (maxLabelCount === 1) {
-    line.forEach((point, index) => {
-      const [x, y] = point;
-      if (index === 0) {
-        const [x2, y2] = line[1];
-        const label = new ContourLabel(z, 'gray', [x, y], [x2, y2]);
-        labels.push(label);
-      }
-    });
-  } else {
-    const labelIndexFactor = ~~(pointCount / maxLabelCount);
-    line.forEach((point, index) => {
-      const [x, y] = point;
-      if (index !== 0 && index !== (pointCount - 1) && index % labelIndexFactor === 0) {
-        const nextIndex = index + 1;
-        const [x2, y2] =line[nextIndex];
-        labels.push(new ContourLabel(z, 'gray', [x, y], [x2, y2]));
-      }
-    });
-  }
-  return labels;
-}
-
-/**
- * Generate contour area enclosed by no line segments
- * @param {number} index
- * @param {Map} contourColorMap
- * @param {Object} area
- * @return {Object}
- */
-function useNoLineArea(index, contourColorMap, area) {
-  const {z, points} = area;
-  const keys = contourColorMap.entries();
-  let color;
-  while (!color) {
-    const key = keys.next().value[0];
-    if (key === z) {
-      color = keys.next().value[1];
-    }
-  }
-  return {
-    type: 'group',
-    children: [
-      {
-        type: 'polygon',
-        shape: {
-          points,
-          smooth: 0,
-        },
-        z2: index,
-        style: {
-          fill: color,
-          stroke: 'gray',
-          lineWidth: 1,
-        },
-      },
-    ],
-  };
-}
-
-/**
- * Generate contour area series of contour map chart
- * @param {number} z
- * @param {number} index
- * @param {Array} lines
- * @param {Map} contourColorMap
- * @param {Object} border
- * @param {Object} zOnBorderInOrder
- * @param {Array} noPointArea
- * @return {Object}
- */
-function useContourArea(z, index, lines, contourColorMap, border, zOnBorderInOrder, noPointArea) {
-  const labels = [];
-  const color = contourColorMap.get(z);
-  lines.forEach((line) => {
-    labels.push(...useLineLabels(z, line.points));
-  });
-  const polygon = {
-    type: 'polygon',
-    shape: {
-      points: completeTopoArea(z, lines, border, zOnBorderInOrder, noPointArea),
-      smooth: 0.1,
-    },
-    z2: index,
-    style: {
-      fill: color,
-      stroke: 'gray',
-      lineWidth: 1,
-    },
-  };
-  return {
-    type: 'group',
-    children: [
-      polygon,
-      ...labels,
-    ],
-  };
-}
-
-/**
  * Generate contour line series of contour map chart
- * @param {number} z
- * @param {Array} line
- * @param {Map} contourColorMap
+ * @param {Array} points
+ * @param {string} color
  * @return {Object}
  */
-function useContourLine(z, line, contourColorMap) {
-  const labels = useLineLabels(z, line);
-  const color = contourColorMap.get(z);
+function useContourLine(points, color) {
   // Contour
-  const polyline = {
+  return {
     type: 'polyline',
     shape: {
-      points: line,
-      smooth: 0.1,
+      points: points,
+      smooth: 0.2,
     },
     style: {
       fill: 'none',
@@ -483,119 +320,238 @@ function useContourLine(z, line, contourColorMap) {
       lineWidth: 1.2,
     },
   };
+}
+
+/**
+ * @param {number} index
+ * @param {Array} shape
+ * @param {string} color
+ * @return {Object}
+ */
+function useSimplePolygon(index, shape, color) {
   return {
-    type: 'group',
-    children: [
-      polyline,
-      ...labels,
-    ],
+    type: 'polygon',
+    z2: index,
+    shape: {
+      points: shape,
+      smooth: 0.2,
+    },
+    style: {
+      fill: color,
+      stroke: '#666',
+      lineWidth: 1,
+    },
   };
 }
+// Border Sample
+// class Border {
+//   top: number;
+//   bottom: number;
+//   left: number;
+//   right: number;
+// }
+
+const SECTION_SPLIT = '|';
 
 /**
- * Complete single line points
- * @param {number} z
- * @param {Array} line
- * @param {Object} border
- * @param {Object} zOnBorderInOrder
- * @param {Array} noPointArea
- * @return {Array}
+ * Complete polygon area by lines that start and end on border
+ * @param {Border} border
+ * @param {Array<Shape>} borderLines
+ * @param {Map<number, string>} contourColorMap
+ * @param {Array<number>} contours
+ * @return {Array<Object>}
  */
-function completeSingleLine(z, line, border, zOnBorderInOrder, noPointArea) {
-  const {startIndex, startBorder} = line;
-  const startBorderInOrder = zOnBorderInOrder[startBorder];
-  const startIncreasing = startBorderInOrder[startIndex - 1] < z || z < startBorderInOrder[startIndex + 1];
-  switch (startBorder) {
-    case 'top':
-    case 'right':
-      return completeByClockwise(z, line, border, startIncreasing, zOnBorderInOrder, noPointArea);
-    case 'bottom':
-    case 'left':
-      return completeByClockwise(z, line, border, !startIncreasing, zOnBorderInOrder, noPointArea);
+function completeAreaByBorderLines(border, borderLines, contourColorMap, contours) {
+  const borderPointMap = generateBorderPointMap(border, borderLines);
+  const children = [];
+  borderLines.forEach((line) => {
+    // Complete area
+    const shape = trackNextLine(line, border, borderPointMap);
+    children.push({
+      z: shape.z,
+      index: -1,
+      points: shape.points,
+      color: contourColorMap.get(shape.z),
+    });
+  });
+  const sections = ['top', 'bottom', 'left', 'right'].map((border) => getSection(border));
+  sections.forEach((section) => {
+    if (borderPointMap[section].size) {
+      borderPointMap[section].forEach((s) => {
+        if (!borderPointMap[section].has(s)) {
+          return;
+        }
+        const [start, end] = s.split(SECTION_SPLIT);
+        const b = getBorderBySection(section);
+        const coord = borderPointMap[b].has(+start) ? +start : +end;
+        const shape = trackNextLine(borderPointMap[b].get(coord), border, borderPointMap, true);
+        const index = contours.indexOf(shape.z);
+        const contour = contours[index + 1] ?? Infinity;
+        children.push({
+          z: contour,
+          index: -1,
+          points: shape.points,
+          color: contourColorMap.get(contour),
+        });
+      });
+    }
+  });
+  return children;
+}
+
+/**
+ * @param {string} section
+ * @return {string}
+ */
+function getBorderBySection(section) {
+  return section.replace('Section', '');
+}
+
+/**
+ * @param {number} start
+ * @param {number} end
+ * @return {string}
+ */
+function generateSection(start, end) {
+  return start > end ? `${end}${SECTION_SPLIT}${start}` : `${start}${SECTION_SPLIT}${end}`;
+}
+
+/**
+ * Start track from end to next point to complete area
+ * @param {Shape} line
+ * @param {Border} border
+ * @param {Object} borderPointMap
+ * @param {boolean} reverse
+ * @return {Object}
+ */
+function trackNextLine(line, border, borderPointMap, reverse = false) {
+  const {z, borders, config} = line;
+  let points = JSON.parse(JSON.stringify(line.points));
+  let [startBorder, endBorder] = borders;
+  // Start coord
+  const startCoord = getEffectiveCoord(startBorder, points[0]);
+  // End about
+  let endCoord = getEffectiveCoord(endBorder, points[points.length - 1]);
+  const mainClockwise = reverse ? !config.clockwise[1] : config.clockwise[1];
+  extendLine(points);
+  let [nextPointBorder, nextPointCoord] = trackNextPoint(endCoord, endBorder, mainClockwise, borderPointMap, border);
+  if (startBorder === nextPointBorder && startCoord === nextPointCoord) {
+    // Simple area, next point is start point
+    if (startBorder === endBorder) {
+      borderPointMap[getSection(startBorder)].delete(generateSection(startCoord, endCoord));
+    } else {
+      const addPoints = addCornerPoints(endBorder, startBorder, border, mainClockwise);
+      const startCornerPoint = addPoints[0];
+      const startCornerCoord = getEffectiveCoord(startBorder, startCornerPoint);
+      borderPointMap[getSection(startBorder)].delete(generateSection(startCoord, startCornerCoord));
+      const endCornerPoint = addPoints[addPoints.length - 1];
+      const endCornerCoord = getEffectiveCoord(endBorder, endCornerPoint);
+      borderPointMap[getSection(endBorder)].delete(generateSection(endCoord, endCornerCoord));
+      // points = points.concat(addPoints);
+      points = points.concat(extendCornerPoints(addPoints));
+    }
+    return {
+      points,
+      z,
+    };
+  } else {
+    while (startBorder !== nextPointBorder || startCoord !== nextPointCoord) {
+      // Not finish track
+      if (endBorder !== nextPointBorder) {
+        // Cross border, need add corner
+        const addPoints = addCornerPoints(endBorder, nextPointBorder, border, mainClockwise);
+        const startCornerPoint = addPoints[0];
+        const startCornerCoord = getEffectiveCoord(endBorder, startCornerPoint);
+        borderPointMap[getSection(endBorder)].delete(generateSection(startCoord, startCornerCoord));
+        const endCornerPoint = addPoints[addPoints.length - 1];
+        const endCornerCoord = getEffectiveCoord(nextPointBorder, endCornerPoint);
+        borderPointMap[getSection(nextPointBorder)].delete(generateSection(nextPointCoord, endCornerCoord));
+        // points = points.concat(addPoints);
+        points = points.concat(extendCornerPoints(addPoints));
+      } else {
+        borderPointMap[getSection(nextPointBorder)].delete(generateSection(endCoord, nextPointCoord));
+      }
+      const nextLine = borderPointMap[nextPointBorder].get(nextPointCoord);
+      const nextBorders = nextLine.borders;
+      const nextPoints = JSON.parse(JSON.stringify(nextLine.points));
+      if (nextPointBorder === nextBorders[0] && nextPointCoord === getEffectiveCoord(nextBorders[0], nextPoints[0])) {
+        // Next point is start of next line
+        endBorder = nextBorders[1];
+        endCoord = getEffectiveCoord(endBorder, nextPoints[nextPoints.length - 1]);
+      } else {
+        // Next point is end of next line
+        endBorder = nextBorders[0];
+        endCoord = getEffectiveCoord(endBorder, nextPoints[0]);
+        nextPoints.reverse();
+      }
+      extendLine(nextPoints);
+      points = points.concat(nextPoints);
+      [nextPointBorder, nextPointCoord] = trackNextPoint(endCoord, endBorder, mainClockwise, borderPointMap, border);
+    }
+    if (endBorder !== nextPointBorder) {
+      // Cross border, need add corner
+      const addPoints = addCornerPoints(endBorder, nextPointBorder, border, mainClockwise);
+      const startCornerPoint = addPoints[0];
+      const startCornerCoord = getEffectiveCoord(endBorder, startCornerPoint);
+      borderPointMap[getSection(endBorder)].delete(generateSection(startCoord, startCornerCoord));
+      const endCornerPoint = addPoints[addPoints.length - 1];
+      const endCornerCoord = getEffectiveCoord(nextPointBorder, endCornerPoint);
+      borderPointMap[getSection(nextPointBorder)].delete(generateSection(nextPointCoord, endCornerCoord));
+      // points = points.concat(addPoints);
+      points = points.concat(extendCornerPoints(addPoints));
+    } else {
+      borderPointMap[getSection(nextPointBorder)].delete(generateSection(endCoord, nextPointCoord));
+    }
+    return {
+      points,
+      z,
+    };
   }
 }
 
 /**
- * Complete single line points with specified order
- * @param {number} z
+ * Extend line to avoid smooth side effect
  * @param {Array} line
- * @param {Object} border
- * @param {boolean} clockwise
- * @param {Object} zOnBorderInOrder
- * @param {Array} noPointArea
+ */
+function extendLine(line) {
+  const startOrigin = line[0];
+  const startNext = line[1];
+  line.unshift(calcInversivePoint(startOrigin, startNext));
+  const endOrigin = line[line.length - 1];
+  const endNext = line[line.length - 2];
+  line.push(calcInversivePoint(endOrigin, endNext));
+}
+
+/**
+ * Extend corner point to avoid smooth side effect
+ * @param {Array} cornerPoints
  * @return {Array}
  */
-function completeByClockwise(z, line, border, clockwise, zOnBorderInOrder, noPointArea) {
-  const {startBorder, endBorder, points} = line;
-  const lastIndex = points.length - 1;
-  const startInversionPoint = calInversionPoint(points[0], points[1]);
-  const endInversionPoint = calInversionPoint(points[lastIndex], points[lastIndex - 1]);
-  switch (startBorder + endBorder) {
-    case 'topleft':
-    case 'leftbottom':
-    case 'bottomright':
-    case 'righttop':
-      if (!clockwise) {
-        const addPoints = checkNoPointAreaInConnecting(line, zOnBorderInOrder, border);
-        if (addPoints) {
-          // NoPointArea exist
-          noPointArea.push({
-            points: [
-              ...addPoints,
-              startInversionPoint,
-              ...points,
-              endInversionPoint,
-            ],
-            z,
-          });
-        }
-      }
-      break;
-    case 'lefttop':
-    case 'bottomleft':
-    case 'rightbottom':
-    case 'topright':
-      if (clockwise) {
-        const addPoints = checkNoPointAreaInConnecting(line, zOnBorderInOrder, border);
-        if (addPoints) {
-          // NoPointArea exist
-          noPointArea.push({
-            points: [
-              ...addPoints,
-              startInversionPoint,
-              ...points,
-              endInversionPoint,
-            ],
-            z,
-          });
-        }
-      }
-      break;
-  }
-  let startPoint = ['top', 'bottom'].includes(endBorder) ? ['middle', endBorder] : [endBorder, 'middle'];
-
-  const addPointsPosition = [];
-  do {
-    startPoint = useNextCornerByClockwise(startPoint, clockwise);
-    addPointsPosition.push(startPoint);
-  } while (startPoint.every((b) => b !== startBorder));
-
-  const addPoints = addPointsPosition.map(([x, y]) => {
-    return [border[x], border[y]];
+function extendCornerPoints(cornerPoints) {
+  return cornerPoints.map((point) => {
+    return point.map((v) => v * 1.1); // Extend 10%
   });
+}
+
+/**
+ * Calc inversive point
+ * @param {Array} origin
+ * @param {Array} target
+ * @return {Array}
+ */
+function calcInversivePoint(origin, target) {
   return [
-    ...addPoints,
-    startInversionPoint,
-    ...points,
-    endInversionPoint,
+    origin[0] - (target[0] - origin[0]),
+    origin[1] - (target[1] - origin[1]),
   ];
 }
 
+// type PointInPosition = [string, string];
+
 /**
- * Get next corner point with specified order
- * @param {Array} startPoint
+ * @param {PointInPosition} startPoint
  * @param {boolean} clockwise
- * @return {Array}
+ * @return {PointInPosition}
  */
 function useNextCornerByClockwise(startPoint, clockwise) {
   switch (startPoint.join('')) {
@@ -604,7 +560,7 @@ function useNextCornerByClockwise(startPoint, clockwise) {
     case 'rightmiddle':
       return clockwise ? ['right', 'bottom'] : ['right', 'top'];
     case 'middlebottom':
-      return clockwise ? ['left', 'bottom'] : ['left', 'bottom'];
+      return clockwise ? ['left', 'bottom'] : ['right', 'bottom'];
     case 'leftmiddle':
       return clockwise ? ['left', 'top'] : ['left', 'bottom'];
     case 'lefttop':
@@ -619,477 +575,182 @@ function useNextCornerByClockwise(startPoint, clockwise) {
 }
 
 /**
- * Calculate the inversion point of target point relative to origin point
- * @param {Array} origin
- * @param {Array} target
- * @return {Array}
- */
-function calInversionPoint(origin, target) {
-  const shrinkFactor = 20; // Used to reduce contour area out of border
-  return [
-    origin[0] - (target[0] - origin[0]) / shrinkFactor,
-    origin[1] - (target[1] - origin[1]) / shrinkFactor,
-  ];
-}
-
-/**
- * Complete area points
- * @param {number} z
- * @param {Array} lines
- * @param {Object} border
- * @param {Object} zOnBorderInOrder
- * @param {Array} noPointArea
- * @return {Array}
- */
-function completeTopoArea(z, lines, border, zOnBorderInOrder, noPointArea) {
-  if (lines.length === 1) {
-    const line = lines[0];
-    const {points, startBorder, endBorder} = line;
-    if (!startBorder) {
-      // Circle
-      return points;
-    }
-    if (startBorder === endBorder) {
-      // Start and end on same border
-      const lastIndex = points.length - 1;
-      return [
-        calInversionPoint(points[0], points[1]),
-        ...points,
-        calInversionPoint(points[lastIndex], points[lastIndex - 1]),
-      ];
-    }
-    // Start and end on different border
-    return completeSingleLine(z, line, border, zOnBorderInOrder, noPointArea);
-  } else {
-    // Multiple lines, and start and end on different border
-    return connectLines(z, lines, border, zOnBorderInOrder, noPointArea);
-  }
-}
-
-/**
- * Transform x, y position to value of point in right order
- * @param {string} border1
- * @param {string} border2
- * @param {Object} border
- * @return {Array}
- */
-function useCornerPoint(border1, border2, border) {
-  const expandFactor = 5; // Used to enlarge contour area out of border
-  const expandBorder = {
-    left: border.left - expandFactor,
-    top: border.top - expandFactor,
-    right: border.right + expandFactor,
-    bottom: border.bottom + expandFactor,
-  };
-  const point = ['left', 'right'].includes(border1)
-                  ? [expandBorder[border1], expandBorder[border2]]
-                  : [expandBorder[border2], expandBorder[border1]];
-  return point;
-}
-
-/**
- * Transform x, y position to value of points in right order
+ * Set start and end border, calc corner points
  * @param {string} startBorder
  * @param {string} endBorder
- * @param {Object} border
- * @param {string} direction
+ * @param {Border} border
+ * @param {boolean} clockwise
  * @return {Array}
  */
-function useTwoCornerPoints(startBorder, endBorder, border, direction) {
-  if (['top', 'bottom'].includes(direction)) {
-    return [[border[direction], border[endBorder]], [border[direction], border[startBorder]]];
+function addCornerPoints(startBorder, endBorder, border, clockwise) {
+  let startPoint = ['top', 'bottom'].includes(startBorder) ? ['middle', startBorder] : [startBorder, 'middle'];
+  const addPointsPosition = [];
+  do {
+    startPoint = useNextCornerByClockwise(startPoint, clockwise);
+    addPointsPosition.push(startPoint);
+  } while (startPoint.every((b) => b !== endBorder));
+  const addPoints = addPointsPosition.map(([x, y]) => {
+    return [border[x], border[y]];
+  });
+  return addPoints;
+}
+
+/**
+ * @param {number} effectiveCoord
+ * @param {string} border
+ * @param {boolean} clockwise
+ * @param {Map} borderPointMap
+ * @return {Array} [border, effectiveCoord]
+ */
+function trackNextPoint(effectiveCoord, border, clockwise, borderPointMap) {
+  const order = borderPointMap[getOrder(border)];
+  const index = order.indexOf(effectiveCoord);
+  const nextIndex = ['top', 'left'].includes(border)
+    ? index + (clockwise ? 1 : -1)
+    : index + (clockwise ? -1 : 1);
+  if (0 <= nextIndex && nextIndex < order.length) {
+    // In range
+    return [border, order[nextIndex]];
   } else {
-    // 'left' and 'right'
-    return [[border[endBorder], border[direction]], [border[startBorder], border[direction]]];
-  }
-}
-
-/**
- * Check no point area whether exist, if exist, return points used to supplement
- * @param {Object} line
- * @param {Object} zOnBorderInOrder
- * @param {Object} border
- * @return {Array}
- */
-function checkNoPointAreaInConnecting(line, zOnBorderInOrder, border) {
-  const {startBorder, endBorder, startIndex, endIndex} = line;
-  const startBorderLastPointIndex = zOnBorderInOrder[startBorder].length - 1;
-  const endBorderLastPointIndex = zOnBorderInOrder[endBorder].length - 1;
-  switch (startBorder + endBorder) {
-    case 'topleft':
-    case 'lefttop':
-      if (startIndex === 0 && endIndex === 0) {
-        return [useCornerPoint(startBorder, endBorder, border)];
-      }
-      break;
-    case 'topright':
-    case 'leftbottom':
-      if (startIndex === startBorderLastPointIndex && endIndex === 0) {
-        return [useCornerPoint(startBorder, endBorder, border)];
-      }
-      break;
-    case 'bottomleft':
-    case 'righttop':
-      if (startIndex === 0 && endIndex === endBorderLastPointIndex) {
-        return [useCornerPoint(startBorder, endBorder, border)];
-      }
-      break;
-    case 'bottomright':
-    case 'rightbottom':
-      if (startIndex === startBorderLastPointIndex && endIndex === endBorderLastPointIndex) {
-        return [useCornerPoint(startBorder, endBorder, border)];
-      }
-      break;
-    case 'topbottom':
-    case 'bottomtop':
-    case 'rightleft':
-    case 'leftright':
-      if (startIndex === 0 && endIndex === 0) {
-        const direction = ['top', 'bottom'].includes(startBorder) ? 'left' : 'top';
-        return useTwoCornerPoints(startBorder, endBorder, border, direction);
-      } else if (startIndex === startBorderLastPointIndex && endIndex === endBorderLastPointIndex) {
-        const direction = ['top', 'bottom'].includes(startBorder) ? 'right' : 'bottom';
-        return useTwoCornerPoints(startBorder, endBorder, border, direction);
-      }
-      break;
-    default:
-      // Never happen under the right calculation
-      return;
-  }
-}
-
-function calIntersectionPoint(line1point1, line1point2, line2point1, line2point2) {
-  const line1DiffX = line1point2[0] - line1point1[0];
-  const line2DiffX = line2point2[0] - line2point1[0];
-  const line1DiffY = line1point2[1] - line1point1[1];
-  const line2DiffY = line2point2[1] - line2point1[1];
-  let k1;
-  let k2;
-  let e1;
-  let e2;
-  if (line1DiffX === 0 && line2DiffX === 0) {
-    // Vertical parallel, such as | |
-    return [];
-  } else if (line1DiffX === 0) {
-    k2 = line2DiffY / line2DiffX;
-    e2 = (line2point2[1] - k2 * line2point2[0]);
-    const x = line1point1[0];
-    return [x, k2 * x + e2];
-  } else if (line2DiffX === 0) {
-    const k1 = line1DiffY / line1DiffX;
-    const e1 = (line1point2[1] - k1 * line1point2[0]);
-    const x = line2point1[0];
-    return [x, k1 * x + e1];
-  }
-  if (line1DiffY === 0 && line2DiffY === 0) {
-    // Horizontal parallel, such as 二
-    return [];
-  } else if (line1DiffY === 0) {
-    k2 = line2DiffY / line2DiffX;
-    e2 = (line2point2[1] - k2 * line2point2[0]);
-    const y = line1point1[1];
-    return [(y - e2) / k2, y];
-  } else if (line2DiffY === 0) {
-    k1 = line1DiffY / line1DiffX;
-    e1 = (line1point2[1] - k1 * line1point2[0]);
-    const y = line2point1[1];
-    return [(y - e1) / k1, y];
-  }
-  k1 = line1DiffY / line1DiffX;
-  e1 = (line1point2[1] - k1 * line1point2[0]);
-  k2 = line2DiffY / line2DiffX;
-  e2 = (line2point2[1] - k2 * line2point2[0]);
-
-  if (k1 === k2) {
-    // Slope parallel, such as \ \ or / /
-    return [];
-  }
-
-  const x = (e2 - e1) / (k1 - k2);
-  const y = k1 * x + e1;
-
-  return [x, y];
-}
-
-/**
- * Calculate two line relation, if two line can connect on same border, return connected line
- * @param {Object} line1
- * @param {Object} line2
- * @return {Object}
- */
-function calTwoLineRelation(line1, line2) {
-  const points1 = line1.points;
-  const points2 = line2.points;
-  const lastIndex1 = points1.length - 1;
-  const lastIndex2 = points2.length - 1;
-  if (line1.startBorder === line2.startBorder) {
-    const controlPoint = calIntersectionPoint(points1[0], points1[1], points2[0], points2[1]);
-    points1.reverse();
-    return {
-      points: [...points1, controlPoint, ...points2],
-      startBorder: line1.endBorder,
-      endBorder: line2.endBorder,
-      passBorder: line2.startBorder,
-    };
-  } else if (line1.startBorder === line2.endBorder) {
-    const controlPoint = calIntersectionPoint(points1[0], points1[1], points2[lastIndex2], points2[lastIndex2 - 1]);
-    return {
-      points: [...points2, controlPoint, ...points1],
-      startBorder: line2.startBorder,
-      endBorder: line1.endBorder,
-      passBorder: line1.startBorder,
-    };
-  } else if (line1.endBorder === line2.startBorder) {
-    const controlPoint = calIntersectionPoint(points1[lastIndex1], points1[lastIndex1 - 1], points2[0], points2[1]);
-    return {
-      points: [...points1, controlPoint, ...points2],
-      startBorder: line1.startBorder,
-      endBorder: line2.endBorder,
-      passBorder: line1.endBorder,
-    };
-  } else if (line1.endBorder === line2.endBorder) {
-    const controlPoint = calIntersectionPoint(
-        points1[lastIndex1 - 1],
-        points1[lastIndex1],
-        points2[lastIndex2 - 1],
-        points2[lastIndex2],
-    );
-    points2.reverse();
-    return {
-      points: [...points1, controlPoint, ...points2],
-      startBorder: line1.startBorder,
-      endBorder: line2.startBorder,
-      passBorder: line1.endBorder,
-    };
-  } else {
-    return;
-  }
-}
-
-/**
- * Connect lines
- * @param {number} z
- * @param {Array} lines
- * @param {Object} border
- * @param {Object} zOnBorderInOrder
- * @param {Array} noPointArea
- * @return {Array} newLine
- */
-function connectLines(z, lines, border, zOnBorderInOrder, noPointArea) {
-  let startLine = lines.splice(0, 1)[0];
-  const addPoints = checkNoPointAreaInConnecting(startLine, zOnBorderInOrder, border);
-  if (addPoints) {
-    // NoPointArea exist
-    noPointArea.push({
-      points: addPoints.concat(startLine.points),
-      z,
-    });
-  }
-  while (lines.length > 0) {
-    for (let i = 0; i < lines.length; i++) {
-      const otherLine = lines[i];
-      const addPoints = checkNoPointAreaInConnecting(otherLine, zOnBorderInOrder, border);
-      const otherPoints = otherLine.points;
-      if (addPoints) {
-        // NoPointArea exist
-        noPointArea.push({
-          points: addPoints.concat(otherPoints),
-          z,
-        });
-      }
-      const connection = calTwoLineRelation(startLine, otherLine);
-      if (connection) {
-        startLine = connection;
-        lines.splice(i, 1);
-        if (lines.length === 0) {
-          const {points, startBorder, endBorder, passBorder} = startLine;
-          const lastIndex = points.length - 1;
-          switch (startBorder + endBorder) {
-            case 'bottomleft':
-            case 'leftbottom':
-            case 'bottomright':
-            case 'rightbottom':
-            case 'topright':
-            case 'righttop':
-            case 'topleft':
-            case 'lefttop':
-              return [
-                useCornerPoint(startBorder, endBorder, border),
-                calInversionPoint(points[0], points[1]),
-                ...points,
-                calInversionPoint(points[lastIndex], points[lastIndex - 1]),
-              ];
-            case 'rightleft':
-            case 'leftright':
-            case 'topbottom':
-            case 'bottomtop':
-              const addPointBorder = useOppositeBorder(passBorder);
-              return [
-                useCornerPoint(startBorder, addPointBorder, border),
-                calInversionPoint(points[0], points[1]),
-                ...points,
-                calInversionPoint(points[lastIndex], points[lastIndex - 1]),
-                useCornerPoint(endBorder, addPointBorder, border),
-              ];
-          }
-        }
-      } else {
-        // No connection
-        if (lines.length === 1) {
-          /**
-           *     \    /
-           *       or
-           *  \          /
-           */
-          return connectDiagonalLines(startLine, otherLine, border);
-        }
-      }
+    // Out of range
+    let nextBorder = getNextBorderByClockwise(border, clockwise);
+    let nextIndex;
+    while (!borderPointMap[nextBorder].size) {
+      nextBorder = getNextBorderByClockwise(nextBorder, clockwise);
     }
+    switch (nextBorder) {
+      case 'top':
+      case 'left':
+        nextIndex = clockwise ? 0 : borderPointMap[nextBorder].size - 1;
+        break;
+      case 'bottom':
+      case 'right':
+        nextIndex = clockwise ? borderPointMap[nextBorder].size - 1 : 0;
+        break;
+    }
+    return [nextBorder, borderPointMap[getOrder(nextBorder)][nextIndex]];
   }
-  return startLine.points;
 }
 
 /**
- * Connect diagonal lines
- * @param {Object} line1
- * @param {Object} line2
- * @param {Object} border
- * @return {Array}
+ * @param {string} border
+ * @param {boolean} clockwise
+ * @return {string}
  */
-function connectDiagonalLines(line1, line2, border) {
-  const points1 = line1.points;
-  const points2 = line2.points;
-  if (line2.startBorder !== useOppositeBorder(line1.startBorder)) {
-    points2.reverse();
+function getNextBorderByClockwise(border, clockwise) {
+  switch (border) {
+    case 'top':
+      return clockwise ? 'right' : 'left';
+    case 'bottom':
+      return clockwise ? 'left' : 'right';
+    case 'left':
+      return clockwise ? 'top' : 'bottom';
+    case 'right':
+      return clockwise ? 'bottom' : 'top';
   }
-  const point1Border = ['top', 'bottom'].includes(line1.startBorder)
-                   ? [line1.endBorder, useOppositeBorder(line1.startBorder)]
-                   : [useOppositeBorder(line1.startBorder), line1.endBorder];
-  const point2Border = useOppositeCorner(point1Border);
-  const point1 = point1Border.map((b) => border[b]);
-  const point2 = point2Border.map((b) => border[b]);
-  const lastIndex1 = points1.length - 1;
-  const lastIndex2 = points2.length - 1;
-  return [
-    calInversionPoint(points1[0], points1[1]),
-    ...points1,
-    calInversionPoint(points1[lastIndex1], points1[lastIndex1 - 1]),
-    point1,
-    calInversionPoint(points2[0], points2[1]),
-    ...points2,
-    calInversionPoint(points2[lastIndex2], points2[lastIndex2 - 1]),
-    point2,
-  ];
 }
 
 /**
- * Generate opposite border
+ * @param {string} order
+ * @return {string}
+ */
+function getBorderByOrder(order) {
+  return order.replace('Order', '');
+}
+
+/**
  * @param {string} border
  * @return {string}
  */
-function useOppositeBorder(border) {
-  if (border === 'left') return 'right';
-  if (border === 'right') return 'left';
-  if (border === 'top') return 'bottom';
-  if (border === 'bottom') return 'top';
+function getOrder(border) {
+  return `${border}Order`;
 }
 
 /**
- * Generate opposite corner point
- * @param {Array} border
+ * @param {string} border
+ * @return {string}
+ */
+function getSection(border) {
+  return `${border}Section`;
+}
+
+/**
+ * Generate borderPointMap, includes the information of all points on the border
+ * @param {Border} borderObject
+ * @param {Array} borderLines
+ * @return {Object}
+ */
+function generateBorderPointMap(borderObject, borderLines) {
+  const orders = ['top', 'bottom', 'left', 'right'].map((border) => getOrder(border));
+  const sections = ['top', 'bottom', 'left', 'right'].map((border) => getSection(border));
+  const borderPointMap = {
+    top: new Map(),
+    [orders[0]]: [],
+    [sections[0]]: new Set(),
+    bottom: new Map(),
+    [orders[1]]: [],
+    [sections[1]]: new Set(),
+    left: new Map(),
+    [orders[2]]: [],
+    [sections[2]]: new Set(),
+    right: new Map(),
+    [orders[3]]: [],
+    [sections[3]]: new Set(),
+  };
+  borderLines.forEach((line) => {
+    const {borders, points} = line;
+    const [startBorder, endBorder] = borders;
+    // Start
+    const startEffectiveCoord = getEffectiveCoord(startBorder, points[0]);
+    borderPointMap[startBorder].set(startEffectiveCoord, line);
+    borderPointMap[getOrder(startBorder)].push(startEffectiveCoord);
+    // End
+    const endEffectiveCoord = getEffectiveCoord(endBorder, points[points.length - 1]);
+    borderPointMap[endBorder].set(endEffectiveCoord, line);
+    borderPointMap[getOrder(endBorder)].push(endEffectiveCoord);
+  });
+  // Generate border composition
+  orders.forEach((order) => {
+    const border = getBorderByOrder(order);
+    const pointsOrder = borderPointMap[order].concat(getStartAndEndCorner(border, borderObject));
+    pointsOrder.sort((a, b) => a - b);
+    pointsOrder.forEach((coord, index) => {
+      if (pointsOrder[index + 1]) {
+        borderPointMap[getSection(border)].add(`${coord}${SECTION_SPLIT}${pointsOrder[index + 1]}`);
+      }
+    });
+    pointsOrder.pop();
+    pointsOrder.shift();
+    borderPointMap[order] = pointsOrder;
+  });
+  return borderPointMap;
+}
+
+/**
+ * Get corner effective coord by border
+ * @param {string} border
+ * @param {Object} borderObject
  * @return {Array}
  */
-function useOppositeCorner(border) {
-  return border.map((b) => useOppositeBorder(b));
-}
-
-/**
- * Calculate is the point on the border
- * @param {Array} point
- * @param {Object} border
- * @return {string | null} result
- */
-function calPointBorder(point, border) {
-  const {top, left, bottom, right} = border;
-  if (left === point[0]) {
-    return 'left';
-  } else if (right === point[0]) {
-    return 'right';
-  } else if (top === point[1]) {
-    return 'top';
-  } else if (bottom === point[1]) {
-    return 'bottom';
-  } else {
-    return null;
+function getStartAndEndCorner(border, borderObject) {
+  switch (border) {
+    case 'top':
+    case 'bottom':
+      return [borderObject.right, borderObject.left];
+    case 'left':
+    case 'right':
+      return [borderObject.top, borderObject.bottom];
   }
 }
 
 /**
- * Generate data required for calculation
- * @param {Map} contourMap
- * @param {Object} border
- * @return {Object}
+ * Get effective coord of point by the border of the point
+ * @param {string} border
+ * @param {Array} point
+ * @return {number}
  */
-function createDataRequiredForCalculation(contourMap, border) {
-  const pointsOnBorder = {
-    top: [],
-    left: [],
-    right: [],
-    bottom: [],
-  };
-  contourMap.forEach((lines, z) => {
-    lines.forEach((line, index) => {
-      const start = line[0];
-      const startBorder = calPointBorder(start, border);
-      if (startBorder) {
-        const end = line[line.length - 1];
-        const endBorder = calPointBorder(end, border);
-        const lineObject = {
-          points: line,
-          startBorder,
-          startIndex: null,
-          endBorder,
-          endIndex: null,
-        };
-        pointsOnBorder[startBorder].push({
-          point: [...start, z],
-          start: true,
-          line: lineObject,
-        });
-        pointsOnBorder[endBorder].push({
-          point: [...end, z],
-          end: true,
-          line: lineObject,
-        });
-        lines[index] = lineObject;
-      } else {
-        // Circle
-        lines[index] = {
-          points: line,
-          startBorder: null,
-          endBorder: null,
-        };
-      }
-    });
-  });
-  Object.keys(pointsOnBorder).forEach((border) => {
-    // 'top' and 'bottom': 'x' is the value to be compared, means index === 0
-    // 'left' and 'right': 'y' is the value to be compared, means index === 1
-    const compareIndex = ['top', 'bottom'].includes(border) ? 0 : 1;
-    pointsOnBorder[border].sort((a, b) => {
-      return a.point[compareIndex] - b.point[compareIndex];
-    });
-    pointsOnBorder[border] = pointsOnBorder[border].map((item, index) => {
-      if (item.start) {
-        item.line.startIndex = index;
-      }
-      if (item.end) {
-        item.line.endIndex = index;
-      }
-      return item.point[2];
-    });
-  });
-  return pointsOnBorder;
+function getEffectiveCoord(border, point) {
+  return ['top', 'bottom'].includes(border) ? point[0] : point[1];
 }
 
 /**
@@ -1103,6 +764,63 @@ function createDataRequiredForCalculation(contourMap, border) {
  * @return {Object} echarts custom series
  */
 function useContourGroup(contours, contourMap, minPoint, maxPoint, contourColorMap, isArea) {
+  const children = [];
+  contourMap.forEach((lines) => {
+    lines.forEach((shape) => {
+      shape.points = shape.points.map((point) => {
+        return Array.isArray(point) ? point : [point.x, point.y];
+      });
+    });
+  });
+  if (isArea) {
+    const [left, bottom] = minPoint;
+    const [right, top] = maxPoint;
+    const border = {left, bottom, right, top};
+    const borderLines = [];
+    contourMap.forEach((lines, z) => {
+      const index = contours.indexOf(z);
+      const color = contourColorMap.get(z);
+      lines.forEach((shape) => {
+        const {points, config} = shape;
+        if (config.circle) {
+          if (config.updateContour) {
+            children.push({
+              z,
+              index: index + 1,
+              points,
+              color: contourColorMap.get(contours[index + 1]),
+            });
+          } else {
+            children.push({
+              z,
+              index,
+              points,
+              color,
+            });
+          }
+          return;
+        }
+        borderLines.push(shape);
+      });
+    });
+    if (borderLines.length) {
+      children.push(...completeAreaByBorderLines(border, borderLines, contourColorMap, contours));
+    }
+  } else {
+    contourMap.forEach((lines, z) => {
+      const index = contours.indexOf(z);
+      const color = contourColorMap.get(z);
+      lines.forEach((shape) => {
+        const {points} = shape;
+        children.push({
+          z,
+          index,
+          points,
+          color,
+        });
+      });
+    });
+  }
   return {
     type: 'custom',
     clip: true,
@@ -1113,42 +831,16 @@ function useContourGroup(contours, contourMap, minPoint, maxPoint, contourColorM
       maxPoint,
     ],
     renderItem: (_params, api) => {
-      const newContourMap = new Map();
-      const children = [];
-      contourMap.forEach((lines, z) => {
-        newContourMap.set(z, []);
-        lines.forEach((line) => {
-          const newLine = line.map((point) => {
-            return api.coord([point.x, point.y]);
-          });
-          newContourMap.get(z).push(newLine);
+      const newChildren = children.map((shape) => {
+        let {index, points, color} = shape;
+        points = points.map((point) => {
+          return api.coord(point);
         });
+        return isArea ? useSimplePolygon(index, points, color) : useContourLine(points, color);
       });
-      if (isArea) {
-        const [left, bottom] = api.coord(minPoint);
-        const [right, top] = api.coord(maxPoint);
-        const border = {top, right, bottom, left};
-        const zOnBorderInOrder = createDataRequiredForCalculation(newContourMap, border);
-        const noPointArea = [];
-        newContourMap.forEach((lines, z) => {
-          if (!lines.length) return;
-          const index = contours.length - contours.indexOf(z);
-          children.push(useContourArea(z, index, lines, contourColorMap, border, zOnBorderInOrder, noPointArea));
-        });
-        noPointArea.forEach((area) => {
-          const index = contours.length - contours.indexOf(area.z);
-          children.push(useNoLineArea(index, contourColorMap, area));
-        });
-      } else {
-        newContourMap.forEach((lines, z) => {
-          lines.forEach((line) => {
-            children.push(useContourLine(z, line, contourColorMap));
-          });
-        });
-      }
       return {
         type: 'group',
-        children,
+        children: newChildren,
         silent: true,
       };
     },
@@ -1164,8 +856,8 @@ function useContourGroup(contours, contourMap, minPoint, maxPoint, contourColorM
 function ceilDecimalPlaces(number, decimalPlaces) {
   const factor = Math.pow(10, decimalPlaces);
   return number < 0
-    ? ~~(number * factor) / factor
-    : (~~(number * factor) + 1) / factor;
+    ? parseInt(number * factor) / factor
+    : (parseInt(number * factor) + 1) / factor;
 }
 
 /**
@@ -1177,8 +869,8 @@ function ceilDecimalPlaces(number, decimalPlaces) {
 function floorDecimalPlaces(number, decimalPlaces) {
   const factor = Math.pow(10, decimalPlaces);
   return number < 0
-    ? (~~(number * factor) - 1) / factor
-    : ~~(number * factor) / factor;
+    ? (parseInt(number * factor) - 1) / factor
+    : parseInt(number * factor) / factor;
 }
 
 /**
@@ -1215,7 +907,7 @@ function updateContourColor(colors, contours, isTopographic) {
  * @return {Object} contours
  */
 function calContours(zList, contoursNumber) {
-  const min = 0;
+  const min = zList[0];
   const max = zList[zList.length - 1];
   let stepTemp = (max - min) / (contoursNumber + 1);
   let step = stepTemp;
@@ -1264,6 +956,9 @@ function createPointMatrix(points) {
   };
 }
 
+let globalContour;
+let globalPointMatrix;
+
 /**
  * Calculate Map<z, [line as points, line as points]> with contours and matrix of point
  * @param {Array<number>} contours Array<z>
@@ -1271,152 +966,510 @@ function createPointMatrix(points) {
  * @return {Map<number, Array<Lines>>}
  */
 function calContoursPoints(contours, pointMatrix) {
+  globalPointMatrix = pointMatrix;
+  const cellsNumber = pointMatrix.length - 1;
   const contourPointMap = new Map();
-  contours.forEach((contour) => {
-    contourPointMap.set(contour, []);
+  contours.forEach((value) => {
+    globalContour = value;
+    const shapes = [];
+    contourPointMap.set(value, shapes);
+    const cellMatrix = [];
+    for (let row = 0; row < cellsNumber; row++) {
+      cellMatrix.push([]);
+      for (let column = 0; column < cellsNumber; column++) {
+        const index = generateCellIndex(value, row, column);
+        cellMatrix[row].push({
+          index,
+          direction: getDirectionByIndex(index),
+        });
+      }
+    }
+    generateShapesByCellMatrix(cellMatrix, shapes);
   });
-  const startPointsNumber = pointMatrix.length - 1;
-  const contoursAreaMap = new Map(); // <'row,column', Set<contours need to calculate>>
-  for (let row = 0; row < startPointsNumber; row++) {
-    for (let column = 0; column < startPointsNumber; column++) {
-      contoursAreaMap.set(`${row},${column}`, new Set(contours));
-    }
-  }
-  for (let row = 0; row < startPointsNumber; row++) {
-    for (let column = 0; column < startPointsNumber; column++) {
-      const contoursInArea = contoursAreaMap.get(`${row},${column}`);
-      contoursInArea.forEach((contourNeedCalculate) => {
-        const store = [];
-        calContourPoints(contourNeedCalculate, row, column, store, pointMatrix, contoursAreaMap);
-        if (store.length) {
-          const lines = contourPointMap.get(contourNeedCalculate);
-          let connected = false;
-          for (let i = 0; i < lines.length; i++) {
-            const result = verifyLinesConnected(lines[i], store);
-            if (result) {
-              lines[i] = result;
-              connected = true;
-              break;
-            }
-          }
-          if (!connected) {
-            lines.push(store);
-          }
-        }
-      });
-    }
-  }
   return contourPointMap;
 }
 
-
 /**
- * Calculate contour points in point matrix
- * @param {number} contour points contour value
- * @param {number} row
- * @param {number} column
- * @param {Array} pointStore
- * @param {Array} pointMatrix
- * @param {Map} contoursAreaMap
- * @param {string} startPosition
+ * @param {string} index
+ * @return {string | Array<string>}
  */
-function calContourPoints(contour, row, column, pointStore, pointMatrix, contoursAreaMap, startPosition = null) {
-  const contourNeedCalculate = contoursAreaMap.get(`${row},${column}`);
-  if (!contourNeedCalculate || !contourNeedCalculate.has(contour)) return;
-  // Delete this contour and start calculating
-  contourNeedCalculate.delete(contour);
-  const [
-    topLeft,
-    topRight,
-    bottomLeft,
-    bottomRight,
-  ] = [
-    pointMatrix[row][column],
-    pointMatrix[row][column + 1],
-    pointMatrix[row + 1][column],
-    pointMatrix[row + 1][column + 1],
-  ];
-  let pointNumber = ['top', 'bottom', 'left', 'right'].includes(startPosition) ? 1 : 0;
-  if (startPosition !== 'top') {
-    const topPercent = (contour - topLeft.z) / (topRight.z - topLeft.z);
-    if (0 < topPercent && topPercent < 1) {
-      // Top exist
-      pointStore.push(calHorizontalContourPoint(topLeft, topRight, contour));
-      pointNumber++;
-      if (pointNumber === 2) {
-        calContourPoints(contour, row - 1, column, pointStore, pointMatrix, contoursAreaMap, 'bottom');
-        return;
-      }
-    }
-  }
-  if (startPosition !== 'bottom') {
-    const bottomPercent = (contour - bottomLeft.z) / (bottomRight.z - bottomLeft.z);
-    if (0 < bottomPercent && bottomPercent < 1) {
-      // Bottom exist
-      pointStore.push(calHorizontalContourPoint(bottomLeft, bottomRight, contour));
-      pointNumber++;
-      if (pointNumber === 2) {
-        calContourPoints(contour, row + 1, column, pointStore, pointMatrix, contoursAreaMap, 'top');
-        return;
-      }
-    }
-  }
-  if (startPosition !== 'left') {
-    const leftPercent = (contour - topLeft.z) / (bottomLeft.z - topLeft.z);
-    if (0 < leftPercent && leftPercent < 1) {
-      // Left exist
-      pointStore.push(calVerticalContourPoint(topLeft, bottomLeft, contour));
-      pointNumber++;
-      if (pointNumber === 2) {
-        calContourPoints(contour, row, column - 1, pointStore, pointMatrix, contoursAreaMap, 'right');
-        return;
-      }
-    }
-  }
-  if (startPosition !== 'right') {
-    const rightExist = (contour - topRight.z) / (bottomRight.z - topRight.z);
-    if (0 < rightExist && rightExist < 1) {
-      // Right exist
-      pointStore.push(calVerticalContourPoint(topRight, bottomRight, contour));
-      pointNumber++;
-      if (pointNumber === 2) {
-        calContourPoints(contour, row, column + 1, pointStore, pointMatrix, contoursAreaMap, 'left');
-        return;
-      }
-    }
-  }
-  if (pointNumber !== 2) {
-    return;
+function getDirectionByIndex(index) {
+  switch (index) {
+    case '0000':
+    case '1111':
+      return null;
+    case '0001':
+    case '1110':
+      return 'left->bottom';
+    case '0010':
+    case '1101':
+      return 'right->bottom';
+    case '0011':
+    case '1100':
+      return 'left->right';
+    case '0100':
+    case '1011':
+      return 'top->right';
+    case '0111':
+    case '1000':
+      return 'top->left';
+    case '0110':
+    case '1001':
+      return 'top->bottom';
+    case '01010':
+    case '10101':
+      return ['top->right', 'left->bottom'];
+    case '01011':
+    case '10100':
+      return ['top->left', 'right->bottom'];
   }
 }
 
 /**
- * Verify whether the two lines are connected on same border
- * @param {Array} line1 {x, y, z}
- * @param {Array} line2 {x, y, z}
- * @return {Array} newLine
+ * Generate index of cell contour type
+ * @param {number} value
+ * @param {number} r
+ * @param {number} c
+ * @return {string}
  */
-function verifyLinesConnected(line1, line2) {
-  const line1Start = line1[0];
-  const line1End = line1[line1.length - 1];
-  const line2Start = line2[0];
-  const line2End = line2[line2.length - 1];
-  if (line1Start.x === line2Start.x && line1Start.y === line2Start.y) {
-    line1.shift();
-    return line1.reverse().concat(line2);
+function generateCellIndex(value, r, c) {
+  const [
+    tl,
+    tr,
+    br,
+    bl,
+  ] = [
+    globalPointMatrix[r][c],
+    globalPointMatrix[r][c + 1],
+    globalPointMatrix[r + 1][c + 1],
+    globalPointMatrix[r + 1][c],
+  ];
+  let index =
+    `${calcValueIndex(tl.z, value)}${calcValueIndex(tr.z, value)}${
+      calcValueIndex(br.z, value)}${calcValueIndex(bl.z, value)}`;
+  if (['0101', '1010'].includes(index)) {
+    const avg = (tl.z + tr.z + br.z + bl.z) / 4;
+    index += calcValueIndex(avg, value);
   }
-  if (line1End.x === line2End.x && line1End.y === line2End.y) {
-    line1.pop();
-    return line1.concat(line2.reverse());
+  return index;
+}
+
+/**
+ * @param {number} pointValue
+ * @param {number} value
+ * @return {number}
+ */
+function calcValueIndex(pointValue, value) {
+  return pointValue > value ? 1 : 0;
+}
+
+const getFlag = (r, c) => `${r},${c}`;
+
+const optimizationSet = new Set();
+const existSet = new Set();
+let brokenLines;
+
+/**
+ * Generate shapes of contour by matrix of cell index
+ * @param {Array} cellMatrix
+ * @param {Array} shapes
+ */
+function generateShapesByCellMatrix(cellMatrix, shapes) {
+  optimizationSet.clear();
+  existSet.clear();
+  brokenLines = [];
+  for (let i = 0; i < cellMatrix.length; i++) {
+    existSet.add(i);
   }
-  if (line1Start.x === line2End.x && line1Start.y === line2End.y) {
-    line1.shift();
-    return line2.concat(line1);
+  for (let r = 0; r < cellMatrix.length; r++) {
+    for (let c = 0; c < cellMatrix.length; c++) {
+      if (optimizationSet.has(getFlag(r, c))) {
+        continue;
+      }
+      const shape = generateShapeByCellIndex(r, c, cellMatrix);
+      if (shape && shape.config.complete) {
+        shapes.push(shape);
+      }
+    }
   }
-  if (line1End.x === line2Start.x && line1End.y === line2Start.y) {
-    line1.pop();
-    return line1.concat(line2);
+  while (brokenLines.length) {
+    const line = brokenLines.shift();
+    const newLine = completeLine(line, brokenLines);
+    if (newLine) {
+      shapes.push(newLine);
+    }
   }
+}
+
+/**
+ * Connect lines
+ * @param {Shape} line
+ * @param {Array<Shape>} brokenLines
+ * @return {Shape}
+ */
+function completeLine(line, brokenLines) {
+  for (let i = 0; i < brokenLines.length; i++) {
+    const newLine = verifyConnection(line, brokenLines[i]);
+    if (newLine) {
+      brokenLines.splice(i, 1);
+      const shape = new Shape(newLine);
+      const {borders, config} = shape;
+      if (borders.length === 2) {
+        config.clockwise = [calcClockwise(shape, true), calcClockwise(shape, false)];
+        config.complete = true;
+        return shape;
+      } else {
+        return completeLine(newLine, brokenLines);
+      }
+    }
+  }
+}
+
+/**
+ * @param {Shape} shape1
+ * @param {Shape} shape2
+ * @return {Shape}
+ */
+function verifyConnection(shape1, shape2) {
+  const points1 = shape1.points;
+  const points2 = shape2.points;
+  const start1 = points1[0];
+  const end1 = points1[points1.length - 1];
+  const start2 = points2[0];
+  const end2 = points2[points2.length - 1];
+  const border1 = shape1.borders;
+  const border2 = shape2.borders;
+  const indexes1 = shape1.indexes;
+  const indexes2 = shape2.indexes;
+  let points;
+  let borders;
+  let indexes;
+  if (start1.x === start2.x && start1.y === start2.y) {
+    points2.shift();
+    indexes2.shift();
+    points = points1.reverse().concat(points2);
+    borders = border1.concat(border2);
+    indexes = indexes1.reverse().concat(indexes2);
+  }
+  if (start1.x === end2.x && start1.y === end2.y) {
+    points1.shift();
+    indexes1.shift();
+    points = points2.concat(points1);
+    borders = border2.concat(border1);
+    indexes = indexes2.concat(indexes1);
+  }
+  if (end1.x === start2.x && end1.y === start2.y) {
+    points2.shift();
+    indexes2.shift();
+    points = points1.concat(points2);
+    borders = border1.concat(border2);
+    indexes = indexes1.concat(indexes2);
+  }
+  if (end1.x === end2.x && end1.y === end2.y) {
+    points1.pop();
+    indexes1.pop();
+    points = points1.concat(points2.reverse());
+    borders = border1.concat(border2);
+    indexes = indexes1.concat(indexes2.reverse());
+  }
+  if (points) {
+    return {
+      z: globalContour,
+      points,
+      borders,
+      indexes,
+    };
+  }
+}
+
+/**
+ * @param {number} r
+ * @param {number} c
+ * @param {string} position
+ * @return {Object}
+ */
+function calcPointCoord(r, c, position) {
+  const [
+    topLeft,
+    topRight,
+    bottomRight,
+    bottomLeft,
+  ] = [
+    globalPointMatrix[r][c],
+    globalPointMatrix[r][c + 1],
+    globalPointMatrix[r + 1][c + 1],
+    globalPointMatrix[r + 1][c],
+  ];
+  switch (position) {
+    case 'top':
+      return calHorizontalContourPoint(topLeft, topRight, globalContour);
+    case 'bottom':
+      return calHorizontalContourPoint(bottomLeft, bottomRight, globalContour);
+    case 'left':
+      return calVerticalContourPoint(topLeft, bottomLeft, globalContour);
+    case 'right':
+      return calVerticalContourPoint(topRight, bottomRight, globalContour);
+  }
+}
+
+/**
+ * Continue track
+ * @param {number} r
+ * @param {number} c
+ * @param {string} end
+ * @param {Array} cellMatrix
+ * @param {Shape} shape
+ */
+function getNextTrack(r, c, end, cellMatrix, shape) {
+  switch (end) {
+    case 'top':
+      continueTrack(r - 1, c, 'bottom', cellMatrix, shape);
+      break;
+    case 'bottom':
+      continueTrack(r + 1, c, 'top', cellMatrix, shape);
+      break;
+    case 'left':
+      continueTrack(r, c - 1, 'right', cellMatrix, shape);
+      break;
+    case 'right':
+      continueTrack(r, c + 1, 'left', cellMatrix, shape);
+      break;
+  }
+}
+
+/**
+ * Get end from direction with given start
+ * @param {string} start
+ * @param {string} direction
+ * @return {string}
+ */
+function getEndByDirection(start, direction) {
+  const dirs = direction.split('->');
+  const index = dirs.indexOf(start);
+  dirs.splice(index, 1);
+  const end = dirs[0];
+  return end;
+}
+
+/**
+ * Finish circle track
+ * @param {number} r
+ * @param {number} c
+ * @param {string} start
+ * @param {Object} cell
+ * @param {Shape} shape
+ */
+function finishCircleTrack(r, c, start, cell, shape) {
+  const {direction} = cell;
+  const end = getEndByDirection(start, direction);
+  const {points, config} = shape;
+  config.updateContour = calcUpdateContour(shape);
+  config.circle = true;
+  points.push(calcPointCoord(r, c, end));
+}
+
+/**
+ * Calc whether to raise the contour
+ * @param {Shape} shape
+ * @return {boolean}
+ */
+function calcUpdateContour(shape) {
+  const indexTotal = shape.indexes.join('');
+  return findTargetNumber(indexTotal, '1') < findTargetNumber(indexTotal, '0');
+}
+
+/**
+ * @param {string} source
+ * @param {string} target
+ * @return {number}
+ */
+function findTargetNumber(source, target) {
+  let result = 0;
+  for (let i = 0; i < source.length; i++) {
+    if (source[i] === target) {
+      result++;
+    }
+  }
+  return result;
+}
+
+/**
+ * Calc whether the path on the border
+ * @param {number} r
+ * @param {number} c
+ * @param {string} position
+ * @return {string | undefined}
+ */
+function calcPathBorder(r, c, position) {
+  const size = existSet.size - 1;
+  if (r === 0 && position === 'top') {
+    return 'top';
+  }
+  if (r === size && position === 'bottom') {
+    return 'bottom';
+  }
+  if (c === 0 && position === 'left') {
+    return 'left';
+  }
+  if (c === size && position === 'right') {
+    return 'right';
+  }
+}
+
+/**
+ * @param {Shape} shape
+ * @param {boolean} isStart
+ * @return {boolean}
+ */
+function calcClockwise(shape, isStart) {
+  const {indexes, borders} = shape;
+  const border = isStart ? borders[0] : borders[1];
+  const index = isStart ? indexes[0] : indexes[indexes.length - 1];
+  switch (border) {
+    case 'top':
+      return ['1000', '1011', '10100', '1001', '10101'].includes(index);
+    case 'bottom':
+      return ['0010', '1110', '0110', '10100', '10101'].includes(index);
+    case 'left':
+      return ['0001', '0111', '0011', '01010', '01011'].includes(index);
+    case 'right':
+      return ['0100', '1110', '01010', '1100', '01011'].includes(index);
+  }
+}
+
+/**
+ * Continue track
+ * @param {number} r
+ * @param {number} c
+ * @param {string} start
+ * @param {Array} cellMatrix
+ * @param {Shape} shape
+ */
+function continueTrack(r, c, start, cellMatrix, shape) {
+  const {indexes, points, borders, config} = shape;
+  if (!existSet.has(r) || !existSet.has(c)) {
+    // End on border
+    if (borders.length === 2) {
+      // Complete line
+      config.clockwise = [calcClockwise(shape, true), calcClockwise(shape, false)];
+      config.complete = true;
+    } else {
+      // borders.length < 2
+      brokenLines.push(shape);
+    }
+    return;
+  }
+  const flag = getFlag(r, c);
+  if (optimizationSet.has(flag)) {
+    if (!borders.length) {
+      // Circle
+      finishCircleTrack(r, c, start, cellMatrix[r][c], shape);
+      config.complete = true;
+    } else {
+      // Broken lines
+      brokenLines.push(shape);
+    }
+    return;
+  }
+  let direction = cellMatrix[r][c].direction;
+  if (Array.isArray(direction)) {
+    for (let i = 0; i < direction.length; i++) {
+      if (direction[i].includes(start)) {
+        cellMatrix[r][c].direction = direction[i === 0 ? 1 : 0];
+        direction = direction[i];
+        break;
+      }
+    }
+  } else {
+    optimizationSet.add(flag);
+  }
+  // Indexes
+  indexes.push(cellMatrix[r][c].index);
+  // Points
+  const end = getEndByDirection(start, direction);
+  const point = calcPointCoord(r, c, end);
+  points.push(point);
+  // Border
+  const endBorder = calcPathBorder(r, c, end);
+  endBorder && borders.push(endBorder);
+  // Continue
+  getNextTrack(r, c, end, cellMatrix, shape);
+}
+
+/**
+ * Class of shape
+ */
+class Shape {
+  z;
+  indexes;
+  points;
+  borders;
+  config = {
+    complete: null,
+    circle: null,
+    updateContour: null,
+    clockwise: null,
+  }
+  /**
+   * @param {Object} object
+   */
+  constructor({z, indexes, points, borders}) {
+    this.z = z;
+    this.indexes = indexes ?? [];
+    this.points = points ?? [];
+    this.borders = borders ?? [];
+  }
+}
+
+/**
+ * Start track
+ * @param {number} r
+ * @param {number} c
+ * @param {string} direction
+ * @param {Array} cellMatrix
+ * @return {Shape}
+ */
+function startTrack(r, c, direction, cellMatrix) {
+  if (!existSet.has(r) || !existSet.has(c)) {
+    return;
+  }
+  const shape = new Shape({z: globalContour});
+  const [start, end] = direction.split('->');
+  const {indexes, points, borders} = shape;
+  // Index
+  indexes.push(cellMatrix[r][c].index);
+  // Points
+  points.push(calcPointCoord(r, c, start), calcPointCoord(r, c, end));
+  // Border
+  const startBorder = calcPathBorder(r, c, start);
+  const endBorder = calcPathBorder(r, c, end);
+  startBorder && borders.push(startBorder);
+  endBorder && borders.push(endBorder);
+  // Continue
+  getNextTrack(r, c, end, cellMatrix, shape);
+  return shape;
+}
+
+/**
+ * Preparation for start track
+ * @param {number} r
+ * @param {number} c
+ * @param {Array} cellMatrix
+ * @return {Shape}
+ */
+function generateShapeByCellIndex(r, c, cellMatrix) {
+  const flag = getFlag(r, c);
+  let direction = cellMatrix[r][c].direction;
+  if (!direction) {
+    return;
+  }
+  if (Array.isArray(direction)) {
+    direction = direction[0];
+    cellMatrix[r][c].direction = direction[1];
+  } else {
+    optimizationSet.add(flag);
+  }
+  return startTrack(r, c, direction, cellMatrix);
 }
 
 /**
@@ -1467,22 +1520,24 @@ import echarts, {echartsThemeName} from '@/js/echarts';
 
 import CommonProperty from '@/common/common-property';
 
+const convergencePointColor = CommonProperty.convergencePointColor;
+
 // Chart type
 const CONTOUR = 'contour';
 const TOPOGRAPHIC = 'topographic';
 
 // Chart series name
+const CONVERGENCE_POINT = 'convergencePoint';
 const PATH_POINTS = 'pathPoints';
 const PATH_LINES = 'pathLines';
-const CONTOUR_LABEL = 'pathLines';
 const POINTS = 'points';
 const TOOLTIP = 'tooltip';
 
 // Chart series z index
 const chartZIndexMap = {
-  [PATH_POINTS]: 999,
-  [PATH_LINES]: 998,
-  [CONTOUR_LABEL]: 997,
+  [CONVERGENCE_POINT]: 999,
+  [PATH_POINTS]: 998,
+  [PATH_LINES]: 997,
   [POINTS]: -1,
   [TOOLTIP]: 9999,
 };
@@ -1531,7 +1586,9 @@ export default {
      * @param {Object} params
      */
     showTooltip(params) {
-      if (this.tooltipTimer) clearTimeout(this.tooltipTimer);
+      if (this.tooltipTimer) {
+        clearTimeout(this.tooltipTimer);
+      }
       this.tooltipTimer = setTimeout(() => {
         if (params.seriesName !== POINTS) {
           return;
@@ -1544,7 +1601,20 @@ export default {
           dataIndex: dataIndex,
           position,
         });
+        this.tooltipTimer = null;
       }, 500); // Use to reduce tooltip consumption
+    },
+    /**
+     * Hide tooltip
+     */
+    hideTooltip() {
+      if (this.tooltipTimer) {
+        clearTimeout(this.tooltipTimer);
+        this.tooltipTimer = null;
+      }
+      this.chartInstance.dispatchAction({
+        type: 'hideTip',
+      });
     },
     /**
      * The logic of play path animation
@@ -1560,40 +1630,32 @@ export default {
           clearLines.push([x[index], y[index], x[index], y[index]]);
         }
       });
-      if (!this.chartInstance) {
-        if (!this.initContourMap()) return;
-      }
+      let index = 0;
+      const playNextAnimation = () => {
+        setTimeout(() => {
+          if (!this.chartInstance) return;
+          if (index === intervals.length - 1) {
+            // Close path animation
+            this.chartInstance.setOption({
+              series: [usePathLines(rightTop, clearLines, pathWidth, pathColor, false)],
+            });
+            this.chartInstance.off('finished');
+            return;
+          }
+          clearLines[index] = [x[index], y[index], x[index + 1], y[index + 1]];
+          index++;
+          this.chartInstance.setOption({
+            series: [usePathLines(rightTop, clearLines, pathWidth, pathColor, true)],
+          });
+        }, 100); // Buffer time
+      };
+      if (!this.chartInstance) return;
+      this.chartInstance.on('finished', playNextAnimation);
       this.chartInstance.setOption({
         series: [
           usePathLines(rightTop, clearLines, pathWidth, pathColor),
         ],
       });
-      // Start animation
-      let index = 0;
-      const timer = setInterval(() => {
-        if (index === intervals.length - 1) {
-          this.chartInstance.setOption({
-            series: [
-              usePathLines(rightTop, clearLines, pathWidth, pathColor, false),
-            ],
-          });
-          clearInterval(timer);
-          return;
-        }
-        clearLines[index] = [x[index], y[index], x[index + 1], y[index + 1]];
-        if (!this.chartInstance) {
-          if (!this.initContourMap()) {
-            clearInterval(timer);
-            return;
-          }
-        }
-        this.chartInstance.setOption({
-          series: [
-            usePathLines(rightTop, clearLines, pathWidth, pathColor, true),
-          ],
-        });
-        index++;
-      }, 600); // Animation time interval
     },
     /**
      * The logic of path style change
@@ -1604,14 +1666,14 @@ export default {
       // Update setting
       setting.pathWidth = newSetting.pathWidth;
       setting.pathColor = newSetting.pathColor;
-      const {pathWidth, pathColor} = setting;
+      const {pathWidth, pathColor, unit} = setting;
       // Update path chart
       if (!this.chartInstance) {
         if (!this.initContourMap()) return;
       }
       this.chartInstance.setOption({
         series: [
-          ...usePathSeries(path, rightTop, pathWidth, pathColor),
+          ...usePathSeries(path, rightTop, pathWidth, pathColor, unit),
         ],
       });
     },
@@ -1673,7 +1735,7 @@ export default {
     handleDataChange(data, setting) {
       const {path, points} = data;
       const convergencePoint = data.convergence_point;
-      const {contourColors, contoursNumber, pathWidth, pathColor} = setting;
+      const {contourColors, contoursNumber, pathWidth, pathColor, unit} = setting;
       const {isArea, chartInstance, showConvergencePoint, type} = this;
       this.path = path;
       this.setting = setting;
@@ -1703,24 +1765,26 @@ export default {
       const series = [];
       if (path) {
         legend.data = path.intervals;
-        series.push(...usePathSeries(path, rightTop, pathWidth, pathColor));
+        series.push(...usePathSeries(path, rightTop, pathWidth, pathColor, unit));
       }
+      // Make sure push order: other -> point series -> point tooltip series -> other
       series.push(usePointSeries(
           pointMatrix,
           this.chartInstance,
-          showConvergencePoint && convergencePoint,
-          +this.$store.state.themeIndex === 0 ? '#000' : '#ddd',
       ));
       series.push(usePointTooltip(pointMatrix));
+      if (showConvergencePoint && convergencePoint) {
+        series.push(useConvergencePoint(convergencePoint, convergencePointColor[this.$store.state.themeIndex]));
+      }
       series.push(
           useContourGroup(contours, contourPointMap, leftBottom, rightTop, contourColorMap, isArea),
       );
-      // series.push({name: TOOLTIP, type: 'custom', z: chartZIndexMap[TOOLTIP], renderItem: () => {}});
       this.chartInstance.setOption({
         legend,
         series,
       });
       this.chartInstance.on('mousemove', this.showTooltip);
+      this.chartInstance.on('mouseout', this.hideTooltip);
     },
     /**
      * The logic of init contour map chart
@@ -1808,7 +1872,13 @@ export default {
       this.chartInstance && this.chartInstance.resize();
     },
     beforeDestroy() {
-      this.chartInstance.off('mousemove');
+      if (this.tooltipTimer) {
+        clearTimeout(this.tooltipTimer);
+      }
+      if (this.chartInstance) {
+        this.chartInstance.off('mousemove');
+        this.chartInstance.off('mouseout');
+      }
     },
   },
 };

@@ -507,6 +507,7 @@ export default {
       contourSetting: {
         needResize: false,
         dataChanged: false,
+        unit: '',
         type: CONTOUR,
         pathColor: '#000000',
         pathWidth: 5,
@@ -517,6 +518,7 @@ export default {
       topographicSetting: {
         needResize: false,
         dataChanged: false,
+        unit: '',
         type: TOPOGRAPHIC,
         pathColor: '#000000',
         pathWidth: 5,
@@ -633,6 +635,9 @@ export default {
                 this.oriData = lossdata;
                 this.chartInfo = lossdata.metadata;
                 this.chartInfo.ratio = ratio;
+                const unit = lossdata.metadata.unit;
+                this.contourSetting.unit = unit;
+                this.topographicSetting.unit = unit;
                 this.$nextTick(() => {
                   if (this.chartOption.series) {
                     this.formatMarkArea(this.chartOption.series[0]);
