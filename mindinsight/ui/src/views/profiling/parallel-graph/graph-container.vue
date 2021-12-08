@@ -1142,8 +1142,10 @@ export default {
     showNodeTypeChange() {
       changeShowNodeType(this.showNodeType);
       resetFirstCntFlag();
-      this.getDisplayedGraph(this.showNodeType, this.showRankId);
-      this.resetSelectStatus();
+      this.getDisplayedGraph(this.showNodeType, this.showRankId).then(() => {
+        this.resetSelectStatus();
+        this.resetSVG();
+      });
     },
 
     /**
@@ -1152,8 +1154,10 @@ export default {
     showRankIdChange() {
       changeShowRankId(this.showRankId);
       resetFirstCntFlag();
-      this.getDisplayedGraph(this.showNodeType, this.showRankId);
-      this.resetSelectStatus();
+      this.getDisplayedGraph(this.showNodeType, this.showRankId).then(() => {
+        this.resetSelectStatus();
+        this.resetSVG();
+      });
     },
 
     /**
