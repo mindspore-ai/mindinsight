@@ -636,10 +636,6 @@ export default {
         value: '#fd9629',
       },
       {
-        key: '--conpoint-color',
-        value: '#ddd',
-      },
-      {
         key: '--focused-node-color',
         value: '#f2453d',
       },

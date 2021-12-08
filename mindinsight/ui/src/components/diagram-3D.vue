@@ -60,6 +60,12 @@ import echarts from '../js/echarts';
 import 'echarts-gl';
 import commonProperty from '../common/common-property';
 import empty from '@/components/empty.vue';
+const itemWidth = 20;
+const itemHeight = 135;
+const itemRight = 18;
+const lineLabelSize = 20;
+const axisNameGap = 30;
+const standardWidth = 1400;
 export default {
   components: {
     empty,
@@ -111,8 +117,8 @@ export default {
     //  Indicates whether different loss graph properties need to be merged
     mergeGraphproperties: {
       type: Boolean,
-      default: false
-    }
+      default: false,
+    },
   },
   data() {
     return {
@@ -225,10 +231,12 @@ export default {
               color: commonProperty.commonChartTheme[this.themeIndex].axisLabelColor,
             },
             seriesIndex: 1,
-            right: 18,
+            right: this.getNowSize(itemRight),
             inRange: {
               color: this.styleSetting.surface.colorscale,
             },
+            itemWidth: this.getNowSize(itemWidth),
+            itemHeight: this.getNowSize(itemHeight),
           },
         ];
       }
@@ -239,6 +247,11 @@ export default {
         xAxis3D: {
           type: 'value',
           scale: true,
+          nameTextStyle: {
+            fontFamily: 'Microsoft YaHei',
+            color: commonProperty.echartsTextStyle[this.themeIndex][0],
+          },
+          nameGap: axisNameGap,
           axisLine: {
             lineStyle: {
               color: commonProperty.commonChartTheme[this.themeIndex].axisLineColor,
@@ -253,6 +266,11 @@ export default {
         yAxis3D: {
           type: 'value',
           scale: true,
+          nameTextStyle: {
+            fontFamily: 'Microsoft YaHei',
+            color: commonProperty.echartsTextStyle[this.themeIndex][0],
+          },
+          nameGap: axisNameGap,
           axisLine: {
             lineStyle: {
               color: commonProperty.commonChartTheme[this.themeIndex].axisLineColor,
@@ -267,6 +285,12 @@ export default {
         zAxis3D: {
           type: 'value',
           scale: true,
+
+          nameTextStyle: {
+            fontFamily: 'Microsoft YaHei',
+            color: commonProperty.echartsTextStyle[this.themeIndex][0],
+          },
+          nameGap: axisNameGap,
           axisLine: {
             lineStyle: {
               color: commonProperty.commonChartTheme[this.themeIndex].axisLineColor,
@@ -312,7 +336,7 @@ export default {
         }
         this.chartObj = echarts.init(chartDom);
       }
-      this.chartObj.setOption(this.chartOption,  !this.mergeGraphproperties);
+      this.chartObj.setOption(this.chartOption, !this.mergeGraphproperties);
     },
     /**
      * Draw animation
@@ -438,6 +462,7 @@ export default {
             textStyle: {
               color: commonProperty.commonThemes[this.themeIndex].fontColor,
             },
+            fontSize: this.getNowSize(lineLabelSize),
           },
         });
       }
@@ -829,6 +854,17 @@ export default {
       const baseSqrt = Math.pow(xd, 2) + Math.pow(yd, 2) + Math.pow(zd, 2);
       const baseDistence = Math.sqrt(baseSqrt);
       return baseDistence;
+    },
+    /**
+     * Calculate the size of the drawing at the current proportion
+     * @param {Number} size
+     * @return {Number} current proportion size
+     */
+    getNowSize(size) {
+      const newWidth = document.getElementById(this.itemId).clientWidth;
+      const proportion = newWidth / standardWidth;
+      const currentSize = size * proportion;
+      return currentSize;
     },
   },
   destroyed() {
