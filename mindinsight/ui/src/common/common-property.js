@@ -1227,6 +1227,10 @@ export default {
       value: 2,
     },
   ],
+  convergencePointColor: {
+    '0': '#000',
+    '1': '#ddd',
+  },  
   lossColorscale: [
     [
       'rgb(0,0,131)',
