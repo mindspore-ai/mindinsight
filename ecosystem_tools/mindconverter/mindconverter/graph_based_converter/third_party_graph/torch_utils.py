@@ -638,10 +638,8 @@ class PytorchNode(BaseNode):
 
         scope_var_name = ""
         for scp in zip(*scope_step_list):
-            scp_set = set(scp)
-            if "" in scp_set:
-                scp_set.remove("")
-            scope_var_name = ".".join((scope_var_name, list(scp_set)[0])) if scope_var_name else list(scp_set)[0]
+            scp_list = [value for value in scp if value != ""]
+            scope_var_name = ".".join((scope_var_name, scp_list[0])) if scope_var_name else scp_list[0]
         return scope_var_name.replace("__module", self._model_name)
 
     def _get_scope_class_name(self):
