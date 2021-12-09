@@ -313,14 +313,14 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts, {echartsThemeName} from '@/js/echarts';
+import echarts, { echartsThemeName } from '@/js/echarts';
 import RequestService from '@/services/request-service';
 import CommonProperty from '@/common/common-property';
-import {select, selectAll, zoom} from 'd3';
-import {event as currentEvent} from 'd3-selection';
+import { select, selectAll, zoom } from 'd3';
+import { event as currentEvent } from 'd3-selection';
 import 'd3-graphviz';
-const d3 = {select, selectAll, zoom};
-import {isInteger} from '@/js/utils';
+const d3 = { select, selectAll, zoom };
+import { isInteger } from '@/js/utils';
 export default {
   props: {
     rankID: String,
@@ -474,7 +474,7 @@ export default {
      */
     debounce(fn, delay) {
       let timer = null;
-      return function() {
+      return function () {
         if (timer) {
           clearTimeout(timer);
         }
@@ -528,37 +528,37 @@ export default {
         train_id: this.trainInfo.id,
       };
       RequestService.minddataOp(params).then(
-          (res) => {
-            if (res && res.data) {
-              chart.initOver = true;
-              const result = res.data;
-              chart.data = result.info;
-              if (result.summary) {
-                chart.timeSummary = result.summary.time_summary || {};
-                Object.keys(chart.timeSummary).forEach((val) => {
-                  chart.timeSummary[val] = parseFloat(chart.timeSummary[val]).toFixed(3);
-                });
-              }
-              if (result.size > 0) {
-                chart.noData = false;
-                this.$nextTick(() => {
-                  this.setOption(chart);
-                });
-              } else {
-                if (chart.chartDom) {
-                  chart.chartDom.clear();
-                }
-                chart.noData = true;
-              }
-            }
-          },
-          (err) => {
-            if (chart.chartDom) {
-              chart.chartDom.clear();
-            }
+        (res) => {
+          if (res && res.data) {
             chart.initOver = true;
-            chart.noData = true;
-          },
+            const result = res.data;
+            chart.data = result.info;
+            if (result.summary) {
+              chart.timeSummary = result.summary.time_summary || {};
+              Object.keys(chart.timeSummary).forEach((val) => {
+                chart.timeSummary[val] = parseFloat(chart.timeSummary[val]).toFixed(3);
+              });
+            }
+            if (result.size > 0) {
+              chart.noData = false;
+              this.$nextTick(() => {
+                this.setOption(chart);
+              });
+            } else {
+              if (chart.chartDom) {
+                chart.chartDom.clear();
+              }
+              chart.noData = true;
+            }
+          }
+        },
+        (err) => {
+          if (chart.chartDom) {
+            chart.chartDom.clear();
+          }
+          chart.initOver = true;
+          chart.noData = true;
+        }
       );
     },
     /**
@@ -573,35 +573,35 @@ export default {
         train_id: this.trainInfo.id,
       };
       RequestService.queueInfo(params).then(
-          (res) => {
-            if (res && res.data) {
-              chart.initOver = true;
-              const result = res.data;
-              chart.data = result.info;
-              if (result.summary) {
-                chart.queueSummary = result.summary.queue_summary || {};
-              }
-              if (result.size > 0) {
-                chart.noData = false;
-                chart.size = result.size;
-                this.$nextTick(() => {
-                  this.setOption(chart);
-                });
-              } else {
-                if (chart.chartDom) {
-                  chart.chartDom.clear();
-                }
-                chart.noData = true;
-              }
-            }
-          },
-          (err) => {
+        (res) => {
+          if (res && res.data) {
             chart.initOver = true;
-            chart.noData = true;
-            if (chart.chartDom) {
-              chart.chartDom.clear();
+            const result = res.data;
+            chart.data = result.info;
+            if (result.summary) {
+              chart.queueSummary = result.summary.queue_summary || {};
             }
-          },
+            if (result.size > 0) {
+              chart.noData = false;
+              chart.size = result.size;
+              this.$nextTick(() => {
+                this.setOption(chart);
+              });
+            } else {
+              if (chart.chartDom) {
+                chart.chartDom.clear();
+              }
+              chart.noData = true;
+            }
+          }
+        },
+        (err) => {
+          chart.initOver = true;
+          chart.noData = true;
+          if (chart.chartDom) {
+            chart.chartDom.clear();
+          }
+        }
       );
     },
     /**
@@ -671,10 +671,10 @@ export default {
           const markPointArr = [];
           item.data.forEach((val, key) => {
             if (val === 0) {
-              markPointArr.push({xAxis: key, yAxis: val, symbolSize: 20});
+              markPointArr.push({ xAxis: key, yAxis: val, symbolSize: 20 });
             }
           });
-          item.markPoint = {data: markPointArr};
+          item.markPoint = { data: markPointArr };
         }
         arr.push(item);
       });
@@ -702,35 +702,35 @@ export default {
       this.connectQueueChart.deviceId = this.deviceID;
       this.initOver = false;
       RequestService.queryProcessSummary(params).then(
-          (res) => {
-            if (res && res.data) {
-              const data = JSON.parse(JSON.stringify(res.data));
-              this.processSummary.count = Object.keys(data).length;
-              if (this.processSummary.count) {
-                this.dealProcess(data);
-                this.$nextTick(() => {
-                  if (this.processSummary.count < this.processSummary.maxCount) {
-                    this.queryQueueInfo(this.connectQueueChart);
-                    this.dataQueueChart.noData = false;
-                    this.deviceQueueOpChart.noData = false;
-                    this.getNextChart.noData = false;
-                  } else {
-                    this.queryQueueInfo(this.connectQueueChart);
-                    this.queryQueueInfo(this.dataQueueChart);
-                    this.queryMinddataOp(this.deviceQueueOpChart);
-                    this.queryMinddataOp(this.getNextChart);
-                  }
-                });
-              } else {
-                this.dealProcess(null);
-              }
+        (res) => {
+          if (res && res.data) {
+            const data = JSON.parse(JSON.stringify(res.data));
+            this.processSummary.count = Object.keys(data).length;
+            if (this.processSummary.count) {
+              this.dealProcess(data);
+              this.$nextTick(() => {
+                if (this.processSummary.count < this.processSummary.maxCount) {
+                  this.queryQueueInfo(this.connectQueueChart);
+                  this.dataQueueChart.noData = false;
+                  this.deviceQueueOpChart.noData = false;
+                  this.getNextChart.noData = false;
+                } else {
+                  this.queryQueueInfo(this.connectQueueChart);
+                  this.queryQueueInfo(this.dataQueueChart);
+                  this.queryMinddataOp(this.deviceQueueOpChart);
+                  this.queryMinddataOp(this.getNextChart);
+                }
+              });
             } else {
               this.dealProcess(null);
             }
-          },
-          (error) => {
+          } else {
             this.dealProcess(null);
-          },
+          }
+        },
+        (error) => {
+          this.dealProcess(null);
+        }
       );
     },
     /**
@@ -785,121 +785,121 @@ export default {
       this.averageRateChart.deviceId = this.rankID;
       this.initOver = false;
       RequestService.queryOpQueue(params).then(
-          (res) => {
-            this.initOver = true;
-            if (res && res.data) {
-              this.removeGraph();
-              const data = JSON.parse(JSON.stringify(res.data));
-              this.dealPipeLineData(data);
+        (res) => {
+          this.initOver = true;
+          if (res && res.data) {
+            this.removeGraph();
+            const data = JSON.parse(JSON.stringify(res.data));
+            this.dealPipeLineData(data);
 
-              this.pipeData = !!!(res.data.object && res.data.object.length);
-              if (res.data.object && res.data.object.length && res.data.col_name) {
-                const result = res.data.object.map((val) => {
-                  const obj = {};
-                  res.data.col_name.forEach((value, key) => {
-                    obj[value] = val[key];
-                  });
-                  return obj;
+            this.pipeData = !!!(res.data.object && res.data.object.length);
+            if (res.data.object && res.data.object.length && res.data.col_name) {
+              const result = res.data.object.map((val) => {
+                const obj = {};
+                res.data.col_name.forEach((value, key) => {
+                  obj[value] = val[key];
                 });
-                const data = result
-                    .sort((a, b) => {
-                      return a.output_queue_usage_rate - b.output_queue_usage_rate;
-                    })
-                    .filter((val) => {
-                      return val.parent_id !== null;
+                return obj;
+              });
+              const data = result
+                .sort((a, b) => {
+                  return a.output_queue_usage_rate - b.output_queue_usage_rate;
+                })
+                .filter((val) => {
+                  return val.parent_id !== null;
+                });
+
+              const dataY = data.map((val) => {
+                return Number((val.output_queue_usage_rate * 100).toFixed(4));
+              });
+              const dataX = data.map((val) => {
+                return `Queue_${val.op_id}`;
+              });
+
+              const profiling = this.$t('profiling');
+              const option = {
+                tooltip: {
+                  trigger: 'axis',
+                  axisPointer: {
+                    type: 'shadow',
+                  },
+                  confine: true,
+                  formatter(params) {
+                    let value = {};
+                    data.forEach((val) => {
+                      if (`${val.op_id}` === params[0].axisValue.split('')[6]) {
+                        value = val;
+                      }
                     });
-
-                const dataY = data.map((val) => {
-                  return (val.output_queue_usage_rate * 100).toFixed(4);
-                });
-                const dataX = data.map((val) => {
-                  return `Queue_${val.op_id}`;
-                });
-
-                const profiling = this.$t('profiling');
-                const option = {
-                  tooltip: {
-                    trigger: 'axis',
-                    axisPointer: {
-                      type: 'shadow',
-                    },
-                    confine: true,
-                    formatter(params) {
-                      let value = {};
-                      data.forEach((val) => {
-                        if (`${val.op_id}` === params[0].axisValue.split('')[6]) {
-                          value = val;
-                        }
-                      });
-                      return (
-                        `${params[0].axisValue}<br>${params[0].marker}` +
+                    return (
+                      `${params[0].axisValue}<br>${params[0].marker}` +
                       `${profiling.averageCapacity}：${value.output_queue_average_size}<br>` +
                       `${params[0].marker}${profiling.totalCapacity}：` +
                       `${value.output_queue_length}`
-                      );
+                    );
+                  },
+                },
+                grid: {
+                  left: 70,
+                  top: 20,
+                  right: 100,
+                  bottom: 50,
+                },
+                xAxis: {
+                  type: 'value',
+                  boundaryGap: [0, 0.01],
+                  max: 100,
+                  axisLabel: {
+                    formatter(params) {
+                      return `${params}%`;
                     },
                   },
-                  grid: {
-                    left: 70,
-                    top: 20,
-                    right: 100,
-                    bottom: 50,
-                  },
-                  xAxis: {
-                    type: 'value',
-                    boundaryGap: [0, 0.01],
-                    max: 100,
-                    axisLabel: {
+                },
+                yAxis: {
+                  type: 'category',
+                  data: dataX,
+                },
+                series: [
+                  {
+                    type: 'bar',
+                    data: dataY,
+                    itemStyle: {
+                      color: this.themeColor,
+                    },
+                    label: {
+                      show: true,
+                      position: 'right',
+                      color: this.chartThemeObj.legendTextColor,
                       formatter(params) {
-                        return `${params}%`;
+                        return `${params.value}%`;
                       },
                     },
                   },
-                  yAxis: {
-                    type: 'category',
-                    data: dataX,
+                ],
+                dataZoom: [
+                  { start: 0, end: 100, orient: 'vertical', right: 10 },
+                  {
+                    start: 0,
+                    end: 100,
+                    type: 'inside',
+                    orient: 'vertical',
+                    right: 10,
                   },
-                  series: [
-                    {
-                      type: 'bar',
-                      data: dataY,
-                      itemStyle: {
-                        color: this.themeColor,
-                      },
-                      label: {
-                        show: true,
-                        position: 'right',
-                        color: this.chartThemeObj.legendTextColor,
-                        formatter(params) {
-                          return `${params.value}%`;
-                        },
-                      },
-                    },
-                  ],
-                  dataZoom: [
-                    {start: 0, end: 100, orient: 'vertical', right: 10},
-                    {
-                      start: 0,
-                      end: 100,
-                      type: 'inside',
-                      orient: 'vertical',
-                      right: 10,
-                    },
-                  ],
-                };
-                this.$nextTick(() => {
-                  const echart = echarts.init(document.getElementById(this.averageRateChart.id), echartsThemeName);
-                  echart.setOption(option);
-                  this.averageRateChart.chartDom = echart;
-                });
-              }
+                ],
+              };
+              this.$nextTick(() => {
+                const echart = echarts.init(document.getElementById(this.averageRateChart.id), echartsThemeName);
+                echart.setOption(option);
+                this.averageRateChart.chartDom = echart;
+              });
             }
-          },
-          () => {
-            this.initOver = true;
-            this.pipeData = true;
-            this.removeGraph();
-          },
+          }
+        },
+        () => {
+          this.initOver = true;
+          this.pipeData = true;
+          this.removeGraph();
+        }
       );
     },
     /**
@@ -938,7 +938,7 @@ export default {
               confine: true,
             },
             xAxis: {
-              name: `${this.$t('profiling.sampleInterval')}/${data.sample_interval}ms`.split(' ').join('\n'),
+              name: `${this.$t('profiling.sampleInterval')}\n${data.sample_interval}ms`,
               data: dataY.map((val, index) => index + 1),
             },
             yAxis: {
@@ -965,7 +965,7 @@ export default {
                 end: 100,
                 bottom: 10,
               },
-              {start: 0, end: 100, type: 'inside', bottom: 10},
+              { start: 0, end: 100, type: 'inside', bottom: 10 },
             ],
           };
           this.$nextTick(() => {
@@ -1053,8 +1053,8 @@ export default {
           `${
             node.op_type === 'queue'
               ? `shape=rect;class="queue";label="Queue_${node.op_id}(${parseFloat(
-                  ((node.output_queue_usage_rate || 0) * 100).toFixed(4),
-              )}%)";`
+                  ((node.output_queue_usage_rate || 0) * 100).toFixed(4)
+                )}%)";`
               : `shape=Mrecord;class="operator";label="${node.op_type}_${node.op_id}";`
           }];`;
 
@@ -1073,12 +1073,12 @@ export default {
      */
     initGraph(dot) {
       this.graphviz = d3
-          .select('#graph')
-          .graphviz({useWorker: false, totalMemory: this.totalMemory})
-          .zoomScaleExtent(this.scaleRange)
-          .dot(dot)
-          .attributer(this.attributer)
-          .render(this.startApp);
+        .select('#graph')
+        .graphviz({ useWorker: false, totalMemory: this.totalMemory })
+        .zoomScaleExtent(this.scaleRange)
+        .dot(dot)
+        .attributer(this.attributer)
+        .render(this.startApp);
     },
     /**
      * Default method of the graph rendering adjustment. Set the node format.
@@ -1156,80 +1156,80 @@ export default {
 
       const padding = 4;
       const minDistance = 20;
-      const pointer = {start: {x: 0, y: 0}, end: {x: 0, y: 0}};
+      const pointer = { start: { x: 0, y: 0 }, end: { x: 0, y: 0 } };
 
       const zoom = d3
-          .zoom()
-          .on('start', () => {
-            const event = currentEvent.sourceEvent;
-            pointer.start.x = event.x;
-            pointer.start.y = event.y;
-          })
-          .on('zoom', () => {
-            const event = currentEvent.sourceEvent;
-            const transformData = this.getTransformData(graphDom);
-            if (!Object.keys(graphTransform).length) {
-              graphTransform = {
-                x: transformData.translate[0],
-                y: transformData.translate[1],
-                k: transformData.scale[0],
-              };
-            }
-
-            let tempStr = '';
-            let change = {};
-            let scale = transformData.scale[0];
-            const graphRect = graphDom.getBoundingClientRect();
-            const transRate = graphBox.width / graphRect.width;
-            if (event.type === 'mousemove') {
-              pointer.end.x = event.x;
-              pointer.end.y = event.y;
-              let tempX = pointer.end.x - pointer.start.x;
-              let tempY = pointer.end.y - pointer.start.y;
-              const paddingTrans = Math.max(padding / transRate / scale, minDistance);
-              if (graphRect.left + paddingTrans + tempX >= svgRect.left + svgRect.width) {
-                tempX = Math.min(tempX, 0);
-              }
-              if (graphRect.left + graphRect.width - paddingTrans + tempX <= svgRect.left) {
-                tempX = Math.max(tempX, 0);
-              }
-              if (graphRect.top + paddingTrans + tempY >= svgRect.top + svgRect.height) {
-                tempY = Math.min(tempY, 0);
-              }
-              if (graphRect.top + graphRect.height - paddingTrans + tempY <= svgRect.top) {
-                tempY = Math.max(tempY, 0);
-              }
-
-              change = {
-                x: tempX * transRate * scale,
-                y: tempY * transRate * scale,
-              };
-              pointer.start.x = pointer.end.x;
-              pointer.start.y = pointer.end.y;
-            } else if (event.type === 'wheel') {
-              const wheelDelta = -event.deltaY;
-              const rate = 1.2;
-              scale = wheelDelta > 0 ? transformData.scale[0] * rate : transformData.scale[0] / rate;
-
-              scale = Math.max(this.scaleRange[0], scale, minScale);
-              scale = Math.min(this.scaleRange[1], scale);
-              change = {
-                x: (graphRect.x + padding / transRate - event.x) * transRate * (scale - transformData.scale[0]),
-                y: (graphRect.bottom - padding / transRate - event.y) * transRate * (scale - transformData.scale[0]),
-              };
-            }
-
+        .zoom()
+        .on('start', () => {
+          const event = currentEvent.sourceEvent;
+          pointer.start.x = event.x;
+          pointer.start.y = event.y;
+        })
+        .on('zoom', () => {
+          const event = currentEvent.sourceEvent;
+          const transformData = this.getTransformData(graphDom);
+          if (!Object.keys(graphTransform).length) {
             graphTransform = {
-              x: transformData.translate[0] + change.x,
-              y: transformData.translate[1] + change.y,
-              k: scale,
+              x: transformData.translate[0],
+              y: transformData.translate[1],
+              k: transformData.scale[0],
             };
+          }
 
-            tempStr = `translate(${graphTransform.x},${graphTransform.y}) scale(${graphTransform.k})`;
-            graphDom.setAttribute('transform', tempStr);
-            event.stopPropagation();
-            event.preventDefault();
-          });
+          let tempStr = '';
+          let change = {};
+          let scale = transformData.scale[0];
+          const graphRect = graphDom.getBoundingClientRect();
+          const transRate = graphBox.width / graphRect.width;
+          if (event.type === 'mousemove') {
+            pointer.end.x = event.x;
+            pointer.end.y = event.y;
+            let tempX = pointer.end.x - pointer.start.x;
+            let tempY = pointer.end.y - pointer.start.y;
+            const paddingTrans = Math.max(padding / transRate / scale, minDistance);
+            if (graphRect.left + paddingTrans + tempX >= svgRect.left + svgRect.width) {
+              tempX = Math.min(tempX, 0);
+            }
+            if (graphRect.left + graphRect.width - paddingTrans + tempX <= svgRect.left) {
+              tempX = Math.max(tempX, 0);
+            }
+            if (graphRect.top + paddingTrans + tempY >= svgRect.top + svgRect.height) {
+              tempY = Math.min(tempY, 0);
+            }
+            if (graphRect.top + graphRect.height - paddingTrans + tempY <= svgRect.top) {
+              tempY = Math.max(tempY, 0);
+            }
+
+            change = {
+              x: tempX * transRate * scale,
+              y: tempY * transRate * scale,
+            };
+            pointer.start.x = pointer.end.x;
+            pointer.start.y = pointer.end.y;
+          } else if (event.type === 'wheel') {
+            const wheelDelta = -event.deltaY;
+            const rate = 1.2;
+            scale = wheelDelta > 0 ? transformData.scale[0] * rate : transformData.scale[0] / rate;
+
+            scale = Math.max(this.scaleRange[0], scale, minScale);
+            scale = Math.min(this.scaleRange[1], scale);
+            change = {
+              x: (graphRect.x + padding / transRate - event.x) * transRate * (scale - transformData.scale[0]),
+              y: (graphRect.bottom - padding / transRate - event.y) * transRate * (scale - transformData.scale[0]),
+            };
+          }
+
+          graphTransform = {
+            x: transformData.translate[0] + change.x,
+            y: transformData.translate[1] + change.y,
+            k: scale,
+          };
+
+          tempStr = `translate(${graphTransform.x},${graphTransform.y}) scale(${graphTransform.k})`;
+          graphDom.setAttribute('transform', tempStr);
+          event.stopPropagation();
+          event.preventDefault();
+        });
 
       const svg = d3.select('#graph svg');
       svg.on('.zoom', null);
@@ -1259,11 +1259,11 @@ export default {
           const index2 = item.indexOf(')');
           const name = item.substring(0, index1);
           const params = item
-              .substring(index1 + 1, index2)
-              .split(',')
-              .map((i) => {
-                return parseFloat(i) || 0;
-              });
+            .substring(index1 + 1, index2)
+            .split(',')
+            .map((i) => {
+              return parseFloat(i) || 0;
+            });
           attrObj[name] = params;
         });
       }

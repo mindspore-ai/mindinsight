@@ -106,9 +106,9 @@ limitations under the License.
 </template>
 <script>
 import RequestService from '@/services/request-service';
-import echarts, {echartsThemeName} from '@/js/echarts';
+import echarts, { echartsThemeName } from '@/js/echarts';
 import CommonProperty from '@/common/common-property';
-import {isInteger} from '@/js/utils';
+import { isInteger } from '@/js/utils';
 export default {
   props: {
     rankID: String,
@@ -274,27 +274,27 @@ export default {
         device_id: this.rankID,
       };
       RequestService.queryMemorySummary(params)
-          .then(
-              (res) => {
-                if (res.data.is_heterogeneous) {
-                  this.isHeterogeneous = true;
-                  return;
-                }
-                if (res.data.summary) {
-                  const resData = res.data.summary;
-                  this.totalMemory = isNaN(resData.capacity) ? '-' : resData.capacity;
-                } else {
-                  this.totalMemory = '-';
-                }
-              },
-              () => {
-                return;
-              },
-          )
-          .then(() => {
-            if (this.isHeterogeneous) return;
-            this.getMemoryGraphics();
-          });
+        .then(
+          (res) => {
+            if (res.data.is_heterogeneous) {
+              this.isHeterogeneous = true;
+              return;
+            }
+            if (res.data.summary) {
+              const resData = res.data.summary;
+              this.totalMemory = isNaN(resData.capacity) ? '-' : resData.capacity;
+            } else {
+              this.totalMemory = '-';
+            }
+          },
+          () => {
+            return;
+          }
+        )
+        .then(() => {
+          if (this.isHeterogeneous) return;
+          this.getMemoryGraphics();
+        });
     },
     /**
      * Obtains memory details
@@ -305,22 +305,22 @@ export default {
         device_id: this.rankID,
       };
       RequestService.queryMemoryGraphics(params).then(
-          (res) => {
-            this.graphicsInitOver = true;
-            if (!res || !res.data || !Object.keys(res.data).length) {
-              this.noGraphicsDataFlag = true;
-              return;
-            }
-            this.noGraphicsDataFlag = false;
-            const resData = res.data[Object.keys(res.data)[0]];
-            this.currentGraphicsDic = resData;
-            this.graphicsOption = this.formatGraphicsOption();
-            this.drawGraphics();
-          },
-          () => {
-            this.graphicsInitOver = true;
+        (res) => {
+          this.graphicsInitOver = true;
+          if (!res || !res.data || !Object.keys(res.data).length) {
             this.noGraphicsDataFlag = true;
-          },
+            return;
+          }
+          this.noGraphicsDataFlag = false;
+          const resData = res.data[Object.keys(res.data)[0]];
+          this.currentGraphicsDic = resData;
+          this.graphicsOption = this.formatGraphicsOption();
+          this.drawGraphics();
+        },
+        () => {
+          this.graphicsInitOver = true;
+          this.noGraphicsDataFlag = true;
+        }
       );
     },
     /**
@@ -380,7 +380,7 @@ export default {
             },
           },
           symbol: ['none', 'none'],
-          data: [{xAxis: startIndex}, {xAxis: endIndex}],
+          data: [{ xAxis: startIndex }, { xAxis: endIndex }],
         },
         markPoint: {
           symbol: 'emptyCircle',
@@ -474,7 +474,7 @@ export default {
                     `${that.$t('symbols.colon')}${that.formatNumber(curData.size)}</div>` +
                     `<div>${that.$t('profiling.memory.curMemorySize')}` +
                     `${that.$t('symbols.colon')}${that.formatNumber(
-                        that.currentGraphicsDic.lines[dataIndex],
+                      that.currentGraphicsDic.lines[dataIndex]
                     )}</div>` +
                     `<div>${that.$t('profiling.memory.memoryChanged')}` +
                     `${that.$t('symbols.colon')}${that.formatNumber(curData.allocated)}</div>`;
@@ -566,28 +566,28 @@ export default {
       this.cpuInfo.noData = true;
       this.cpuInfo.initOver = false;
       RequestService.getCpuUtilization(params).then(
-          (res) => {
-            this.cpuInfo.initOver = true;
-            if (res && res.data) {
-              this.cpuInfo.noData = !res.data.step_total_num;
-              this.cpuInfo.stepArray = res.data.step_info;
-              this.samplingInterval = res.data.sampling_interval;
-              this.deviceCpuChart.logicCores = res.data.cpu_processor_num;
-              const deviceInfo = res.data.device_info;
-              if (deviceInfo && this.samplingInterval) {
-                this.initDeviceCpu(deviceInfo);
-              } else {
-                this.clearCpuChart();
-                this.cpuInfo.noData = true;
-              }
+        (res) => {
+          this.cpuInfo.initOver = true;
+          if (res && res.data) {
+            this.cpuInfo.noData = !res.data.step_total_num;
+            this.cpuInfo.stepArray = res.data.step_info;
+            this.samplingInterval = res.data.sampling_interval;
+            this.deviceCpuChart.logicCores = res.data.cpu_processor_num;
+            const deviceInfo = res.data.device_info;
+            if (deviceInfo && this.samplingInterval) {
+              this.initDeviceCpu(deviceInfo);
             } else {
               this.clearCpuChart();
+              this.cpuInfo.noData = true;
             }
-          },
-          () => {
+          } else {
             this.clearCpuChart();
-            this.cpuInfo.initOver = true;
-          },
+          }
+        },
+        () => {
+          this.clearCpuChart();
+          this.cpuInfo.initOver = true;
+        }
       );
     },
     /**
@@ -650,12 +650,8 @@ export default {
       // Echarts option
       const deviceCpuChartOption = deviceCpuChart.option;
       deviceCpuChartOption.series = series;
-      deviceCpuChartOption.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
-          'symbols.leftbracket',
-      )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
-      deviceCpuChartOption.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map(
-          (val, index) => index + 1,
-      );
+      deviceCpuChartOption.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;
+      deviceCpuChartOption.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map((val, index) => index + 1);
       deviceCpuChartOption.legend.data = legend;
       deviceCpuChartOption.tooltip.formatter = (params) => {
         return this.formatCpuChartTip(params, this.cpuInfo.stepArray);

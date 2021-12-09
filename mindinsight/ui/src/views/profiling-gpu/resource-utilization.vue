@@ -75,7 +75,7 @@ limitations under the License.
 </template>
 <script>
 import RequestService from '../../services/request-service';
-import echarts, {echartsThemeName} from '../../js/echarts';
+import echarts, { echartsThemeName } from '../../js/echarts';
 import CommonProperty from '../../common/common-property';
 export default {
   data() {
@@ -242,28 +242,28 @@ export default {
       this.cpuInfo.noData = true;
       this.cpuInfo.initOver = false;
       RequestService.getCpuUtilization(params).then(
-          (res) => {
-            this.cpuInfo.initOver = true;
-            if (res && res.data) {
-              this.cpuInfo.noData = !res.data.step_total_num;
-              this.cpuInfo.stepArray = res.data.step_info;
-              this.samplingInterval = res.data.sampling_interval;
-              this.deviceCpuChart.logicCores = res.data.cpu_processor_num;
-              const deviceInfo = res.data.device_info;
-              if (deviceInfo && this.samplingInterval) {
-                this.initDeviceCpu(deviceInfo);
-              } else {
-                this.clearCpuChart();
-                this.cpuInfo.noData = true;
-              }
+        (res) => {
+          this.cpuInfo.initOver = true;
+          if (res && res.data) {
+            this.cpuInfo.noData = !res.data.step_total_num;
+            this.cpuInfo.stepArray = res.data.step_info;
+            this.samplingInterval = res.data.sampling_interval;
+            this.deviceCpuChart.logicCores = res.data.cpu_processor_num;
+            const deviceInfo = res.data.device_info;
+            if (deviceInfo && this.samplingInterval) {
+              this.initDeviceCpu(deviceInfo);
             } else {
               this.clearCpuChart();
+              this.cpuInfo.noData = true;
             }
-          },
-          () => {
+          } else {
             this.clearCpuChart();
-            this.cpuInfo.initOver = true;
-          },
+          }
+        },
+        () => {
+          this.clearCpuChart();
+          this.cpuInfo.initOver = true;
+        }
       );
     },
     /**
@@ -323,11 +323,9 @@ export default {
       this.deviceCpuChart.cpuAvgProcess = deviceInfo.runnable_process.avg_value;
       this.deviceCpuChart.cpuAvgSwitch = deviceInfo.context_switch_count.avg_value;
       this.deviceCpuChart.option.series = series;
-      this.deviceCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
-          'symbols.leftbracket',
-      )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
+      this.deviceCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;
       this.deviceCpuChart.option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map(
-          (val, index) => index + 1,
+        (val, index) => index + 1
       );
       this.deviceCpuChart.option.legend.data = legend;
       this.deviceCpuChart.option.tooltip.formatter = (params) => {

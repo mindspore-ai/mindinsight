@@ -136,13 +136,13 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts, {echartsThemeName} from '@/js/echarts';
+import echarts, { echartsThemeName } from '@/js/echarts';
 import RequestService from '@/services/request-service';
 import initDot from '@/mixins/init-dot';
-import {select, selectAll, zoom} from 'd3';
+import { select, selectAll, zoom } from 'd3';
 import 'd3-graphviz';
-const d3 = {select, selectAll, zoom};
-import {isInteger} from '@/js/utils';
+const d3 = { select, selectAll, zoom };
+import { isInteger } from '@/js/utils';
 export default {
   props: {
     rankID: String,
@@ -353,7 +353,7 @@ export default {
      */
     debounce(fn, delay) {
       let timer = null;
-      return function() {
+      return function () {
         if (timer) {
           clearTimeout(timer);
         }
@@ -461,12 +461,12 @@ export default {
         dataArr.forEach((data) => {
           const text = `${data[1]}_${data[0]}`;
           const node = Object.assign(
-              {
-                name: text,
-                id: text,
-                label: text,
-              },
-              nodeStyle,
+            {
+              name: text,
+              id: text,
+              label: text,
+            },
+            nodeStyle
           );
           // If has the parent node
           if (typeof data[6] === 'number') {
@@ -490,14 +490,14 @@ export default {
     initOperatorGraph(dot) {
       return new Promise((resolve) => {
         d3.select('#operator-graph')
-            .graphviz()
-            .height('100%')
-            .width('100%')
-            .fit(true)
-            .dot(dot)
-            .render(() => {
-              resolve(true);
-            });
+          .graphviz()
+          .height('100%')
+          .width('100%')
+          .fit(true)
+          .dot(dot)
+          .render(() => {
+            resolve(true);
+          });
       });
     },
     /**
@@ -507,13 +507,13 @@ export default {
     addGraphEvent(nodes) {
       if (nodes) {
         nodes.on(
-            'click',
-            (target, index, nodeslist) => {
-              this.clickEvent(nodeslist[index]);
-              nodes.classed('selected', false);
-              d3.select(`g[id="${nodeslist[index].id}"]`).classed('selected', true);
-            },
-            false,
+          'click',
+          (target, index, nodeslist) => {
+            this.clickEvent(nodeslist[index]);
+            nodes.classed('selected', false);
+            d3.select(`g[id="${nodeslist[index].id}"]`).classed('selected', true);
+          },
+          false
         );
       }
     },
@@ -573,50 +573,50 @@ export default {
       const cpuInfo = this.cpuInfo;
       cpuInfo.initOver = false;
       RequestService.getCpuUtilization(params).then(
-          (res) => {
-            this.cpuInfo.initOver = true;
-            if (res && res.data) {
-              const data = res.data;
-              const totalStep = data.step_total_num;
-              cpuInfo.noData = !totalStep;
-              cpuInfo.step = totalStep;
-              cpuInfo.stepArray = data.step_info;
-              cpuInfo.stepTip = this.$t('profiling.cpuStepTip', {max: totalStep});
-              cpuInfo.cpuStepInputTip = this.$t('profiling.cpuStepInputTip', {max: totalStep});
+        (res) => {
+          this.cpuInfo.initOver = true;
+          if (res && res.data) {
+            const data = res.data;
+            const totalStep = data.step_total_num;
+            cpuInfo.noData = !totalStep;
+            cpuInfo.step = totalStep;
+            cpuInfo.stepArray = data.step_info;
+            cpuInfo.stepTip = this.$t('profiling.cpuStepTip', { max: totalStep });
+            cpuInfo.cpuStepInputTip = this.$t('profiling.cpuStepInputTip', { max: totalStep });
 
-              this.samplingInterval = data.sampling_interval;
-              this.deviceCpuChart.logicCores = data.cpu_processor_num;
-              const deviceInfo = data.device_info;
-              const processInfo = data.process_info;
-              const opInfo = data.op_info;
-              if (deviceInfo && processInfo && opInfo && this.samplingInterval) {
-                this.initDeviceCpu(deviceInfo);
-                this.initProcessCpu(processInfo);
-                if (isInitGraph) {
-                  this.$nextTick(() => {
-                    this.initCPUGraph().then(() => {
-                      this.initOperatorCpu(opInfo, true);
-                    });
+            this.samplingInterval = data.sampling_interval;
+            this.deviceCpuChart.logicCores = data.cpu_processor_num;
+            const deviceInfo = data.device_info;
+            const processInfo = data.process_info;
+            const opInfo = data.op_info;
+            if (deviceInfo && processInfo && opInfo && this.samplingInterval) {
+              this.initDeviceCpu(deviceInfo);
+              this.initProcessCpu(processInfo);
+              if (isInitGraph) {
+                this.$nextTick(() => {
+                  this.initCPUGraph().then(() => {
+                    this.initOperatorCpu(opInfo, true);
                   });
-                } else {
-                  this.$nextTick(() => {
-                    this.initOperatorCpu(opInfo, false);
-                  });
-                }
+                });
               } else {
-                this.clearCpuChart();
-                cpuInfo.noData = true;
+                this.$nextTick(() => {
+                  this.initOperatorCpu(opInfo, false);
+                });
               }
             } else {
               this.clearCpuChart();
               cpuInfo.noData = true;
             }
-          },
-          () => {
+          } else {
             this.clearCpuChart();
             cpuInfo.noData = true;
-            cpuInfo.initOver = true;
-          },
+          }
+        },
+        () => {
+          this.clearCpuChart();
+          cpuInfo.noData = true;
+          cpuInfo.initOver = true;
+        }
       );
     },
     /**
@@ -637,7 +637,7 @@ export default {
      * filter step to view cpu info
      */
     viewStepFilter() {
-      const {startStep, endStep, step} = this.cpuInfo;
+      const { startStep, endStep, step } = this.cpuInfo;
       const startShowStep = startStep.showStep;
       const endShowStep = endStep.showStep;
       const emptyStart = startShowStep === '';
@@ -647,16 +647,24 @@ export default {
         return;
       }
       const endTemp = Number.isInteger(endShowStep)
-        ? endShowStep <= step ? endShowStep : false
-        : emptyEnd ? step : false;
+        ? endShowStep <= step
+          ? endShowStep
+          : false
+        : emptyEnd
+        ? step
+        : false;
       if (!endTemp) {
         // Unexpected end step
         this.resolveWrongFilter(startStep, endStep);
         return;
       }
       const startTemp = Number.isInteger(startShowStep)
-        ? startShowStep <= endTemp ? startShowStep : false
-        : emptyStart ? 1 : false;
+        ? startShowStep <= endTemp
+          ? startShowStep
+          : false
+        : emptyStart
+        ? 1
+        : false;
       if (!startTemp) {
         // Unexpected start step
         this.resolveWrongFilter(startStep, endStep);
@@ -681,7 +689,7 @@ export default {
      * reset to view all cpu info
      */
     resetStepFilter() {
-      const {startStep, endStep} = this.cpuInfo;
+      const { startStep, endStep } = this.cpuInfo;
       startStep.step = startStep.showStep = '';
       endStep.step = endStep.showStep = '';
       this.queryCpuInfo(false, false);
@@ -700,8 +708,8 @@ export default {
         tipInnerHTML.push(`step: ${stepArray[index]}`);
         params.forEach((item, index) => {
           tipInnerHTML.push(
-              `<span class="cpu-chart-tip" style="background-color:${colorArray[index]};"></span>` +
-              `${item.seriesName}: ${item.data}`,
+            `<span class="cpu-chart-tip" style="background-color:${colorArray[index]};"></span>` +
+              `${item.seriesName}: ${item.data}`
           );
         });
       }
@@ -739,9 +747,7 @@ export default {
       // Chart option
       const option = deviceCpuChart.option;
       option.series = series;
-      option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
-          'symbols.leftbracket',
-      )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
+      option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;
       option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map((_v, i) => i + 1);
       option.legend.data = legend;
       option.tooltip.formatter = (params) => {
@@ -783,9 +789,7 @@ export default {
       // Chart option
       const option = processCpuChart.option;
       option.series = series;
-      option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
-          'symbols.leftbracket',
-      )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
+      option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;
       option.xAxis.data = processInfo[Object.keys(processInfo)[0]].metrics.map((_v, i) => i + 1);
       option.legend.data = legend;
       option.tooltip.formatter = (params) => {
@@ -856,9 +860,7 @@ export default {
           // Chart option
           const option = operatorCpuChart.option;
           option.series = series;
-          option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.$t(
-              'symbols.leftbracket',
-          )}${this.samplingInterval}ms${this.$t('symbols.rightbracket')}`;
+          option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;
           option.xAxis.data = currentOpInfo[Object.keys(currentOpInfo)[0]].metrics.map((_v, i) => i + 1);
           option.legend.data = legend;
           option.tooltip.formatter = (params) => {
@@ -958,7 +960,7 @@ export default {
   fill: var(--data-process-operator-color);
   stroke: #e6ebf5;
 }
-.cpu-info .cpu-detail .detail-item-graph svg g.selected path{
+.cpu-info .cpu-detail .detail-item-graph svg g.selected path {
   stroke: red;
 }
 .cpu-info .cpu-detail .detail-item-graph svg text {
