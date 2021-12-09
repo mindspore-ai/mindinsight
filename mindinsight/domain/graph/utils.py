@@ -317,6 +317,7 @@ class Toolkit:
             ('downstream', styles['header_left_fmt'], 30),
             ('name', styles['header_center_fmt'], 10),
             ('attrs', styles['header_left_fmt'], 30),
+            ('scope', styles['header_left_fmt'], 20),
             ('full_name', styles['header_left_fmt'], 20),
             ('rank_id', styles['header_left_fmt'], 20),
             ('graph_name', styles['header_left_fmt'], 30),
@@ -349,6 +350,7 @@ class Toolkit:
 
             worksheet.write(index + 1, indices.get('name'), operator.name, styles['content_center_fmt'])
             worksheet.write(index + 1, indices.get('attrs'), str(operator.attrs), styles['content_left_fmt'])
+            worksheet.write(index + 1, indices.get('scope'), operator.scope, styles['content_left_fmt'])
             worksheet.write(index + 1, indices.get('full_name'), operator.full_name, styles['content_left_fmt'])
             worksheet.write(index + 1, indices.get('rank_id'), operator.rank_id, styles['content_left_fmt'])
             worksheet.write(index + 1, indices.get('graph_name'), operator.graph_name, styles['content_left_fmt'])

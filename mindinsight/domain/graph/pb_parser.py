@@ -72,9 +72,7 @@ class PBParser(Parser):
         Args:
             pb_constant (Protobuf): Constant node.
         """
-        constant = Constant(pb_constant.key)
-        constant.raw = str(pb_constant)
-
+        constant = Constant(pb_constant)
         if pb_constant.value.dtype in self.int_types:
             constant.output = NodeOutput(OutputType(self.dtype_mapping[pb_constant.value.dtype]))
             constant.output.info['value'] = pb_constant.value.int_val
@@ -104,9 +102,7 @@ class PBParser(Parser):
         Args:
             pb_parameter (Protobuf): Parameter node.
         """
-        parameter = Parameter(pb_parameter.name)
-        parameter.raw = str(pb_parameter)
-
+        parameter = Parameter(pb_parameter)
         output = NodeOutput(OutputType.TENSOR)
         if pb_parameter.type.tensor_type.elem_type == self.proto.DT_UNDEFINED:
             output.type = OutputType.NONE
@@ -249,9 +245,7 @@ class PBParser(Parser):
         if pb_operator.name == '':
             return
 
-        operator = Operator(pb_operator.name, pb_operator.op_type)
-        operator.full_name = pb_operator.full_name
-        operator.raw = str(pb_operator)
+        operator = Operator(pb_operator)
         self.operators.append(operator)
 
         # parse source code
