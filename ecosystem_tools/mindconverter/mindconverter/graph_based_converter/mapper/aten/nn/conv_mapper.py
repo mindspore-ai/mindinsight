@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
+import numpy as np
 from mindconverter.graph_based_converter.common.utils import reset_template_and_exchange_msg
 from mindconverter.graph_based_converter.constant import WeightType
 from mindconverter.graph_based_converter.mapper.base import AtenToMindSporeMapper
@@ -23,7 +24,14 @@ class ConvMapper(AtenToMindSporeMapper):
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        return "nn.Conv2d"
+        weights = kwargs.get("weights")
+        dim = 2
+        for weight in weights:
+            # weights includes weight and bias, weight.location=1.
+            # Conv(n)d.weight.shape(out_channels, in_channels/groups, kernel_size[0], ... , kernel_size[n-1]).
+            if weight.location == 1:
+                dim = len(weight.value.shape[2:])
+        return f"nn.Conv{dim}d"
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
@@ -39,8 +47,13 @@ class ConvMapper(AtenToMindSporeMapper):
         args_name_list = ConvMapper.get_args_name_list(**kwargs, args_name=args_name)
         trainable_params = dict()
         for weight in weights:
+            # If the current operator is `Conv1d`, weight.value needs to do `np.expand_dims(weight.value, 2)`.
+            if weight.location == 1 and len(weight.value.shape[2:]) == 1:
+                weight_value = np.expand_dims(weight.value, 2)
+            else:
+                weight_value = weight.value
             trainable_params[args_name_list[weight.location]] = {
-                "data": weight.value, "location": weight.location,
+                "data": weight_value, "location": weight.location,
                 "type": WeightType.PARAMETER.value if weight.location == 0 else WeightType.COMMON.value,
                 "onnx_name": weight.name
             }
@@ -71,6 +84,11 @@ class ConvMapper(AtenToMindSporeMapper):
         args = ConvMapper._get_args(inputs=inputs, args=args, trainable_params=trainable_params)
 
         init_template_list = [f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"]
+        if op == "nn.Conv1d":
+            for name in ["stride", "dilation", "padding"]:
+                if isinstance(args.get(name), (list, tuple)):
+                    args[name] = args.get(name)[0]
+            args["kernel_size"] = args.get("kernel_size")[-1]
         parameters_declared = dict()
         for name, trainable_param in trainable_params.copy().items():
             value = trainable_param["data"]
