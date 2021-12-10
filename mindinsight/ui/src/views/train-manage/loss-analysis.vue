@@ -16,8 +16,20 @@ limitations under the License.
 
 <template>
   <div class="mi-common-full-page cl-loss-analysis">
-    <div class="mi-title-top-level space-between">
+    <div class="cl-title-top">
       {{$t('lossAnalysis.titleText')}}
+      <el-tooltip placement="right-start" 
+                  effect="light">
+        <div slot="content" 
+              class="tooltip-container">
+          <div class="cl-title-tip">
+            <div class="tip-part">
+              {{$t('lossAnalysis.dataToolTip')}}
+            </div>
+          </div>
+        </div>
+        <i class="el-icon-info"></i>
+      </el-tooltip>
       <div class="cl-close-btn"
            @click="backToManage">
         <img src="@/assets/images/close-page.png">
@@ -1302,5 +1314,30 @@ export default {
 }
 .cl-loss-analysis .borderspacing3 {
   border-spacing: 3px;
+}
+
+.cl-loss-analysis .cl-title-top {
+  height: 56px;
+  line-height: 56px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.cl-loss-analysis .cl-title-top .el-icon-info {
+  color: #6c7280;
+}
+
+.cl-loss-analysis .cl-title-top .cl-title-tip .tip-part {
+  line-height: 20px;
+  word-break: normal;
+}
+
+.cl-loss-analysis .cl-close-btn {
+  width: 20px;
+  height: 20px;
+  vertical-align: -3px;
+  cursor: pointer;
+  display: inline;
+  float: right;
 }
 </style>

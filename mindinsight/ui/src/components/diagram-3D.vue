@@ -122,6 +122,7 @@ export default {
   },
   data() {
     return {
+      preOpacity: commonProperty.lossCommonStyle.opacity,  // previous opacity value
       itemId: '', // Dom id
       maxAnimateStepNum: 80, // Maximum number of animations steps
       viewMapMin: 0, // Z-axis minimum
@@ -404,7 +405,7 @@ export default {
         itemStyle: {
           opacity: isFixedSurface ? this.FIXED_SURFACE_OPACITY : this.styleSetting.opacity,
         },
-        data: surfaceData,
+        data: this.styleSetting.opacity ? surfaceData : [],
       };
       return surfaceSeries;
     },
@@ -643,8 +644,22 @@ export default {
         const loopCount = this.chartOption.series.length;
         for (let i = 0; i < loopCount; i++) {
           const tempData = this.chartOption.series[i];
-          if (tempData.type === 'surface') {
+          if (tempData.type === 'surface' && tempData.name !== commonProperty.emptySurfaceSeries.name) {
             tempData.itemStyle.opacity = settingData.opacity;
+            // to resolve loss analysis point blocked by curved surface where opacity reset 0
+            if (settingData.opacity && !this.preOpacity){
+              const oriData = this.oriData
+              if (oriData.points) {
+                const seriesSurface = this.getSurfaceData(oriData)
+                if (seriesSurface) {
+                  this.seriesArr[i] = seriesSurface
+                  tempData = seriesSurface
+                }
+              }
+            }else if (!settingData.opacity) {
+              tempData.data = []
+            }
+            this.preOpacity = settingData.opacity
           } else if (tempData.type === 'line3D') {
             tempData.lineStyle.width = settingData.line.width;
             tempData.lineStyle.color = settingData.line.color;
