@@ -300,6 +300,7 @@ class OutputType(enum.Enum):
     FLOAT64 = 'float64'
     TENSOR = 'tensor'
     TUPLE = 'tuple'
+    STRING = 'string'
 
 
 class NodeInput:
@@ -350,6 +351,9 @@ class NodeOutput:
     def __init__(self, output_type):
         self.type = output_type
         if output_type == OutputType.BOOL:
+            self.info = dict(value=None)
+            self.slot_size = 1
+        elif output_type == OutputType.STRING:
             self.info = dict(value=None)
             self.slot_size = 1
         elif output_type in self.SCALAR_TYPES:
