@@ -19,7 +19,7 @@ This module is used to register all conditions, as well as their parameters.
 This module also provide the available conditions to condition_collections api.
 """
 from enum import Enum
-from mindinsight.debugger.conditionmgr.log import logger
+from mindinsight.debugger.common.log import LOGGER as logger
 
 
 class ParamNameEnum(Enum):

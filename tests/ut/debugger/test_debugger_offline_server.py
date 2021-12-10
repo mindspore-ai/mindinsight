@@ -41,6 +41,11 @@ class DataLoader:
         self._debugger_base_dir = Path(base_dir).absolute()
         self._net_name = "Lenet"
 
+    @property
+    def device_target(self):
+        """The property of device target."""
+        return "Ascend"
+
     def get_dump_dir(self):
         """Get graph_name directory of the data."""
         return str(self._debugger_base_dir)
@@ -48,6 +53,11 @@ class DataLoader:
     def get_net_name(self):
         """Get net_name of the data."""
         return self._net_name
+
+    @staticmethod
+    def get_sync_flag():
+        """Get sync flag of the data."""
+        return True
 
 
 def init_offline_server(dbg_dir):

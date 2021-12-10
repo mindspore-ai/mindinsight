@@ -22,7 +22,8 @@ from threading import Event
 import os
 
 import mindinsight
-from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotFoundError, DebuggerParamValueError
+from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotFoundError, DebuggerParamValueError, \
+    DebuggerToolkitNotFoundError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import Streams, ServerStatus, version_match, DebuggerServerMode, get_ack_reply, \
     RunLevel, MAX_SINGLE_TENSOR_CACHE_BYTES, ViewCommandLevelEnum, convert_tensor_stats, put_tensor_base_in_cache, \
@@ -97,6 +98,7 @@ class DebuggerOfflineManager:
 
         self._command_listener = CommandListener(cache_store)
         self._data_loader = DataLoader(dbg_dir)
+        self.check_toolkit(self._data_loader)
         self._is_running_flag = False
         self._old_run_cmd = {}
 
@@ -132,12 +134,14 @@ class DebuggerOfflineManager:
     @staticmethod
     def check_toolkit(data_loader):
         """Check if the toolkit file exist."""
-        if not data_loader.get_sync_flag and data_loader.device_target == "Ascend":
+        if not data_loader.get_sync_flag() and data_loader.device_target == "Ascend":
             try:
                 get_msaccucmp_path()
-            except FileNotFoundError as err:
-                log.error("File not found. %s", err)
-                raise DebuggerModuleNotFoundError(err)
+            except FileNotFoundError:
+                msg = "Failed to find the msaccucmp.py or msaccucmp.pyc file. Please make sure you have installed " \
+                      "toolkit package and set `ASCEND_TOOLKIT_PATH` in the environment correctly."
+                log.error("File not found. %s", msg)
+                raise DebuggerToolkitNotFoundError(msg)
 
     @staticmethod
     def get_dbg_service(dbg_services_module, data_loader, mem_limit):

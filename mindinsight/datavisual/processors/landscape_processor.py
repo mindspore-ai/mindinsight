@@ -46,6 +46,7 @@ class LandscapeProcessor(BaseProcessor):
                     id=self._get_interval_id(loss_landscape),
                     value=[loss_landscape.loss_path.intervals[0], loss_landscape.loss_path.intervals[-1]]
                 ))
+        intervals.sort(key=lambda interval: interval.get("value")[0])
         return dict(intervals=intervals)
 
     def list_landscapes(self, train_ids, landscape_type='interval', interval_id=None):
@@ -147,11 +148,13 @@ class LandscapeProcessor(BaseProcessor):
         for lineage_data in lineage_objects:
             if lineage_data.get("summary_dir") == train_id:
                 learning_rate = lineage_data.get('model_lineage', {}).get('learning_rate', None)
+                loss = lineage_data.get('model_lineage', {}).get('loss', None)
                 result = dict(
                     network=lineage_data.get('model_lineage', {}).get('network', None),
                     learning_rate=round(learning_rate, 6) if learning_rate is not None else None,
                     optimizer=lineage_data.get('model_lineage', {}).get('optimizer', None),
                     metric=lineage_data.get('model_lineage', {}).get('metric', {}),
+                    loss=round(loss, 6) if loss is not None else None,
                 )
                 return result
         return dict(
