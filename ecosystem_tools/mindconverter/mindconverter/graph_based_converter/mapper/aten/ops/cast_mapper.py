@@ -31,7 +31,7 @@ class CastMapper(AtenToMindSporeMapper):
         args_name = {
             2: ["input_0", "input_1"],
             5: ["input", "var", "unused", "unused", "unused"],
-            6: ["input", "unused", "dtype", " unused", "unused", "unused"],
+            6: ["input", "unused", "dtype", "unused", "unused", "unused"],
             8: ["input", "dtype", "unused", "unused", "unused", "unused", "unused", "unused"]
         }
         args_name_list = CastMapper.get_args_name_list(**kwargs, args_name=args_name)
@@ -57,7 +57,7 @@ class CastMapper(AtenToMindSporeMapper):
         args_name = {
             2: ["input_0", "input_1"],
             5: ["input", "var", "unused", "unused", "unused"],
-            6: ["input", "unused", "dtype", " unused", "unused", "unused"],
+            6: ["input", "unused", "dtype", "unused", "unused", "unused"],
             8: ["input", "dtype", "unused", "unused", "unused", "unused", "unused", "unused"]
         }
         inputs, args, group_inputs = CastMapper._params_parser(raw_params=raw_params, args_name=args_name,
