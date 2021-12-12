@@ -195,11 +195,25 @@ export default {
           true,
           this.$store.state.themeIndex,
       );
+      let width, height;
       await this.elk.layout(elkGraph, this.option).then((res) => {
+        let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+        res.children.forEach((node) => {
+          minx = Math.min(node.x, minx);
+          miny = Math.min(node.y, miny);
+          maxx = Math.max(node.x, maxx, node.width + node.x);
+          maxy = Math.max(node.y, maxy, node.height + node.y);
+        })
         this.processDisplayedGraph(res.getDisplayedGraph());
         this.nodeAttrMap = visGraph.nodeAttrMap;
+        this.loading.show = false;
+        width = maxx - minx;
+        height = maxy - miny;
       });
-      this.loading.show = false;
+      return {
+        "width": width,
+        "height" : height,
+      }
     },
 
     /**
