@@ -32,7 +32,8 @@ class TileMapper(AtenToMindSporeMapper):
     @staticmethod
     def _convert_trained_weights(**kwargs):
         weights = kwargs.get("weights", list())
-        args_name_list = ["input", "multiples"]
+        args_name = ["input", "multiples"]
+        args_name_list = TileMapper.get_args_name_list(**kwargs, args_name=args_name)
         trainable_params = dict()
         for weight in weights:
             trainable_params[args_name_list[weight.location]] = {"data": weight.value, "location": weight.location,
@@ -51,9 +52,9 @@ class TileMapper(AtenToMindSporeMapper):
         op = kwargs.get("operation")
 
         variable_slot = "var_0"
-        trainable_params = kwargs.get("trainable_params", dict())
-        args_name_list = ["input", "multiples"]
-        inputs, args, group_inputs = TileMapper._params_parser(raw_params, args_name_list, trainable_params)
+        trainable_params = kwargs.get("trainable_params")
+        args_name = ["input", "multiples"]
+        inputs, args, group_inputs = TileMapper._params_parser(raw_params, args_name, trainable_params)
 
         init_template_list = [f"self.{{{variable_slot}}}_{arg_name} = {{{arg_name}}}" for arg_name in args]
         parameters_declared = dict()
