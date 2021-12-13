@@ -40,6 +40,13 @@ class DumpTarget(enum.Enum):
     OUTPUT_ONLY = 2
 
 
+@enum.unique
+class FileFormat(enum.Enum):
+    """Define the file format."""
+    BIN = "bin"
+    NPY = "npy"
+
+
 class DataLoader:
     """The DataLoader object provides interface to load graphs and device information from base_dir."""
 
@@ -54,9 +61,15 @@ class DataLoader:
         # flag for whether the data is from sync dump or async dump.
         self._is_sync = False
         self._device_target = "Ascend"
+        self._file_format = ""
         self._net_name = ""
         self._dump_type = 0
         self._initialize()
+
+    @property
+    def file_format(self):
+        """The property of file format."""
+        return self._file_format
 
     @property
     def device_target(self):
@@ -93,6 +106,7 @@ class DataLoader:
             try:
                 self._net_name = common_settings['net_name']
                 self._dump_type = common_settings['input_output']
+                self._file_format = common_settings.get('file_format', FileFormat.BIN.value)
             except KeyError:
                 raise DebuggerJsonFileParseError("data_dump.json")
 
