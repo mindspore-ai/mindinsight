@@ -1141,7 +1141,8 @@
     "lossValue": "loss value",
     "trainingStep": "training\nstep",
     "dataSelectTip": "Please select the graph to be compared on the right",
-    "dataToolTip": "The line chart on the right side of this function is the actual training loss value curve, and the large image on the left side of the page is an approximate representation of the training loss surface. Due to the randomness of the data and other reasons, the specific value may not be exactly the same as the actual training loss value."
+    "dataToolTip": "The line chart on the right side of this function is the actual training loss value curve, and the large image on the left side of the page is an approximate representation of the training loss surface. Due to the randomness of the data and other reasons, the specific value may not be exactly the same as the actual training loss value.",
+    "basicTrainingTip": "If part of the basic training information is missing, please check whether the traceability data is collected correctly."
   },
   "lossCompare": {
     "titleText": "Loss Graph Comparison",
@@ -1157,7 +1158,8 @@
     "high": "High",
     "low": "Low",
     "diagram3DSVLimitTip": "A maximum of two graphs can be selected for comparison",
-    "more": "View More"
+    "more": "View More",
+    "trainingTip": "If some basic training information or evaluation indicators are missing, please check whether the traceability data is collected correctly."
   },
   "error": {
     "50540000": "System error.",

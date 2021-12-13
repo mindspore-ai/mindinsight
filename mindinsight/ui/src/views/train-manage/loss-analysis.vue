@@ -338,30 +338,44 @@ limitations under the License.
           </div>
         </div>
         <div class="chart-info">
-          <div class="title">{{$t('lossAnalysis.basicTrainingInfo')}}</div>
+          <div class="title">
+            {{$t('lossAnalysis.basicTrainingInfo')}}
+            <el-tooltip placement="bottom-end" 
+                        effect="light">
+              <div slot="content" 
+                  class="tooltip-container">
+                <div class="cl-title-tip">
+                  <div class="tip-part">
+                    {{$t('lossAnalysis.basicTrainingTip')}}
+                  </div>
+                </div>
+              </div>
+              <i class="el-icon-info"></i>
+            </el-tooltip>
+          </div>
           <div class="chart-info-item">
             <div class="chart-info-item-left">{{$t('lossAnalysis.network')}}{{$t('symbols.colon')}}</div>
-            <div class="chart-info-item-right">{{chartInfo.network}}</div>
+            <div class="chart-info-item-right">{{chartInfo.network || '--'}}</div>
           </div>
           <div class="chart-info-item">
             <div class="chart-info-item-left">{{$t('lossAnalysis.optimizer')}}{{$t('symbols.colon')}}</div>
-            <div class="chart-info-item-right">{{chartInfo.optimizer}}</div>
+            <div class="chart-info-item-right">{{chartInfo.optimizer || '--'}}</div>
           </div>
           <div class="chart-info-item">
             <div class="chart-info-item-left">{{$t('lossAnalysis.learning_rate')}}{{$t('symbols.colon')}}</div>
-            <div class="chart-info-item-right">{{chartInfo.learning_rate}}</div>
+            <div class="chart-info-item-right">{{isNaN(chartInfo.learning_rate) || chartInfo.learning_rate === null ? '--' : chartInfo.learning_rate}}</div>
           </div>
           <div class="chart-info-item">
             <div class="chart-info-item-left">{{$t('lossAnalysis.decomposition')}}{{$t('symbols.colon')}}</div>
-            <div class="chart-info-item-right">{{chartInfo.decomposition}}</div>
+            <div class="chart-info-item-right">{{chartInfo.decomposition || '--'}}</div>
           </div>
           <div class="chart-info-item">
             <div class="chart-info-item-left">{{$t('lossAnalysis.ratio')}}{{$t('symbols.colon')}}</div>
-            <div class="chart-info-item-right">{{chartInfo.ratio}}</div>
+            <div class="chart-info-item-right">{{chartInfo.ratio || '--'}}</div>
           </div>
           <div class="chart-info-item">
             <div class="chart-info-item-left">{{$t('lossAnalysis.step_per_epoch')}}{{$t('symbols.colon')}}</div>
-            <div class="chart-info-item-right">{{chartInfo.step_per_epoch ? chartInfo.step_per_epoch+'/1' : ''}}</div>
+            <div class="chart-info-item-right">{{chartInfo.step_per_epoch ? chartInfo.step_per_epoch+'/1' : '--'}}</div>
           </div>
         </div>
       </div>
