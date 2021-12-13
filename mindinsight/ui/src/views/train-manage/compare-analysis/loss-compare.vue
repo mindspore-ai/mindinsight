@@ -225,7 +225,21 @@ limitations under the License.
                   </div>
                   <div class="info-container">
                     <div class="info-title">
-                      <div class="view-title inline-show">{{$t('lossCompare.trainInfo')}}</div>
+                      <div class="view-title inline-show">
+                        {{$t('lossCompare.trainInfo')}}
+                        <el-tooltip placement="right-start" 
+                                    effect="light">
+                          <div slot="content" 
+                               class="tooltip-container">
+                            <div class="cl-title-tip">
+                              <div class="tip-part">
+                                {{$t('lossCompare.trainingTip')}}
+                              </div>
+                            </div>
+                          </div>
+                          <i class="el-icon-info"></i>
+                        </el-tooltip>
+                      </div>
                     </div>
                     <div class="info-content">
                       <div class="w33">
@@ -296,7 +310,21 @@ limitations under the License.
                   </div>
                   <div class="info-container">
                     <div class="info-title">
-                      <div class="view-title inline-show">{{$t('lossCompare.trainInfo')}}</div>
+                      <div class="view-title inline-show">
+                        {{$t('lossCompare.trainInfo')}}
+                        <el-tooltip placement="right-start" 
+                                    effect="light">
+                          <div slot="content" 
+                               class="tooltip-container">
+                            <div class="cl-title-tip">
+                              <div class="tip-part">
+                                {{$t('lossCompare.trainingTip')}}
+                              </div>
+                            </div>
+                          </div>
+                          <i class="el-icon-info"></i>
+                        </el-tooltip>
+                      </div>
                     </div>
                     <div class="info-content">
                       <div class="w33">
@@ -369,7 +397,21 @@ limitations under the License.
                 </div>
                 <div class="info-container">
                   <div class="info-title">
-                    <div class="view-title inline-show">{{$t('lossCompare.trainInfo')}}</div>
+                    <div class="view-title inline-show">
+                      {{$t('lossCompare.trainInfo')}}
+                      <el-tooltip placement="right-start" 
+                                    effect="light">
+                          <div slot="content" 
+                               class="tooltip-container">
+                            <div class="cl-title-tip">
+                              <div class="tip-part">
+                                {{$t('lossCompare.trainingTip')}}
+                              </div>
+                            </div>
+                          </div>
+                          <i class="el-icon-info"></i>
+                        </el-tooltip>
+                    </div>
                   </div>
                   <div class="info-content">
                     <div class="w33">
@@ -1463,5 +1505,12 @@ export default {
   max-height: 500px;
   padding-top: 10px;
   overflow: auto;
+}
+.loss-compare .compare-content .info-container .info-title .cl-title-tip .tip-part {
+  line-height: 20px;
+  word-break: normal;
+}
+.loss-compare .compare-content .info-container .info-title .el-icon-info {
+  color: #6c7280;
 }
 </style>
