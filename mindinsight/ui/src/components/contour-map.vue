@@ -1514,6 +1514,15 @@ function calVerticalContourPoint(point1, point2, z) {
   };
 }
 
+/**
+ * Get decimal places of number
+ * @param {number} value
+ * @return {number}
+ */
+function getDecimalPlaces(value) {
+  return Number.isInteger(value) ? 0 : (value + '').split('.')[1].length;
+}
+
 import {getGradientColor} from '@/js/utils';
 
 import echarts, {echartsThemeName} from '@/js/echarts';
@@ -1795,6 +1804,18 @@ export default {
         if (!this.$refs.contour) return false;
         this.chartInstance = echarts.init(this.$refs.contour, echartsThemeName);
       }
+      const calcAxisMin = (value) => {
+        const min = value.min;
+        if (typeof min !== 'number' || Number.isNaN(min)) return;
+        const decimalPlaces = getDecimalPlaces(min);
+        return decimalPlaces ? min : floorDecimalPlaces(min, decimalPlaces - 1);
+      };
+      const calcAxisMax = (value) => {
+        const max = value.max;
+        if (typeof max !== 'number' || Number.isNaN(max)) return;
+        const decimalPlaces = getDecimalPlaces(max);
+        return decimalPlaces ? max : floorDecimalPlaces(max, decimalPlaces - 1);
+      };
       this.chartInstance.setOption({
         legend: {
           show: false,
@@ -1841,10 +1862,10 @@ export default {
             show: false,
           },
           min: (value) => {
-            return floorDecimalPlaces(value.min, 4);
+            return calcAxisMin(value);
           },
           max: (value) => {
-            return ceilDecimalPlaces(value.max, 4);
+            return calcAxisMax(value);
           },
         },
         yAxis: {
@@ -1859,10 +1880,10 @@ export default {
             show: false,
           },
           min: (value) => {
-            return floorDecimalPlaces(value.min, 4);
+            return calcAxisMin(value);
           },
           max: (value) => {
-            return ceilDecimalPlaces(value.max, 4);
+            return calcAxisMax(value);
           },
         },
       });
