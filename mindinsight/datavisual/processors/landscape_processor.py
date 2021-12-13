@@ -151,10 +151,10 @@ class LandscapeProcessor(BaseProcessor):
                 loss = lineage_data.get('model_lineage', {}).get('loss', None)
                 result = dict(
                     network=lineage_data.get('model_lineage', {}).get('network', None),
-                    learning_rate=round(learning_rate, 6) if learning_rate is not None else None,
+                    learning_rate=format(learning_rate, '6e') if learning_rate is not None else None,
                     optimizer=lineage_data.get('model_lineage', {}).get('optimizer', None),
                     metric=lineage_data.get('model_lineage', {}).get('metric', {}),
-                    loss=round(loss, 6) if loss is not None else None,
+                    loss=format(loss, '6e') if loss is not None else None,
                 )
                 return result
         return dict(

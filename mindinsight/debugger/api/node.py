@@ -216,10 +216,11 @@ class NodeImpl(Node):
             >>> print(node.name)
             conv5.bias
         """
-        if hasattr(self._base_node, 'type') and self._base_node.type == "Load":
-            scope = self._node_feature.name.rsplit('/')
-            name = f'Load-op{self._base_node.name}'
-            return f'{scope[0]}/{name}' if len(scope) > 1 else name
+        if hasattr(self._base_node, 'type') and (self._base_node.type == "Load" or "Summary" in self._base_node.type):
+            name = self._base_node.name.split('/')[-1]
+            node_id = name.split('op')[-1]
+            name = f'{self._base_node.type}-op{node_id}'
+            return f'{self._base_node.scope}/{name}'
         return self._node_feature.name
 
     @property

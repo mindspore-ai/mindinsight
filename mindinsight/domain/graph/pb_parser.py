@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """PB parser module."""
+import numpy as np
 
 from mindinsight.domain.graph.base import MindSporeType, InputType, OutputType
 from mindinsight.domain.graph.base import NodeInput, NodeOutput, Tensor, Source, Constant, Parameter, Operator, Parser
@@ -43,9 +44,24 @@ class PBParser(Parser):
             self.proto.DT_FLOAT64: 'float64',
             self.proto.DT_TENSOR: 'tensor',
             self.proto.DT_TUPLE: 'tuple',
+            self.proto.DT_STRING: 'string',
             self.proto.DT_BASE_INT: MindSporeType.INT,
             self.proto.DT_BASE_UINT: MindSporeType.UINT,
             self.proto.DT_BASE_FLOAT: MindSporeType.FLOAT,
+        }
+        self.numpy_type_mapping = {
+            self.proto.DT_BOOL: np.bool,
+
+            self.proto.DT_INT8: np.int8,
+            self.proto.DT_INT16: np.int16,
+            self.proto.DT_INT32: np.int32,
+            self.proto.DT_INT64: np.int64,
+
+            self.proto.DT_FLOAT16: np.float16,
+            self.proto.DT_FLOAT32: np.float32,
+            self.proto.DT_FLOAT64: np.float64,
+
+            self.proto.DT_STRING: np.str
         }
         self.int_types = (
             self.proto.DT_INT8,
@@ -76,9 +92,23 @@ class PBParser(Parser):
         if pb_constant.value.dtype in self.int_types:
             constant.output = NodeOutput(OutputType(self.dtype_mapping[pb_constant.value.dtype]))
             constant.output.info['value'] = pb_constant.value.int_val
+            constant.output.info['np_value'] = np.array(pb_constant.value.int_val,
+                                                        dtype=self.numpy_type_mapping[pb_constant.value.dtype])
         elif pb_constant.value.dtype in self.float_types:
             constant.output = NodeOutput(OutputType(self.dtype_mapping[pb_constant.value.dtype]))
             constant.output.info['value'] = pb_constant.value.float_val
+            constant.output.info['np_value'] = np.array(pb_constant.value.float_val,
+                                                        dtype=self.numpy_type_mapping[pb_constant.value.dtype])
+        elif pb_constant.value.dtype == self.proto.DT_BOOL:
+            constant.output = NodeOutput(OutputType(self.dtype_mapping[pb_constant.value.dtype]))
+            constant.output.info['value'] = pb_constant.value.bool_str
+            constant.output.info['np_value'] = np.array(pb_constant.value.bool_val,
+                                                        dtype=self.numpy_type_mapping[pb_constant.value.dtype])
+        elif pb_constant.value.dtype == self.proto.DT_STRING:
+            constant.output = NodeOutput(OutputType(self.dtype_mapping[pb_constant.value.dtype]))
+            constant.output.info['value'] = pb_constant.value.str_val
+            constant.output.info['np_value'] = np.array(pb_constant.value.str_val,
+                                                        dtype=self.numpy_type_mapping[pb_constant.value.dtype])
         elif pb_constant.value.dtype == self.proto.DT_TENSOR:
             constant.output = NodeOutput(OutputType.TENSOR)
             if pb_constant.value.tensor_val.data_type:

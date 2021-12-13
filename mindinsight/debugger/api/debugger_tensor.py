@@ -183,6 +183,11 @@ class DebuggerTensorImpl(DebuggerTensor):
         if self.iteration is None:
             log.warning("The iteration of is not specified, no value returned.")
             return None
+        base_node = self.node.base_node
+        if hasattr(base_node, 'output') and hasattr(base_node.output, 'info'):
+            info = base_node.output.info
+            if isinstance(info, dict) and info.get("np_value") is not None:
+                return info.get("np_value")
         debugger_engine = self.node.debugger_engine
         tensor_info = debugger_engine.dbg_services_module.TensorInfo(
             node_name=self.node.name,
