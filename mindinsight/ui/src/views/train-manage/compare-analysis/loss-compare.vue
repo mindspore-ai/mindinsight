@@ -177,6 +177,12 @@ limitations under the License.
                           :title="sampleItem.info.learning_rate">{{sampleItem.info.learning_rate}}
                     </span>
                   </div>
+                  <div v-if="!Object.keys(sampleItem.info.metric).length">
+                    <span class="label">loss{{$t('symbols.colon')}}</span>
+                    <span class="value"
+                          :title="sampleItem.info.loss">{{sampleItem.info.loss}}
+                    </span>
+                  </div>
                   <div v-show="Object.keys(sampleItem.info.metric).length">
                     <span class="label">{{sampleItem.showMetric.label}}{{$t('symbols.colon')}}</span>
                     <span class="value"
@@ -253,7 +259,14 @@ limitations under the License.
                         {{$t('lossCompare.more')}}</div>
                     </div>
                     <div class="info-content">
+                      <div v-if="!Object.keys(sampleItem.info.metric).length">
+                        <span class="label">loss{{$t('symbols.colon')}}</span>
+                        <span class="value"
+                              :title="sampleItem.info.loss">{{sampleItem.info.loss}}
+                        </span>
+                      </div>
                       <div class="w33"
+                           v-else
                            v-for="(evalKey, index) in Object.keys(sampleItem.info.metric).slice(0, 3)"
                            :key="index">
                         <span class="label">{{evalKey}}{{$t('symbols.colon')}}</span>
@@ -318,7 +331,14 @@ limitations under the License.
                         {{$t('lossCompare.more')}}</div>
                     </div>
                     <div class="info-content">
+                      <div v-if="!Object.keys(sampleItem.info.metric).length">
+                        <span class="label">loss{{$t('symbols.colon')}}</span>
+                        <span class="value"
+                              :title="sampleItem.info.loss">{{sampleItem.info.loss}}
+                        </span>
+                      </div>
                       <div class="w33"
+                           v-else
                            v-for="(evalKey, index) in Object.keys(sampleItem.info.metric).slice(0, 3)"
                            :key="index">
                         <span class="label">{{evalKey}}{{$t('symbols.colon')}}</span>
@@ -383,7 +403,14 @@ limitations under the License.
                       {{$t('lossCompare.more')}}</div>
                   </div>
                   <div class="info-content">
+                    <div v-if="!Object.keys(sampleItem.info.metric).length">
+                      <span class="label">loss{{$t('symbols.colon')}}</span>
+                      <span class="value"
+                            :title="sampleItem.info.loss">{{sampleItem.info.loss}}
+                      </span>
+                    </div>
                     <div class="w33"
+                         v-else
                          v-for="(evalKey, index) in Object.keys(sampleItem.info.metric).slice(0, 3)"
                          :key="index">
                       <span class="label">{{evalKey}}{{$t('symbols.colon')}}</span>
@@ -442,6 +469,7 @@ class DataItem {
     learning_rate: '--',
     optimizer: '--',
     metric: {},
+    loss: '--',
   };
   showMetric = {
     label: '--',
@@ -902,6 +930,9 @@ export default {
             info.optimizer = landscape.metadata.optimizer ?? '--';
             info.learning_rate = landscape.metadata.learning_rate ?? '--';
             info.metric = landscape.metadata.metric ?? {};
+            info.loss = isNaN(landscape.metadata.loss) || landscape.metadata.loss === null
+              ? '--'
+              : landscape.metadata.loss;
             const keys = Object.keys(info.metric);
             if (keys.length) {
               showMetric.label = keys[0];

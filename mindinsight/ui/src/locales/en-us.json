@@ -1140,7 +1140,8 @@
     "step_per_epoch": "Step/Epoch",
     "lossValue": "loss value",
     "trainingStep": "training\nstep",
-    "dataSelectTip": "Please select the graph to be compared on the right"
+    "dataSelectTip": "Please select the graph to be compared on the right",
+    "dataToolTip": "The line chart on the right side of this function is the actual training loss value curve, and the large image on the left side of the page is an approximate representation of the training loss surface. Due to the randomness of the data and other reasons, the specific value may not be exactly the same as the actual training loss value."
   },
   "lossCompare": {
     "titleText": "Loss Graph Comparison",
@@ -1202,6 +1203,7 @@
     "5054B189": "Do not set the value repeatedly.",
     "5054B083": "Failed to create the watchpoint. Do not use invalid rules.",
     "5054B202": "The debugger offline server module is not found",
+    "5054B203": "Failed to the Ascend toolkit package, please install it and set `ASCEND_TOOLKIT_PATH` in the environment correstly.",
     "5054B283": "A tensor is being downloaded. Please try again later.",
     "5054B286": "The .dump_metadata/data_dump.json file in the summary directory is missing or damaged. Please check the integrity of the dump data in the directory.",
     "5054000C": "Insufficient memory, please try again after freeing memory."
