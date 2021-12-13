@@ -134,7 +134,8 @@ class DebuggerOfflineManager:
     @staticmethod
     def check_toolkit(data_loader):
         """Check if the toolkit file exist."""
-        if not data_loader.get_sync_flag() and data_loader.device_target == "Ascend":
+        if not data_loader.get_sync_flag() and data_loader.device_target == "Ascend" and \
+                data_loader.file_format == "bin":
             try:
                 get_msaccucmp_path()
             except FileNotFoundError:
