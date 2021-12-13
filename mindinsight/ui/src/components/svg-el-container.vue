@@ -78,9 +78,15 @@ export default {
     this.showGraphAreaHeight = this.$refs['show-graph-area'].getBoundingClientRect().height;
   },
   methods: {
-    reset() {
-      this.wholeGraphWidth = this.$refs['whole-compute-graph'].getBoundingClientRect().width / this.scale;
-      this.wholeGraphHeight = this.$refs['whole-compute-graph'].getBoundingClientRect().height / this.scale;
+    reset(flag=true, width=0, height=0) {
+      if (flag) { // bind on single click on reset icon
+        this.wholeGraphWidth = this.$refs['whole-compute-graph'].getBoundingClientRect().width / this.scale;
+        this.wholeGraphHeight = this.$refs['whole-compute-graph'].getBoundingClientRect().height / this.scale;
+      } else {
+        this.wholeGraphWidth = width;
+        this.wholeGraphHeight = height;
+      }
+      
       this.x = this.showGraphAreaWidth / 2 - this.wholeGraphWidth / 2;
       this.y = this.showGraphAreaHeight / 2 - this.wholeGraphHeight / 2;
       this.scale = 1;

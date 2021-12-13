@@ -1142,9 +1142,10 @@ export default {
     showNodeTypeChange() {
       changeShowNodeType(this.showNodeType);
       resetFirstCntFlag();
-      this.getDisplayedGraph(this.showNodeType, this.showRankId).then(() => {
+      this.getDisplayedGraph(this.showNodeType, this.showRankId).then((res) => {
+        const {width, height} = res;
         this.resetSelectStatus();
-        this.resetSVG();
+        this.resetSVG(false, width, height);
       });
     },
 
@@ -1154,9 +1155,10 @@ export default {
     showRankIdChange() {
       changeShowRankId(this.showRankId);
       resetFirstCntFlag();
-      this.getDisplayedGraph(this.showNodeType, this.showRankId).then(() => {
+      this.getDisplayedGraph(this.showNodeType, this.showRankId).then((res) => {
+        const {width, height} = res;
         this.resetSelectStatus();
-        this.resetSVG();
+        this.resetSVG(false, width, height);
       });
     },
 
@@ -1370,8 +1372,12 @@ export default {
     /**
      * reset the whole graph to the center
      */
-    resetSVG() {
-      this.$refs.graphContainer.reset();
+    resetSVG(flag, width, height) {
+      if (flag) {
+        this.$refs.graphContainer.reset();
+      } else {
+        this.$refs.graphContainer.reset(false, width, height);
+      }
     },
 
     /**
