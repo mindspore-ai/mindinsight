@@ -701,7 +701,7 @@
     "debugger": "调试器",
     "nodeTypes": "节点类型",
     "nodeList": "节点列表",
-    "watchList": "异常现象检查列表",
+    "watchList": "监测点列表",
     "watchPoint": "监测点",
     "continue": "继续",
     "pause": "暂停",
@@ -709,7 +709,7 @@
     "selectCondition": "请选择条件",
     "inputStep": "请输入轮次值",
     "inputTip": "小于等于{total_step_num}的正整数",
-    "curHitNode": "已发现的异常现象",
+    "curHitNode": "已发现的命中的监测点",
     "backstageStatus": "后台运行状态是",
     "view": "查看",
     "deleteWatchpointConfirm": "此操作将删除当前监测点，是否继续？",
@@ -775,7 +775,7 @@
     "tuningAdvice": "调优建议",
     "setValue": "设置值",
     "actualValue": "实际值",
-    "noWatchPoint": "没有已发现的异常现象",
+    "noWatchPoint": "没有命中的监测点",
     "tensorTuningRule": {
       "operator_real_data_validation": "真实数据单算子验证",
       "loss_overflow": "检查loss值溢出（NAN，INF）",
@@ -950,7 +950,7 @@
     "recommendDetail": "检查张量全为零、梯度消失、权重更新过大等常见异常现象。",
     "use": "使用",
     "notUse": "不使用",
-    "outdateTip": "异常现象检查列表或者当前轮次发生修改，结果可能过时，请重新检查或执行后续轮次训练。",
+    "outdateTip": "监测点列表或者当前轮次发生修改，结果可能过时，请重新检查或执行后续轮次训练。",
     "versionConflictTip": "MindSpore和MindInsight版本不匹配，MindSpore版本：{msv}；MindInsight版本：{miv}；",
     "checkTips": {
       "nan": "张量中含有NaN，",
@@ -1013,7 +1013,11 @@
     "noExexutionGraph": "execution_order目录下的图执行历史文件缺失,无法查看图执行历史。",
     "graphExecutionHistoryTip": "图执行历史文件：保存该图执行的历史轮次信息",
     "noExecutionHistoryFile": "图执行历史文件缺失",
-    "stackTip": "有部分算子由框架生成，这些算子可能关联到框架本身的代码，或者没有代码可以关联，均为正常现象。这些算子例如TupleGetItem、Depend、UpdateState等。"
+    "stackTip": "有部分算子由框架生成，这些算子可能关联到框架本身的代码，或者没有代码可以关联，均为正常现象。这些算子例如TupleGetItem、Depend、UpdateState等。",
+    "createWpTip": {
+      "explain": "监测点用于对一组节点设置检测规则。",
+      "example": "例如，创建“检查过大张量”监测点，设置检查参数为max > 100，执行检查后即可找出“最大值大于100”的张量。"
+    }
   },
   "explain": {
     "explain": "模型解释",

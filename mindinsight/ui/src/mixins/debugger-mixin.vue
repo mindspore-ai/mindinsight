@@ -617,11 +617,12 @@ export default {
             }
             if(res.data.graph?.graph_names?.length && this.graphFiles.options.length){
               let graphNames = res.data.graph.graph_names.filter(val=>!this.graphFiles.options.includes(val));
-              graphNames.filter(val=>!this.graphFiles.options.includes(val))
-              this.$message.success(this.$t('debugger.newGraphName', { graphNames }));
-              setTimeout(() => {
-                location.reload();
-              }, 3000);
+              if(graphNames.length){
+                this.$message.success(this.$t('debugger.newGraphName', { graphNames }));
+                setTimeout(() => {
+                  location.reload();
+                }, 3000);
+              }
             }
             let name = null;
             if (this.selectedNode.name) {

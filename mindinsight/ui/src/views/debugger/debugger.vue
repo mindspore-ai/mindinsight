@@ -209,7 +209,15 @@ limitations under the License.
             <div class="watch-point-wrap">
               <div class="title-wrap">
                 {{$t('debugger.watchList')}}
-
+                <el-tooltip class="tooltip"
+                            effect="light"
+                            placement="right">
+                  <div slot="content">
+                    {{ $t('debugger.createWpTip.explain')}}
+                    <div>{{ $t('debugger.createWpTip.example')}}</div>
+                  </div>
+                  <i class="el-icon-info"></i>
+                </el-tooltip>
                 <div class="check-wrap">
                   <i class="el-icon-circle-check"
                      :title="$t('debugger.recheck')"
@@ -221,7 +229,7 @@ limitations under the License.
                   <i class="el-icon-delete"
                      :title="$t('debugger.clearWatchpoint')"
                      :class="{disable: !(watchPointArr.length && metadata.state !== state.running &&
-                    metadata.state !== state.sending)}"
+                     metadata.state !== state.sending)}"
                      @click="deleteWatchpoint()"></i>
                 </div>
                 <div class="add-wrap">
@@ -357,7 +365,7 @@ limitations under the License.
             </div>
 
             <div class="hit-list-wrap">
-              <el-table class="watchpoint-table"
+              <el-table class="watchpoint-table stack"
                         :data="stacks.list">
                 <el-table-column type="expand">
                   <template slot-scope="props">
@@ -405,14 +413,14 @@ limitations under the License.
                          size="mini"
                          class="custom-btn green"
                          :disabled="!(step && metadata.state === state.waiting)
-                        || (metadata.step === metadata.total_step_num && !!trainId)"
+                         || (metadata.step === metadata.total_step_num && !!trainId)"
                          @click="control(0)">{{ $t('public.sure') }}</el-button>
             </div>
             <div class="btn-two">
               <el-button size="mini"
                          class="custom-btn white"
                          :disabled="metadata.state !== state.waiting
-                        || (metadata.step === metadata.total_step_num && !!trainId)"
+                         || (metadata.step === metadata.total_step_num && !!trainId)"
                          @click="control(1)">{{$t('debugger.continue')}}</el-button>
               <el-button size="mini"
                          class="custom-btn white"
@@ -546,9 +554,9 @@ limitations under the License.
                        size="mini"
                        class="custom-btn white"
                        :disabled="metadata.state === state.running ||
-                      metadata.state === state.sending"
+                       metadata.state === state.sending"
                        :class="{disabled: metadata.state === state.running ||
-                      metadata.state === state.sending}"
+                       metadata.state === state.sending}"
                        @click="getNextNodeInfo">
               {{ $t('debugger.nextNode')}}
             </el-button>
@@ -692,23 +700,28 @@ limitations under the License.
                 <div class="graph-id">{{$t('debugger.graphName')}}</div>
               </div>
               <div class="right"
-                   id="graph-count-container">
+                   id="graph-count-container"
+                   @scroll="handleScroll">
                 <div :style="{width:`${graphIdArr.length*graphCountWidth}px`}"
-                     v-if="graphIdArr.length">
-                  <div class="value-wrap"
-                       v-for="(item,index) in graphIdArr"
-                       :key="index"
-                       :class="{highLight:metadata.step===item.count,hasData:item.has_data}">
-                    <div class="count">{{item.count}}</div>
-                    <el-tooltip class="item"
-                                effect="light"
-                                :content="`sub(${item.sub_graph_names.join()})`"
-                                placement="top"
-                                v-if="item.sub_graph_names.length">
-                      <div class="graph-name">{{ item.graph_name }}</div>
-                    </el-tooltip>
-                    <div class="graph-name"
-                         v-else>{{ item.graph_name }}</div>
+                     v-if="graphIdArr.length"
+                     class="all-content-wrap">
+                  <div class="content-wrap"
+                       ref="content">
+                    <div class="value-wrap"
+                         v-for="(item,index) in visibleGraphIdArr"
+                         :key="index"
+                         :class="{highLight:metadata.step===item.count,hasData:item.has_data}">
+                      <div class="count">{{item.count}}</div>
+                      <el-tooltip class="item"
+                                  effect="light"
+                                  :content="`sub(${item.sub_graph_names.join()})`"
+                                  placement="top"
+                                  v-if="item.sub_graph_names.length">
+                        <div class="graph-name">{{ item.graph_name }}</div>
+                      </el-tooltip>
+                      <div class="graph-name"
+                           v-else>{{ item.graph_name }}</div>
+                    </div>
                   </div>
                 </div>
                 <div class="no-data"
@@ -794,14 +807,14 @@ limitations under the License.
                           <el-button size="mini"
                                      type="text"
                                      :disabled="metadata.state === state.running || metadata.state === state.sending ||
-                                    scope.row.value === 'null' || !scope.row.value || scope.row.oversized"
+                                     scope.row.value === 'null' || !scope.row.value || scope.row.oversized"
                                      @click="loadTensor(scope.row)">
                             {{ $t('graph.downloadPic') }}
                           </el-button>
                           <el-button size="mini"
                                      type="text"
                                      :disabled="metadata.state===state.running || metadata.state === state.sending ||
-                                    !scope.row.has_prev_step || scope.row.tensor_status==='oversize'"
+                                     !scope.row.has_prev_step || scope.row.tensor_status==='oversize'"
                                      @click="showTensor(scope.row,'compare')">
                             {{ $t('debugger.compareToPre') }}
                           </el-button>
@@ -854,7 +867,8 @@ limitations under the License.
                   <li class="stack-item"
                       v-show="nodeStackContent.length"
                       v-for="(item, index) in nodeStackContent"
-                      :key="index">
+                      :key="index"
+                      :class="{'sub-stack':item.has_substack}">
                     {{item.file_path ? item.file_path + ':' + item.line_no : ''}}
                     <br v-if="item.file_path">
                     {{item.code_line}}
@@ -989,6 +1003,11 @@ limitations under the License.
               </el-select>
             </div>
           </div>
+        </div>
+        <div class="watch-point-tip">
+          <i class="el-icon-warning"></i>
+          {{ $t('debugger.createWpTip.explain')}}
+          <div>{{ $t('debugger.createWpTip.example')}}</div>
         </div>
       </div>
       <span slot="footer"
@@ -1270,6 +1289,7 @@ export default {
       showGraphCount: true,
       allGraphIdArr: [],
       graphIdArr: [],
+      visibleGraphIdArr: [],
       graphCountWidth: 120,
       showCount: 5,
       graphNameObj: {
@@ -1322,6 +1342,7 @@ export default {
       showFixed: false,
       gridStyleKey: this.$route.query.sessionId ? 'offline-debugger' : 'debugger',
       isGraphRunsInit: false,
+      timer: null,
     };
   },
   components: { debuggerTensor, tree, FlexibleGrid },
@@ -1374,7 +1395,7 @@ export default {
     },
     'metadata.step': {
       handler() {
-        if (this.trainId) {
+        if (this.allGraphIdArr.length) {
           this.scrollGraphCount();
         }
       },
@@ -1399,14 +1420,30 @@ export default {
     },
   },
   methods: {
+    handleScroll() {
+      const scrollLeft = document.querySelector('#graph-count-container').scrollLeft;
+      this.updateVisibleData(scrollLeft);
+    },
+    updateVisibleData(scrollLeft) {
+      if (!this.graphIdArr.length) return;
+      const padding = 20;
+      const visibleCount =
+        Math.ceil((document.querySelector('#graph-count-container').clientWidth - padding) / this.graphCountWidth) * 2;
+      const start = Math.floor(scrollLeft / this.graphCountWidth);
+      const end = start + visibleCount;
+      this.visibleGraphIdArr = this.graphIdArr.slice(start, end);
+      this.$refs.content.style.transform = `translateX(${start * this.graphCountWidth}px)`;
+    },
     resizeGridStyle(resizeObj) {
+      if (this.allGraphIdArr.length) {
+        this.scrollGraphCount();
+      }
     },
     initDebugger() {
       if (this.trainId) {
         document.title = `${this.trainId}-${this.$t('debugger.debugger')}-MindInsight`;
         this.retrieveAll();
         this.queryStacks();
-        this.scrollGraphCount();
       } else {
         this.getSession();
       }
@@ -1450,6 +1487,7 @@ export default {
             return this.hasDataObj.value === val.has_data;
           }
         });
+      this.scrollGraphCount();
     },
     scrollGraphCount() {
       this.$nextTick(() => {
@@ -1457,8 +1495,9 @@ export default {
         const padding = 20;
         const viewAreaLength =
           (document.querySelector('#graph-count-container').clientWidth - padding) / this.graphCountWidth;
-        document.querySelector('#graph-count-container').scrollLeft =
-          countIndex < viewAreaLength ? 0 : this.graphCountWidth * countIndex;
+        const scrollLeft = countIndex < viewAreaLength ? 0 : this.graphCountWidth * countIndex;
+        document.querySelector('#graph-count-container').scrollLeft = scrollLeft;
+        this.updateVisibleData(scrollLeft);
       });
     },
     stackOperator(stack) {
@@ -1491,7 +1530,7 @@ export default {
       if (this.graphFiles.options.length > 1) {
         this.graphFiles.options.unshift(this.$t('debugger.all'));
       }
-      if(this.graphFiles.value !== this.graphFiles.options[0]){
+      if (this.graphFiles.value !== this.graphFiles.options[0]) {
         this.isCurrentGraph = false;
       }
       this.graphFiles.value = this.graphFiles.options[0];
@@ -2321,6 +2360,12 @@ export default {
       } else {
         setData();
       }
+      if (this.graphIdArr.length) {
+        if (this.timer) clearTimeout(this.timer);
+        this.timer = setTimeout(() => {
+          this.scrollGraphCount();
+        }, this.resizeDelay);
+      }
     },
   },
   destroyed() {
@@ -2599,6 +2644,9 @@ export default {
   overflow: auto;
   margin-top: 10px;
 }
+.deb-wrap .left-wrap .left .content .hit-list-wrap .watchpoint-table.stack {
+  max-height: calc(100% - 58px);
+}
 .deb-wrap .left-wrap .left .content .hit-list-wrap .watchpoint-table .stack-info > li {
   padding: 5px 50px 5px 10px !important;
   position: relative;
@@ -2834,6 +2882,15 @@ export default {
   flex: 5;
   overflow: auto;
 }
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .right .all-content-wrap {
+  height: 63px;
+  position: relative;
+}
+.deb-wrap .rightTop .svg-wrap .graph-count-wrap .right .content-wrap {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
 .deb-wrap .rightTop .svg-wrap .graph-count-wrap .right .no-data {
   line-height: 60px;
   text-align: center;
@@ -3041,6 +3098,12 @@ export default {
   word-break: break-all;
   border-bottom: 1px solid var(--table-border-color);
 }
+.deb-wrap .rightBottom .table-container .table-content .stack-content .stack-item.sub-stack::before {
+  content: '-';
+  position: absolute;
+  left: 2px;
+  top: 5px;
+}
 .deb-wrap .rightBottom .table-container .table-content .stack-content .stack-item:hover {
   background-color: var(--table-hover-color);
 }
@@ -3175,10 +3238,13 @@ export default {
 .deb-wrap .creat-watch-point-dialog .conditions-container .inclusive-param .item + .item {
   margin-left: 10px;
 }
+.deb-wrap .creat-watch-point-dialog .watch-point-tip {
+  margin-top: 20px;
+}
 .deb-wrap .creat-watch-point-dialog .error-msg {
   float: left;
 }
-.deb-wrap .creat-watch-point-dialog .error-msg .el-icon-warning {
+.deb-wrap .creat-watch-point-dialog .el-icon-warning {
   color: #e6a23c;
   font-size: 16px;
   cursor: pointer;
