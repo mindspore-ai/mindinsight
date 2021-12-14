@@ -299,11 +299,6 @@ class DebuggerOfflineManager:
         # read tensor value by dbg_service
         rank_id = node_info.get('rank_id', 0)
         cur_step = self._metadata_stream.step
-        # as DbgServices hasn't support -1 yet, put empty tensor value into cache.
-        if cur_step <= 0:
-            log.info("Offline debugger not support to read initial weights yet.")
-            self._put_tensor_value_into_cache(cur_step, node_info, view_cmd.tensors)
-            return
         iteration_id = cur_step - 1
         root_graph_id = self.get_root_graph_id(rank_id=rank_id,
                                                graph_name=node_info.get('graph_name'),
@@ -318,6 +313,32 @@ class DebuggerOfflineManager:
                 is_output=True,
                 root_graph_id=root_graph_id
             ) for tensor_proto in tensor_protos]
+
+        if cur_step <= 0:
+            cst_infos = []
+            cst_protos = []
+            other_protos = []
+            cst_prefix = "Default--data-"
+            for tensor_proto in tensor_protos:
+                if tensor_proto.node_name[0:len(cst_prefix)] == cst_prefix:
+                    cst_infos.append(self._dbg_services_module.TensorInfo(
+                        node_name=tensor_proto.node_name,
+                        slot=int(tensor_proto.slot),
+                        iteration=iteration_id - 1 if tensor_proto.iter == 'prev' else iteration_id,
+                        rank_id=rank_id,
+                        is_output=True,
+                        root_graph_id=root_graph_id))
+                    cst_protos.append(tensor_proto)
+                else:
+                    other_protos.append(tensor_proto)
+            # if cur step is less than 1 and no cst tensor to read, put empty tensor value into cache.
+            if not cst_protos:
+                self._put_tensor_value_into_cache(cur_step, node_info, view_cmd.tensors)
+                return
+            self._put_tensor_value_into_cache(cur_step, node_info, other_protos)
+            tensor_infos = cst_infos
+            tensor_protos = cst_protos
+
         if node_info.get('level') == ViewCommandLevelEnum.BASE.value:
             self._read_tensor_base(cur_step, node_info, tensor_infos, tensor_protos)
         elif node_info.get('level') == ViewCommandLevelEnum.STATS.value:

@@ -161,8 +161,9 @@ def create_view_event_from_tensor_basic_info(tensors_info):
     for tensor_info in tensors_info:
         node_type = tensor_info.node_type
         if node_type == NodeTypeEnum.CONST.value:
-            continue
-        truncate_tag = node_type == NodeTypeEnum.PARAMETER.value
+            truncate_tag = node_type == NodeTypeEnum.CONST.value
+        else:
+            truncate_tag = node_type == NodeTypeEnum.PARAMETER.value
         tensor_name = tensor_info.full_name
         # create view command
         ms_tensor = view_event.view_cmd.tensors.add()

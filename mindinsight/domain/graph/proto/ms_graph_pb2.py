@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='mindinsight.domain.graph',
   syntax='proto2',
   serialized_options=None,
-  serialized_pb=b'\n-mindinsight/domain/graph/proto/ms_graph.proto\x12\x18mindinsight.domain.graph\"\xab\x05\n\nValueProto\x12\x31\n\x05\x64type\x18\x01 \x01(\x0e\x32\".mindinsight.domain.graph.DataType\x12\x10\n\x08\x62ool_val\x18\x02 \x01(\x08\x12\x0f\n\x07int_val\x18\x03 \x01(\x03\x12\x10\n\x08uint_val\x18\x04 \x01(\x04\x12\x11\n\tfloat_val\x18\x05 \x01(\x02\x12\x12\n\ndouble_val\x18\x06 \x01(\x01\x12\x0f\n\x07str_val\x18\x07 \x01(\t\x12\x39\n\ntensor_val\x18\x08 \x01(\x0b\x32%.mindinsight.domain.graph.TensorProto\x12\x33\n\x05graph\x18\t \x01(\x0b\x32$.mindinsight.domain.graph.GraphProto\x12\x11\n\tbool_vals\x18\n \x03(\x08\x12\x10\n\x08int_vals\x18\x0b \x03(\x03\x12\x11\n\tuint_vals\x18\x0c \x03(\x04\x12\x12\n\nfloat_vals\x18\r \x03(\x02\x12\x13\n\x0b\x64ouble_vals\x18\x0e \x03(\x01\x12\x10\n\x08str_vals\x18\x0f \x03(\t\x12:\n\x0btensor_vals\x18\x10 \x03(\x0b\x32%.mindinsight.domain.graph.TensorProto\x12\x34\n\x06graphs\x18\x11 \x03(\x0b\x32$.mindinsight.domain.graph.GraphProto\x12\x34\n\x06values\x18\x12 \x03(\x0b\x32$.mindinsight.domain.graph.ValueProto\x12;\n\x08\x64ict_val\x18\x13 \x03(\x0b\x32).mindinsight.domain.graph.NamedValueProto\x12\x35\n\x08type_val\x18\x14 \x01(\x0b\x32#.mindinsight.domain.graph.TypeProto\"S\n\x0e\x41ttributeProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x33\n\x05value\x18\x02 \x01(\x0b\x32$.mindinsight.domain.graph.ValueProto\"S\n\x0fNamedValueProto\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x33\n\x05value\x18\x02 \x01(\x0b\x32$.mindinsight.domain.graph.ValueProto\"~\n\x10TensorShapeProto\x12\x41\n\x03\x64im\x18\x01 \x03(\x0b\x32\x34.mindinsight.domain.graph.TensorShapeProto.Dimension\x1a\'\n\tDimension\x12\x0c\n\x04size\x18\x01 \x01(\x03\x12\x0c\n\x04name\x18\x02 \x01(\t\"\x96\x03\n\tTypeProto\x12\x35\n\tdata_type\x18\x01 \x01(\x0e\x32\".mindinsight.domain.graph.DataType\x12\x41\n\x0btensor_type\x18\x02 \x01(\x0b\x32*.mindinsight.domain.graph.TypeProto.TensorH\x00\x12\x45\n\rsequence_type\x18\x03 \x01(\x0b\x32,.mindinsight.domain.graph.TypeProto.SequenceH\x00\x1az\n\x06Tensor\x12\x35\n\telem_type\x18\x01 \x01(\x0e\x32\".mindinsight.domain.graph.DataType\x12\x39\n\x05shape\x18\x02 \x01(\x0b\x32*.mindinsight.domain.graph.TensorShapeProto\x1a\x43\n\x08Sequence\x12\x37\n\nelem_types\x18\x01 \x03(\x0b\x32#.mindinsight.domain.graph.TypeProtoB\x07\n\x05value\"\x8c\x01\n\x0eParameterProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x31\n\x04type\x18\x02 \x01(\x0b\x32#.mindinsight.domain.graph.TypeProto\x12\x39\n\x0b\x64\x65\x66\x61ult_val\x18\x03 \x01(\x0b\x32$.mindinsight.domain.graph.ValueProto\"N\n\x0bOutputProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x31\n\x04type\x18\x02 \x01(\x0b\x32#.mindinsight.domain.graph.TypeProto\"\x84\x01\n\nInputProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12;\n\x04type\x18\x02 \x01(\x0e\x32-.mindinsight.domain.graph.InputProto.EdgeType\"+\n\x08\x45\x64geType\x12\r\n\tDATA_EDGE\x10\x00\x12\x10\n\x0c\x43ONTROL_EDGE\x10\x01\"\xa2\x02\n\tNodeProto\x12\x33\n\x05input\x18\x01 \x03(\x0b\x32$.mindinsight.domain.graph.InputProto\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0f\n\x07op_type\x18\x03 \x01(\t\x12\r\n\x05scope\x18\x04 \x01(\t\x12;\n\tattribute\x18\x05 \x03(\x0b\x32(.mindinsight.domain.graph.AttributeProto\x12\x38\n\x0boutput_type\x18\x06 \x01(\x0b\x32#.mindinsight.domain.graph.TypeProto\x12\x10\n\x08output_i\x18\x07 \x01(\x04\x12\x11\n\tfull_name\x18\x08 \x01(\t\x12\x16\n\x0esource_address\x18\t \x01(\t\"\xc4\x01\n\nModelProto\x12\x12\n\nir_version\x18\x01 \x01(\x03\x12\x0e\n\x06\x64omain\x18\x02 \x01(\t\x12\x15\n\rmodel_version\x18\x03 \x01(\x03\x12\x33\n\x05graph\x18\x04 \x01(\x0b\x32$.mindinsight.domain.graph.GraphProto\x12\x46\n\x12metadata_operators\x18\x05 \x01(\x0b\x32*.mindinsight.domain.graph.OperatorSetProto\"?\n\rOperatorProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x63onfig\x18\x02 \x01(\x0c\x12\x10\n\x08obj_info\x18\x03 \x01(\x0c\"_\n\x10OperatorSetProto\x12:\n\toperators\x18\x01 \x03(\x0b\x32\'.mindinsight.domain.graph.OperatorProto\x12\x0f\n\x07summary\x18\x02 \x01(\t\"\x95\x02\n\nGraphProto\x12\x31\n\x04node\x18\x01 \x03(\x0b\x32#.mindinsight.domain.graph.NodeProto\x12\x0c\n\x04name\x18\x02 \x01(\t\x12<\n\nparameters\x18\x03 \x03(\x0b\x32(.mindinsight.domain.graph.ParameterProto\x12\x36\n\x07outputs\x18\x04 \x03(\x0b\x32%.mindinsight.domain.graph.OutputProto\x12=\n\nconst_vals\x18\x05 \x03(\x0b\x32).mindinsight.domain.graph.NamedValueProto\x12\x11\n\troot_name\x18\x06 \x01(\t\"\xbd\x01\n\x0bTensorProto\x12\x11\n\tnode_name\x18\x01 \x01(\t\x12\x0c\n\x04slot\x18\x02 \x01(\t\x12\x16\n\x0etensor_content\x18\x03 \x01(\x0c\x12\x0c\n\x04\x64ims\x18\x04 \x03(\x03\x12\x35\n\tdata_type\x18\x05 \x01(\x0e\x32\".mindinsight.domain.graph.DataType\x12\x10\n\x08\x66inished\x18\x06 \x01(\x08\x12\x0c\n\x04iter\x18\x07 \x01(\t\x12\x10\n\x08truncate\x18\x08 \x01(\x08*/\n\x07Version\x12\x14\n\x10UNKNOWWN_VERSION\x10\x00\x12\x0e\n\nIR_VERSION\x10\x01*\x96\x05\n\x08\x44\x61taType\x12\x10\n\x0c\x44T_UNDEFINED\x10\x00\x12\x0b\n\x07\x44T_BOOL\x10\x01\x12\x0b\n\x07\x44T_INT8\x10\x02\x12\x0c\n\x08\x44T_INT16\x10\x03\x12\x0c\n\x08\x44T_INT32\x10\x04\x12\x0c\n\x08\x44T_INT64\x10\x05\x12\x0c\n\x08\x44T_UINT8\x10\x06\x12\r\n\tDT_UINT16\x10\x07\x12\r\n\tDT_UINT32\x10\x08\x12\r\n\tDT_UINT64\x10\t\x12\x0e\n\nDT_FLOAT16\x10\n\x12\x0e\n\nDT_FLOAT32\x10\x0b\x12\x0e\n\nDT_FLOAT64\x10\x0c\x12\r\n\tDT_STRING\x10\r\x12\r\n\tDT_TENSOR\x10\x0e\x12\x0c\n\x08\x44T_GRAPH\x10\x0f\x12\x0c\n\x08\x44T_BOOLS\x10\x10\x12\x0c\n\x08\x44T_INTS8\x10\x11\x12\r\n\tDT_INTS16\x10\x12\x12\r\n\tDT_INTS32\x10\x13\x12\r\n\tDT_INTS64\x10\x14\x12\r\n\tDT_UINTS8\x10\x15\x12\x0e\n\nDT_UINTS16\x10\x16\x12\x0e\n\nDT_UINTS32\x10\x17\x12\x0e\n\nDT_UINTS64\x10\x18\x12\x0f\n\x0b\x44T_FLOATS16\x10\x19\x12\x0f\n\x0b\x44T_FLOATS32\x10\x1a\x12\x0f\n\x0b\x44T_FLOATS64\x10\x1b\x12\x0e\n\nDT_STRINGS\x10\x1c\x12\x0e\n\nDT_TENSORS\x10\x1d\x12\r\n\tDT_GRAPHS\x10\x1e\x12\x0c\n\x08\x44T_TUPLE\x10\x1f\x12\x0b\n\x07\x44T_LIST\x10 \x12\x0b\n\x07\x44T_DICT\x10!\x12\x0b\n\x07\x44T_NONE\x10\"\x12\x0f\n\x0b\x44T_SYM_INST\x10#\x12\x0f\n\x0b\x44T_BASE_INT\x10$\x12\x10\n\x0c\x44T_BASE_UINT\x10%\x12\x11\n\rDT_BASE_FLOAT\x10&\x12\x0b\n\x07\x44T_TYPE\x10\'\x12\x0f\n\x0b\x44T_ANYTHING\x10(\x12\r\n\tDT_REFKEY\x10)\x12\n\n\x06\x44T_REF\x10*'
+  serialized_pb=b'\n-mindinsight/domain/graph/proto/ms_graph.proto\x12\x18mindinsight.domain.graph\"\xab\x05\n\nValueProto\x12\x31\n\x05\x64type\x18\x01 \x01(\x0e\x32\".mindinsight.domain.graph.DataType\x12\x10\n\x08\x62ool_val\x18\x02 \x01(\x08\x12\x0f\n\x07int_val\x18\x03 \x01(\x03\x12\x10\n\x08uint_val\x18\x04 \x01(\x04\x12\x11\n\tfloat_val\x18\x05 \x01(\x02\x12\x12\n\ndouble_val\x18\x06 \x01(\x01\x12\x0f\n\x07str_val\x18\x07 \x01(\t\x12\x39\n\ntensor_val\x18\x08 \x01(\x0b\x32%.mindinsight.domain.graph.TensorProto\x12\x33\n\x05graph\x18\t \x01(\x0b\x32$.mindinsight.domain.graph.GraphProto\x12\x11\n\tbool_vals\x18\n \x03(\x08\x12\x10\n\x08int_vals\x18\x0b \x03(\x03\x12\x11\n\tuint_vals\x18\x0c \x03(\x04\x12\x12\n\nfloat_vals\x18\r \x03(\x02\x12\x13\n\x0b\x64ouble_vals\x18\x0e \x03(\x01\x12\x10\n\x08str_vals\x18\x0f \x03(\t\x12:\n\x0btensor_vals\x18\x10 \x03(\x0b\x32%.mindinsight.domain.graph.TensorProto\x12\x34\n\x06graphs\x18\x11 \x03(\x0b\x32$.mindinsight.domain.graph.GraphProto\x12\x34\n\x06values\x18\x12 \x03(\x0b\x32$.mindinsight.domain.graph.ValueProto\x12;\n\x08\x64ict_val\x18\x13 \x03(\x0b\x32).mindinsight.domain.graph.NamedValueProto\x12\x35\n\x08type_val\x18\x14 \x01(\x0b\x32#.mindinsight.domain.graph.TypeProto\"S\n\x0e\x41ttributeProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x33\n\x05value\x18\x02 \x01(\x0b\x32$.mindinsight.domain.graph.ValueProto\"f\n\x0fNamedValueProto\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x33\n\x05value\x18\x02 \x01(\x0b\x32$.mindinsight.domain.graph.ValueProto\x12\x11\n\tfull_name\x18\x03 \x01(\t\"~\n\x10TensorShapeProto\x12\x41\n\x03\x64im\x18\x01 \x03(\x0b\x32\x34.mindinsight.domain.graph.TensorShapeProto.Dimension\x1a\'\n\tDimension\x12\x0c\n\x04size\x18\x01 \x01(\x03\x12\x0c\n\x04name\x18\x02 \x01(\t\"\x96\x03\n\tTypeProto\x12\x35\n\tdata_type\x18\x01 \x01(\x0e\x32\".mindinsight.domain.graph.DataType\x12\x41\n\x0btensor_type\x18\x02 \x01(\x0b\x32*.mindinsight.domain.graph.TypeProto.TensorH\x00\x12\x45\n\rsequence_type\x18\x03 \x01(\x0b\x32,.mindinsight.domain.graph.TypeProto.SequenceH\x00\x1az\n\x06Tensor\x12\x35\n\telem_type\x18\x01 \x01(\x0e\x32\".mindinsight.domain.graph.DataType\x12\x39\n\x05shape\x18\x02 \x01(\x0b\x32*.mindinsight.domain.graph.TensorShapeProto\x1a\x43\n\x08Sequence\x12\x37\n\nelem_types\x18\x01 \x03(\x0b\x32#.mindinsight.domain.graph.TypeProtoB\x07\n\x05value\"\x8c\x01\n\x0eParameterProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x31\n\x04type\x18\x02 \x01(\x0b\x32#.mindinsight.domain.graph.TypeProto\x12\x39\n\x0b\x64\x65\x66\x61ult_val\x18\x03 \x01(\x0b\x32$.mindinsight.domain.graph.ValueProto\"N\n\x0bOutputProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x31\n\x04type\x18\x02 \x01(\x0b\x32#.mindinsight.domain.graph.TypeProto\"\x84\x01\n\nInputProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12;\n\x04type\x18\x02 \x01(\x0e\x32-.mindinsight.domain.graph.InputProto.EdgeType\"+\n\x08\x45\x64geType\x12\r\n\tDATA_EDGE\x10\x00\x12\x10\n\x0c\x43ONTROL_EDGE\x10\x01\"\xa2\x02\n\tNodeProto\x12\x33\n\x05input\x18\x01 \x03(\x0b\x32$.mindinsight.domain.graph.InputProto\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0f\n\x07op_type\x18\x03 \x01(\t\x12\r\n\x05scope\x18\x04 \x01(\t\x12;\n\tattribute\x18\x05 \x03(\x0b\x32(.mindinsight.domain.graph.AttributeProto\x12\x38\n\x0boutput_type\x18\x06 \x01(\x0b\x32#.mindinsight.domain.graph.TypeProto\x12\x10\n\x08output_i\x18\x07 \x01(\x04\x12\x11\n\tfull_name\x18\x08 \x01(\t\x12\x16\n\x0esource_address\x18\t \x01(\t\"\xc4\x01\n\nModelProto\x12\x12\n\nir_version\x18\x01 \x01(\x03\x12\x0e\n\x06\x64omain\x18\x02 \x01(\t\x12\x15\n\rmodel_version\x18\x03 \x01(\x03\x12\x33\n\x05graph\x18\x04 \x01(\x0b\x32$.mindinsight.domain.graph.GraphProto\x12\x46\n\x12metadata_operators\x18\x05 \x01(\x0b\x32*.mindinsight.domain.graph.OperatorSetProto\"?\n\rOperatorProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x63onfig\x18\x02 \x01(\x0c\x12\x10\n\x08obj_info\x18\x03 \x01(\x0c\"_\n\x10OperatorSetProto\x12:\n\toperators\x18\x01 \x03(\x0b\x32\'.mindinsight.domain.graph.OperatorProto\x12\x0f\n\x07summary\x18\x02 \x01(\t\"\x95\x02\n\nGraphProto\x12\x31\n\x04node\x18\x01 \x03(\x0b\x32#.mindinsight.domain.graph.NodeProto\x12\x0c\n\x04name\x18\x02 \x01(\t\x12<\n\nparameters\x18\x03 \x03(\x0b\x32(.mindinsight.domain.graph.ParameterProto\x12\x36\n\x07outputs\x18\x04 \x03(\x0b\x32%.mindinsight.domain.graph.OutputProto\x12=\n\nconst_vals\x18\x05 \x03(\x0b\x32).mindinsight.domain.graph.NamedValueProto\x12\x11\n\troot_name\x18\x06 \x01(\t\"\xbd\x01\n\x0bTensorProto\x12\x11\n\tnode_name\x18\x01 \x01(\t\x12\x0c\n\x04slot\x18\x02 \x01(\t\x12\x16\n\x0etensor_content\x18\x03 \x01(\x0c\x12\x0c\n\x04\x64ims\x18\x04 \x03(\x03\x12\x35\n\tdata_type\x18\x05 \x01(\x0e\x32\".mindinsight.domain.graph.DataType\x12\x10\n\x08\x66inished\x18\x06 \x01(\x08\x12\x0c\n\x04iter\x18\x07 \x01(\t\x12\x10\n\x08truncate\x18\x08 \x01(\x08*/\n\x07Version\x12\x14\n\x10UNKNOWWN_VERSION\x10\x00\x12\x0e\n\nIR_VERSION\x10\x01*\x96\x05\n\x08\x44\x61taType\x12\x10\n\x0c\x44T_UNDEFINED\x10\x00\x12\x0b\n\x07\x44T_BOOL\x10\x01\x12\x0b\n\x07\x44T_INT8\x10\x02\x12\x0c\n\x08\x44T_INT16\x10\x03\x12\x0c\n\x08\x44T_INT32\x10\x04\x12\x0c\n\x08\x44T_INT64\x10\x05\x12\x0c\n\x08\x44T_UINT8\x10\x06\x12\r\n\tDT_UINT16\x10\x07\x12\r\n\tDT_UINT32\x10\x08\x12\r\n\tDT_UINT64\x10\t\x12\x0e\n\nDT_FLOAT16\x10\n\x12\x0e\n\nDT_FLOAT32\x10\x0b\x12\x0e\n\nDT_FLOAT64\x10\x0c\x12\r\n\tDT_STRING\x10\r\x12\r\n\tDT_TENSOR\x10\x0e\x12\x0c\n\x08\x44T_GRAPH\x10\x0f\x12\x0c\n\x08\x44T_BOOLS\x10\x10\x12\x0c\n\x08\x44T_INTS8\x10\x11\x12\r\n\tDT_INTS16\x10\x12\x12\r\n\tDT_INTS32\x10\x13\x12\r\n\tDT_INTS64\x10\x14\x12\r\n\tDT_UINTS8\x10\x15\x12\x0e\n\nDT_UINTS16\x10\x16\x12\x0e\n\nDT_UINTS32\x10\x17\x12\x0e\n\nDT_UINTS64\x10\x18\x12\x0f\n\x0b\x44T_FLOATS16\x10\x19\x12\x0f\n\x0b\x44T_FLOATS32\x10\x1a\x12\x0f\n\x0b\x44T_FLOATS64\x10\x1b\x12\x0e\n\nDT_STRINGS\x10\x1c\x12\x0e\n\nDT_TENSORS\x10\x1d\x12\r\n\tDT_GRAPHS\x10\x1e\x12\x0c\n\x08\x44T_TUPLE\x10\x1f\x12\x0b\n\x07\x44T_LIST\x10 \x12\x0b\n\x07\x44T_DICT\x10!\x12\x0b\n\x07\x44T_NONE\x10\"\x12\x0f\n\x0b\x44T_SYM_INST\x10#\x12\x0f\n\x0b\x44T_BASE_INT\x10$\x12\x10\n\x0c\x44T_BASE_UINT\x10%\x12\x11\n\rDT_BASE_FLOAT\x10&\x12\x0b\n\x07\x44T_TYPE\x10\'\x12\x0f\n\x0b\x44T_ANYTHING\x10(\x12\r\n\tDT_REFKEY\x10)\x12\n\n\x06\x44T_REF\x10*'
 )
 
 _VERSION = _descriptor.EnumDescriptor(
@@ -39,8 +39,8 @@ _VERSION = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=2952,
-  serialized_end=2999,
+  serialized_start=2971,
+  serialized_end=3018,
 )
 _sym_db.RegisterEnumDescriptor(_VERSION)
 
@@ -226,8 +226,8 @@ _DATATYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=3002,
-  serialized_end=3664,
+  serialized_start=3021,
+  serialized_end=3683,
 )
 _sym_db.RegisterEnumDescriptor(_DATATYPE)
 
@@ -296,8 +296,8 @@ _INPUTPROTO_EDGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1781,
-  serialized_end=1824,
+  serialized_start=1800,
+  serialized_end=1843,
 )
 _sym_db.RegisterEnumDescriptor(_INPUTPROTO_EDGETYPE)
 
@@ -525,6 +525,13 @@ _NAMEDVALUEPROTO = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='full_name', full_name='mindinsight.domain.graph.NamedValueProto.full_name', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -538,7 +545,7 @@ _NAMEDVALUEPROTO = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=846,
-  serialized_end=929,
+  serialized_end=948,
 )
 
 
@@ -575,8 +582,8 @@ _TENSORSHAPEPROTO_DIMENSION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1018,
-  serialized_end=1057,
+  serialized_start=1037,
+  serialized_end=1076,
 )
 
 _TENSORSHAPEPROTO = _descriptor.Descriptor(
@@ -605,8 +612,8 @@ _TENSORSHAPEPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=931,
-  serialized_end=1057,
+  serialized_start=950,
+  serialized_end=1076,
 )
 
 
@@ -643,8 +650,8 @@ _TYPEPROTO_TENSOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1266,
-  serialized_end=1388,
+  serialized_start=1285,
+  serialized_end=1407,
 )
 
 _TYPEPROTO_SEQUENCE = _descriptor.Descriptor(
@@ -673,8 +680,8 @@ _TYPEPROTO_SEQUENCE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1390,
-  serialized_end=1457,
+  serialized_start=1409,
+  serialized_end=1476,
 )
 
 _TYPEPROTO = _descriptor.Descriptor(
@@ -720,8 +727,8 @@ _TYPEPROTO = _descriptor.Descriptor(
       name='value', full_name='mindinsight.domain.graph.TypeProto.value',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=1060,
-  serialized_end=1466,
+  serialized_start=1079,
+  serialized_end=1485,
 )
 
 
@@ -765,8 +772,8 @@ _PARAMETERPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1469,
-  serialized_end=1609,
+  serialized_start=1488,
+  serialized_end=1628,
 )
 
 
@@ -803,8 +810,8 @@ _OUTPUTPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1611,
-  serialized_end=1689,
+  serialized_start=1630,
+  serialized_end=1708,
 )
 
 
@@ -842,8 +849,8 @@ _INPUTPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1692,
-  serialized_end=1824,
+  serialized_start=1711,
+  serialized_end=1843,
 )
 
 
@@ -929,8 +936,8 @@ _NODEPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1827,
-  serialized_end=2117,
+  serialized_start=1846,
+  serialized_end=2136,
 )
 
 
@@ -988,8 +995,8 @@ _MODELPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2120,
-  serialized_end=2316,
+  serialized_start=2139,
+  serialized_end=2335,
 )
 
 
@@ -1033,8 +1040,8 @@ _OPERATORPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2318,
-  serialized_end=2381,
+  serialized_start=2337,
+  serialized_end=2400,
 )
 
 
@@ -1071,8 +1078,8 @@ _OPERATORSETPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2383,
-  serialized_end=2478,
+  serialized_start=2402,
+  serialized_end=2497,
 )
 
 
@@ -1137,8 +1144,8 @@ _GRAPHPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2481,
-  serialized_end=2758,
+  serialized_start=2500,
+  serialized_end=2777,
 )
 
 
@@ -1217,8 +1224,8 @@ _TENSORPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2761,
-  serialized_end=2950,
+  serialized_start=2780,
+  serialized_end=2969,
 )
 
 _VALUEPROTO.fields_by_name['dtype'].enum_type = _DATATYPE

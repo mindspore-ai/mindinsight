@@ -356,6 +356,11 @@ class ConstTensor(BaseTensor):
         return self._const_proto.key + ':0'
 
     @property
+    def full_name(self):
+        """The property of tensor full name."""
+        return self._const_proto.full_name + ':0'
+
+    @property
     def dtype(self):
         """The property of tensor dtype."""
         return DataType.Name(self._const_proto.value.dtype)

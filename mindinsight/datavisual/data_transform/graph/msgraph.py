@@ -128,7 +128,7 @@ class MSGraph(Graph):
                 logger.warning("Finding a const with an empty key will not save it.")
                 continue
             check_invalid_character(const.key)
-            node = Node(name=const.key, node_id=const.key)
+            node = Node(name=const.key, node_id=const.key, full_name=const.full_name)
             node.type = NodeTypeEnum.CONST.value
             if const.value.ByteSize() > self.MAX_NODE_ATTRIBUTE_VALUE_BYTES:
                 node.add_attr({const.key: 'dtype: ' + DataType.Name(const.value.dtype)})

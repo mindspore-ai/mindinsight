@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto2',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x18mindinsight_anf_ir.proto\x12\x0bmindinsight\"\xc3\x04\n\nValueProto\x12$\n\x05\x64type\x18\x01 \x01(\x0e\x32\x15.mindinsight.DataType\x12\x10\n\x08\x62ool_val\x18\x02 \x01(\x08\x12\x0f\n\x07int_val\x18\x03 \x01(\x03\x12\x10\n\x08uint_val\x18\x04 \x01(\x04\x12\x11\n\tfloat_val\x18\x05 \x01(\x02\x12\x12\n\ndouble_val\x18\x06 \x01(\x01\x12\x0f\n\x07str_val\x18\x07 \x01(\t\x12,\n\ntensor_val\x18\x08 \x01(\x0b\x32\x18.mindinsight.TensorProto\x12&\n\x05graph\x18\t \x01(\x0b\x32\x17.mindinsight.GraphProto\x12\x11\n\tbool_vals\x18\n \x03(\x08\x12\x10\n\x08int_vals\x18\x0b \x03(\x03\x12\x11\n\tuint_vals\x18\x0c \x03(\x04\x12\x12\n\nfloat_vals\x18\r \x03(\x02\x12\x13\n\x0b\x64ouble_vals\x18\x0e \x03(\x01\x12\x10\n\x08str_vals\x18\x0f \x03(\t\x12-\n\x0btensor_vals\x18\x10 \x03(\x0b\x32\x18.mindinsight.TensorProto\x12\'\n\x06graphs\x18\x11 \x03(\x0b\x32\x17.mindinsight.GraphProto\x12\'\n\x06values\x18\x12 \x03(\x0b\x32\x17.mindinsight.ValueProto\x12.\n\x08\x64ict_val\x18\x13 \x03(\x0b\x32\x1c.mindinsight.NamedValueProto\x12(\n\x08type_val\x18\x14 \x01(\x0b\x32\x16.mindinsight.TypeProto\"F\n\x0e\x41ttributeProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.mindinsight.ValueProto\"F\n\x0fNamedValueProto\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.mindinsight.ValueProto\"q\n\x10TensorShapeProto\x12\x34\n\x03\x64im\x18\x01 \x03(\x0b\x32\'.mindinsight.TensorShapeProto.Dimension\x1a\'\n\tDimension\x12\x0c\n\x04size\x18\x01 \x01(\x03\x12\x0c\n\x04name\x18\x02 \x01(\t\"\xc8\x02\n\tTypeProto\x12(\n\tdata_type\x18\x01 \x01(\x0e\x32\x15.mindinsight.DataType\x12\x34\n\x0btensor_type\x18\x02 \x01(\x0b\x32\x1d.mindinsight.TypeProto.TensorH\x00\x12\x38\n\rsequence_type\x18\x03 \x01(\x0b\x32\x1f.mindinsight.TypeProto.SequenceH\x00\x1a`\n\x06Tensor\x12(\n\telem_type\x18\x01 \x01(\x0e\x32\x15.mindinsight.DataType\x12,\n\x05shape\x18\x02 \x01(\x0b\x32\x1d.mindinsight.TensorShapeProto\x1a\x36\n\x08Sequence\x12*\n\nelem_types\x18\x01 \x03(\x0b\x32\x16.mindinsight.TypeProtoB\x07\n\x05value\"r\n\x0eParameterProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12$\n\x04type\x18\x02 \x01(\x0b\x32\x16.mindinsight.TypeProto\x12,\n\x0b\x64\x65\x66\x61ult_val\x18\x03 \x01(\x0b\x32\x17.mindinsight.ValueProto\"A\n\x0bOutputProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12$\n\x04type\x18\x02 \x01(\x0b\x32\x16.mindinsight.TypeProto\"w\n\nInputProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12.\n\x04type\x18\x02 \x01(\x0e\x32 .mindinsight.InputProto.EdgeType\"+\n\x08\x45\x64geType\x12\r\n\tDATA_EDGE\x10\x00\x12\x10\n\x0c\x43ONTROL_EDGE\x10\x01\"\xfa\x01\n\tNodeProto\x12&\n\x05input\x18\x01 \x03(\x0b\x32\x17.mindinsight.InputProto\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0f\n\x07op_type\x18\x03 \x01(\t\x12\r\n\x05scope\x18\x04 \x01(\t\x12.\n\tattribute\x18\x05 \x03(\x0b\x32\x1b.mindinsight.AttributeProto\x12+\n\x0boutput_type\x18\x06 \x01(\x0b\x32\x16.mindinsight.TypeProto\x12\x10\n\x08output_i\x18\x07 \x01(\x04\x12\x11\n\tfull_name\x18\x08 \x01(\t\x12\x15\n\rinstance_name\x18\n \x01(\t\"\xaa\x01\n\nModelProto\x12\x12\n\nir_version\x18\x01 \x01(\x03\x12\x0e\n\x06\x64omain\x18\x02 \x01(\t\x12\x15\n\rmodel_version\x18\x03 \x01(\x03\x12&\n\x05graph\x18\x04 \x01(\x0b\x32\x17.mindinsight.GraphProto\x12\x39\n\x12metadata_operators\x18\x05 \x01(\x0b\x32\x1d.mindinsight.OperatorSetProto\"?\n\rOperatorProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x63onfig\x18\x02 \x01(\x0c\x12\x10\n\x08obj_info\x18\x03 \x01(\x0c\"R\n\x10OperatorSetProto\x12-\n\toperators\x18\x01 \x03(\x0b\x32\x1a.mindinsight.OperatorProto\x12\x0f\n\x07summary\x18\x02 \x01(\t\"\xce\x01\n\nGraphProto\x12$\n\x04node\x18\x01 \x03(\x0b\x32\x16.mindinsight.NodeProto\x12\x0c\n\x04name\x18\x02 \x01(\t\x12/\n\nparameters\x18\x03 \x03(\x0b\x32\x1b.mindinsight.ParameterProto\x12)\n\x07outputs\x18\x04 \x03(\x0b\x32\x18.mindinsight.OutputProto\x12\x30\n\nconst_vals\x18\x05 \x03(\x0b\x32\x1c.mindinsight.NamedValueProto\"\xd1\x01\n\x0bTensorProto\x12\x0c\n\x04\x64ims\x18\x01 \x03(\x03\x12(\n\tdata_type\x18\x02 \x01(\x0e\x32\x15.mindinsight.DataType\x12\x16\n\nfloat_data\x18\x03 \x03(\x02\x42\x02\x10\x01\x12\x16\n\nint32_data\x18\x04 \x03(\x05\x42\x02\x10\x01\x12\x16\n\nint64_data\x18\x05 \x03(\x03\x42\x02\x10\x01\x12\x17\n\x0b\x64ouble_data\x18\x06 \x03(\x01\x42\x02\x10\x01\x12\x17\n\x0buint64_data\x18\x07 \x03(\x04\x42\x02\x10\x01\x12\x10\n\x08raw_data\x18\x08 \x01(\x0c*/\n\x07Version\x12\x14\n\x10UNKNOWWN_VERSION\x10\x00\x12\x0e\n\nIR_VERSION\x10\x01*\x96\x05\n\x08\x44\x61taType\x12\x10\n\x0c\x44T_UNDEFINED\x10\x00\x12\x0b\n\x07\x44T_BOOL\x10\x01\x12\x0b\n\x07\x44T_INT8\x10\x02\x12\x0c\n\x08\x44T_INT16\x10\x03\x12\x0c\n\x08\x44T_INT32\x10\x04\x12\x0c\n\x08\x44T_INT64\x10\x05\x12\x0c\n\x08\x44T_UINT8\x10\x06\x12\r\n\tDT_UINT16\x10\x07\x12\r\n\tDT_UINT32\x10\x08\x12\r\n\tDT_UINT64\x10\t\x12\x0e\n\nDT_FLOAT16\x10\n\x12\x0e\n\nDT_FLOAT32\x10\x0b\x12\x0e\n\nDT_FLOAT64\x10\x0c\x12\r\n\tDT_STRING\x10\r\x12\r\n\tDT_TENSOR\x10\x0e\x12\x0c\n\x08\x44T_GRAPH\x10\x0f\x12\x0c\n\x08\x44T_BOOLS\x10\x10\x12\x0c\n\x08\x44T_INTS8\x10\x11\x12\r\n\tDT_INTS16\x10\x12\x12\r\n\tDT_INTS32\x10\x13\x12\r\n\tDT_INTS64\x10\x14\x12\r\n\tDT_UINTS8\x10\x15\x12\x0e\n\nDT_UINTS16\x10\x16\x12\x0e\n\nDT_UINTS32\x10\x17\x12\x0e\n\nDT_UINTS64\x10\x18\x12\x0f\n\x0b\x44T_FLOATS16\x10\x19\x12\x0f\n\x0b\x44T_FLOATS32\x10\x1a\x12\x0f\n\x0b\x44T_FLOATS64\x10\x1b\x12\x0e\n\nDT_STRINGS\x10\x1c\x12\x0e\n\nDT_TENSORS\x10\x1d\x12\r\n\tDT_GRAPHS\x10\x1e\x12\x0c\n\x08\x44T_TUPLE\x10\x1f\x12\x0b\n\x07\x44T_LIST\x10 \x12\x0b\n\x07\x44T_DICT\x10!\x12\x0b\n\x07\x44T_NONE\x10\"\x12\x0f\n\x0b\x44T_SYM_INST\x10#\x12\x0f\n\x0b\x44T_BASE_INT\x10$\x12\x10\n\x0c\x44T_BASE_UINT\x10%\x12\x11\n\rDT_BASE_FLOAT\x10&\x12\x0b\n\x07\x44T_TYPE\x10\'\x12\x0f\n\x0b\x44T_ANYTHING\x10(\x12\r\n\tDT_REFKEY\x10)\x12\n\n\x06\x44T_REF\x10*'
+  serialized_pb=b'\n\x18mindinsight_anf_ir.proto\x12\x0bmindinsight\"\xc3\x04\n\nValueProto\x12$\n\x05\x64type\x18\x01 \x01(\x0e\x32\x15.mindinsight.DataType\x12\x10\n\x08\x62ool_val\x18\x02 \x01(\x08\x12\x0f\n\x07int_val\x18\x03 \x01(\x03\x12\x10\n\x08uint_val\x18\x04 \x01(\x04\x12\x11\n\tfloat_val\x18\x05 \x01(\x02\x12\x12\n\ndouble_val\x18\x06 \x01(\x01\x12\x0f\n\x07str_val\x18\x07 \x01(\t\x12,\n\ntensor_val\x18\x08 \x01(\x0b\x32\x18.mindinsight.TensorProto\x12&\n\x05graph\x18\t \x01(\x0b\x32\x17.mindinsight.GraphProto\x12\x11\n\tbool_vals\x18\n \x03(\x08\x12\x10\n\x08int_vals\x18\x0b \x03(\x03\x12\x11\n\tuint_vals\x18\x0c \x03(\x04\x12\x12\n\nfloat_vals\x18\r \x03(\x02\x12\x13\n\x0b\x64ouble_vals\x18\x0e \x03(\x01\x12\x10\n\x08str_vals\x18\x0f \x03(\t\x12-\n\x0btensor_vals\x18\x10 \x03(\x0b\x32\x18.mindinsight.TensorProto\x12\'\n\x06graphs\x18\x11 \x03(\x0b\x32\x17.mindinsight.GraphProto\x12\'\n\x06values\x18\x12 \x03(\x0b\x32\x17.mindinsight.ValueProto\x12.\n\x08\x64ict_val\x18\x13 \x03(\x0b\x32\x1c.mindinsight.NamedValueProto\x12(\n\x08type_val\x18\x14 \x01(\x0b\x32\x16.mindinsight.TypeProto\"F\n\x0e\x41ttributeProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.mindinsight.ValueProto\"Y\n\x0fNamedValueProto\x12\x0b\n\x03key\x18\x01 \x01(\t\x12&\n\x05value\x18\x02 \x01(\x0b\x32\x17.mindinsight.ValueProto\x12\x11\n\tfull_name\x18\x03 \x01(\t\"q\n\x10TensorShapeProto\x12\x34\n\x03\x64im\x18\x01 \x03(\x0b\x32\'.mindinsight.TensorShapeProto.Dimension\x1a\'\n\tDimension\x12\x0c\n\x04size\x18\x01 \x01(\x03\x12\x0c\n\x04name\x18\x02 \x01(\t\"\xc8\x02\n\tTypeProto\x12(\n\tdata_type\x18\x01 \x01(\x0e\x32\x15.mindinsight.DataType\x12\x34\n\x0btensor_type\x18\x02 \x01(\x0b\x32\x1d.mindinsight.TypeProto.TensorH\x00\x12\x38\n\rsequence_type\x18\x03 \x01(\x0b\x32\x1f.mindinsight.TypeProto.SequenceH\x00\x1a`\n\x06Tensor\x12(\n\telem_type\x18\x01 \x01(\x0e\x32\x15.mindinsight.DataType\x12,\n\x05shape\x18\x02 \x01(\x0b\x32\x1d.mindinsight.TensorShapeProto\x1a\x36\n\x08Sequence\x12*\n\nelem_types\x18\x01 \x03(\x0b\x32\x16.mindinsight.TypeProtoB\x07\n\x05value\"r\n\x0eParameterProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12$\n\x04type\x18\x02 \x01(\x0b\x32\x16.mindinsight.TypeProto\x12,\n\x0b\x64\x65\x66\x61ult_val\x18\x03 \x01(\x0b\x32\x17.mindinsight.ValueProto\"A\n\x0bOutputProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12$\n\x04type\x18\x02 \x01(\x0b\x32\x16.mindinsight.TypeProto\"w\n\nInputProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12.\n\x04type\x18\x02 \x01(\x0e\x32 .mindinsight.InputProto.EdgeType\"+\n\x08\x45\x64geType\x12\r\n\tDATA_EDGE\x10\x00\x12\x10\n\x0c\x43ONTROL_EDGE\x10\x01\"\xfa\x01\n\tNodeProto\x12&\n\x05input\x18\x01 \x03(\x0b\x32\x17.mindinsight.InputProto\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0f\n\x07op_type\x18\x03 \x01(\t\x12\r\n\x05scope\x18\x04 \x01(\t\x12.\n\tattribute\x18\x05 \x03(\x0b\x32\x1b.mindinsight.AttributeProto\x12+\n\x0boutput_type\x18\x06 \x01(\x0b\x32\x16.mindinsight.TypeProto\x12\x10\n\x08output_i\x18\x07 \x01(\x04\x12\x11\n\tfull_name\x18\x08 \x01(\t\x12\x15\n\rinstance_name\x18\n \x01(\t\"\xaa\x01\n\nModelProto\x12\x12\n\nir_version\x18\x01 \x01(\x03\x12\x0e\n\x06\x64omain\x18\x02 \x01(\t\x12\x15\n\rmodel_version\x18\x03 \x01(\x03\x12&\n\x05graph\x18\x04 \x01(\x0b\x32\x17.mindinsight.GraphProto\x12\x39\n\x12metadata_operators\x18\x05 \x01(\x0b\x32\x1d.mindinsight.OperatorSetProto\"?\n\rOperatorProto\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0e\n\x06\x63onfig\x18\x02 \x01(\x0c\x12\x10\n\x08obj_info\x18\x03 \x01(\x0c\"R\n\x10OperatorSetProto\x12-\n\toperators\x18\x01 \x03(\x0b\x32\x1a.mindinsight.OperatorProto\x12\x0f\n\x07summary\x18\x02 \x01(\t\"\xce\x01\n\nGraphProto\x12$\n\x04node\x18\x01 \x03(\x0b\x32\x16.mindinsight.NodeProto\x12\x0c\n\x04name\x18\x02 \x01(\t\x12/\n\nparameters\x18\x03 \x03(\x0b\x32\x1b.mindinsight.ParameterProto\x12)\n\x07outputs\x18\x04 \x03(\x0b\x32\x18.mindinsight.OutputProto\x12\x30\n\nconst_vals\x18\x05 \x03(\x0b\x32\x1c.mindinsight.NamedValueProto\"\xd1\x01\n\x0bTensorProto\x12\x0c\n\x04\x64ims\x18\x01 \x03(\x03\x12(\n\tdata_type\x18\x02 \x01(\x0e\x32\x15.mindinsight.DataType\x12\x16\n\nfloat_data\x18\x03 \x03(\x02\x42\x02\x10\x01\x12\x16\n\nint32_data\x18\x04 \x03(\x05\x42\x02\x10\x01\x12\x16\n\nint64_data\x18\x05 \x03(\x03\x42\x02\x10\x01\x12\x17\n\x0b\x64ouble_data\x18\x06 \x03(\x01\x42\x02\x10\x01\x12\x17\n\x0buint64_data\x18\x07 \x03(\x04\x42\x02\x10\x01\x12\x10\n\x08raw_data\x18\x08 \x01(\x0c*/\n\x07Version\x12\x14\n\x10UNKNOWWN_VERSION\x10\x00\x12\x0e\n\nIR_VERSION\x10\x01*\x96\x05\n\x08\x44\x61taType\x12\x10\n\x0c\x44T_UNDEFINED\x10\x00\x12\x0b\n\x07\x44T_BOOL\x10\x01\x12\x0b\n\x07\x44T_INT8\x10\x02\x12\x0c\n\x08\x44T_INT16\x10\x03\x12\x0c\n\x08\x44T_INT32\x10\x04\x12\x0c\n\x08\x44T_INT64\x10\x05\x12\x0c\n\x08\x44T_UINT8\x10\x06\x12\r\n\tDT_UINT16\x10\x07\x12\r\n\tDT_UINT32\x10\x08\x12\r\n\tDT_UINT64\x10\t\x12\x0e\n\nDT_FLOAT16\x10\n\x12\x0e\n\nDT_FLOAT32\x10\x0b\x12\x0e\n\nDT_FLOAT64\x10\x0c\x12\r\n\tDT_STRING\x10\r\x12\r\n\tDT_TENSOR\x10\x0e\x12\x0c\n\x08\x44T_GRAPH\x10\x0f\x12\x0c\n\x08\x44T_BOOLS\x10\x10\x12\x0c\n\x08\x44T_INTS8\x10\x11\x12\r\n\tDT_INTS16\x10\x12\x12\r\n\tDT_INTS32\x10\x13\x12\r\n\tDT_INTS64\x10\x14\x12\r\n\tDT_UINTS8\x10\x15\x12\x0e\n\nDT_UINTS16\x10\x16\x12\x0e\n\nDT_UINTS32\x10\x17\x12\x0e\n\nDT_UINTS64\x10\x18\x12\x0f\n\x0b\x44T_FLOATS16\x10\x19\x12\x0f\n\x0b\x44T_FLOATS32\x10\x1a\x12\x0f\n\x0b\x44T_FLOATS64\x10\x1b\x12\x0e\n\nDT_STRINGS\x10\x1c\x12\x0e\n\nDT_TENSORS\x10\x1d\x12\r\n\tDT_GRAPHS\x10\x1e\x12\x0c\n\x08\x44T_TUPLE\x10\x1f\x12\x0b\n\x07\x44T_LIST\x10 \x12\x0b\n\x07\x44T_DICT\x10!\x12\x0b\n\x07\x44T_NONE\x10\"\x12\x0f\n\x0b\x44T_SYM_INST\x10#\x12\x0f\n\x0b\x44T_BASE_INT\x10$\x12\x10\n\x0c\x44T_BASE_UINT\x10%\x12\x11\n\rDT_BASE_FLOAT\x10&\x12\x0b\n\x07\x44T_TYPE\x10\'\x12\x0f\n\x0b\x44T_ANYTHING\x10(\x12\r\n\tDT_REFKEY\x10)\x12\n\n\x06\x44T_REF\x10*'
 )
 
 _VERSION = _descriptor.EnumDescriptor(
@@ -43,8 +43,8 @@ _VERSION = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=2513,
-  serialized_end=2560,
+  serialized_start=2532,
+  serialized_end=2579,
 )
 _sym_db.RegisterEnumDescriptor(_VERSION)
 
@@ -274,8 +274,8 @@ _DATATYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=2563,
-  serialized_end=3225,
+  serialized_start=2582,
+  serialized_end=3244,
 )
 _sym_db.RegisterEnumDescriptor(_DATATYPE)
 
@@ -347,8 +347,8 @@ _INPUTPROTO_EDGETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1472,
-  serialized_end=1515,
+  serialized_start=1491,
+  serialized_end=1534,
 )
 _sym_db.RegisterEnumDescriptor(_INPUTPROTO_EDGETYPE)
 
@@ -579,6 +579,13 @@ _NAMEDVALUEPROTO = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='full_name', full_name='mindinsight.NamedValueProto.full_name', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -592,7 +599,7 @@ _NAMEDVALUEPROTO = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=695,
-  serialized_end=765,
+  serialized_end=784,
 )
 
 
@@ -630,8 +637,8 @@ _TENSORSHAPEPROTO_DIMENSION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=841,
-  serialized_end=880,
+  serialized_start=860,
+  serialized_end=899,
 )
 
 _TENSORSHAPEPROTO = _descriptor.Descriptor(
@@ -661,8 +668,8 @@ _TENSORSHAPEPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=767,
-  serialized_end=880,
+  serialized_start=786,
+  serialized_end=899,
 )
 
 
@@ -700,8 +707,8 @@ _TYPEPROTO_TENSOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1050,
-  serialized_end=1146,
+  serialized_start=1069,
+  serialized_end=1165,
 )
 
 _TYPEPROTO_SEQUENCE = _descriptor.Descriptor(
@@ -731,8 +738,8 @@ _TYPEPROTO_SEQUENCE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1148,
-  serialized_end=1202,
+  serialized_start=1167,
+  serialized_end=1221,
 )
 
 _TYPEPROTO = _descriptor.Descriptor(
@@ -781,8 +788,8 @@ _TYPEPROTO = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=883,
-  serialized_end=1211,
+  serialized_start=902,
+  serialized_end=1230,
 )
 
 
@@ -827,8 +834,8 @@ _PARAMETERPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1213,
-  serialized_end=1327,
+  serialized_start=1232,
+  serialized_end=1346,
 )
 
 
@@ -866,8 +873,8 @@ _OUTPUTPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1329,
-  serialized_end=1394,
+  serialized_start=1348,
+  serialized_end=1413,
 )
 
 
@@ -906,8 +913,8 @@ _INPUTPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1396,
-  serialized_end=1515,
+  serialized_start=1415,
+  serialized_end=1534,
 )
 
 
@@ -994,8 +1001,8 @@ _NODEPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1518,
-  serialized_end=1768,
+  serialized_start=1537,
+  serialized_end=1787,
 )
 
 
@@ -1054,8 +1061,8 @@ _MODELPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1771,
-  serialized_end=1941,
+  serialized_start=1790,
+  serialized_end=1960,
 )
 
 
@@ -1100,8 +1107,8 @@ _OPERATORPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1943,
-  serialized_end=2006,
+  serialized_start=1962,
+  serialized_end=2025,
 )
 
 
@@ -1139,8 +1146,8 @@ _OPERATORSETPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2008,
-  serialized_end=2090,
+  serialized_start=2027,
+  serialized_end=2109,
 )
 
 
@@ -1199,8 +1206,8 @@ _GRAPHPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2093,
-  serialized_end=2299,
+  serialized_start=2112,
+  serialized_end=2318,
 )
 
 
@@ -1280,8 +1287,8 @@ _TENSORPROTO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2302,
-  serialized_end=2511,
+  serialized_start=2321,
+  serialized_end=2530,
 )
 
 _VALUEPROTO.fields_by_name['dtype'].enum_type = _DATATYPE

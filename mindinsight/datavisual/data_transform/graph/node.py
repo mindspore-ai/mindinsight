@@ -23,9 +23,10 @@ class Node:
     Args:
         name (str): Name of new node.
         node_id (str): The id of this node, and node id is unique in graph.
+        full_name (str): Full Name of new node, used when node is constant
     """
 
-    def __init__(self, name, node_id, topological_index=-1):
+    def __init__(self, name, node_id, full_name="", topological_index=-1):
         self._node_id = node_id
         self.name = name
         self.type = ""
@@ -42,7 +43,7 @@ class Node:
         self.output_data_type = ""
         self.output_nums = 0
         self.elem_types = []
-        self.full_name = ""
+        self.full_name = full_name
         # This value will be used as the priority field.
         self.topological_index = topological_index
         self.stack = []
