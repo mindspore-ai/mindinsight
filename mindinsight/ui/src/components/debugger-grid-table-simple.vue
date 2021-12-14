@@ -79,6 +79,9 @@ limitations under the License.
         {{ $t('tensors.mode') }}
         <el-select v-model="displayMode"
                    class="mode-selector"
+                   :style="{
+                     width:`${modeWidth}px`
+                   }"
                    @change="handleDisplayModeChange">
           <el-option v-for="mode of displayModes"
                      :key="mode.value"
@@ -89,6 +92,9 @@ limitations under the License.
         {{$t('components.category')}}
         <el-select v-model="category"
                    class="category-selector"
+                   :style="{
+                     width:`${categoryWidth}px`
+                   }"
                    @change="accuracyChange">
           <el-option v-for="item in categoryArr"
                      :key="item.label"
@@ -108,7 +114,7 @@ limitations under the License.
                      :value="item.value"></el-option>
         </el-select>
       </div>
-      
+
     </div>
   </div>
 </template>
@@ -123,13 +129,14 @@ import 'slickgrid/slick.core.js';
 import 'slickgrid/slick.dataview.js';
 import 'slickgrid/slick.grid.js';
 import CommonProperty from '@/common/common-property.js';
-import echarts, {echartsThemeName} from '@/js/echarts';
+import echarts, { echartsThemeName } from '@/js/echarts';
 
 // Data display mode
 const [TABLE, CHART] = ['table', 'chart'];
-
 const gridPadding = [40, 0, 10, 40]; // Same as padding in CSS rule order
-
+const enCategoryWidth = 103; //en-us category selecter width
+const enModeWidth = 82; //en-us mode selecter width
+const cnWidth = 103; //zh-cn mode ande category selecter width
 export default {
   props: {
     // Original data
@@ -184,7 +191,7 @@ export default {
       viewResizeFlag: false, // Size reset flag
       // Accuracy options
       accuracyArr: new Array(11).fill(null).map((_, i) => {
-        return {label: i, value: i}
+        return { label: i, value: i };
       }),
       // Table configuration items
       optionObj: {
@@ -203,18 +210,20 @@ export default {
       },
       shape: '',
       categoryArr: [
-        {label: this.$t('components.value'), value: 'value'},
-        {label: this.$t('components.scientificCounting'), value: 'science'},
+        { label: this.$t('components.value'), value: 'value' },
+        { label: this.$t('components.scientificCounting'), value: 'science' },
       ],
       category: 'value', // value:Numerical notation      science:Scientific notation
       gridTableThemeObj: CommonProperty.tensorThemes[this.$store.state.themeIndex],
       displayMode: CHART,
       displayModes: [
-        {label: this.$t('tensors.chartMode'), value: CHART},
-        {label: this.$t('tensors.tableMode'), value: TABLE},
+        { label: this.$t('tensors.chartMode'), value: CHART },
+        { label: this.$t('tensors.tableMode'), value: TABLE },
       ],
       chartInstance: null,
       filterStr: null,
+      categoryWidth: 0,
+      modeWidth: 0,
     };
   },
   watch: {
@@ -263,7 +272,7 @@ export default {
             this.renderHeatmapChart();
             break;
         }
-      })
+      });
     },
     /**
      * Initialize
@@ -271,6 +280,13 @@ export default {
     init() {
       this.itemId = `${new Date().getTime()}` + `${this.$store.state.componentsCount}`;
       this.$store.commit('componentsNum');
+      if (this.$store.state.language === 'en-us') {
+        this.categoryWidth = enCategoryWidth;
+        this.modeWidth = enModeWidth;
+      } else {
+        this.categoryWidth = cnWidth;
+        this.modeWidth = cnWidth;
+      }
     },
     /**
      * Render heatmap chart by fullData
@@ -288,7 +304,7 @@ export default {
       const seriesData = [];
       const xAxisData = [];
       const yAxisData = [];
-      const {rowStartIndex, colStartIndex} = this.axisStartIndex;
+      const { rowStartIndex, colStartIndex } = this.axisStartIndex;
       if (Array.isArray(data)) {
         if (Array.isArray(data[0])) {
           // Matrix
@@ -315,7 +331,7 @@ export default {
         yAxisData.push(rowStartIndex);
         seriesData.push([0, 0, data === 'null' ? 0 : data, data]);
       }
-      const {overall_min, overall_max} = this.statistics;
+      const { overall_min, overall_max } = this.statistics;
       const minAbs = Math.abs(overall_min);
       const maxAbs = Math.abs(overall_max);
       let ultimate = 0;
@@ -355,7 +371,7 @@ export default {
           this.chartInstance = echarts.init(this.$refs.heatmap, echartsThemeName);
           this.chartInstance.setOption({
             tooltip: {
-              position: 'top'
+              position: 'top',
             },
             grid: {
               top: gridPadding[0],
@@ -368,21 +384,21 @@ export default {
                 type: 'inside',
                 xAxisIndex: 0,
                 yAxisIndex: 0,
-              }
+              },
             ],
             xAxis: {
               type: 'category',
               data: [],
               position: 'top',
               splitArea: {
-                show: true
-              }
+                show: true,
+              },
             },
             yAxis: {
               type: 'category',
               data: [],
               splitArea: {
-                show: true
+                show: true,
               },
               inverse: true,
             },
@@ -395,33 +411,33 @@ export default {
                 type: 'heatmap',
                 data: [],
                 label: {
-                  show: false
+                  show: false,
                 },
                 emphasis: {
                   itemStyle: {
                     shadowBlur: 10,
-                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                  }
+                    shadowColor: 'rgba(0, 0, 0, 0.5)',
+                  },
                 },
                 tooltip: {
                   formatter: (params) => {
-                    const {category, accuracy, judgeDataType} = this;
+                    const { category, accuracy, judgeDataType } = this;
                     let value = params.data[3]; // Original data
                     value = judgeDataType(value)
                       ? value
                       : category === 'science'
-                          ? value.toExponential(accuracy)
-                          : value.toFixed(accuracy)
+                      ? value.toExponential(accuracy)
+                      : value.toFixed(accuracy);
                     return `
                       x: ${params.data[0]}<br>
                       y: ${params.data[1]}<br>
                       value: ${value}
-                    `
-                  }
+                    `;
+                  },
                 },
-              }
-            ]
-          })
+              },
+            ],
+          });
         }
         return true;
       }
@@ -518,8 +534,7 @@ export default {
             field: order,
             width: 120,
             headerCssClass: 'headerStyle',
-            formatter:
-              this.gridType === this.gridTypeKeys.compare ? this.formatCompareColor : this.formatValueColor,
+            formatter: this.gridType === this.gridTypeKeys.compare ? this.formatCompareColor : this.formatValueColor,
           });
         });
       } else {
@@ -832,9 +847,8 @@ export default {
               }
             }
             break;
-        }     
+        }
       });
-
     },
     /**
      * Expand/Collapse in full screen
