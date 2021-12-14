@@ -1238,7 +1238,19 @@ export default {
             const statistics = res.data.tensor_value.statistics || {};
             const tensorStatus = res.data.tensor_value.tensor_status;
             this.statisticsArr = [statistics];
-            if (value === 'Too large to show.' || tensorStatus === 'uncached' || tensorStatus === 'oversize') {
+            if (value === 'Too large to show.') {
+              this.tensorValue = [];
+              this.$nextTick(() => {
+                this.$refs.tensorValue.showRequestErrorMessage(
+                  this.$t('debugger.largeDataTip'),
+                  JSON.parse(row.shape),
+                  shape,
+                  true);
+              });
+              this.dealLoading();
+              return;
+            }
+            else if (tensorStatus === 'uncached' || tensorStatus === 'oversize') {
               let errorMsg = null;
               if (tensorStatus === 'uncached') {
                 errorMsg = this.$t('debugger.largeDataLoading');
