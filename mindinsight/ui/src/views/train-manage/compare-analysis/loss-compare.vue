@@ -227,9 +227,9 @@ limitations under the License.
                     <div class="info-title">
                       <div class="view-title inline-show">
                         {{$t('lossCompare.trainInfo')}}
-                        <el-tooltip placement="right-start" 
+                        <el-tooltip placement="right-start"
                                     effect="light">
-                          <div slot="content" 
+                          <div slot="content"
                                class="tooltip-container">
                             <div class="cl-title-tip">
                               <div class="tip-part">
@@ -312,9 +312,9 @@ limitations under the License.
                     <div class="info-title">
                       <div class="view-title inline-show">
                         {{$t('lossCompare.trainInfo')}}
-                        <el-tooltip placement="right-start" 
+                        <el-tooltip placement="right-start"
                                     effect="light">
-                          <div slot="content" 
+                          <div slot="content"
                                class="tooltip-container">
                             <div class="cl-title-tip">
                               <div class="tip-part">
@@ -399,18 +399,18 @@ limitations under the License.
                   <div class="info-title">
                     <div class="view-title inline-show">
                       {{$t('lossCompare.trainInfo')}}
-                      <el-tooltip placement="right-start" 
-                                    effect="light">
-                          <div slot="content" 
-                               class="tooltip-container">
-                            <div class="cl-title-tip">
-                              <div class="tip-part">
-                                {{$t('lossCompare.trainingTip')}}
-                              </div>
+                      <el-tooltip placement="right-start"
+                                  effect="light">
+                        <div slot="content"
+                             class="tooltip-container">
+                          <div class="cl-title-tip">
+                            <div class="tip-part">
+                              {{$t('lossCompare.trainingTip')}}
                             </div>
                           </div>
-                          <i class="el-icon-info"></i>
-                        </el-tooltip>
+                        </div>
+                        <i class="el-icon-info"></i>
+                      </el-tooltip>
                     </div>
                   </div>
                   <div class="info-content">
@@ -937,7 +937,7 @@ export default {
       const trainIds = [];
       this.curPageArr.forEach((sampleItem) => {
         if (sampleItem.label) {
-          trainIds.push(sampleItem.label);
+          trainIds.push(encodeURIComponent(sampleItem.label));
         }
       });
 
@@ -972,9 +972,8 @@ export default {
             info.optimizer = landscape.metadata.optimizer ?? '--';
             info.learning_rate = landscape.metadata.learning_rate ?? '--';
             info.metric = landscape.metadata.metric ?? {};
-            info.loss = isNaN(landscape.metadata.loss) || landscape.metadata.loss === null
-              ? '--'
-              : landscape.metadata.loss;
+            info.loss =
+              isNaN(landscape.metadata.loss) || landscape.metadata.loss === null ? '--' : landscape.metadata.loss;
             const keys = Object.keys(info.metric);
             if (keys.length) {
               showMetric.label = keys[0];

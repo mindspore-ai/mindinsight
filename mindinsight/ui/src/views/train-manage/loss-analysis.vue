@@ -18,10 +18,10 @@ limitations under the License.
   <div class="mi-common-full-page cl-loss-analysis">
     <div class="cl-title-top">
       {{$t('lossAnalysis.titleText')}}
-      <el-tooltip placement="right-start" 
+      <el-tooltip placement="right-start"
                   effect="light">
-        <div slot="content" 
-              class="tooltip-container">
+        <div slot="content"
+             class="tooltip-container">
           <div class="cl-title-tip">
             <div class="tip-part">
               {{$t('lossAnalysis.dataToolTip')}}
@@ -340,10 +340,10 @@ limitations under the License.
         <div class="chart-info">
           <div class="title">
             {{$t('lossAnalysis.basicTrainingInfo')}}
-            <el-tooltip placement="bottom-end" 
+            <el-tooltip placement="bottom-end"
                         effect="light">
-              <div slot="content" 
-                  class="tooltip-container">
+              <div slot="content"
+                   class="tooltip-container">
                 <div class="cl-title-tip">
                   <div class="tip-part">
                     {{$t('lossAnalysis.basicTrainingTip')}}
@@ -385,7 +385,7 @@ limitations under the License.
 
 <script>
 import RequestService from '../../services/request-service';
-import echarts, {echartsThemeName} from '@/js/echarts';
+import echarts, { echartsThemeName } from '@/js/echarts';
 import contourMap from '../../components/contour-map.vue';
 import diagram3D from '../../components/diagram-3D.vue';
 import commonProperty from '../../common/common-property';
@@ -444,7 +444,7 @@ export default {
         noBoxSelect: false,
       },
       pathColor: '#00a5a7',
-      pathStyle: {lineColor: '#000', lineWidth: '5'},
+      pathStyle: { lineColor: '#000', lineWidth: '5' },
       // Whether the gradient color and color bar of 2D contour map display settings
       mapStyle: {
         showColorBar: true,
@@ -489,18 +489,12 @@ export default {
         colorBar: true,
       },
       diagram3DSetting: {
-        camera: JSON.parse(
-            JSON.stringify(commonProperty.lossCommonStyle.camera),
-        ),
+        camera: JSON.parse(JSON.stringify(commonProperty.lossCommonStyle.camera)),
         light: JSON.parse(JSON.stringify(commonProperty.lossCommonStyle.light)),
         line: JSON.parse(JSON.stringify(commonProperty.lossCommonStyle.line)),
-        opacity: JSON.parse(
-            JSON.stringify(commonProperty.lossCommonStyle.opacity),
-        ),
+        opacity: JSON.parse(JSON.stringify(commonProperty.lossCommonStyle.opacity)),
         surface: {
-          colorscale: JSON.parse(
-              JSON.stringify(commonProperty.lossColorscale[0]),
-          ),
+          colorscale: JSON.parse(JSON.stringify(commonProperty.lossColorscale[0])),
           colorScaleIndex: 0,
         },
       },
@@ -554,7 +548,7 @@ export default {
       },
       mapLineNumoptions: new Array(15).fill(null).map((_, index) => {
         const value = (index + 2) * 5;
-        return {value, label: value};
+        return { value, label: value };
       }),
     };
   },
@@ -565,8 +559,8 @@ export default {
       document.title = `${this.$t('lossAnalysis.titleText')}-MindInsight`;
       return;
     }
-    document.title = `${this.trainInfo.id}-${this.$t('lossAnalysis.titleText')}-MindInsight`;
-    this.trainInfo.id = id;
+    document.title = `${id}-${this.$t('lossAnalysis.titleText')}-MindInsight`;
+    this.trainInfo.id = encodeURIComponent(id);
     this.$nextTick(() => {
       this.init();
     });
@@ -596,44 +590,44 @@ export default {
         train_id: id,
       };
       RequestService.queryEpochIntervals(params).then(
-          (res) => {
-            if (!res.data) {
-              this.initOver = true;
-              return;
-            }
-            const resArr = res.data.intervals;
-            if (Array.isArray(resArr) && resArr.length) {
-              resArr.forEach((item) => {
-                const label = `${item.value[0]}-${item.value[1]}`;
-                item.label = label;
-              });
-
-              this.steps.options = resArr;
-              this.steps.value = resArr[0].label;
-              this.steps.id = resArr[0].id;
-
-              const params = {
-                train_id: id,
-                type: 'interval',
-                metadata: true,
-                interval_id: this.steps.id,
-              };
-              this.getDataOfLossGraph(params);
-              this.initCommonChart();
-            }
-          },
-          () => {
+        (res) => {
+          if (!res.data) {
             this.initOver = true;
-            this.steps.value = '';
-            this.steps.id = '';
-            this.steps.options = [];
-            if (this.chartObj) {
-              this.chartObj.clear();
-              this.chartObj = null;
-            }
-            this.chartOption = {};
-            this.chartInfo = {};
-          },
+            return;
+          }
+          const resArr = res.data.intervals;
+          if (Array.isArray(resArr) && resArr.length) {
+            resArr.forEach((item) => {
+              const label = `${item.value[0]}-${item.value[1]}`;
+              item.label = label;
+            });
+
+            this.steps.options = resArr;
+            this.steps.value = resArr[0].label;
+            this.steps.id = resArr[0].id;
+
+            const params = {
+              train_id: id,
+              type: 'interval',
+              metadata: true,
+              interval_id: this.steps.id,
+            };
+            this.getDataOfLossGraph(params);
+            this.initCommonChart();
+          }
+        },
+        () => {
+          this.initOver = true;
+          this.steps.value = '';
+          this.steps.id = '';
+          this.steps.options = [];
+          if (this.chartObj) {
+            this.chartObj.clear();
+            this.chartObj = null;
+          }
+          this.chartOption = {};
+          this.chartInfo = {};
+        }
       );
     },
     /**
@@ -642,45 +636,43 @@ export default {
      */
     getDataOfLossGraph(params) {
       RequestService.queryLossGraph(params).then(
-          (resp) => {
-            if (resp && resp.data) {
-              if (resp.data.landscapes && resp.data.landscapes.length) {
-                const lossdata = JSON.parse(
-                    JSON.stringify(resp.data.landscapes[0]),
-                );
-                if (lossdata.convergence_point) {
-                  lossdata.convergence_point = null;
-                }
-                let ratio = '';
-                for (const key in lossdata.points) {
-                  if (lossdata.points.hasOwnProperty(key)) {
-                    ratio += lossdata.points[key].length + 'x';
-                  }
-                }
-                ratio = ratio.slice(0, -1);
-                this.oriData = lossdata;
-                this.chartInfo = lossdata.metadata;
-                this.chartInfo.ratio = ratio;
-                const unit = lossdata.metadata.unit;
-                this.contourSetting.unit = unit;
-                this.topographicSetting.unit = unit;
-                this.$nextTick(() => {
-                  if (this.chartOption.series) {
-                    this.formatMarkArea(this.chartOption.series[0]);
-                    this.chartObj.setOption(this.chartOption, false);
-                  }
-                  this.updateTabsChart();
-                });
+        (resp) => {
+          if (resp && resp.data) {
+            if (resp.data.landscapes && resp.data.landscapes.length) {
+              const lossdata = JSON.parse(JSON.stringify(resp.data.landscapes[0]));
+              if (lossdata.convergence_point) {
+                lossdata.convergence_point = null;
               }
-            } else {
-              this.initOver = true;
+              let ratio = '';
+              for (const key in lossdata.points) {
+                if (lossdata.points.hasOwnProperty(key)) {
+                  ratio += lossdata.points[key].length + 'x';
+                }
+              }
+              ratio = ratio.slice(0, -1);
+              this.oriData = lossdata;
+              this.chartInfo = lossdata.metadata;
+              this.chartInfo.ratio = ratio;
+              const unit = lossdata.metadata.unit;
+              this.contourSetting.unit = unit;
+              this.topographicSetting.unit = unit;
+              this.$nextTick(() => {
+                if (this.chartOption.series) {
+                  this.formatMarkArea(this.chartOption.series[0]);
+                  this.chartObj.setOption(this.chartOption, false);
+                }
+                this.updateTabsChart();
+              });
             }
-          },
-          (error) => {
-            this.oriData = {};
-            this.chartInfo = {};
+          } else {
             this.initOver = true;
-          },
+          }
+        },
+        (error) => {
+          this.oriData = {};
+          this.chartInfo = {};
+          this.initOver = true;
+        }
       );
     },
 
@@ -746,7 +738,7 @@ export default {
           this.$nextTick(() => {
             this.updateTabChart(activeRefName);
           });
-          setting.dataChanged= false;
+          setting.dataChanged = false;
         }
       });
     },
@@ -863,7 +855,7 @@ export default {
             },
           },
           nameTextStyle: {
-            padding: [0, 0, 7, 0]
+            padding: [0, 0, 7, 0],
           },
           axisLabel: {
             formatter(value) {
@@ -884,7 +876,7 @@ export default {
           top: 40,
           left: 50,
           right: 60,
-          bottom: 40
+          bottom: 40,
         },
         animation: true,
         tooltip: {
@@ -923,8 +915,7 @@ export default {
                     sameRunIndex.forEach((sameIndex) => {
                       if (
                         detialArr[sameIndex] &&
-                        detialArr[sameIndex].value ===
-                          curSerieOriData.stepData[parma.dataIndex][1]
+                        detialArr[sameIndex].value === curSerieOriData.stepData[parma.dataIndex][1]
                       ) {
                         addFlag = false;
                       }
@@ -946,9 +937,7 @@ export default {
                   `<tr><td style="border-radius:50%;width:15px;height:15px;vertical-align: middle;` +
                   `margin-right: 5px;background-color:${parma.color};` +
                   `display:inline-block;"></td><td>${parma.seriesName}</td>` +
-                  `<td>${that.formatYAxisValue(
-                      curSerieOriData.stepData[parma.dataIndex][1],
-                  )}</td>` +
+                  `<td>${that.formatYAxisValue(curSerieOriData.stepData[parma.dataIndex][1])}</td>` +
                   `<td>${curSerieOriData.stepData[parma.dataIndex][0]}</td>` +
                   `</tr>`;
               }
@@ -1004,34 +993,31 @@ export default {
       };
 
       RequestService.getScalarsSample(params).then(
-          (res) => {
-            if (res && res.data) {
-              const resData = res.data;
-              const tempObject = {
-                valueData: {
-                  stepData: [],
-                },
-              };
-              resData.metadatas.forEach((metaData) => {
-                tempObject.valueData.stepData.push([
-                  metaData.step,
-                  metaData.value,
-                ]);
-              });
+        (res) => {
+          if (res && res.data) {
+            const resData = res.data;
+            const tempObject = {
+              valueData: {
+                stepData: [],
+              },
+            };
+            resData.metadatas.forEach((metaData) => {
+              tempObject.valueData.stepData.push([metaData.step, metaData.value]);
+            });
 
-              const tempOriData = tempObject;
-              const tempOption = this.formatChartOption(tempOriData);
-              this.updateOrCreateChart(tempOption);
-            }
-          },
-          (error) => {
-            if (this.chartObj) {
-              this.chartObj.clear();
-              this.chartObj = null;
-            }
-            this.chartOption = {};
-            this.chartInfo = {};
-          },
+            const tempOriData = tempObject;
+            const tempOption = this.formatChartOption(tempOriData);
+            this.updateOrCreateChart(tempOption);
+          }
+        },
+        (error) => {
+          if (this.chartObj) {
+            this.chartObj.clear();
+            this.chartObj = null;
+          }
+          this.chartOption = {};
+          this.chartInfo = {};
+        }
       );
     },
     stepChange(val) {
@@ -1073,8 +1059,7 @@ export default {
         setting.colorsIndex = 0;
         setting.pathColor = '#000000';
         setting.pathWidth = 5;
-        setting.contoursNumber = 10,
-        setting.contourColors = commonProperty.lossColorscale[setting.colorsIndex];
+        (setting.contoursNumber = 10), (setting.contourColors = commonProperty.lossColorscale[setting.colorsIndex]);
         this.$refs[activeRefName].handleDataChange(this.oriData, setting);
       }
     },
@@ -1088,9 +1073,7 @@ export default {
         this.diagramSliderChangeTimer = null;
       }
       this.diagram3DSetting.surface.colorscale =
-        commonProperty.lossColorscale[
-            this.diagram3DSetting.surface.colorScaleIndex
-        ];
+        commonProperty.lossColorscale[this.diagram3DSetting.surface.colorScaleIndex];
       this.diagramSliderChangeTimer = setTimeout(() => {
         const elementItem = this.$refs[THREED];
         if (elementItem) {
