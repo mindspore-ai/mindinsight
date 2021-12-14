@@ -35,13 +35,14 @@ class Node(ABC):
         change and/or deletion.
 
     Args:
-        node_feature(namedtuple): The node feature.
+        node_feature (namedtuple): The node feature.
 
             - name (str): The node name.
             - rank (int): The rank id.
             - stack (iterable[dict]): The format of each item is like:
 
                 ..code-block::
+
                     {
                         'file_path': str,
                         'line_no': int,
