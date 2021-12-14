@@ -283,13 +283,13 @@ limitations under the License.
 </template>
 
 <script>
-import echarts, {echartsThemeName} from '../../js/echarts';
+import echarts, { echartsThemeName } from '../../js/echarts';
 import RequestService from '@/services/request-service';
-import {basePath} from '@/services/fetcher';
+import { basePath } from '@/services/fetcher';
 import CommonProperty from '@/common/common-property.js';
-import {select, selectAll, format, precisionRound} from 'd3';
+import { select, selectAll, format, precisionRound } from 'd3';
 import 'd3-graphviz';
-const d3 = {select, selectAll, format, precisionRound};
+const d3 = { select, selectAll, format, precisionRound };
 import gridTableComponents from '../../components/grid-table-simple';
 import diagram3D from '../../components/diagram-3D.vue';
 export default {
@@ -356,18 +356,12 @@ export default {
       show3dGraph: false,
       diagramOriDate: {},
       diagram3DSetting: {
-        camera: JSON.parse(
-            JSON.stringify(CommonProperty.lossCommonStyle.camera),
-        ),
+        camera: JSON.parse(JSON.stringify(CommonProperty.lossCommonStyle.camera)),
         light: JSON.parse(JSON.stringify(CommonProperty.lossCommonStyle.light)),
         line: JSON.parse(JSON.stringify(CommonProperty.lossCommonStyle.line)),
-        opacity: JSON.parse(
-            JSON.stringify(CommonProperty.lossCommonStyle.opacity),
-        ),
+        opacity: JSON.parse(JSON.stringify(CommonProperty.lossCommonStyle.opacity)),
         surface: {
-          colorscale: JSON.parse(
-              JSON.stringify(CommonProperty.lossColorscale[0]),
-          ),
+          colorscale: JSON.parse(JSON.stringify(CommonProperty.lossColorscale[0])),
         },
       },
       themeIndex: this.$store.state.themeIndex, // Index of theme color
@@ -473,7 +467,7 @@ export default {
     init() {
       if (this.$route.query && this.$route.query.id) {
         this.trainingJobId = this.$route.query.id;
-        this.summaryPath = decodeURIComponent(this.trainingJobId);
+        this.summaryPath = this.trainingJobId;
         document.title =
           this.summaryPath + '-' + this.$t('trainingDashboard.trainingDashboardTitle') + '-MindInsight';
       } else {
@@ -498,53 +492,51 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.queryEpochIntervals(params).then(
-          (res) => {
-            if (!res || !res.data) {
-              this.show3dGraph = false;
-              return;
-            }
-
-            const resArr = res.data.intervals;
-            if (resArr instanceof Array && resArr.length) {
-              const params = {
-                train_id: this.trainingJobId,
-                type: 'interval',
-                metadata: true,
-                interval_id: resArr[0].id,
-              };
-              this.getDataOfLossGraph(params);
-            }
-          },
-          () => {
-            this.diagramNewDataFlag = true;
+        (res) => {
+          if (!res || !res.data) {
             this.show3dGraph = false;
-          },
+            return;
+          }
+
+          const resArr = res.data.intervals;
+          if (resArr instanceof Array && resArr.length) {
+            const params = {
+              train_id: this.trainingJobId,
+              type: 'interval',
+              metadata: true,
+              interval_id: resArr[0].id,
+            };
+            this.getDataOfLossGraph(params);
+          }
+        },
+        () => {
+          this.diagramNewDataFlag = true;
+          this.show3dGraph = false;
+        }
       );
     },
 
     getDataOfLossGraph(params) {
       RequestService.queryLossGraph(params).then(
-          (resp) => {
-            if (resp && resp.data) {
-              if (resp.data.landscapes && resp.data.landscapes.length) {
-                this.show3dGraph = true;
-                this.diagramOriDate = JSON.parse(
-                    JSON.stringify(resp.data.landscapes[0]),
-                );
-                this.$nextTick(() => {
-                  const elementItem = this.$refs.diagram3D;
-                  if (elementItem) {
-                    elementItem.updateView(this.diagramNewDataFlag);
-                    this.diagramNewDataFlag = false;
-                  }
-                });
-              }
+        (resp) => {
+          if (resp && resp.data) {
+            if (resp.data.landscapes && resp.data.landscapes.length) {
+              this.show3dGraph = true;
+              this.diagramOriDate = JSON.parse(JSON.stringify(resp.data.landscapes[0]));
+              this.$nextTick(() => {
+                const elementItem = this.$refs.diagram3D;
+                if (elementItem) {
+                  elementItem.updateView(this.diagramNewDataFlag);
+                  this.diagramNewDataFlag = false;
+                }
+              });
             }
-          },
-          () => {
-            this.diagramNewDataFlag = true;
-            this.show3dGraph = false;
-          },
+          }
+        },
+        () => {
+          this.diagramNewDataFlag = true;
+          this.show3dGraph = false;
+        }
       );
     },
 
@@ -558,39 +550,9 @@ export default {
         manual_update: fromInit || false,
       };
       RequestService.getDatavisualPlugins(params)
-          .then((res) => {
-            this.wrongPlugin = false;
-            if (!res || !res.data || !res.data.plugins) {
-              this.initOverKey = {
-                histogram: true,
-                image: true,
-                tensor: true,
-                scalar: true,
-                graph: true,
-                dataMap: true,
-              };
-              return;
-            }
-            const data = res.data.plugins;
-            const imageTags = data.image || [];
-            const scalarTags = data.scalar || [];
-            const graphIds = data.graph || [];
-            const tensorTags = data.tensor || [];
-            if (graphIds.length) {
-              this.fileTag = graphIds[0];
-            }
-            const histogramTags = data.histogram || [];
-            this.getHistogramTag(histogramTags);
-            this.dealImageData(imageTags);
-            this.getScalarList(scalarTags);
-            this.dealTensorData(tensorTags);
-            if (!this.firstFloorNodes.length && graphIds.length) {
-              this.queryGraphData();
-            } else {
-              this.initOverKey.graph = true;
-            }
-          })
-          .catch((error) => {
+        .then((res) => {
+          this.wrongPlugin = false;
+          if (!res || !res.data || !res.data.plugins) {
             this.initOverKey = {
               histogram: true,
               image: true,
@@ -599,13 +561,43 @@ export default {
               graph: true,
               dataMap: true,
             };
-            if (!error.response || !error.response.data || !error.response.data.error_code) {
-              return;
-            }
-            if (error.response.data.error_code.toString() === '50545005') {
-              this.wrongPlugin = true;
-            }
-          });
+            return;
+          }
+          const data = res.data.plugins;
+          const imageTags = data.image || [];
+          const scalarTags = data.scalar || [];
+          const graphIds = data.graph || [];
+          const tensorTags = data.tensor || [];
+          if (graphIds.length) {
+            this.fileTag = graphIds[0];
+          }
+          const histogramTags = data.histogram || [];
+          this.getHistogramTag(histogramTags);
+          this.dealImageData(imageTags);
+          this.getScalarList(scalarTags);
+          this.dealTensorData(tensorTags);
+          if (!this.firstFloorNodes.length && graphIds.length) {
+            this.queryGraphData();
+          } else {
+            this.initOverKey.graph = true;
+          }
+        })
+        .catch((error) => {
+          this.initOverKey = {
+            histogram: true,
+            image: true,
+            tensor: true,
+            scalar: true,
+            graph: true,
+            dataMap: true,
+          };
+          if (!error.response || !error.response.data || !error.response.data.error_code) {
+            return;
+          }
+          if (error.response.data.error_code.toString() === '50545005') {
+            this.wrongPlugin = true;
+          }
+        });
     },
 
     /**
@@ -762,56 +754,56 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.getSingleTrainJob(params, true)
-          .then((res) => {
-            if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
-              this.initOverKey.scalar = true;
-              return;
-            }
-            if (res.data && res.data.error_code) {
-              this.$message.error(`${res.data.error_code} : ${this.$t('error')[res.data.error_code]}`);
-              return;
-            }
-            let dataList = [];
-            const tempRunList = [];
-            const data = res.data.train_jobs;
-            data.forEach((runObj, runObjectIndex) => {
-              tempRunList.push({
-                id: runObj.id,
-                label: runObj.name,
-              });
+        .then((res) => {
+          if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
+            this.initOverKey.scalar = true;
+            return;
+          }
+          if (res.data && res.data.error_code) {
+            this.$message.error(`${res.data.error_code} : ${this.$t('error')[res.data.error_code]}`);
+            return;
+          }
+          let dataList = [];
+          const tempRunList = [];
+          const data = res.data.train_jobs;
+          data.forEach((runObj, runObjectIndex) => {
+            tempRunList.push({
+              id: runObj.id,
+              label: runObj.name,
+            });
 
-              runObj.tags.forEach((tagObj) => {
-                let sameTagIndex = -1;
-                dataList.some((imageTagItem, curIndex) => {
-                  if (imageTagItem.tagName === tagObj) {
-                    sameTagIndex = curIndex;
-                    return true;
-                  }
-                });
-                if (sameTagIndex === -1) {
-                  dataList.push({
-                    tagName: tagObj,
-                    runNames: [runObj.name],
-                    runId: [runObj.id],
-                    colors: [],
-                  });
-                } else {
-                  const sameTagObj = dataList[sameTagIndex];
-                  sameTagObj.runNames.push(runObj.name);
-                  sameTagObj.runId.push(runObj.id);
+            runObj.tags.forEach((tagObj) => {
+              let sameTagIndex = -1;
+              dataList.some((imageTagItem, curIndex) => {
+                if (imageTagItem.tagName === tagObj) {
+                  sameTagIndex = curIndex;
+                  return true;
                 }
               });
+              if (sameTagIndex === -1) {
+                dataList.push({
+                  tagName: tagObj,
+                  runNames: [runObj.name],
+                  runId: [runObj.id],
+                  colors: [],
+                });
+              } else {
+                const sameTagObj = dataList[sameTagIndex];
+                sameTagObj.runNames.push(runObj.name);
+                sameTagObj.runId.push(runObj.id);
+              }
             });
-            this.runList = tempRunList;
-            if (dataList.length) {
-              dataList = dataList.slice(0, 2);
-              this.curPageArr = dataList;
-              this.updateTagInPage();
-            }
-          }, this.errorScalar)
-          .catch((e) => {
-            this.initOverKey.scalar = true;
           });
+          this.runList = tempRunList;
+          if (dataList.length) {
+            dataList = dataList.slice(0, 2);
+            this.curPageArr = dataList;
+            this.updateTagInPage();
+          }
+        }, this.errorScalar)
+        .catch((e) => {
+          this.initOverKey.scalar = true;
+        });
     },
     /**
      * Update tag
@@ -1019,18 +1011,18 @@ export default {
     addAjax(params, yIndex) {
       return new Promise((resolve, reject) => {
         RequestService.getScalarsSample(params)
-            .then((res) => {
-              if (res) {
-                res.params = params;
-                res.yIndex = yIndex;
-                resolve(res);
-              }
-            })
-            .catch((error) => {
-              if (error) {
-                reject(error);
-              }
-            });
+          .then((res) => {
+            if (res) {
+              res.params = params;
+              res.yIndex = yIndex;
+              resolve(res);
+            }
+          })
+          .catch((error) => {
+            if (error) {
+              reject(error);
+            }
+          });
       });
     },
     /**
@@ -1088,39 +1080,39 @@ export default {
         detail: 'stats',
       };
       RequestService.getTensorsSample(params).then(
-          (res) => {
-            this.initOverKey.tensor = true;
-            if (!res || !res.data) {
-              return;
-            }
-            if (!res.data.tensors.length) {
-              return;
-            }
-            const resData = JSON.parse(JSON.stringify(res.data.tensors[0]));
-            if (!resData.values.length) {
-              this.tensorData = [];
-              this.$nextTick(() => {
-                const elementItem = this.$refs.tensorChart;
-                if (elementItem) {
-                  elementItem.updateGridData();
-                }
-              });
-              return;
-            }
-            const data = resData.values[resData.values.length - 1];
-            const filterStr = this.initFilterStr(data.value.dims);
-            this.freshtMartixData(data.step, filterStr);
-          },
-          () => {
+        (res) => {
+          this.initOverKey.tensor = true;
+          if (!res || !res.data) {
+            return;
+          }
+          if (!res.data.tensors.length) {
+            return;
+          }
+          const resData = JSON.parse(JSON.stringify(res.data.tensors[0]));
+          if (!resData.values.length) {
             this.tensorData = [];
-            this.initOverKey.tensor = true;
             this.$nextTick(() => {
               const elementItem = this.$refs.tensorChart;
               if (elementItem) {
                 elementItem.updateGridData();
               }
             });
-          },
+            return;
+          }
+          const data = resData.values[resData.values.length - 1];
+          const filterStr = this.initFilterStr(data.value.dims);
+          this.freshtMartixData(data.step, filterStr);
+        },
+        () => {
+          this.tensorData = [];
+          this.initOverKey.tensor = true;
+          this.$nextTick(() => {
+            const elementItem = this.$refs.tensorChart;
+            if (elementItem) {
+              elementItem.updateGridData();
+            }
+          });
+        }
       );
     },
     initFilterStr(array) {
@@ -1152,60 +1144,60 @@ export default {
         dims: encodeURIComponent(filterStr),
       };
       RequestService.getTensorsSample(params).then(
-          (res) => {
-            if (!res || !res.data) {
-              return;
-            }
-            if (!res.data.tensors.length) {
-              return;
-            }
-            const resData = res.data.tensors[0];
-            const curStepData = resData.values[0];
-            let statistics = {};
-            if (curStepData) {
-              this.tensorData =
+        (res) => {
+          if (!res || !res.data) {
+            return;
+          }
+          if (!res.data.tensors.length) {
+            return;
+          }
+          const resData = res.data.tensors[0];
+          const curStepData = resData.values[0];
+          let statistics = {};
+          if (curStepData) {
+            this.tensorData =
               curStepData.value.data instanceof Array ? curStepData.value.data : [curStepData.value.data];
-              statistics = curStepData.value.statistics;
-            } else {
-              this.tensorData = [[]];
+            statistics = curStepData.value.statistics;
+          } else {
+            this.tensorData = [[]];
+          }
+          this.$nextTick(() => {
+            const elementItem = this.$refs.tensorChart;
+            if (elementItem) {
+              elementItem.updateGridData(this.tensorNewDataFlag, curStepData.value.dims, statistics);
             }
-            this.$nextTick(() => {
-              const elementItem = this.$refs.tensorChart;
-              if (elementItem) {
-                elementItem.updateGridData(this.tensorNewDataFlag, curStepData.value.dims, statistics);
-              }
-            });
-          },
-          (e) => {
-            this.tensorData = [];
-            let showLimitError = false;
-            let errorMsg = '';
-            if (
-              e.response &&
+          });
+        },
+        (e) => {
+          this.tensorData = [];
+          let showLimitError = false;
+          let errorMsg = '';
+          if (
+            e.response &&
             e.response.data &&
             e.response.data.error_code &&
             (e.response.data.error_code.toString() === '50545013' ||
               e.response.data.error_code.toString() === '50545014' ||
               e.response.data.error_code.toString() === '50545016')
-            ) {
-              showLimitError = true;
-              if (e.response.data.error_code.toString() === '50545013') {
-                errorMsg = this.$t('tensors.tensorDashboardLimitErrorMsg');
+          ) {
+            showLimitError = true;
+            if (e.response.data.error_code.toString() === '50545013') {
+              errorMsg = this.$t('tensors.tensorDashboardLimitErrorMsg');
+            } else {
+              errorMsg = this.$t('error')[e.response.data.error_code];
+            }
+          }
+          this.$nextTick(() => {
+            const elementItem = this.$refs.tensorChart;
+            if (elementItem) {
+              if (showLimitError) {
+                elementItem.showRequestErrorMessage(errorMsg);
               } else {
-                errorMsg = this.$t('error')[e.response.data.error_code];
+                elementItem.updateGridData();
               }
             }
-            this.$nextTick(() => {
-              const elementItem = this.$refs.tensorChart;
-              if (elementItem) {
-                if (showLimitError) {
-                  elementItem.showRequestErrorMessage(errorMsg);
-                } else {
-                  elementItem.updateGridData();
-                }
-              }
-            });
-          },
+          });
+        }
       );
     },
     getHistogramTag(tagList) {
@@ -1230,21 +1222,21 @@ export default {
       };
       // tag
       RequestService.getHistogramData(params).then(
-          (res) => {
-            this.initOverKey.histogram = true;
-            if (!res || !res.data || !res.data.histograms || !res.data.histograms.length) {
-              return;
-            }
-            const data = JSON.parse(JSON.stringify(res.data));
-            this.histogramTag = histogramTag;
-            this.histogramData = this.formOriData(data);
-            this.formatDataToChar();
-            this.updateHistogramSampleData();
-          },
-          (e) => {
-            this.initOverKey.histogram = true;
-            this.histogramTag = '';
-          },
+        (res) => {
+          this.initOverKey.histogram = true;
+          if (!res || !res.data || !res.data.histograms || !res.data.histograms.length) {
+            return;
+          }
+          const data = JSON.parse(JSON.stringify(res.data));
+          this.histogramTag = histogramTag;
+          this.histogramData = this.formOriData(data);
+          this.formatDataToChar();
+          this.updateHistogramSampleData();
+        },
+        (e) => {
+          this.initOverKey.histogram = true;
+          this.histogramTag = '';
+        }
       );
     },
     formOriData(dataItem) {
@@ -1344,7 +1336,7 @@ export default {
           },
           axisLabel: {
             fontSize: '11',
-            formatter: function(value) {
+            formatter: function (value) {
               if (value.toString().length >= 6) {
                 return value.toExponential(3);
               } else {
@@ -1352,15 +1344,15 @@ export default {
               }
             },
           },
-          splitLine: {show: false},
+          splitLine: { show: false },
         },
         yAxis: {
           type: 'category',
           position: 'right',
-          axisLine: {onZero: false, show: false},
-          splitLine: {show: true},
+          axisLine: { onZero: false, show: false },
+          splitLine: { show: true },
           inverse: true,
-          axisTick: {show: false},
+          axisTick: { show: false },
           boundaryGap: false,
           axisLabel: {
             fontSize: '11',
@@ -1548,41 +1540,41 @@ export default {
         tag: sampleItem.tagName,
       };
       RequestService.getImageMetadatas(params)
-          .then(
-              (res) => {
-                this.initOverKey.image = true;
-                if (!res || !res.data || !res.data.metadatas) {
-                  return;
-                }
-                if (
-                  sampleItem.runId !== this.curImageShowSample.runId ||
+        .then(
+          (res) => {
+            this.initOverKey.image = true;
+            if (!res || !res.data || !res.data.metadatas) {
+              return;
+            }
+            if (
+              sampleItem.runId !== this.curImageShowSample.runId ||
               sampleItem.tagName !== this.curImageShowSample.tagName
-                ) {
-                  return;
-                }
-                // Processes image data
-                const tempData = res.data.metadatas;
-                sampleItem.sampleData = tempData;
-                // Initialize the current step information
-                if (sampleItem.sampleData.length) {
-                  const sampleIndex = sampleItem.sampleData.length - 1;
-                  const sampleWallTime = sampleItem.sampleData[sampleIndex].wall_time;
-                  sampleItem.curImgUrl =
+            ) {
+              return;
+            }
+            // Processes image data
+            const tempData = res.data.metadatas;
+            sampleItem.sampleData = tempData;
+            // Initialize the current step information
+            if (sampleItem.sampleData.length) {
+              const sampleIndex = sampleItem.sampleData.length - 1;
+              const sampleWallTime = sampleItem.sampleData[sampleIndex].wall_time;
+              sampleItem.curImgUrl =
                 `${basePath}${this.imageBasePath}` +
                 `train_id=${encodeURIComponent(sampleItem.runId)}&tag=${encodeURIComponent(sampleItem.tagName)}` +
                 `&step=-1&wt=${sampleWallTime}`;
-                } else {
-                  this.curImageShowSample = {};
-                }
-              },
-              (err) => {
-                this.initOverKey.image = true;
-                this.curImageShowSample = {};
-              },
-          )
-          .catch((e) => {
-            this.$message.error(this.$t('public.dataError'));
-          });
+            } else {
+              this.curImageShowSample = {};
+            }
+          },
+          (err) => {
+            this.initOverKey.image = true;
+            this.curImageShowSample = {};
+          }
+        )
+        .catch((e) => {
+          this.$message.error(this.$t('public.dataError'));
+        });
     },
 
     /**
@@ -1629,22 +1621,22 @@ export default {
      */
     initGraph(dot) {
       this.graphviz = d3
-          .select('#graph')
-          .graphviz({useWorker: false, totalMemory: this.totalMemory})
-          .dot(dot)
-          .attributer(this.attributer)
-          .render(() => {
-            this.initOverKey.graph = true;
-            if (d3.select('#graph svg')) {
-              d3.select('#graph svg').on('.zoom', null);
-            }
-            d3.selectAll('#graph title').remove();
-            setTimeout(() => {
-              this.graphviz._data = null;
-              this.graphviz._dictionary = null;
-              this.graphviz = null;
-            }, 200);
-          });
+        .select('#graph')
+        .graphviz({ useWorker: false, totalMemory: this.totalMemory })
+        .dot(dot)
+        .attributer(this.attributer)
+        .render(() => {
+          this.initOverKey.graph = true;
+          if (d3.select('#graph svg')) {
+            d3.select('#graph svg').on('.zoom', null);
+          }
+          d3.selectAll('#graph title').remove();
+          setTimeout(() => {
+            this.graphviz._data = null;
+            this.graphviz._dictionary = null;
+            this.graphviz = null;
+          }, 200);
+        });
     },
     /**
      * To obtain graph data, initialize and expand the namespace or aggregate nodes.
@@ -1656,24 +1648,24 @@ export default {
         tag: this.fileTag,
       };
       RequestService.queryGraphData(params)
-          .then(
-              (response) => {
-                if (response && response.data && response.data.nodes && response.data.nodes.length) {
-                  const nodes = response.data.nodes;
-                  this.packageDataToObject(nodes);
-                  const dot = this.packageGraphData();
-                  this.initGraph(dot);
-                } else {
-                  this.initOverKey.graph = true;
-                }
-              },
-              (error) => {
-                this.initOverKey.graph = true;
-              },
-          )
-          .catch((e) => {
+        .then(
+          (response) => {
+            if (response && response.data && response.data.nodes && response.data.nodes.length) {
+              const nodes = response.data.nodes;
+              this.packageDataToObject(nodes);
+              const dot = this.packageGraphData();
+              this.initGraph(dot);
+            } else {
+              this.initOverKey.graph = true;
+            }
+          },
+          (error) => {
             this.initOverKey.graph = true;
-          });
+          }
+        )
+        .catch((e) => {
+          this.initOverKey.graph = true;
+        });
     },
     /**
      * Processes its own and corresponding child node data when expanding or closing namespaces.
@@ -1947,26 +1939,26 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.queryDatasetGraph(params)
-          .then(
-              (res) => {
-                if (res && res.data && res.data.dataset_graph && Object.keys(res.data.dataset_graph).length) {
-                  const data = JSON.parse(JSON.stringify(res.data.dataset_graph));
-                  this.dealDatasetGraph(data);
-                  if (Object.keys(this.allDatasetGraphData).length) {
-                    const dot = this.packageDatasetGraph();
-                    this.initDatasetGraph(dot);
-                  }
-                } else {
-                  this.initOverKey.dataMap = true;
-                }
-              },
-              (err) => {
-                this.initOverKey.dataMap = true;
-              },
-          )
-          .catch((e) => {
+        .then(
+          (res) => {
+            if (res && res.data && res.data.dataset_graph && Object.keys(res.data.dataset_graph).length) {
+              const data = JSON.parse(JSON.stringify(res.data.dataset_graph));
+              this.dealDatasetGraph(data);
+              if (Object.keys(this.allDatasetGraphData).length) {
+                const dot = this.packageDatasetGraph();
+                this.initDatasetGraph(dot);
+              }
+            } else {
+              this.initOverKey.dataMap = true;
+            }
+          },
+          (err) => {
             this.initOverKey.dataMap = true;
-          });
+          }
+        )
+        .catch((e) => {
+          this.initOverKey.dataMap = true;
+        });
     },
     /**
      * Processing dataset Graph Data
@@ -2075,18 +2067,18 @@ export default {
      */
     initDatasetGraph(dot) {
       this.datasetGraphviz = d3
-          .select('#dataMapGraph')
-          .graphviz({useWorker: false, totalMemory: this.totalMemory})
-          .dot(dot)
-          .attributer((datum, index, nodes) => {
-            if (datum.tag === 'svg') {
-              const width = '100%';
-              const height = '100%';
-              datum.attributes.width = width;
-              datum.attributes.height = height;
-            }
-          })
-          .render(this.afterinitDatasetGraph);
+        .select('#dataMapGraph')
+        .graphviz({ useWorker: false, totalMemory: this.totalMemory })
+        .dot(dot)
+        .attributer((datum, index, nodes) => {
+          if (datum.tag === 'svg') {
+            const width = '100%';
+            const height = '100%';
+            datum.attributes.width = width;
+            datum.attributes.height = height;
+          }
+        })
+        .render(this.afterinitDatasetGraph);
     },
     /**
      * Process other data after the dataset graph is initialized.
