@@ -713,7 +713,7 @@ class DebuggerOfflineManager:
             try:
                 file_name = tensor_file
                 node_name_location = file_name.find(node_name)
-                post_str = file_name[node_name_location+len(node_name):]
+                post_str = file_name[node_name_location + len(node_name):]
                 time_str = post_str.split('.')[3]
                 time_stamp = int(time_str)
                 if time_stamp > res:
@@ -729,9 +729,9 @@ class DebuggerOfflineManager:
         iteration_path = self.get_iteration_path(iteration, root_graph_id, rank_id)
         # Find the pure node_name without scope
         node_name = name.rsplit('/')[-1]
-        tensor_files = [fname for fname in os.listdir(iteration_path) if re.match(
-            r"[a-zA-Z]+\.{}\.[0-9]+\.[0-9]+\.[0-9]+\.output\.{}.*\.npy".format(node_name, slot), fname
-        )]
+        tensor_files = [fname for fname in os.listdir(iteration_path) if
+                        re.match(r"[^\.]+\.{}\.[0-9]+\.[0-9]+\.[0-9]+\.output\.{}.*\.npy".format(node_name, slot),
+                                 fname)]
         log.debug("Find %s files in path: %s.", len(tensor_files), iteration_path)
         return tensor_files
 
