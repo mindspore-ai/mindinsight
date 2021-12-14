@@ -492,9 +492,9 @@ class DebuggerOfflineManager:
             return
         log.info("Go to next step: %s.", new_step)
         self._cache_store.clean_data()
-        self._check_watchpoint(new_step)
         self._metadata_stream.step = new_step
         self._cache_store.get_stream_handler(Streams.TENSOR).set_step(new_step)
+        self._check_watchpoint(new_step)
         self._cache_store.put_data(self._metadata_stream.get(['step', 'state']))
 
     def _get_parsed_run_cmd(self, run_cmd):
