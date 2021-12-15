@@ -972,8 +972,8 @@ export default {
             info.optimizer = landscape.metadata.optimizer ?? '--';
             info.learning_rate = landscape.metadata.learning_rate ?? '--';
             info.metric = landscape.metadata.metric ?? {};
-            info.loss =
-              isNaN(landscape.metadata.loss) || landscape.metadata.loss === null ? '--' : landscape.metadata.loss;
+            info.loss = landscape.convergence_point === '' || landscape.convergence_point === null || !landscape.convergence_point instanceof Array
+              ? '--' : landscape.convergence_point[2];
             const keys = Object.keys(info.metric);
             if (keys.length) {
               showMetric.label = keys[0];

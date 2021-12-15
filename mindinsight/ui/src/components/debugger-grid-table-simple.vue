@@ -289,6 +289,18 @@ export default {
       }
     },
     /**
+     * judge the value type and transform to Float
+     * @param {String} value
+     */
+    processData(value) {
+      const {judgeDataType, accuracy} = this;
+      return value === 'null' 
+        ? 0 : 
+        judgeDataType(value) 
+        ? value 
+        : +value.toFixed(accuracy);
+    },
+    /**
      * Render heatmap chart by fullData
      * @param {Object} statistics Object contains maximum and minimum
      * @param {string} filterStr String of dimension selection
@@ -314,7 +326,7 @@ export default {
               if (!rowIndex) {
                 xAxisData.push(colStartIndex + columnIndex);
               }
-              seriesData.push([columnIndex, rowIndex, item === 'null' ? 0 : item, item]);
+              seriesData.push([columnIndex, rowIndex, item, this.processData(item)]);
             });
           });
         } else {
@@ -322,14 +334,14 @@ export default {
           yAxisData.push(rowStartIndex);
           data.forEach((item, columnIndex) => {
             xAxisData.push(colStartIndex + columnIndex);
-            seriesData.push([columnIndex, 0, item === 'null' ? 0 : item, item]);
+            seriesData.push([columnIndex, 0, item, this.processData(item)]);
           });
         }
       } else {
         // Number
         xAxisData.push(colStartIndex);
         yAxisData.push(rowStartIndex);
-        seriesData.push([0, 0, data === 'null' ? 0 : data, data]);
+        seriesData.push([0, 0, data, this.processData(data)]);
       }
       const { overall_min, overall_max } = this.statistics;
       const minAbs = Math.abs(overall_min);
@@ -700,6 +712,9 @@ export default {
       this.formatGridArray();
       if (!this.requestError && !this.incorrectData) {
         this.updateGrid();
+      }
+      if (this.displayMode === CHART) {
+        this.renderHeatmapChart()
       }
     },
     /**
