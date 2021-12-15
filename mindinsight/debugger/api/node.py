@@ -41,13 +41,13 @@ class Node(ABC):
             - rank (int): The rank id.
             - stack (iterable[dict]): The format of each item is like:
 
-                ..code-block::
+              .. code-block::
 
-                    {
-                        'file_path': str,
-                        'line_no': int,
-                        'code_line': str
-                    }
+                  {
+                      'file_path': str,
+                      'line_no': int,
+                      'code_line': str
+                  }
 
             - graph_name (str): The graph name.
             - root_graph_id (int): The root graph id.
