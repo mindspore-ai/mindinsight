@@ -33,6 +33,7 @@ from mindinsight.debugger.stream_cache.watchpoint import Watchpoint
 from mindinsight.debugger.stream_handler import MultiCardGraphHandler
 from mindinsight.debugger.stream_handler.watchpoint_handler import WatchpointHandler, \
     WatchpointHitHandler, validate_watch_condition, validate_watch_condition_params
+from mindinsight.debugger.stream_operator.watchpoint_operator import WatchpointOperator
 from tests.ut.debugger.configurations import init_graph_handler, mock_tensor_proto, \
     mock_tensor_history, get_node_basic_infos, \
     init_watchpoint_hit_handler
@@ -108,8 +109,9 @@ class TestWatchpointHandler:
         file_path = os.path.join(self.results_dir, result_file)
         with open(file_path, 'r') as file_handler:
             contents = json.load(file_handler)
-        protos = self.handler.get_pending_commands(self.multi_graph_stream)
+        protos = self.handler.get_pending_commands()
         for proto in protos:
+            WatchpointOperator.add_set_cmd_detail(proto, self.handler, self.multi_graph_stream)
             msg_dict = json_format.MessageToDict(proto)
             msg_dict['watch_nodes_num'] = len(msg_dict.pop('watchNodes', []))
             assert msg_dict in contents

@@ -33,6 +33,7 @@ from mindinsight.debugger.debugger_services.debugger_server_base import Debugger
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
 from mindinsight.debugger.stream_cache.data_loader import DataLoader
 from mindinsight.debugger.dump.convert import get_msaccucmp_path
+from mindinsight.debugger.stream_operator.watchpoint_operator import WatchpointOperator
 from mindinsight.domain.graph.proto.ms_graph_pb2 import TensorProto
 from mindinsight.utils.exceptions import MindInsightException
 
@@ -628,9 +629,12 @@ class DebuggerOfflineManager:
         """
         set_cmd = event.set_cmd
         set_cmd_id = set_cmd.id
-        delete = set_cmd.delete
-        if not delete:
+        watchpoint_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT)
+        watchpoint_stream.clean_cache_set_cmd(set_cmd)
+        if not set_cmd.delete:
             log.info("Add watchpoint by using dbg_server.")
+            multi_card_graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH)
+            WatchpointOperator.add_set_cmd_detail(set_cmd, watchpoint_stream, multi_card_graph_stream)
             watch_condition = set_cmd.watch_condition
             param_list = []
             for param in watch_condition.params:
@@ -651,17 +655,18 @@ class DebuggerOfflineManager:
         for watch_node in watch_nodes:
             node_name = watch_node.node_name
             rank_id = watch_node.rank_id
+            root_graph_id = self.get_root_graph_id(rank_id=rank_id,
+                                                   graph_name=watch_node.graph_name,
+                                                   node_name=node_name)
             if node_name not in check_nodes:
-                root_graph_id = self.get_root_graph_id(rank_id=rank_id,
-                                                       graph_name=watch_node.graph_name,
-                                                       node_name=node_name)
                 check_nodes[node_name] = {
-                    "rank_id": [rank_id],
+                    "rank_id": set([rank_id]),
                     "is_output": True,
-                    "root_graph_id": [root_graph_id]
+                    "root_graph_id": set([root_graph_id])
                 }
             else:
-                check_nodes[node_name]["rank_id"].append(rank_id)
+                check_nodes[node_name]["rank_id"].add(rank_id)
+                check_nodes[node_name]["root_graph_id"].add(root_graph_id)
         return check_nodes
 
     def _update_state(self, server_status):

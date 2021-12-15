@@ -557,3 +557,28 @@ class NodeTypeEnum(enum.Enum):
     MAKETUPLE = 'MakeTuple'
     TUPLE_GET_ITEM = 'TupleGetItem'
     UPDATE_STATE = 'UpdateState'
+
+
+class DebuggerSource(Source):
+    """Source Data object"""
+
+    @property
+    def stack(self):
+        """The property of stack."""
+        return [self]
+
+    def __lt__(self, other):
+        pkg_pattern = 'site-packages'
+        cur_path_value = int(pkg_pattern in self.file_path)
+        other_path_value = int(pkg_pattern in other.file_path)
+        if cur_path_value != other_path_value:
+            return cur_path_value < other_path_value
+        if self.file_path != other.file_path:
+            return self.file_path < other.file_path
+        return self.line_no < other.line_no
+
+    def __eq__(self, other):
+        return self.to_dict() == other.to_dict()
+
+    def __hash__(self):
+        return hash(str(self.to_dict()))

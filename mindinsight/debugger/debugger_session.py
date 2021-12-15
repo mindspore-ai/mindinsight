@@ -623,7 +623,8 @@ class DebuggerSession:
 
                 - watch_condition (dict): The watch condition. The format is like:
 
-                  ..code-block::
+                  .. code-block::
+
                       {
                           "id": "tensor_too_large",
                           "params": [

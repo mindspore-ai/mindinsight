@@ -20,7 +20,7 @@ from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValue
     DebuggerDeleteWatchPointError, DebuggerConditionUnavailableError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import ServerStatus, \
-    Streams, is_cst_type
+    Streams, is_cst_type, is_scope_type
 from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum, ConditionContext
 from mindinsight.debugger.conditionmgr.recommender import get_basic_node_info
 from mindinsight.debugger.stream_handler.watchpoint_handler import validate_watch_condition
@@ -42,15 +42,16 @@ class WatchpointOperator:
 
         Args:
             - watch_condition (dict): The watch condition. The format is like:
-                    {
-                        "id": "tensor_too_large",
-                        "params": [
-                            {
-                                "name": "abs_mean_gt",
-                                "value": 1.1
-                            }
-                        ]
-                    }
+
+              .. code-block::
+
+                  {
+                      "id": "tensor_too_large",
+                      "params": [{
+                          "name": "abs_mean_gt",
+                          "value": 1.1
+                      }]
+                  }
 
                     - id (str): Id of condition.
                     - params (list[dict]): The list of param for this condition.
@@ -111,7 +112,7 @@ class WatchpointOperator:
                 - watch_point_id (int): The id of watchpoint.
                 - watch_nodes (list[str]): The list of node names.
                 - mode (int): The update operator on nodes. 0 for remove nodes from watch nodes.
-                    1 for add nodes to watch nodes.
+                  1 for add nodes to watch nodes.
                 - search_pattern (dict): The search pattern.
                 - graph_name (str): The relative graph_name of the watched node.
                 - rank_id (int): The rank id.
@@ -283,3 +284,42 @@ class WatchpointOperator:
                 node_infos.append(node_info)
 
         return node_infos
+
+    @staticmethod
+    def add_set_cmd_detail(set_cmd, watchpoint_stream, multi_card_graph_stream):
+        """Add watch node and watch condition into set_cmd."""
+        watchpoint = watchpoint_stream.get_watchpoint_by_id(set_cmd.id)
+        watch_nodes_for_devices = watchpoint.get_watch_nodes()
+        leaf_watch_nodes_for_devices = {}
+        for rank_id, watch_nodes in watch_nodes_for_devices.items():
+            graph_stream = multi_card_graph_stream.get_graph_handler_by_rank_id(rank_id)
+            leaf_watch_nodes = WatchpointOperator.expand_to_leaf_nodes(graph_stream, watch_nodes)
+            leaf_watch_nodes_for_devices[rank_id] = leaf_watch_nodes
+        watchpoint.add_set_cmd_detail(set_cmd, leaf_watch_nodes_for_devices)
+
+    @staticmethod
+    def expand_to_leaf_nodes(graph_stream, watch_nodes):
+        """
+        Get all leaf node basic info according to watch nodes.
+
+        Args:
+            graph_stream (GraphHandler): Graph handler.
+            watch_nodes (list[NodeBasicInfo]): The list of watch node basic infos.
+
+        Returns:
+            list[NodeBasicInfo], expanded leaf basic node infos.
+        """
+        leaf_watch_nodes = []
+        for node in watch_nodes:
+            if is_scope_type(node.type):
+                pure_node_name = ''
+                if len(node.name.split('/')) > 1:
+                    graph_name, pure_node_name = node.name.split('/', 1)
+                else:
+                    graph_name = node.name
+                search_node_infos = graph_stream.get_node_basic_info_by_scope(pure_node_name, graph_name=graph_name)
+                search_node_infos = [node_info for node_info in search_node_infos if not is_cst_type(node_info.type)]
+                leaf_watch_nodes.extend(search_node_infos)
+            else:
+                leaf_watch_nodes.append(node)
+        return leaf_watch_nodes

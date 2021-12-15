@@ -15,8 +15,8 @@
 """
 This file is used to define the node of graph and associated base types.
 """
-from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
-from mindinsight.debugger.common.log import LOGGER as log
+from mindinsight.utils.exceptions import ParamValueError
+from mindinsight.datavisual.common.log import logger as log
 
 
 class NodeTree:
@@ -58,4 +58,4 @@ class NodeTree:
             self._children.pop(sub_name)
         except KeyError as err:
             log.error("Failed to find node %s. %s", sub_name, err)
-            raise DebuggerParamValueError("Failed to find node {}".format(sub_name))
+            raise ParamValueError("Failed to find node {}".format(sub_name))

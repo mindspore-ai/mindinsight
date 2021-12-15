@@ -13,17 +13,15 @@
 # limitations under the License.
 # ============================================================================
 """Define the watchpoint stream handler."""
-from mindinsight.debugger.conditionmgr.condition import ValueTypeEnum
-from mindinsight.debugger.conditionmgr.condition import ParamTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, \
     DebuggerParamTypeError
 from mindinsight.debugger.common.log import LOGGER as log
-from mindinsight.debugger.common.utils import is_scope_type
+from mindinsight.debugger.conditionmgr.condition import ParamTypeEnum
+from mindinsight.debugger.conditionmgr.condition import ValueTypeEnum
 from mindinsight.debugger.proto.debug_grpc_pb2 import SetCMD
 from mindinsight.debugger.stream_cache.watchpoint import Watchpoint, WatchpointHit, \
     WatchNodeTree
 from mindinsight.debugger.stream_handler.base_handler import StreamHandlerBase
-
 
 RANGE_START = 'range_start_inclusive'
 RANGE_END = 'range_end_inclusive'
@@ -114,56 +112,23 @@ class WatchpointHandler(StreamHandlerBase):
 
         return {'watch_points': reply}
 
-    def get_pending_commands(self, multi_card_graph_stream):
+    def get_pending_commands(self):
         """
         Get all watchpoint in SetCMD proto format.
-
-        Args:
-            multi_card_graph_stream (MultiCardGraphHandler): Multi card graph handler.
 
         Returns:
             list[SetCMD], updated watchpoint to be sent to MindSpore.
         """
         newly_set_cmds = []
         for _, watchpoint in self._updated_watchpoints.items():
-            # construct set command with leaf nodes
-            watch_nodes_for_devices = watchpoint.get_watch_nodes()
-            leaf_watch_nodes_for_devices = {}
-            for rank_id, watch_nodes in watch_nodes_for_devices.items():
-                graph_stream = multi_card_graph_stream.get_graph_handler_by_rank_id(rank_id)
-                leaf_watch_nodes = self._expand_to_leaf_nodes(graph_stream, watch_nodes)
-                leaf_watch_nodes_for_devices[rank_id] = leaf_watch_nodes
-            newly_set_cmds.append(watchpoint.get_pending_cmd(leaf_watch_nodes_for_devices))
+            set_cmd = SetCMD()
+            set_cmd.id = watchpoint.watchpoint_id
+            set_cmd.delete = False
+            newly_set_cmds.append(set_cmd)
         newly_set_cmds.extend(self._deleted_watchpoints)
         self.sync_set_cmd(newly_set_cmds)
 
         return list(self._cache_set_cmd.values())
-
-    @staticmethod
-    def _expand_to_leaf_nodes(graph_stream, watch_nodes):
-        """
-        Get all leaf node basic info according to watch nodes.
-
-        Args:
-            graph_stream (GraphHandler): Graph handler.
-            watch_nodes (list[NodeBasicInfo]): The list of watch node basic infos.
-
-        Returns:
-            list[NodeBasicInfo], expanded leaf basic node infos.
-        """
-        leaf_watch_nodes = []
-        for node in watch_nodes:
-            if is_scope_type(node.type):
-                pure_node_name = ''
-                if len(node.name.split('/')) > 1:
-                    graph_name, pure_node_name = node.name.split('/', 1)
-                else:
-                    graph_name = node.name
-                search_node_infos = graph_stream.get_node_basic_info_by_scope(pure_node_name, graph_name=graph_name)
-                leaf_watch_nodes.extend(search_node_infos)
-            else:
-                leaf_watch_nodes.append(node)
-        return leaf_watch_nodes
 
     def is_recheckable(self):
         """
