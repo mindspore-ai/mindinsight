@@ -298,7 +298,7 @@ export default {
                   this.$t('profilingCluster.computationTime'),
                   this.$t('profilingCluster.communicationAloneTime'),
                 ],
-                cols: ['iteration_interval', 'communication_alone', 'computation'],
+                cols: ['iteration_interval', 'computation', 'communication_alone'],
                 tips: [
                   {
                     label: this.$t('profiling.iterationGapTime'),
@@ -327,11 +327,11 @@ export default {
                 ],
                 cols: [
                   'iteration_interval',
-                  'receive_alone',
+                  'computation',
                   'stage',
                   'communication_alone',
-                  'computation',
                   'collective_communication_alone',
+                  'receive_alone',
                 ],
                 tips: [
                   {
@@ -385,24 +385,22 @@ export default {
               const tableItem = {};
               tableItem.rank_id = item.rank_id;
               tableItem.profiler_dir = item.profiler_dir;
-              const stepTraceInfo = item[parallelModes[parallelMode].model];
+              let stepTraceInfo = item[parallelModes[parallelMode].model];
+              if (parallelMode === 'pipeline-parallel') {
+                stepTraceInfo = [
+                  stepTraceInfo[0],
+                  stepTraceInfo[1],
+                  stepTraceInfo[3],
+                  stepTraceInfo[2],
+                  stepTraceInfo[5],
+                  stepTraceInfo[4],
+                ];
+              }
               stepTraceInfo.forEach((val, key) => {
                 tableItem[this.cols[key]] = stepTraceInfo[key];
               });
               this.tableData.push(tableItem);
             });
-            if (parallelMode === 'pipeline-parallel') {
-              this.cols = [
-                'iteration_interval',
-                'computation',
-                'stage',
-                'communication_alone',
-                'collective_communication_alone',
-                'receive_alone',
-              ];
-            } else if (parallelMode === 'model-parallel') {
-              this.cols = ['iteration_interval', 'computation', 'communication_alone'];
-            }
           }
         })
         .catch((error) => {
