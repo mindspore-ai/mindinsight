@@ -86,7 +86,7 @@ class Pattern1(BasePass):
 
         template_list = [
             shape_code,
-            f"{{{input_symbol}}} = {{{input_symbol}}}.{view_code}",
-            f"opt_{{{variable_slot}}} = {{{input_symbol}}}"
+            f"{{{input_symbol}}}_ = {{{input_symbol}}}.{view_code}",
+            f"opt_{{{variable_slot}}} = {{{input_symbol}}}_"
         ]
         return template_list
