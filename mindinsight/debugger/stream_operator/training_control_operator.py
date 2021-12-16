@@ -62,9 +62,9 @@ class TrainingControlOperator:
             params (dict): The control params.
 
                 - level (str): The control granularity, `node` level or `step` level.
-                    Default: `step`.
+                  Default: `step`.
                 - steps (int): Specify the steps that training should run.
-                    Used when `level` is `step`.
+                  Used when `level` is `step`.
                 - name (str): Specify the name of the node. Used when `level` is `node`.
                 - graph_name (str): The graph name.
 
@@ -208,7 +208,7 @@ class TrainingControlOperator:
 
     def _send_watchpoints(self):
         """Send watchpoints to client."""
-        set_commands = self._watchpoint_stream.get_pending_commands(self._multi_card_graph_stream)
+        set_commands = self._watchpoint_stream.get_pending_commands()
         if not set_commands:
             return
         for set_cmd in set_commands:

@@ -22,7 +22,7 @@ from mindinsight.debugger.common.utils import is_scope_type, is_cst_type
 from mindinsight.debugger.conditionmgr.conditionmgr import ConditionMgr
 from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
 from mindinsight.debugger.conditionmgr.condition import ConditionIdEnum
-from mindinsight.debugger.proto.debug_grpc_pb2 import SetCMD, WatchCondition
+from mindinsight.debugger.proto.debug_grpc_pb2 import WatchCondition
 
 WATCHPOINT_CONDITION_MAPPING = {
     ConditionIdEnum.ACTIVATION_RANGE.value: WatchCondition.Condition.tensor_range,
@@ -289,11 +289,10 @@ class Watchpoint:
             watch_nodes_for_devices[rank_id] = watch_nodes
         return watch_nodes_for_devices
 
-    def get_pending_cmd(self, watch_nodes_for_devices):
+    def add_set_cmd_detail(self, set_cmd, watch_nodes_for_devices):
         """Return the watchpoint in proto format."""
         # construct SetCMD
         condition_id = self._condition.get('id')
-        set_cmd = SetCMD()
         set_cmd.id = self._id
         set_cmd.delete = False
         set_cmd.watch_condition.condition = WATCHPOINT_CONDITION_MAPPING.get(condition_id)
@@ -323,7 +322,6 @@ class Watchpoint:
                 event_node.node_name = watch_node.full_name
                 event_node.node_type = watch_node.type
                 event_node.rank_id = rank_id
-        return set_cmd
 
     def get_watch_condition_info(self):
         """Get watch condition info."""

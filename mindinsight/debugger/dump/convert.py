@@ -31,6 +31,7 @@ PARSE_ARGS_FIELDS = ['dump_path', 'format', 'output_path', 'output_file_type',
 CannTool = namedtuple("CannTool", ['utils', 'common', 'log', 'format_conversion',
                                    'compare_error', 'compare_exception'])
 
+
 class ArgsParser(namedtuple("ArgsParser", PARSE_ARGS_FIELDS)):
     """Args Parser object."""
 

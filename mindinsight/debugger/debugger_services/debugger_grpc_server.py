@@ -26,8 +26,9 @@ from mindinsight.debugger.common.utils import MAX_SINGLE_TENSOR_CACHE_BYTES, get
 from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum, ParamNameEnum
 from mindinsight.debugger.debugger_services.debugger_server_base import debugger_server_wrap
 from mindinsight.debugger.proto import debug_grpc_pb2_grpc as grpc_server_base
-from mindinsight.domain.graph.proto.ms_graph_pb2 import GraphProto
 from mindinsight.debugger.proto.debug_grpc_pb2 import ViewCMD
+from mindinsight.debugger.stream_operator.watchpoint_operator import WatchpointOperator
+from mindinsight.domain.graph.proto.ms_graph_pb2 import GraphProto
 
 
 def debugger_wrap(func):
@@ -302,7 +303,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             self._cache_store.put_data(metadata_stream.get())
             log.debug("Clean cache for exit cmd.")
         else:
-            self._cache_store.get_stream_handler(Streams.WATCHPOINT).clean_cache_set_cmd(event.set_cmd)
+            event = self._deal_with_set_cmd(event)
             log.debug("get set cmd.")
 
         return event
@@ -367,6 +368,26 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         metadata_stream.state = ServerStatus.RUNNING.value
         return event
 
+    def _deal_with_set_cmd(self, event):
+        """
+        Deal with set cmd.
+
+        Args:
+            event (EventReply): EventReply with set command.
+
+        Returns:
+            EventReply, set command to be sent to client.
+        """
+        set_cmd = event.set_cmd
+        watchpoint_stream = self._cache_store.get_stream_handler(Streams.WATCHPOINT)
+        watchpoint_stream.clean_cache_set_cmd(set_cmd)
+        if set_cmd.delete:
+            return event
+        # add watch node and condition info into set_cmd
+        multi_card_graph_stream = self._cache_store.get_stream_handler(Streams.GRAPH)
+        WatchpointOperator.add_set_cmd_detail(set_cmd, watchpoint_stream, multi_card_graph_stream)
+        return event
+
     @debugger_wrap
     def SendMetadata(self, request, context):
         """Send metadata into DebuggerCache."""
@@ -383,7 +404,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
         else:
             ms_version = request.ms_version
             if version_match(ms_version, mindinsight.__version__) is False:
-                log.info("Version is mismatched, mindspore is: %s, mindinsight is: %s",
+                log.info("Version is mismatched, MindSpore is: %s, MindInsight is: %s",
                          ms_version, mindinsight.__version__)
                 self._status = ServerStatus.MISMATCH
                 reply.version_matched = False
@@ -413,7 +434,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             self._old_run_cmd.clear()
         reply = get_ack_reply()
         if self._status == ServerStatus.MISMATCH:
-            log.info("Mindspore and Mindinsight is unmatched, waiting for user to terminate the service.")
+            log.info("MindSpore and MindInsight is unmatched, waiting for user to terminate the service.")
             return reply
         serial_graph = b""
         for chunk in request_iterator:
@@ -440,7 +461,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             self._old_run_cmd.clear()
         reply = get_ack_reply()
         if self._status == ServerStatus.MISMATCH:
-            log.info("Mindspore and Mindinsight is unmatched, waiting for user to terminate the service.")
+            log.info("MindSpore and MindInsight is unmatched, waiting for user to terminate the service.")
             return reply
         serial_graph = b""
         graph_dict = {}
@@ -525,7 +546,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
     @debugger_wrap
     def SendTensorStats(self, request_iterator, context):
         """Send tensor stats into DebuggerCache."""
-        log.info("Received tensor base.")
+        log.info("Received tensor statistic.")
         metadata_stream = self._cache_store.get_stream_handler(Streams.METADATA)
         cur_step = metadata_stream.step
         tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0)
