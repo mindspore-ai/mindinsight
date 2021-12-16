@@ -465,7 +465,7 @@ limitations under the License.
               </div>
             </div>
             <div class="summary-title"
-                 :title="sampleItem.label">{{sampleItem.label}}
+                 :title="sampleItem.label">{{sampleItem.label.length > 35 ? sampleItem.label.substring(0, 35) + "..." : sampleItem.label}}
             </div>
           </div>
         </div>

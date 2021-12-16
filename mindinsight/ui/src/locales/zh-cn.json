@@ -1143,7 +1143,8 @@
     "trainingStep": "训练\n步数",
     "dataSelectTip": "请选择右侧需要对比的图形",
     "dataToolTip": "本功能右侧折线图为实际训练损失值曲线，页面左侧大图为训练损失曲面的近似呈现，因数据随机性等原因，具体数值与实际训练损失值不一定完全一致",
-    "basicTrainingTip": "如果部分基础训练信息缺失，请检查是否正确收集溯源数据。"
+    "basicTrainingTip": "如果部分基础训练信息缺失，请检查是否正确收集溯源数据。",
+    "graph3DOperateTip": "按住鼠标左键，可旋转3D图，按住鼠标中键，可平移3D图"
   },
   "lossCompare": {
     "titleText": "损失函数图形对比",
