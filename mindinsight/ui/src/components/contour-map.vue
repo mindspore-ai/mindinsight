@@ -1862,10 +1862,16 @@ export default {
             show: false,
           },
           min: (value) => {
-            return calcAxisMin(value);
+            let minVal = calcAxisMin(value)
+            return minVal ? String(minVal).length > 5
+              ? minVal.toFixed(5)
+              : minVal : minVal;
           },
           max: (value) => {
-            return calcAxisMax(value);
+            let maxVal = calcAxisMax(value)
+            return maxVal ? String(maxVal).length > 5
+              ? maxVal.toFixed(5)
+              : maxVal : maxVal;
           },
         },
         yAxis: {
@@ -1880,10 +1886,16 @@ export default {
             show: false,
           },
           min: (value) => {
-            return calcAxisMin(value);
+            let minVal = calcAxisMin(value)
+            return minVal ? String(minVal).length > 5
+              ? minVal.toFixed(5)
+              : minVal : minVal;
           },
           max: (value) => {
-            return calcAxisMax(value);
+            let maxVal = calcAxisMax(value)
+            return maxVal ? String(maxVal).length > 5
+              ? maxVal.toFixed(5)
+              : maxVal : maxVal;
           },
         },
       });

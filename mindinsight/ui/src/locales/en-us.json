@@ -1146,7 +1146,8 @@
     "trainingStep": "training\nstep",
     "dataSelectTip": "Please select the graph to be compared on the right",
     "dataToolTip": "The line chart on the right side of this function is the actual training loss value curve, and the large image on the left side of the page is an approximate representation of the training loss surface. Due to the randomness of the data and other reasons, the specific value may not be exactly the same as the actual training loss value.",
-    "basicTrainingTip": "If part of the basic training information is missing, please check whether the traceability data is collected correctly."
+    "basicTrainingTip": "If part of the basic training information is missing, please check whether the traceability data is collected correctly.",
+    "graph3DOperateTip": "Press and hold the left button of the mouse to rotate the 3D image, and press and hold the middle button of the mouse to pan the 3D image"
   },
   "lossCompare": {
     "titleText": "Loss Graph Comparison",

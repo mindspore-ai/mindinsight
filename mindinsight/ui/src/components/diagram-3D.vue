@@ -33,6 +33,18 @@ limitations under the License.
             class="icon-item download-icon"
             @click="downloadToImage"
             :title="$t('lossAnalysis.downloadPic')"></span>
+      <el-tooltip placement="bottom-end"
+                  effect="light">
+        <div slot="content"
+             class="tooltip-container">
+          <div class="cl-title-tip">
+            <div class="tip-part">
+              {{$t('lossAnalysis.graph3DOperateTip')}}
+            </div>
+          </div>
+        </div>
+        <span class="el-icon-info"></span>
+      </el-tooltip>
     </div>
     <!-- Draw Area -->
     <div class="chart-container"
@@ -938,6 +950,11 @@ export default {
 }
 .cl-diagram-container .operateContainer .icon-item:hover {
   border: 1px solid var(--theme-color);
+}
+.cl-diagram-container .operateContainer .el-icon-info {
+  margin-top: 5px;
+  font-size: 16px;
+  padding-right: 10px;
 }
 .cl-diagram-container .operateContainer .download-icon {
   background: url('../assets/images/download.png') center no-repeat;
