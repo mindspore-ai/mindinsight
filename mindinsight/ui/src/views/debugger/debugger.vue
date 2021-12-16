@@ -673,7 +673,14 @@ limitations under the License.
                              :value="item.value">
                   </el-option>
                 </el-select>
-                <div class="label">{{ $t('debugger.graphName') }}</div>
+                <div class="label">{{ $t('debugger.graphName') }}
+                  <el-tooltip class="tooltip"
+                              effect="light"
+                              :content="$t('debugger.graphNameExplain')"
+                              placement="right">
+                    <i class="el-icon-info"></i>
+                  </el-tooltip>
+                </div>
                 <el-select v-model="graphNameObj.value"
                            @change="graphExecutionSelect">
                   <el-option v-for="item in graphNameObj.options"
@@ -686,7 +693,7 @@ limitations under the License.
               <div class="current-step"></div>{{this.$t('debugger.currentStepTip')}}
               <img :src="require('@/assets/images/all-drop-down.png')"
                    v-show="!showGraphCount"
-                   @click="showGraphCount = !showGraphCount"
+                   @click="showGraphCount = !showGraphCount;scrollGraphCount()"
                    alt="" />
               <img :src="require('@/assets/images/all-uptake.png')"
                    v-show="showGraphCount"
@@ -1427,10 +1434,14 @@ export default {
     updateVisibleData(scrollLeft) {
       if (!this.graphIdArr.length) return;
       const padding = 20;
-      const visibleCount =
-        Math.ceil((document.querySelector('#graph-count-container').clientWidth - padding) / this.graphCountWidth) * 2;
-      const start = Math.floor(scrollLeft / this.graphCountWidth);
-      const end = start + visibleCount;
+      const visibleCount = Math.ceil(
+        (document.querySelector('#graph-count-container').clientWidth - padding) / this.graphCountWidth
+      );
+      let start = Math.floor(scrollLeft / this.graphCountWidth);
+      const end = start + visibleCount * 2;
+      if (this.graphIdArr.length - start < visibleCount) {
+        start = start - visibleCount;
+      }
       this.visibleGraphIdArr = this.graphIdArr.slice(start, end);
       this.$refs.content.style.transform = `translateX(${start * this.graphCountWidth}px)`;
     },
