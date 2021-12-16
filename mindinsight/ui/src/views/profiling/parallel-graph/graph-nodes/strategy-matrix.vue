@@ -38,8 +38,6 @@ limitations under the License.
         stroke="#333"
         fill="transparent"
         class="tip"
-        @mouseover="handleMouseOver(strategy[i].name)"
-        @mouseout="handleMouseOut"
       />
     </g>
   </g>

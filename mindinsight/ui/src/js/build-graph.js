@@ -24,11 +24,13 @@ import {
   INSERTED_ATTR,
   MIN_COUNT_OF_NODE_STACK,
   SCOPE_AGGREGATOR,
+  COMM_LIST,
+  MAX_EXTRACT_NUM,
 } from './const';
 
 import {genHash, _checkShardMethod} from './util';
 
-let processedGraph = {
+export let processedGraph = {
   nodeMap: {},
   parameterMap: {},
   constMap: {},
@@ -37,19 +39,12 @@ let processedGraph = {
 
 
 let nameScopeIds = [];
-const minimumCutMode = true;
+let minimumCutMode = true;
 let insertedAttr = [];
 let delNodesSet;
 let firstCntFlag = true;
 
 let rawGraphData = null; // raw graph data
-
-const COMM_LIST = new Set([
-  'AllReduce',
-  'AllGather',
-  'AllToAll',
-  'ReduceScatter',
-]);
 
 export let showNodeType = ''; // graph selector label
 export let showRankId = ''; // rank selector label
@@ -100,6 +95,7 @@ function _createBasicNode(node) {
     parameters: {},
     consts: {},
     scope: node.scope,
+    extracted: false,
     ...insertedAttr.reduce((acc, key) => ((acc[key] = node[key]), acc), {}),
     output_shape: node.output_shape,
   };
@@ -150,6 +146,39 @@ function _createNameScope(name) {
     scope: parent,
     specialNodesCnt: {},
   };
+}
+
+function checkIfTopScope(scope) {
+  return scope.indexOf('Computation') === 0 &&
+    scope.indexOf(SCOPE_SEPARATOR) === -1
+}
+
+function processVisGraph(visGraph) {
+  const {nodeMap} = processedGraph;
+  const i2o = {};
+  const o2i = {};
+
+  visGraph.edges.forEach(edge => {
+    if (!checkIfTopScope(edge.source) && !checkIfTopScope(edge.target)) return;
+    if (!i2o[edge.source]) i2o[edge.source] = new Set();
+    if (!o2i[edge.target]) o2i[edge.target] = new Set();
+    i2o[edge.source].add(edge.target);
+    o2i[edge.target].add(edge.source);
+  })
+
+  Object.keys(o2i).forEach(key => {
+    if (!checkIfTopScope(key)) return;
+    let inputs = [...o2i[key]];
+    if (inputs.length > 1) {
+      inputs.forEach(input => {
+        let curOutputCnt = i2o[input].size;
+        if (curOutputCnt > 1) {
+          visGraph.edges = visGraph.edges.filter(edge => !(edge.source === input && edge.target === key));
+          i2o[input].delete(key);
+        }
+      })
+    }
+  })
 }
 
 /**
@@ -450,7 +479,7 @@ function _buildTopScopeSet(data) {
  * Construct bipartite graph, do namescope aggregation.
  * @param {Object} data Graph data.
  */
-function _processNodesParallel(data) {
+function _processNodesParallel(data, st = new Set()) {
   const nodes = data.op_nodes || [];
   const {parameter_nodes: parameterNodes, const_nodes: constNodes} = data;
   const {nodeMap, parameterMap, constMap} = processedGraph;
@@ -464,22 +493,20 @@ function _processNodesParallel(data) {
     constMap[con.node_id] = _createConst(con);
   }
 
-  let commNodesCnt = 0;
-  for (const sNode of nodes) {
-    if (COMM_LIST.has(sNode.type) && sNode.scope.startsWith(showNodeType)) {
-      commNodesCnt++;
-    }
-  }
-  // for nodes cnt > 5000 and comm nodes cnt > 30, we only extract comm nodes with special type
-  if (nodes.length > 5000 && commNodesCnt > 30) instanceTypeFlag = true;
+  if (nodes.length > 5000) minimumCutMode = false;
 
   // nodeMap
   for (const sNode of nodes) {
     if (sNode && Object.keys(sNode).length) {
       const node = _createBasicNode(sNode);
-      if (COMM_LIST.has(node.type) && node.scope.startsWith(showNodeType) && (!instanceTypeFlag || node.instance_type !== '')) {
+      const extract_condition = COMM_LIST.has(node.type)
+        && node.scope.startsWith(showNodeType)
+        && (!instanceTypeFlag || node.instance_type !== '')
+        && !st.has(sNode.node_id);
+      if (extract_condition) {
         sNode.parent = '';
         sNode.scope = '';
+        node.extracted = true;
       }
       nodeMap[node.id] = node;
     }
@@ -501,7 +528,7 @@ function _processNodesParallel(data) {
       }
       source.output.push(basicNode.id);
     }
-  });
+});
 
 
   let bipartiteRes;
@@ -561,6 +588,7 @@ function _processNodesParallel(data) {
       basicNode.input_shape[inputId] = source.output_shape;
     }
   });
+
   for (const sNode of nodes) {
     if (sNode && Object.keys(sNode).length && !delNodesSet.has(sNode.node_id)) {
       if (sNode.scope && !nameScopeSet.has(sNode.scope)) {
@@ -580,8 +608,6 @@ function _processNodesParallel(data) {
       nodeMap[sNode.node_id].parent = sNode.scope;
     }
   }
-
-
   nameScopeIds = Array.from(nameScopeSet).sort(); // to ensure the child's namescope constructed after the father's
 }
 
@@ -589,7 +615,7 @@ function _processNodesParallel(data) {
  * Creating all name scope nodes.
  */
 function _processNameScope() {
-  processedGraph.root = {id: 'root', children: [], stacked: false};
+  processedGraph.root = {id: '', children: [], stacked: false};
   const {nodeMap, root} = processedGraph;
 
   for (const id of nameScopeIds) {
@@ -766,9 +792,9 @@ function _processHierarchy() {
  * Processing all data.
  * @param {Object} data All graph data
  */
-function _processSourceData(data) {
+function _processSourceData(data, st) {
   insertedAttr = Object.values(INSERTED_ATTR);
-  _processNodesParallel(data);
+  _processNodesParallel(data, st);
   _processNameScope();
   _processNodesCnt();
   _processHierarchy();
@@ -861,7 +887,7 @@ function _optimizeNodes(id) {
   for (const child of nameScope.children) {
     const node = nodeMap[child];
     if (node.type in NODE_TYPE) continue;
-    if (COMM_LIST.has(node.type)) { // do not stack comm nodes
+    if (node.extracted || node.instance_type) { // do not stack extracted comm
       continue;
     }
     const nodeHash = _getNodeHash(node, nodeMap, parameterMap, constMap);
@@ -1021,6 +1047,7 @@ function querySingleNode(id) {
   }
 
   const visGraph = _produceVisGraph();
+  processVisGraph(visGraph);
   return visGraph;
 }
 
@@ -1089,6 +1116,7 @@ function toggleExpanded(id) {
   _optimizeNodes(optimizeId);
 
   const visGraph = _produceVisGraph();
+  processVisGraph(visGraph);
   return visGraph;
 }
 
@@ -1183,6 +1211,69 @@ function getSpecialNodesMap() {
   return specialNodesMap;
 }
 
+function _setNodeTag(visGraph) {
+  const {nodeMap} = processedGraph;
+  const notExtractSet = new Set();
+  
+  const i2o = {};
+  const o2i = {};
+
+  visGraph.edges.forEach(edge => {
+    if (!i2o[edge.source]) i2o[edge.source] = new Set();
+    if (!o2i[edge.target]) o2i[edge.target] = new Set();
+    i2o[edge.source].add(edge.target);
+    o2i[edge.target].add(edge.source);
+  })
+
+  
+  Object.keys(o2i).forEach(key => {
+    if (!isNaN(key)) return;
+    let inputs = [...o2i[key]];
+    if (inputs.length > MAX_EXTRACT_NUM) {
+      const topInputScopeSet = new Set();
+      inputs.forEach(input => {
+        nodeMap[input].input.forEach(it => {
+          if (!isNaN(it)) topInputScopeSet.add(_findTopScope(it));
+        })
+      })
+      if (topInputScopeSet.size === 1) return; 
+      inputs.forEach(input => {
+        let curOutputCnt = 0;
+        nodeMap[input].output.forEach(id => {
+          if (!isNaN(id)) curOutputCnt++;
+        })
+        if (curOutputCnt === 1) {
+          notExtractSet.add(input);
+        }
+      })
+    }
+  })
+
+  Object.keys(i2o).forEach(key => {
+    if (!isNaN(key)) return;
+    let outputs = [...i2o[key]];
+    if (outputs.length > MAX_EXTRACT_NUM) {
+      const topOutputScopeSet = new Set();
+      outputs.forEach(output => {
+        nodeMap[output].output.forEach(it => {
+          if (!isNaN(it)) topOutputScopeSet.add(_findTopScope(it));
+        })
+      })
+      if (topOutputScopeSet.size === 1) return; 
+      outputs.forEach(output => {
+        let curInputCnt = 0;
+        nodeMap[output].input.forEach(id => {
+          if (!isNaN(id)) curInputCnt++;
+        })
+        if (curInputCnt === 1) {
+          notExtractSet.add(output);
+        }
+      })
+    }
+  })
+  return notExtractSet;
+}
+
 /**
  * Build graph data.
  * @param {Object} data All graph data
@@ -1190,10 +1281,15 @@ function getSpecialNodesMap() {
  */
 function buildGraph(data) {
   _resetData();
-  _processSourceData(data);
+  _processSourceData(JSON.parse(JSON.stringify(data)));
   bipartiteGraphOptimzer.init(processedGraph);
   _optimizeNodes();
-  const visGraph = _produceVisGraph();
+  let visGraph = _produceVisGraph();
+  const notExtractSet = _setNodeTag(visGraph);
+  _resetData();
+  _processSourceData(data, notExtractSet);
+  visGraph = _produceVisGraph();
+  processVisGraph(visGraph);
   return visGraph;
 }
 
@@ -1213,4 +1309,5 @@ export {
   resetData,
   _buildTopScopeSet,
   getSpecialNodesMap,
+  processVisGraph,
 };

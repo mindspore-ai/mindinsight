@@ -18,16 +18,9 @@ import {
   NODE_TYPE,
   EDGE_SEPARATOR,
 } from './const';
-import {showNodeType, instanceTypeFlag} from './build-graph';
 import {_checkShardMethod} from './util';
 
-// communication oeperator
-const COMM_LIST = new Set([
-  'AllReduce',
-  'AllGather',
-  'AllToAll',
-  'ReduceScatter',
-]);
+
 let processedGraph = {};
 
 /**
@@ -36,10 +29,10 @@ let processedGraph = {};
  * @param {Object} cutEdges edges to cut
  * @return {Object}
  */
-function processBipartite(nodeMap, cutEdges = null) {
+function processBipartite(nodeMap, cutEdges = new Set()) {
   Object.keys(nodeMap).forEach((nodeid) => {
     const node = nodeMap[nodeid];
-    if (COMM_LIST.has(node.type) && node.scope.startsWith(showNodeType) && (!instanceTypeFlag || node.instance_type !== '')) {
+    if (node.extracted) {
       // Traverse from the comm node as the source node
       let v = [];
       const preNxtNodeDict = {
@@ -80,11 +73,7 @@ function processBipartite(nodeMap, cutEdges = null) {
       v = [];
       q = [];
       for (const id of preNxtNodeDict['pre']) {
-        if (
-          COMM_LIST.has(nodeMap[id].type) &&
-            nodeMap[id].scope.startsWith(showNodeType) &&
-            (!instanceTypeFlag || nodeMap[id].instance_type !== '')
-        ) {
+        if (nodeMap[id].extracted) {
           continue;
         }
         v[id] = true;
@@ -95,11 +84,7 @@ function processBipartite(nodeMap, cutEdges = null) {
         const curNode = nodeMap[cur];
         for (const nxtId of curNode.output) {
           if (cutEdges.has(cur + EDGE_SEPARATOR + nxtId)) continue;
-          if (
-            COMM_LIST.has(nodeMap[nxtId].type) &&
-              nodeMap[nxtId].scope.startsWith(showNodeType) &&
-              (!instanceTypeFlag || nodeMap[nxtId].instance_type !== '')
-          ) {
+          if (nodeMap[nxtId].extracted) {
             continue;
           }
           if (!v[nxtId]) {
@@ -114,11 +99,7 @@ function processBipartite(nodeMap, cutEdges = null) {
         for (const nxtId of curNode.input) {
           if (cutEdges.has(nxtId + EDGE_SEPARATOR + cur)) continue;
           if (
-            !nodeMap[nxtId] ||
-              (COMM_LIST.has(nodeMap[nxtId].type) &&
-                nodeMap[nxtId].scope.startsWith(showNodeType)) &&
-                (!instanceTypeFlag || nodeMap[nxtId].instance_type !== '')
-          ) {
+            !nodeMap[nxtId] || nodeMap[nxtId].extracted) {
             continue;
           }
           if (!v[nxtId]) {
@@ -141,8 +122,7 @@ function processBipartite(nodeMap, cutEdges = null) {
       if (
         !isNaN(key) &&
         !v[key] &&
-        !(COMM_LIST.has(node.type) && node.scope.startsWith(showNodeType) && (!instanceTypeFlag || node.instance_type !== ''))
-      ) {
+        !node.extracted) {
         const curConnectedComponent = [];
         curConnectedComponent.push(key);
         v[key] = true;
@@ -153,11 +133,7 @@ function processBipartite(nodeMap, cutEdges = null) {
             if (cutEdges.has(cur + EDGE_SEPARATOR + nid)) continue;
             if (
               !v[nid] &&
-              !(
-                COMM_LIST.has(nodeMap[nid].type) &&
-                nodeMap[nid].scope.startsWith(showNodeType) &&
-                (!instanceTypeFlag || nodeMap[nid].instance_type !== '')
-              )
+              !nodeMap[nid].extracted
             ) {
               curConnectedComponent.push(nid);
               queue.push(nid);
@@ -169,11 +145,7 @@ function processBipartite(nodeMap, cutEdges = null) {
             if (cutEdges.has(nid + EDGE_SEPARATOR + cur)) continue;
             if (
               !v[nid] &&
-              !(
-                COMM_LIST.has(nodeMap[nid].type) &&
-                nodeMap[nid].scope.startsWith(showNodeType) &&
-                (!instanceTypeFlag || nodeMap[nid].instance_type !== '')
-              )
+              !nodeMap[nid].extracted
             ) {
               curConnectedComponent.push(nid);
               queue.push(nid);
@@ -451,7 +423,7 @@ function findCutEdges(source, target, residualAllNodes, residualAllEdges, origin
  * @return {Object} pre and next nodes
  */
 function findRelateNodes(commNodeID, allNodes, nodeMap) {
-  const maxIterateCnt = 5;
+  const maxIterateCnt = 3;
 
   const preNodes = new Set();
   const nextNodes = new Set();
@@ -472,9 +444,7 @@ function findRelateNodes(commNodeID, allNodes, nodeMap) {
     queue.pop();
 
     nodeMap[top].input.forEach((inputID) => {
-      if (!isVisit.get(inputID) && !isNaN(inputID) && !(COMM_LIST.has(nodeMap[inputID].type)
-      && (!instanceTypeFlag || nodeMap[inputID].instance_type !== '') && nodeMap[inputID].scope.startsWith(showNodeType))
-      ) {
+      if (!isVisit.get(inputID) && !isNaN(inputID) && !nodeMap[inputID].extracted) {
         queue.push(inputID);
         preNodes.add(inputID);
         isVisit.set(inputID, true);
@@ -499,9 +469,7 @@ function findRelateNodes(commNodeID, allNodes, nodeMap) {
     queue.pop();
 
     nodeMap[top].output.forEach((outputID) => {
-      if (!isVisit.get(outputID) && !isNaN(outputID) && !(COMM_LIST.has(nodeMap[outputID].type)
-        && (!instanceTypeFlag || nodeMap[outputID].instance_type !== '') && nodeMap[outputID].scope.startsWith(showNodeType))
-      ) {
+      if (!isVisit.get(outputID) && !isNaN(outputID) && !nodeMap[outputID].extracted) {
         queue.push(outputID);
         nextNodes.add(outputID);
         isVisit.set(outputID, true);
@@ -532,7 +500,7 @@ function calcMinCut(nodeMap) {
     if (isNaN(key)) {
       return;
     }
-    if (COMM_LIST.has(node.type) && node.scope.startsWith(showNodeType) && node.instance_type !== '') {
+    if (node.extracted) {
       commNodes.push(key);
       return;
     } else {
@@ -541,8 +509,7 @@ function calcMinCut(nodeMap) {
     }
     node.input.forEach((inputID) => {
       const inputNode = nodeMap[inputID];
-      if (!isNaN(inputID) && !(COMM_LIST.has(inputNode.type) && inputNode.scope.startsWith(showNodeType)
-        && (!instanceTypeFlag || inputNode.instance_type !== ''))) {
+      if (!isNaN(inputID) && !inputNode.extracted) {
         allNodes.add(inputID);
         if (!(inputID in allEdges)) {
           allEdges[inputID] = {};
@@ -552,8 +519,7 @@ function calcMinCut(nodeMap) {
     });
     node.output.forEach((outputID) => {
       const outputNode = nodeMap[outputID];
-      if (!isNaN(outputID) && !(COMM_LIST.has(outputNode.type) && outputNode.scope.startsWith(showNodeType)
-        && (!instanceTypeFlag || outputNode.instance_type !== ''))) {
+      if (!isNaN(outputID) && !outputNode.extracted) {
         allNodes.add(outputID);
         allEdges[key][outputID] = 1;
       }
