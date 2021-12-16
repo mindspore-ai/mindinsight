@@ -1021,7 +1021,8 @@
     "createWpTip": {
       "explain": "Watchpoints are used to set detection rules for a group of nodes.",
       "example": "For example, create a watchpoint for 'checking too large tensor' and set the check parameter to max > 100. After performing the check, you can find the tensor with the 'maximum value greater than 100'."
-    }
+    },
+    "graphNameExplain": "Different from the graph names in the node list, only the list of graph names executed during training is shown here."
   },
   "explain": {
     "explain": "Model Explanation",

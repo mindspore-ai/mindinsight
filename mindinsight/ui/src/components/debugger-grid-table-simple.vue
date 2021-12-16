@@ -710,11 +710,12 @@ export default {
      */
     accuracyChange(value) {
       this.formatGridArray();
-      if (!this.requestError && !this.incorrectData) {
-        this.updateGrid();
-      }
       if (this.displayMode === CHART) {
         this.renderHeatmapChart()
+      } else {
+        if (!this.requestError && !this.incorrectData) {
+          this.updateGrid();
+        }
       }
     },
     /**
