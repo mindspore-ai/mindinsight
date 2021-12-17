@@ -293,12 +293,12 @@ export default {
      * @param {String} value
      */
     processData(value) {
-      const {judgeDataType, accuracy} = this;
-      return value === 'null' 
-        ? 0 : 
-        judgeDataType(value) 
-        ? value 
-        : +value.toFixed(accuracy);
+      const { judgeDataType, accuracy, category } = this;
+      return judgeDataType(value)
+        ? 0
+        : category === 'science'
+        ? value.toExponential(accuracy)
+        : value.toFixed(accuracy);
     },
     /**
      * Render heatmap chart by fullData
@@ -326,7 +326,17 @@ export default {
               if (!rowIndex) {
                 xAxisData.push(colStartIndex + columnIndex);
               }
-              seriesData.push([columnIndex, rowIndex, item, this.processData(item)]);
+              if (Array.isArray(item)) {
+                seriesData.push([
+                  columnIndex,
+                  rowIndex,
+                  this.processData(item[0]),
+                  this.processData(item[1]),
+                  this.processData(item[2]),
+                ]);
+              } else {
+                seriesData.push([columnIndex, rowIndex, item, this.processData(item)]);
+              }
             });
           });
         } else {
@@ -433,18 +443,22 @@ export default {
                 },
                 tooltip: {
                   formatter: (params) => {
-                    const { category, accuracy, judgeDataType } = this;
-                    let value = params.data[3]; // Original data
-                    value = judgeDataType(value)
-                      ? value
-                      : category === 'science'
-                      ? value.toExponential(accuracy)
-                      : value.toFixed(accuracy);
-                    return `
+                    let length = params.data.length;
+                    let value = params.data[length - 1]; // Original data
+                    if (length === 5) {
+                      return `
+                      x: ${params.data[0]} &nbsp&nbsp&nbsp&nbsp&nbspy: ${params.data[1]}<br>
+                      ${this.$t('debugger.curStatisticsLabel')} ${params.data[3]}<br>
+                      ${this.$t('debugger.preStatisticsLabel')} ${params.data[2]}<br>
+                      ${this.$t('scalar.charTipHeadValue')} ${this.$t('symbols.colon')} ${value}
+                    `;
+                    } else {
+                      return `
                       x: ${params.data[0]}<br>
                       y: ${params.data[1]}<br>
-                      value: ${value}
+                      ${this.$t('scalar.charTipHeadValue')} ${this.$t('symbols.colon')} ${value}
                     `;
+                    }
                   },
                 },
               },
@@ -711,7 +725,7 @@ export default {
     accuracyChange(value) {
       this.formatGridArray();
       if (this.displayMode === CHART) {
-        this.renderHeatmapChart()
+        this.renderHeatmapChart();
       } else {
         if (!this.requestError && !this.incorrectData) {
           this.updateGrid();
