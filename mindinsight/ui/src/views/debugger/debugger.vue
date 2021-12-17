@@ -1440,7 +1440,7 @@ export default {
       let start = Math.floor(scrollLeft / this.graphCountWidth);
       const end = start + visibleCount * 2;
       if (this.graphIdArr.length - start < visibleCount) {
-        start = start - visibleCount;
+        start = start - visibleCount > 0 ? start - visibleCount : 0;
       }
       this.visibleGraphIdArr = this.graphIdArr.slice(start, end);
       this.$refs.content.style.transform = `translateX(${start * this.graphCountWidth}px)`;
