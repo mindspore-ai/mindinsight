@@ -53,11 +53,20 @@ export const INPUT = 'input';
 export const OUTPUT = 'output';
 
 export const MIN_COUNT_OF_NODE_STACK = 10;
+export const MAX_EXTRACT_NUM = 10;
 
 export const COLOR = {
   expanded: '#fff5e6',
   unexpanded: '#ffffff',
 };
+
+// communication oeperator
+export const COMM_LIST = new Set([
+  'AllReduce',
+  'AllGather',
+  'AllToAll',
+  'ReduceScatter',
+]);
 
 export const GRAPH_STYLE = `.no-fill {fill: none;}
 .graph-action {height: 40px;width: 100%;display: flex;align-items: center;}
