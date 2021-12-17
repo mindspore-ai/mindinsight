@@ -275,6 +275,11 @@ export default {
               color: commonProperty.commonChartTheme[this.themeIndex].axisLabelColor,
             },
           },
+          axisPointer: {
+            lineStyle: {
+              color: '#808080',
+            }
+          },
         },
         yAxis3D: {
           type: 'value',
@@ -293,6 +298,11 @@ export default {
             textStyle: {
               color: commonProperty.commonChartTheme[this.themeIndex].axisLabelColor,
             },
+          },
+          axisPointer: {
+            lineStyle: {
+              color: '#808080',
+            }
           },
         },
         zAxis3D: {
@@ -313,6 +323,11 @@ export default {
             textStyle: {
               color: commonProperty.commonChartTheme[this.themeIndex].axisLabelColor,
             },
+          },
+          axisPointer: {
+            lineStyle: {
+              color: '#808080',
+            }
           },
         },
         grid3D: {
@@ -864,6 +879,7 @@ export default {
           pathData.push(tempArr.concat([{ value: [curX, curY, curZ] }]));
         }
       }
+      pathData.push(lineData);
       this.animationData.pathData = pathData;
       this.animationData.pointsIndex = pointsIndex;
       this.animationData.animateStepNum = pathData.length;
