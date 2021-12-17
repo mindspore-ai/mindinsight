@@ -384,15 +384,17 @@ function completeAreaByBorderLines(border, borderLines, contourColorMap, contour
         const [start, end] = s.split(SECTION_SPLIT);
         const b = getBorderBySection(section);
         const coord = borderPointMap[b].has(+start) ? +start : +end;
-        const shape = trackNextLine(borderPointMap[b].get(coord), border, borderPointMap, true);
-        const index = contours.indexOf(shape.z);
-        const contour = contours[index + 1] ?? Infinity;
-        children.push({
-          z: contour,
-          index: -1,
-          points: shape.points,
-          color: contourColorMap.get(contour),
-        });
+        if (borderPointMap[b].get(coord)) {
+          const shape = trackNextLine(borderPointMap[b].get(coord), border, borderPointMap, true);
+          const index = contours.indexOf(shape.z);
+          const contour = contours[index + 1] ?? Infinity;
+          children.push({
+            z: contour,
+            index: -1,
+            points: shape.points,
+            color: contourColorMap.get(contour),
+          });
+        }
       });
     }
   });
