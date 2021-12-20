@@ -25,7 +25,7 @@ from mindspore.communication.management import init, get_rank, get_group_size
 from .config import cfg
 
 
-def create_dataset(data_path, batch_size=32, repeat_size=1, do_train=True, target="Ascend"):
+def create_dataset(data_path, batch_size=32, repeat_size=1, do_train=True, target="Ascend", run_distribute=False):
     """
     create a train or eval imagenet dataset
 
@@ -35,6 +35,7 @@ def create_dataset(data_path, batch_size=32, repeat_size=1, do_train=True, targe
         repeat_num(int): the repeat times of dataset. Default: 1
         batch_size(int): the batch size of dataset. Default: 32
         target(string): the target of device. Default: "Ascend"
+        run_distribute(bool): running in whether distribute or not. Default: False
 
     Returns:
         dataset
@@ -43,9 +44,12 @@ def create_dataset(data_path, batch_size=32, repeat_size=1, do_train=True, targe
     if target == "Ascend":
          device_num, rank_id = _get_rank_info()
     elif target == "GPU":
-        init("nccl")
-        rank_id = get_rank()
-        device_num = get_group_size()
+        if run_distribute:
+            init()
+            rank_id = get_rank()
+            device_num = get_group_size()
+        else:
+            device_num = 1
     else:
         device_num = 1
 

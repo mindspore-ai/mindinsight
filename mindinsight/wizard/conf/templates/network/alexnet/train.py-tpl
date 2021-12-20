@@ -65,7 +65,7 @@ if __name__ == "__main__":
             init()
         # GPU target
         else:
-            init("nccl")
+            init()
             context.set_auto_parallel_context(device_num=get_group_size(), parallel_mode=ParallelMode.DATA_PARALLEL,
                                               gradients_mean=True)
             ckpt_save_dir = cfg.save_checkpoint_path + "ckpt_" + str(get_rank()) + "/"
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     do_train = True
 
     ds_train = create_dataset(data_path=data_path, batch_size=cfg.batch_size, do_train=do_train,
-                              target=target)
+                              target=target, run_distribute=args.run_distribute)
     step_size = ds_train.get_dataset_size()
 
     # define net

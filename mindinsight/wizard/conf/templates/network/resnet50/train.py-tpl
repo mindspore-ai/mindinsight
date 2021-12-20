@@ -77,7 +77,8 @@ if __name__ == '__main__':
             ckpt_save_dir = cfg.save_checkpoint_path + "ckpt_" + str(get_rank()) + "/"
 
     # create dataset
-    dataset = create_dataset(data_path=args_opt.dataset_path, do_train=True, batch_size=cfg.batch_size, target=target)
+    dataset = create_dataset(data_path=args_opt.dataset_path, do_train=True, batch_size=cfg.batch_size, target=target,
+                             run_distribute=args_opt.run_distribute)
 
     step_size = dataset.get_dataset_size()
 

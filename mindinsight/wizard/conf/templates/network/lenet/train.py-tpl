@@ -57,7 +57,7 @@ if __name__ == "__main__":
             context.set_context(device_id=device_id)
             init()
         elif args.device_target == "GPU":
-            init("nccl")
+            init()
             ckpt_save_dir = os.path.join(ckpt_save_dir, 'ckpt_' + str(get_rank()))
         else:
             raise ValueError('Distribute running is no supported on %s' % args.device_target)
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     do_train = True
 
     ds_train = create_dataset(data_path=data_path, do_train=do_train,
-                              batch_size=cfg.batch_size, target=args.device_target)
+                              batch_size=cfg.batch_size, target=args.device_target, run_distribute=args.run_distribute)
 
     network = LeNet5(cfg.num_classes)
     if args.pre_trained:
