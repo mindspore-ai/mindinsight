@@ -319,25 +319,39 @@ export default {
       const { rowStartIndex, colStartIndex } = this.axisStartIndex;
       if (Array.isArray(data)) {
         if (Array.isArray(data[0])) {
+          if (this.gridType === 'compare' && !Array.isArray(data[0][0])) {
+            yAxisData.push(rowStartIndex);
+          }
           // Matrix
           data.forEach((row, rowIndex) => {
-            yAxisData.push(rowStartIndex + rowIndex);
-            row.forEach((item, columnIndex) => {
-              if (!rowIndex) {
-                xAxisData.push(colStartIndex + columnIndex);
-              }
-              if (Array.isArray(item)) {
-                seriesData.push([
-                  columnIndex,
-                  rowIndex,
-                  this.processData(item[0]),
-                  this.processData(item[1]),
-                  this.processData(item[2]),
-                ]);
-              } else {
-                seriesData.push([columnIndex, rowIndex, item, this.processData(item)]);
-              }
-            });
+            if (this.gridType === 'compare' && !Array.isArray(row[0])) {
+              xAxisData.push(colStartIndex + rowIndex);
+              seriesData.push([
+                rowIndex,
+                0,
+                this.processData(row[0]),
+                this.processData(row[1]),
+                this.processData(row[2]),
+              ]);
+            } else {
+              yAxisData.push(rowStartIndex + rowIndex);
+              row.forEach((item, columnIndex) => {
+                if (!rowIndex) {
+                  xAxisData.push(colStartIndex + columnIndex);
+                }
+                if (Array.isArray(item)) {
+                  seriesData.push([
+                    columnIndex,
+                    rowIndex,
+                    this.processData(item[0]),
+                    this.processData(item[1]),
+                    this.processData(item[2]),
+                  ]);
+                } else {
+                  seriesData.push([columnIndex, rowIndex, item, this.processData(item)]);
+                }
+              });
+            }
           });
         } else {
           // Array
@@ -460,6 +474,7 @@ export default {
                     `;
                     }
                   },
+                  position: [0, 0],
                 },
               },
             ],
