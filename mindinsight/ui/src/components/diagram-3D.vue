@@ -149,6 +149,7 @@ export default {
         end: 'triangle',
         other: 'circle',
       },
+      curName: '',
       animationTimer: null, // Timer of animation
       ANIMATION_TOTAL_TIME: 3000, // Total animation execution duration
       EMPTY_SURFACE_NAME: commonProperty.emptySurfaceSeries.name, // Name of the placeholder surface
@@ -424,7 +425,7 @@ export default {
 
       const surfaceSeries = {
         type: 'surface',
-        name: oriData.train_id,
+        name: this.curName,
         wireframe: {
           show: false,
         },
@@ -470,7 +471,7 @@ export default {
         }
         seriesPointArr.push({
           type: 'scatter3D',
-          name: oriData.train_id,
+          name: this.curName,
           data: [
             {
               name: `${oriData.metadata.unit}${this.$t('symbols.colon')}${originLineData.intervals[k]}`,
@@ -501,7 +502,7 @@ export default {
       this.animationData.animationStepTime = this.ANIMATION_TOTAL_TIME / (this.animationData.animateStepNum - 1);
       const seriesPath = {
         type: 'line3D',
-        name: oriData.train_id,
+        name: this.curName,
         data: pathData,
         lineStyle: {
           width: this.styleSetting.line.width,
@@ -523,7 +524,7 @@ export default {
       const pointObj = oriData.convergence_point;
       const pointData = {
         type: 'scatter3D',
-        name: oriData.train_id,
+        name: this.curName,
         data: [pointObj],
         symbol: this.lineSymbol.other,
         symbolSize: 10,
@@ -545,6 +546,8 @@ export default {
      * Obtain path data and animation data according to identifiable data
      */
     updateView() {
+      const oriName = this.oriData.train_id;
+      this.curName = oriName.length > 20 ? oriName.slice(0, 20) + '...' : oriName;
       this.seriesArr = [commonProperty.emptySurfaceSeries];
       this.formatOriData(this.oriData);
       this.formatChartOption();
