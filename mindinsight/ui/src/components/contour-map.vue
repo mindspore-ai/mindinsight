@@ -1581,6 +1581,9 @@ export default {
       setting: {},
       CONTOUR,
       TOPOGRAPHIC,
+      legend: {},
+      series: [],
+      // init legend series
     };
   },
   beforeCreate() {
@@ -1787,9 +1790,9 @@ export default {
       if (showConvergencePoint && convergencePoint) {
         series.push(useConvergencePoint(convergencePoint, convergencePointColor[this.$store.state.themeIndex]));
       }
-      series.push(
-          useContourGroup(contours, contourPointMap, leftBottom, rightTop, contourColorMap, isArea),
-      );
+      series.push(useContourGroup(contours, contourPointMap, leftBottom, rightTop, contourColorMap, isArea));
+      this.series = series;
+      this.legend = legend;
       this.chartInstance.setOption({
         legend,
         series,
@@ -1835,14 +1838,33 @@ export default {
             dataZoom: {
               filterMode: 'none',
             },
-            myFullScreen: this.showFullScreen ? {
+            myRestore: {
               show: true,
-              title: this.$t('scalar.fullScreen'),
-              icon: CommonProperty.fullScreenIcon[this.$store.state.themeIndex],
+              title: this.$t('lossAnalysis.restore'),
+              icon: CommonProperty.restoreIcon[this.$store.state.themeIndex],
               onclick: () => {
-                this.$emit('fullScreen');
+                const legend = this.legend;
+                const series = this.series;
+                this.chartInstance.clear();
+                this.initContourMap();
+                this.chartInstance.setOption({
+                  legend,
+                  series,
+                });
+                this.chartInstance.on('mousemove', this.showTooltip);
+                this.chartInstance.on('mouseout', this.hideTooltip);
               },
-            } : {},
+            },
+            myFullScreen: this.showFullScreen
+              ? {
+                  show: true,
+                  title: this.$t('scalar.fullScreen'),
+                  icon: CommonProperty.fullScreenIcon[this.$store.state.themeIndex],
+                  onclick: () => {
+                    this.$emit('fullScreen');
+                  },
+                }
+              : {},
           },
           right: 10,
         },

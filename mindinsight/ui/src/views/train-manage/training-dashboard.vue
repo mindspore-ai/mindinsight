@@ -466,8 +466,8 @@ export default {
      */
     init() {
       if (this.$route.query && this.$route.query.id) {
-        this.trainingJobId = this.$route.query.id;
-        this.summaryPath = this.trainingJobId;
+        this.trainingJobId = encodeURIComponent(this.$route.query.id);
+        this.summaryPath = this.$route.query.id;
         document.title =
           this.summaryPath + '-' + this.$t('trainingDashboard.trainingDashboardTitle') + '-MindInsight';
       } else {
@@ -489,7 +489,7 @@ export default {
 
     getEpochIntervals() {
       const params = {
-        train_id: this.trainingJobId,
+        train_id: decodeURIComponent(this.trainingJobId),
       };
       RequestService.queryEpochIntervals(params).then(
         (res) => {

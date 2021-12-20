@@ -585,7 +585,7 @@ export default {
      * get Epoch Intervals
      */
     getEpochIntervals() {
-      const id = this.trainInfo.id;
+      const id = decodeURIComponent(this.trainInfo.id);
       const params = {
         train_id: id,
       };
@@ -988,7 +988,7 @@ export default {
 
     initCommonChart() {
       const params = {
-        train_id: this.trainInfo.id,
+        train_id: decodeURIComponent(this.trainInfo.id),
         tag: 'loss/auto/scalar',
       };
 
