@@ -1584,6 +1584,8 @@ export default {
       legend: {},
       series: [],
       // init legend series
+      playNextAnimation: null,
+      animationTimer: null,  // animation timer
     };
   },
   beforeCreate() {
@@ -1631,6 +1633,36 @@ export default {
       });
     },
     /**
+     * stop path animation
+     * @param {boolean} isResetData the line and point data of map graph to reset again
+     */
+    stopPathAnimation(isResetData) {
+      if (this.playNextAnimation) {
+        if(this.chartInstance) {
+          this.chartInstance.off('finished')
+        }
+        this.playNextAnimation = null;
+        if (this.animationTimer) {
+          clearTimeout(this.animationTimer);
+        }
+        if (isResetData) {
+          const {path, rightTop, setting} = this;
+          const {pathWidth, pathColor} = setting;
+          // clear path lines
+          const {intervals, x, y} = path;
+          const clearLines = [];
+          x.forEach((_, index) => {
+            if (index < x.length - 1) {
+              clearLines[index] = [x[index], y[index], x[index + 1], y[index + 1]];
+            }
+          });
+          this.chartInstance.setOption({
+            series: [usePathLines(rightTop, clearLines, pathWidth, pathColor, true)],
+          })
+        }
+      }
+    },
+    /**
      * The logic of play path animation
      */
     playPathAnimation() {
@@ -1645,8 +1677,8 @@ export default {
         }
       });
       let index = 0;
-      const playNextAnimation = () => {
-        setTimeout(() => {
+      this.playNextAnimation = () => {
+        this.animationTimer = setTimeout(() => {
           if (!this.chartInstance) return;
           if (index === intervals.length - 1) {
             // Close path animation
@@ -1664,7 +1696,7 @@ export default {
         }, 100); // Buffer time
       };
       if (!this.chartInstance) return;
-      this.chartInstance.on('finished', playNextAnimation);
+      this.chartInstance.on('finished', this.playNextAnimation);
       this.chartInstance.setOption({
         series: [
           usePathLines(rightTop, clearLines, pathWidth, pathColor),
@@ -1676,6 +1708,7 @@ export default {
      * @param {Object} newSetting
      */
     handlePathStyleChange(newSetting) {
+      this.stopPathAnimation(true);
       const {setting, rightTop, path} = this;
       // Update setting
       setting.pathWidth = newSetting.pathWidth;
@@ -1696,6 +1729,7 @@ export default {
      * @param {Object} newSetting
      */
     handleContoursNumberChange(newSetting) {
+      this.stopPathAnimation(true);
       const {pointMatrix, setting, zList, leftBottom, rightTop, isArea, type} = this;
       // Update setting
       setting.contoursNumber = newSetting.contoursNumber;
@@ -1724,6 +1758,7 @@ export default {
      * @param {Object} newSetting
      */
     handleContourColorsChange(newSetting) {
+      this.stopPathAnimation(true);
       const {contours, contourPointMap, leftBottom, rightTop, isArea, setting, type} = this;
       // Update setting
       setting.contourColors = newSetting.contourColors;
@@ -1747,6 +1782,7 @@ export default {
      * @param {Object} setting
      */
     handleDataChange(data, setting) {
+      this.stopPathAnimation();
       const {path, points} = data;
       const convergencePoint = data.convergence_point;
       const {contourColors, contoursNumber, pathWidth, pathColor, unit} = setting;
