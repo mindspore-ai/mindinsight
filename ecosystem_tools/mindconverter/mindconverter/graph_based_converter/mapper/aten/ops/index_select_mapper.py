@@ -8,7 +8,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either Gatherress or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
@@ -18,18 +18,21 @@ from mindconverter.graph_based_converter.constant import WeightType
 from mindconverter.graph_based_converter.mapper.base import AtenToMindSporeMapper
 
 
-class IndexMapper(AtenToMindSporeMapper):
-    """Index mapper."""
+class GatherMapper(AtenToMindSporeMapper):
+    """Gather mapper."""
 
     @staticmethod
     def _operation_name_in_ms(*args, **kwargs):
-        return "index"
+        return "index_select"
+
+    @staticmethod
+    def _convert_params(**kwargs):
+        return dict()
 
     @staticmethod
     def _convert_trained_weights(**kwargs):
         weights = kwargs.get("weights", list())
-        args_name = ["input", "indices"]
-        args_name_list = IndexMapper.get_args_name_list(**kwargs, args_name=args_name)
+        args_name_list = ["input", "axis", "index"]
         trainable_params = dict()
         for weight in weights:
             trainable_params[args_name_list[weight.location]] = {"data": weight.value, "location": weight.location,
@@ -46,17 +49,14 @@ class IndexMapper(AtenToMindSporeMapper):
             return template, exchange_msg, outputs_list, outputs_mapping
 
         trainable_params = kwargs.get("trainable_params", dict())
-
         variable_slot = "var_0"
-        args_name = ["input", "indices"]
-        inputs, args, group_inputs = IndexMapper._params_parser(raw_params=raw_params, args_name=args_name,
-                                                                trainable_params=trainable_params)
-
-        init_template_list = [f"self.{{{variable_slot}}}_{arg_name} = {{{arg_name}" for arg_name in args]
+        args_name_list = ["input", "axis", "index"]
+        inputs, args, group_inputs = GatherMapper._params_parser(raw_params, args_name_list, trainable_params)
+        init_template_list = [f"self.{{{variable_slot}}}_{arg_name} = {{{arg_name}}}" for arg_name in args]
         parameters_declared = dict()
         for name, trainable_param in trainable_params.copy().items():
             value = trainable_param["data"]
-            if IndexMapper.is_tensor(value):
+            if GatherMapper.is_tensor(value):
                 variable_slot_param_name = f"{variable_slot}/{name}"
                 init_template_list.append(f"self.{{{variable_slot}}}_{name} = {{{variable_slot_param_name}}}")
                 parameters_declared[name] = ""
@@ -64,9 +64,12 @@ class IndexMapper(AtenToMindSporeMapper):
                 args[name] = value.tolist()
                 init_template_list.append(f"self.{{{variable_slot}}}_{name} = {{{name}}}")
                 trainable_params.pop(name)
-        construct_template = f"opt_{{{variable_slot}}} = {inputs[0]}[{', '.join(inputs[1:])}]"
+
+        construct_template = f"opt_{{{variable_slot}}} = P.Gather()" \
+                             f"({inputs[0]}, {inputs[-1]}, {inputs[1]})"
 
         template, exchange_msg = reset_template_and_exchange_msg(template, exchange_msg, variable_slot,
                                                                  init_template_list, [construct_template], args,
                                                                  trainable_params, parameters_declared, group_inputs)
+
         return template, exchange_msg, outputs_list, outputs_mapping
