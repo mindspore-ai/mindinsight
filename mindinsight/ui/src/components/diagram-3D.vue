@@ -546,6 +546,7 @@ export default {
      * Obtain path data and animation data according to identifiable data
      */
     updateView() {
+      this.stopAnimateAction();
       const oriName = this.oriData.train_id;
       this.curName = oriName.length > 20 ? oriName.slice(0, 20) + '...' : oriName;
       this.seriesArr = [commonProperty.emptySurfaceSeries];
@@ -569,6 +570,33 @@ export default {
         document.body.appendChild(imageLink);
         imageLink.click();
         document.body.removeChild(imageLink);
+      }
+    },
+    /**
+     * stop the animate action
+     */
+    stopAnimateAction() {
+      if (this.animationTimer) {
+        clearInterval(this.animationTimer);
+        this.animationTimer = null;
+        if (this.charOption) {
+          const loopCount = this.chartOption.series.length;
+          for(let i = loopCount -1; i >= 0; i--) {
+            const tempData = this.chartOption.series[i];
+            if (tempData.type === 'line3D') {
+              tempData.data = [];
+            } else if (tempData.type === 'scatter3D') {
+              if (this.oriData.path) {
+                this.chartOption.series.splice(i, 1);
+              }
+            }
+          }
+        }
+        const pathIndex = this.chartOption.series.length - 1;
+        // line data
+        this.chartOption.series[pathIndex].data = this.animationData.pathData[this.animationData.pathData.length - 1]
+        // point data
+        this.chartOption.series.push(...this.animationData.pointData)
       }
     },
     /**
@@ -660,6 +688,7 @@ export default {
       if (!this.chartObj) {
         return;
       }
+      this.stopAnimateAction();
       this.$nextTick(() => {
         const settingData = this.styleSetting;
         const pointWidthBase = 3;
