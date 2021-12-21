@@ -49,8 +49,9 @@ class EqualMapper(AtenToMindSporeMapper):
             return template, exchange_msg, outputs_list, outputs_mapping
 
         op = kwargs.get("operation")
+
         variable_slot = "var_0"
-        trainable_params = kwargs.get("trainable_params")
+        trainable_params = kwargs.get("trainable_params", dict())
         args_name_list = ["input_0", "input_1"]
         inputs, args, group_inputs = EqualMapper._params_parser(raw_params, args_name_list, trainable_params)
 
@@ -72,4 +73,3 @@ class EqualMapper(AtenToMindSporeMapper):
                                                                  init_template_list, [construct_template], args,
                                                                  trainable_params, parameters_declared, group_inputs)
         return template, exchange_msg, outputs_list, outputs_mapping
-    
