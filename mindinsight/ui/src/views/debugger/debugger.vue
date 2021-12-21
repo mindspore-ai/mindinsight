@@ -578,7 +578,7 @@ limitations under the License.
                  class="legend-content">
               <div class="legend-item">
                 <div class="pic">
-                  <img :src="require('@/assets/images/name-scope.svg')"
+                  <img :src="require(`@/assets/images/${themeIndex}/name-scope.svg`)"
                        alt="" />
                 </div>
                 <div class="legend-text"
@@ -588,7 +588,7 @@ limitations under the License.
               </div>
               <div class="legend-item">
                 <div class="pic">
-                  <img :src="require('@/assets/images/polymetric.svg')"
+                  <img :src="require(`@/assets/images/${themeIndex}/polymetric.svg`)"
                        alt="" />
                 </div>
                 <div class="legend-text"
@@ -598,7 +598,7 @@ limitations under the License.
               </div>
               <div class="legend-item">
                 <div class="pic">
-                  <img :src="require('@/assets/images/virtual-node.svg')"
+                  <img :src="require(`@/assets/images/${themeIndex}/virtual-node.svg`)"
                        alt="" />
                 </div>
                 <div class="legend-text"
@@ -608,7 +608,7 @@ limitations under the License.
               </div>
               <div class="legend-item">
                 <div class="pic">
-                  <img :src="require('@/assets/images/operator-node.svg')"
+                  <img :src="require(`@/assets/images/${themeIndex}/operator-node.svg`)"
                        alt="" />
                 </div>
                 <div class="legend-text"
@@ -618,7 +618,7 @@ limitations under the License.
               </div>
               <div class="legend-item">
                 <div class="pic">
-                  <img :src="require('@/assets/images/constant-node.svg')"
+                  <img :src="require(`@/assets/images/${themeIndex}/constant-node.svg`)"
                        alt="" />
                 </div>
                 <div class="legend-text"
@@ -1350,6 +1350,7 @@ export default {
       gridStyleKey: this.$route.query.sessionId ? 'offline-debugger' : 'debugger',
       isGraphRunsInit: false,
       timer: null,
+      themeIndex: this.$store.state.themeIndex,  // current theme index
     };
   },
   components: { debuggerTensor, tree, FlexibleGrid },

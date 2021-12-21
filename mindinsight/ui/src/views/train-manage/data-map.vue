@@ -99,42 +99,42 @@ limitations under the License.
                      class="legend-content">
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/creat-dataset.svg')"
+                      <img :src="require(`@/assets/images/${themeIndex}/creat-dataset.svg`)"
                            alt="" />
                     </div>
                     <div>Create</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/map-dataset.svg')"
+                      <img :src="require(`@/assets/images/${themeIndex}/map-dataset.svg`)"
                            alt="" />
                     </div>
                     <div>Map</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/operator-node.svg')"
+                      <img :src="require(`@/assets/images/${themeIndex}/operator-node.svg`)"
                            alt="" />
                     </div>
                     <div>Operator</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/shuffle-dataset.svg')"
+                      <img :src="require(`@/assets/images/${themeIndex}/shuffle-dataset.svg`)"
                            alt="" />
                     </div>
                     <div>Shuffle</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/batch-img.svg')"
+                      <img :src="require(`@/assets/images/${themeIndex}/batch-img.svg`)"
                            alt="" />
                     </div>
                     <div>Batch</div>
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/repeat-dataset.svg')"
+                      <img :src="require(`@/assets/images/${themeIndex}/repeat-dataset.svg`)"
                            alt="" />
                     </div>
                     <div>Repeat</div>

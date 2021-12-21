@@ -193,16 +193,16 @@ limitations under the License.
                           slot-scope="{ node ,data }">
                       <span>
                         <img v-if="data.type ==='name_scope'"
-                             :src="require('@/assets/images/name-scope.svg')"
+                             :src="require(`@/assets/images/${themeIndex}/name-scope.svg`)"
                              class="image-type" />
                         <img v-else-if="data.type ==='Const'"
-                             :src="require('@/assets/images/constant-node.svg')"
+                             :src="require(`@/assets/images/${themeIndex}/constant-node.svg`)"
                              class="image-type" />
                         <img v-else-if="data.type ==='aggregation_scope'"
-                             :src="require('@/assets/images/polymetric.svg')"
+                             :src="require(`@/assets/images/${themeIndex}/polymetric.svg`)"
                              class="image-type" />
                         <img v-else
-                             :src="require('@/assets/images/operator-node.svg')"
+                             :src="require(`@/assets/images/${themeIndex}/operator-node.svg`)"
                              class="image-type" />
                       </span>
                       <span class="custom-tree-node">{{ node.label }}</span>
@@ -220,16 +220,16 @@ limitations under the License.
                           slot-scope="{ node ,data }">
                       <span>
                         <img v-if="data.type ==='name_scope'"
-                             :src="require('@/assets/images/name-scope.svg')"
+                             :src="require(`@/assets/images/${themeIndex}/name-scope.svg`)"
                              class="image-type" />
                         <img v-else-if="data.type ==='Const'"
-                             :src="require('@/assets/images/constant-node.svg')"
+                             :src="require(`@/assets/images/${themeIndex}/constant-node.svg`)"
                              class="image-type" />
                         <img v-else-if="data.type ==='aggregation_scope'"
-                             :src="require('@/assets/images/polymetric.svg')"
+                             :src="require(`@/assets/images/${themeIndex}/polymetric.svg`)"
                              class="image-type" />
                         <img v-else
-                             :src="require('@/assets/images/operator-node.svg')"
+                             :src="require(`@/assets/images/${themeIndex}/operator-node.svg`)"
                              class="image-type" />
                       </span>
                       <span class="custom-tree-node">{{ node.label }}</span>
@@ -433,7 +433,7 @@ limitations under the License.
                      class="legend-content">
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/name-scope.svg')"
+                      <img :src="require(`@/assets/images/${themeIndex}/name-scope.svg`)"
                            alt="" />
                     </div>
                     <div class="legend-text"
@@ -443,7 +443,7 @@ limitations under the License.
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/polymetric.svg')"
+                      <img :src="require(`@/assets/images/${themeIndex}/polymetric.svg`)"
                            alt="" />
                     </div>
                     <div class="legend-text"
@@ -453,7 +453,7 @@ limitations under the License.
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/virtual-node.svg')"
+                      <img :src="require(`@/assets/images/${themeIndex}/virtual-node.svg`)"
                            alt="" />
                     </div>
                     <div class="legend-text"
@@ -463,7 +463,7 @@ limitations under the License.
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/operator-node.svg')"
+                      <img :src="require(`@/assets/images/${themeIndex}/operator-node.svg`)"
                            alt="" />
                     </div>
                     <div class="legend-text"
@@ -473,7 +473,7 @@ limitations under the License.
                   </div>
                   <div class="legend-item">
                     <div class="pic">
-                      <img :src="require('@/assets/images/constant-node.svg')"
+                      <img :src="require(`@/assets/images/${themeIndex}/constant-node.svg`)"
                            alt="" />
                     </div>
                     <div class="legend-text"
