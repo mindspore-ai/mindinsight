@@ -389,9 +389,11 @@ class TensorHandler(StreamHandlerBase):
                 }
                 name = ':'.join([tensor_proto.node_name, tensor_proto.slot])
                 const_tensor = OpTensor(name, tensor_base, tensor_content=tensor_value)
+                const_key = name
             else:
                 const_tensor = ConstTensor(const_val)
-            self._const_vals[const_tensor.name] = const_tensor
+                const_key = const_tensor.full_name
+            self._const_vals[const_key] = const_tensor
 
     def record_parameter_names(self, names):
         """
@@ -720,7 +722,7 @@ class TensorHandler(StreamHandlerBase):
             temp_dir = tempfile.TemporaryDirectory(dir=self.download_mgr.temp_base_dir)
             os.chmod(temp_dir.name, DIR_MODE)
             node_name, slot = tensor_name.rsplit(':', 1)
-            _, node_name = node_name.rsplit('/', 1)
+            node_name = node_name.rsplit('/', 1)[-1]
             file_name = "{}.{}.0.0.{}.output.{}.NONE.npy".format(node_type, node_name, round(time.time() * 100),
                                                                  slot)
             file_path = os.path.join(temp_dir.name, file_name)

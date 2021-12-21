@@ -344,7 +344,9 @@ class ConstTensor(BaseTensor):
         self._value = self.generate_value_from_proto(const_proto.value)
         self._status = TensorStatusEnum.CACHED.value if self._value is not None else TensorStatusEnum.EMPTY.value
         self._stats = None
-        self.tensor_base = None
+        self._tensor_base = {'dtype': DataType.Name(self._const_proto.value.dtype),
+                             'shape': [],
+                             'data_size': self.nbytes}
 
     def set_step(self, step):
         """Set step value."""
@@ -383,8 +385,17 @@ class ConstTensor(BaseTensor):
     @property
     def download_size(self):
         """The property of download size."""
-        # cannot download the const value, so the the download size is 0
-        return 0
+        return self.nbytes
+
+    @property
+    def tensor_base(self):
+        """The property of tensor_base."""
+        return self._tensor_base
+
+    @property
+    def nbytes(self):
+        """The property of tensor size."""
+        return self._value.nbytes if self._value is not None else 0
 
     def generate_value_from_proto(self, tensor_proto):
         """
