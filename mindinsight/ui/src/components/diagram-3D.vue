@@ -579,7 +579,7 @@ export default {
       if (this.animationTimer) {
         clearInterval(this.animationTimer);
         this.animationTimer = null;
-        if (this.charOption) {
+        if (this.chartOption) {
           const loopCount = this.chartOption.series.length;
           for(let i = loopCount -1; i >= 0; i--) {
             const tempData = this.chartOption.series[i];
@@ -594,9 +594,9 @@ export default {
         }
         const pathIndex = this.chartOption.series.length - 1;
         // line data
-        this.chartOption.series[pathIndex].data = this.animationData.pathData[this.animationData.pathData.length - 1]
+        this.chartOption.series[pathIndex].data = this.animationData.pathData[this.animationData.pathData.length - 1];
         // point data
-        this.chartOption.series.push(...this.animationData.pointData)
+        this.chartOption.series.push(...this.animationData.pointData);
       }
     },
     /**
