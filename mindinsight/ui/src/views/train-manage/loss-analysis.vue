@@ -560,7 +560,7 @@ export default {
       return;
     }
     document.title = `${id}-${this.$t('lossAnalysis.titleText')}-MindInsight`;
-    this.trainInfo.id = encodeURIComponent(id);
+    this.trainInfo.id = id;
     this.$nextTick(() => {
       this.init();
     });
@@ -585,7 +585,7 @@ export default {
      * get Epoch Intervals
      */
     getEpochIntervals() {
-      const id = decodeURIComponent(this.trainInfo.id);
+      const id = this.trainInfo.id;
       const params = {
         train_id: id,
       };
@@ -607,7 +607,7 @@ export default {
             this.steps.id = resArr[0].id;
 
             const params = {
-              train_id: id,
+              train_id: encodeURIComponent(id),
               type: 'interval',
               metadata: true,
               interval_id: this.steps.id,
@@ -988,7 +988,7 @@ export default {
 
     initCommonChart() {
       const params = {
-        train_id: decodeURIComponent(this.trainInfo.id),
+        train_id: this.trainInfo.id,
         tag: 'loss/auto/scalar',
       };
 
@@ -1028,7 +1028,7 @@ export default {
       });
       if (this.chartObj) {
         const params = {
-          train_id: this.trainInfo.id,
+          train_id: encodeURIComponent(this.trainInfo.id),
           type: 'interval',
           metadata: true,
           interval_id: this.steps.id,

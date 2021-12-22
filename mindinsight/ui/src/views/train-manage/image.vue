@@ -155,7 +155,7 @@ limitations under the License.
 <script>
 import multiselectGroupComponents from '../../components/multiselect-group.vue';
 import RequestService from '../../services/request-service';
-import {basePath} from '@/services/fetcher';
+import { basePath } from '@/services/fetcher';
 import autoUpdate from '../../mixins/auto-update.vue';
 export default {
   mixins: [autoUpdate],
@@ -187,8 +187,7 @@ export default {
       document.title = this.$t('images.titleText') + '-MindInsight';
       return;
     }
-    document.title =
-      decodeURIComponent(this.$route.query.train_id) + '-' + this.$t('images.titleText') + '-MindInsight';
+    document.title = this.$route.query.train_id + '-' + this.$t('images.titleText') + '-MindInsight';
     this.getTagList();
     // Automatic refresh
     if (this.isTimeReload) {
@@ -206,57 +205,57 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.getSingleTrainJob(params, false)
-          .then((res) => {
-            if (!res || !res.data || !res.data.train_jobs) {
-              this.initOver = true;
-              return;
-            }
-            const data = res.data.train_jobs[0];
-            if (!data.tags) {
-              return;
-            }
-            const tempTagList = [];
-            const dataList = [];
-            data.tags.forEach((tagName) => {
-              if (!this.oriDataDictionaries[tagName]) {
-                this.oriDataDictionaries[tagName] = true;
-                tempTagList.push({
-                  label: tagName,
-                  checked: true,
-                  show: true,
-                });
-                dataList.push({
-                  summaryId: data.id,
-                  summaryName: data.name,
-                  tagName: tagName,
-                  sampleData: [],
-                  curPageShow: false,
-                  sliderValue: 0,
-                  fullScreen: false,
-                  totalStepNum: 0,
-                  curStep: '',
-                  curImgUrl: '',
-                  curTime: '',
-                  curImageSize: [0, 0],
-                  showErrMsg: false,
-                  errMsg: '',
-                });
-              }
-            });
-            // Initialize the assignment tag list, and image list
-            this.tagOperateList = tempTagList;
-            this.originDataArr = dataList;
+        .then((res) => {
+          if (!res || !res.data || !res.data.train_jobs) {
             this.initOver = true;
-
-            this.$nextTick(() => {
-              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-              // Obtains data on the current page
-              this.updateTagInPage();
-            });
-          }, this.requestErrorCallback)
-          .catch((e) => {
-            this.$message.error(this.$t('public.dataError'));
+            return;
+          }
+          const data = res.data.train_jobs[0];
+          if (!data.tags) {
+            return;
+          }
+          const tempTagList = [];
+          const dataList = [];
+          data.tags.forEach((tagName) => {
+            if (!this.oriDataDictionaries[tagName]) {
+              this.oriDataDictionaries[tagName] = true;
+              tempTagList.push({
+                label: tagName,
+                checked: true,
+                show: true,
+              });
+              dataList.push({
+                summaryId: data.id,
+                summaryName: data.name,
+                tagName: tagName,
+                sampleData: [],
+                curPageShow: false,
+                sliderValue: 0,
+                fullScreen: false,
+                totalStepNum: 0,
+                curStep: '',
+                curImgUrl: '',
+                curTime: '',
+                curImageSize: [0, 0],
+                showErrMsg: false,
+                errMsg: '',
+              });
+            }
           });
+          // Initialize the assignment tag list, and image list
+          this.tagOperateList = tempTagList;
+          this.originDataArr = dataList;
+          this.initOver = true;
+
+          this.$nextTick(() => {
+            this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+            // Obtains data on the current page
+            this.updateTagInPage();
+          });
+        }, this.requestErrorCallback)
+        .catch((e) => {
+          this.$message.error(this.$t('public.dataError'));
+        });
     },
     /**
      * Obtains data on the current page
@@ -294,56 +293,56 @@ export default {
           tag: sampleItem.tagName,
         };
         RequestService.getImageMetadatas(params)
-            .then(
-                (res) => {
-                  if (!res || !res.data || !res.data.metadatas) {
-                    return;
-                  }
-                  // Processes image data
-                  const tempData = res.data.metadatas;
-                  sampleItem.sampleData = tempData;
-                  const oldTotalStepNum = sampleItem.totalStepNum;
-                  if (tempData.length) {
-                    sampleItem.totalStepNum = tempData.length - 1;
-                  } else {
-                    sampleItem.totalStepNum = 0;
-                    sampleItem.sliderValue = 0;
-                    sampleItem.curStep = '';
-                    sampleItem.curImgUrl = '';
-                    sampleItem.curTime = '';
-                    return;
-                  }
-                  if (sampleItem.sliderValue === oldTotalStepNum) {
-                    sampleItem.sliderValue = sampleItem.totalStepNum;
-                  }
-                  if (sampleItem.sliderValue > sampleItem.totalStepNum) {
-                    sampleItem.sliderValue = sampleItem.totalStepNum;
-                  }
-                  const curSampleData = sampleItem.sampleData[sampleItem.sliderValue];
-                  // Initialize the current step information
-                  if (curSampleData) {
-                    sampleItem.curStep = curSampleData.step;
-                    const params = {
-                      train_id: sampleItem.summaryId,
-                      tag: sampleItem.tagName,
-                      step: curSampleData.step,
-                      wt: curSampleData.wall_time,
-                    };
-                    this.getImageData(params, sampleItem);
-                    sampleItem.curTime = this.dealrelativeTime(new Date(curSampleData.wall_time * 1000).toString());
-                    sampleItem.curImageSize = [curSampleData.width, curSampleData.height];
-                  }
-                  this.$forceUpdate();
-                },
-                (e) => {
-                  sampleItem.totalStepNum = 0;
-                  sampleItem.sliderValue = 0;
-                  sampleItem.curStep = '';
-                  sampleItem.curImgUrl = '';
-                  sampleItem.curTime = '';
-                },
-            )
-            .catch((e) => {});
+          .then(
+            (res) => {
+              if (!res || !res.data || !res.data.metadatas) {
+                return;
+              }
+              // Processes image data
+              const tempData = res.data.metadatas;
+              sampleItem.sampleData = tempData;
+              const oldTotalStepNum = sampleItem.totalStepNum;
+              if (tempData.length) {
+                sampleItem.totalStepNum = tempData.length - 1;
+              } else {
+                sampleItem.totalStepNum = 0;
+                sampleItem.sliderValue = 0;
+                sampleItem.curStep = '';
+                sampleItem.curImgUrl = '';
+                sampleItem.curTime = '';
+                return;
+              }
+              if (sampleItem.sliderValue === oldTotalStepNum) {
+                sampleItem.sliderValue = sampleItem.totalStepNum;
+              }
+              if (sampleItem.sliderValue > sampleItem.totalStepNum) {
+                sampleItem.sliderValue = sampleItem.totalStepNum;
+              }
+              const curSampleData = sampleItem.sampleData[sampleItem.sliderValue];
+              // Initialize the current step information
+              if (curSampleData) {
+                sampleItem.curStep = curSampleData.step;
+                const params = {
+                  train_id: sampleItem.summaryId,
+                  tag: sampleItem.tagName,
+                  step: curSampleData.step,
+                  wt: curSampleData.wall_time,
+                };
+                this.getImageData(params, sampleItem);
+                sampleItem.curTime = this.dealrelativeTime(new Date(curSampleData.wall_time * 1000).toString());
+                sampleItem.curImageSize = [curSampleData.width, curSampleData.height];
+              }
+              this.$forceUpdate();
+            },
+            (e) => {
+              sampleItem.totalStepNum = 0;
+              sampleItem.sliderValue = 0;
+              sampleItem.curStep = '';
+              sampleItem.curImgUrl = '';
+              sampleItem.curTime = '';
+            }
+          )
+          .catch((e) => {});
       });
     },
     /**
@@ -379,23 +378,23 @@ export default {
      */
     getImageData(params, sampleItem) {
       RequestService.getImageData(params).then(
-          (res) => {
-            sampleItem.showErrMsg = false;
-            sampleItem.curImgUrl =
+        (res) => {
+          sampleItem.showErrMsg = false;
+          sampleItem.curImgUrl =
             `${basePath}${this.imageBasePath}train_id=${encodeURIComponent(sampleItem.summaryId)}` +
             `&tag=${encodeURIComponent(sampleItem.tagName)}&step=${params.step}&wt=${params.wt}`;
-          },
-          (e) => {
-            if (e.response && e.response.data && e.response.data.error_code) {
-              sampleItem.curImgUrl = '';
-              sampleItem.showErrMsg = true;
-              if (e.response.data.error_code === '5054500D') {
-                sampleItem.errMsg = this.$t('images.imageErrorTip');
-              } else {
-                sampleItem.errMsg = this.$t('error')[e.response.data.error_code];
-              }
+        },
+        (e) => {
+          if (e.response && e.response.data && e.response.data.error_code) {
+            sampleItem.curImgUrl = '';
+            sampleItem.showErrMsg = true;
+            if (e.response.data.error_code === '5054500D') {
+              sampleItem.errMsg = this.$t('images.imageErrorTip');
+            } else {
+              sampleItem.errMsg = this.$t('error')[e.response.data.error_code];
             }
-          },
+          }
+        }
       );
     },
     /**
@@ -569,35 +568,35 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.getSingleTrainJob(params, ignoreError)
-          .then((res) => {
-            if (this.isReloading) {
-              this.$store.commit('setIsReload', false);
-              this.isReloading = false;
-            }
-            // Fault tolerance processing
-            if (
-              !res ||
+        .then((res) => {
+          if (this.isReloading) {
+            this.$store.commit('setIsReload', false);
+            this.isReloading = false;
+          }
+          // Fault tolerance processing
+          if (
+            !res ||
             !res.data ||
             !res.data.train_jobs ||
             !res.data.train_jobs.length ||
             !res.data.train_jobs[0].tags
-            ) {
-              this.clearAllData();
-              return;
-            }
-            const oriData = res.data.train_jobs[0];
-            // Delete the data that does not exist.
-            const dataRemoveFlag = this.removeNonexistentData(oriData);
-            // Check whether new data exists and add it
-            const dataAddFlag = this.checkNewDataAndComplete(oriData);
-            this.$nextTick(() => {
-              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-              this.updateTagInPage(!dataRemoveFlag && !dataAddFlag);
-            });
-          }, this.requestErrorCallback)
-          .catch((e) => {
-            this.$message.error(this.$t('public.dataError'));
+          ) {
+            this.clearAllData();
+            return;
+          }
+          const oriData = res.data.train_jobs[0];
+          // Delete the data that does not exist.
+          const dataRemoveFlag = this.removeNonexistentData(oriData);
+          // Check whether new data exists and add it
+          const dataAddFlag = this.checkNewDataAndComplete(oriData);
+          this.$nextTick(() => {
+            this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+            this.updateTagInPage(!dataRemoveFlag && !dataAddFlag);
           });
+        }, this.requestErrorCallback)
+        .catch((e) => {
+          this.$message.error(this.$t('public.dataError'));
+        });
     },
     // Jump back to train dashboard
     jumpToTrainDashboard() {

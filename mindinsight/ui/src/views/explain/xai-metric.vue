@@ -320,7 +320,7 @@ export default {
       document.title = `${this.$t('metric.scoreSystem')}-MindInsight`;
       return;
     }
-    document.title = `${decodeURIComponent(this.$route.query.id)}-${this.$t('metric.scoreSystem')}-MindInsight`;
+    document.title = `${this.$route.query.id}-${this.$t('metric.scoreSystem')}-MindInsight`;
     this.maxHeight = this.$refs.xaiCon.clientHeight;
     this.getEvaluationData();
     window.addEventListener('resize', this.resizeCallback, false);
@@ -449,7 +449,7 @@ export default {
      */
     getSummaries(param) {
       this.tableParam = param;
-      const {columns, data} = param;
+      const { columns, data } = param;
 
       if (!this.evaluationTableData.length) {
         return [];
@@ -523,27 +523,27 @@ export default {
         train_id: this.trainId,
       };
       RequestService.getEvaluation(params).then(
-          (res) => {
-            this.initOver = true;
-            if (res && res.data) {
-              const resData = JSON.parse(JSON.stringify(res.data));
-              if (
-                resData.explainer_scores &&
+        (res) => {
+          this.initOver = true;
+          if (res && res.data) {
+            const resData = JSON.parse(JSON.stringify(res.data));
+            if (
+              resData.explainer_scores &&
               resData.explainer_scores.length &&
               resData.explainer_scores[0].evaluations.length
-              ) {
-                this.isNoData = false;
-                this.initEvaluationTable(resData);
-                this.processRadarData(resData);
-                this.initializeClassifyData(resData);
-              } else {
-                this.isNoData = true;
-              }
+            ) {
+              this.isNoData = false;
+              this.initEvaluationTable(resData);
+              this.processRadarData(resData);
+              this.initializeClassifyData(resData);
+            } else {
+              this.isNoData = true;
             }
-          },
-          (err) => {
-            this.initOver = true;
-          },
+          }
+        },
+        (err) => {
+          this.initOver = true;
+        }
       );
     },
 

@@ -269,7 +269,7 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts, {echartsThemeName} from '../../js/echarts';
+import echarts, { echartsThemeName } from '../../js/echarts';
 import ScalarButton from './scalar-button';
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
@@ -345,7 +345,7 @@ export default {
       document.title = `${this.$t('scalar.titleText')}-MindInsight`;
       return;
     }
-    document.title = `${decodeURIComponent(this.$route.query.train_id)}-${this.$t('scalar.titleText')}-MindInsight`;
+    document.title = `${this.$route.query.train_id}-${this.$t('scalar.titleText')}-MindInsight`;
     // Adding a Listener
     window.addEventListener('resize', this.resizeCallback, false);
     // Dom ready
@@ -355,7 +355,7 @@ export default {
 
       this.firstNum = 1;
 
-      this.decodeTrainingJobId = decodeURIComponent(this.trainingJobId);
+      this.decodeTrainingJobId = this.trainingJobId;
 
       this.getCache();
 
@@ -376,76 +376,76 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.getSingleTrainJob(params, false)
-          .then((res) => {
+        .then((res) => {
           // Error
-            if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
-              this.initOver = true;
-              return;
-            }
-            const tempTagList = [];
-            const dataList = [];
-            const propsList = [];
-            const data = res.data.train_jobs[0];
-            const runNmeColor = CommonProperty.commonColorArr[this.$store.state.themeIndex][0];
-            data.tags.forEach((tagObj) => {
-              if (!this.oriDataDictionaries[tagObj]) {
-                this.oriDataDictionaries[tagObj] = true;
-                // Add the tag list
-                tempTagList.push({
-                  label: tagObj,
-                  checked: true,
-                  show: true,
-                });
-                const sampleIndex = dataList.length;
-                // Adding chart data
-                dataList.push({
-                  tagName: tagObj,
-                  runNames: data.name,
-                  colors: runNmeColor,
-                  show: false,
-                  updateFlag: false,
-                  dataRemove: false,
-                  fullScreen: false,
-                  sampleIndex: sampleIndex,
-                  domId: 'prDom' + this.DomIdIndex,
-                  charData: {
-                    oriData: [],
-                    charOption: {},
-                  },
-                  zoomData: [null, null],
-                  zoomDataTimer: null,
-                  charObj: null,
-                  invalidData: false,
-                });
-
-                propsList.push({
-                  tagName: tagObj,
-                  runNames: data.name,
-                  colors: '',
-                });
-                this.DomIdIndex++;
-              }
-            });
-            this.tagOperateList = tempTagList;
-            this.tagPropsList = JSON.parse(JSON.stringify(tempTagList));
-            if (dataList.length === 1) {
-              dataList[0].fullScreen = true;
-            }
-            this.originDataArr = dataList;
-            this.propsList = propsList;
+          if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
             this.initOver = true;
+            return;
+          }
+          const tempTagList = [];
+          const dataList = [];
+          const propsList = [];
+          const data = res.data.train_jobs[0];
+          const runNmeColor = CommonProperty.commonColorArr[this.$store.state.themeIndex][0];
+          data.tags.forEach((tagObj) => {
+            if (!this.oriDataDictionaries[tagObj]) {
+              this.oriDataDictionaries[tagObj] = true;
+              // Add the tag list
+              tempTagList.push({
+                label: tagObj,
+                checked: true,
+                show: true,
+              });
+              const sampleIndex = dataList.length;
+              // Adding chart data
+              dataList.push({
+                tagName: tagObj,
+                runNames: data.name,
+                colors: runNmeColor,
+                show: false,
+                updateFlag: false,
+                dataRemove: false,
+                fullScreen: false,
+                sampleIndex: sampleIndex,
+                domId: 'prDom' + this.DomIdIndex,
+                charData: {
+                  oriData: [],
+                  charOption: {},
+                },
+                zoomData: [null, null],
+                zoomDataTimer: null,
+                charObj: null,
+                invalidData: false,
+              });
 
-            this.$nextTick(() => {
-              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-              // Obtains data on the current page
-              this.updateTagInPage();
-              this.resizeCallback();
-            });
-          }, this.requestErrorCallback)
-          .catch((e) => {
-            this.initOver = true;
-            this.$message.error(this.$t('public.dataError'));
+              propsList.push({
+                tagName: tagObj,
+                runNames: data.name,
+                colors: '',
+              });
+              this.DomIdIndex++;
+            }
           });
+          this.tagOperateList = tempTagList;
+          this.tagPropsList = JSON.parse(JSON.stringify(tempTagList));
+          if (dataList.length === 1) {
+            dataList[0].fullScreen = true;
+          }
+          this.originDataArr = dataList;
+          this.propsList = propsList;
+          this.initOver = true;
+
+          this.$nextTick(() => {
+            this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+            // Obtains data on the current page
+            this.updateTagInPage();
+            this.resizeCallback();
+          });
+        }, this.requestErrorCallback)
+        .catch((e) => {
+          this.initOver = true;
+          this.$message.error(this.$t('public.dataError'));
+        });
     },
 
     /**
@@ -493,111 +493,111 @@ export default {
         };
 
         RequestService.getScalarsSample(params)
-            .then((res) => {
+          .then((res) => {
             // Error
-              if (!res || !res.data || !res.data.metadatas) {
+            if (!res || !res.data || !res.data.metadatas) {
               // Canceled
-                if (res.toString() === 'false') {
-                  return;
-                }
-                if (sampleObject.charObj) {
-                  sampleObject.charObj.clear();
-                  sampleObject.onePoint = false;
-                }
+              if (res.toString() === 'false') {
                 return;
               }
-              let hasInvalidData = false;
-
-              if (sampleObject.charObj) {
-                sampleObject.charObj.showLoading();
-              }
-
-              const resData = res.data;
-
-              const tempObject = {
-                valueData: {
-                  stepData: [],
-                  absData: [],
-                  relativeData: [],
-                },
-                logData: {
-                  stepData: [],
-                  absData: [],
-                  relativeData: [],
-                },
-              };
-              let relativeTimeBench = 0;
-              if (resData.metadatas.length) {
-                relativeTimeBench = resData.metadatas[0].wall_time;
-              }
-
-              const mathData = [];
-              // Initializing chart data
-              resData.metadatas.forEach((metaData) => {
-                if (metaData.value === null && !hasInvalidData) {
-                  hasInvalidData = true;
-                }
-                if (!isNaN(metaData.value) && metaData.value !== null) {
-                  mathData.push(metaData.value);
-                }
-                tempObject.valueData.stepData.push([metaData.step, metaData.value]);
-                tempObject.valueData.absData.push([metaData.wall_time, metaData.value]);
-                tempObject.valueData.relativeData.push([metaData.wall_time - relativeTimeBench, metaData.value]);
-                // Values less than 0 have no logarithm
-                // Set empty string and echart does not render
-                const logValue = metaData.value > 0 ? metaData.value : '';
-                tempObject.logData.stepData.push([metaData.step, logValue]);
-                tempObject.logData.absData.push([metaData.wall_time, logValue]);
-                tempObject.logData.relativeData.push([metaData.wall_time - relativeTimeBench, logValue]);
-              });
-
-              // Numerical range
-              const filtersData = mathData.filter((item) => {
-              // Values less than 0 have no logarithm
-                return item > 0;
-              });
-              const maxData = Math.max(...filtersData);
-              const minData = Math.min(...filtersData);
-              sampleObject.max = maxData;
-              if (maxData === minData) {
-                sampleObject.isEqual = true;
-              } else {
-                sampleObject.isEqual = false;
-              }
-
-              sampleObject.charData.oriData[0] = tempObject;
-
-              if (hasInvalidData) {
-                this.$set(sampleObject, 'invalidData', true);
-              } else {
-                this.$set(sampleObject, 'invalidData', false);
-              }
-
-              sampleObject.charData.charOption = this.formateCharOption(sampleIndex);
-              const tempOption = sampleObject.charData.charOption;
-              if (tempOption.series[0].data.length === 1 || sampleObject.onePoint) {
-                tempOption.series[0].showSymbol = true;
-              } else {
-                tempOption.series[0].showSymbol = false;
-              }
-
-              this.$forceUpdate();
-
-              this.$nextTick(() => {
-                if (sampleObject.charObj) {
-                  sampleObject.charObj.hideLoading();
-                }
-                // Draw chart
-                if (!this.compare) {
-                  this.updateOrCreateChar(sampleIndex, true);
-                }
-              });
-            })
-            .catch((e) => {
               if (sampleObject.charObj) {
                 sampleObject.charObj.clear();
+                sampleObject.onePoint = false;
+              }
+              return;
+            }
+            let hasInvalidData = false;
+
+            if (sampleObject.charObj) {
+              sampleObject.charObj.showLoading();
+            }
+
+            const resData = res.data;
+
+            const tempObject = {
+              valueData: {
+                stepData: [],
+                absData: [],
+                relativeData: [],
+              },
+              logData: {
+                stepData: [],
+                absData: [],
+                relativeData: [],
+              },
+            };
+            let relativeTimeBench = 0;
+            if (resData.metadatas.length) {
+              relativeTimeBench = resData.metadatas[0].wall_time;
+            }
+
+            const mathData = [];
+            // Initializing chart data
+            resData.metadatas.forEach((metaData) => {
+              if (metaData.value === null && !hasInvalidData) {
+                hasInvalidData = true;
+              }
+              if (!isNaN(metaData.value) && metaData.value !== null) {
+                mathData.push(metaData.value);
+              }
+              tempObject.valueData.stepData.push([metaData.step, metaData.value]);
+              tempObject.valueData.absData.push([metaData.wall_time, metaData.value]);
+              tempObject.valueData.relativeData.push([metaData.wall_time - relativeTimeBench, metaData.value]);
+              // Values less than 0 have no logarithm
+              // Set empty string and echart does not render
+              const logValue = metaData.value > 0 ? metaData.value : '';
+              tempObject.logData.stepData.push([metaData.step, logValue]);
+              tempObject.logData.absData.push([metaData.wall_time, logValue]);
+              tempObject.logData.relativeData.push([metaData.wall_time - relativeTimeBench, logValue]);
+            });
+
+            // Numerical range
+            const filtersData = mathData.filter((item) => {
+              // Values less than 0 have no logarithm
+              return item > 0;
+            });
+            const maxData = Math.max(...filtersData);
+            const minData = Math.min(...filtersData);
+            sampleObject.max = maxData;
+            if (maxData === minData) {
+              sampleObject.isEqual = true;
+            } else {
+              sampleObject.isEqual = false;
+            }
+
+            sampleObject.charData.oriData[0] = tempObject;
+
+            if (hasInvalidData) {
+              this.$set(sampleObject, 'invalidData', true);
+            } else {
+              this.$set(sampleObject, 'invalidData', false);
+            }
+
+            sampleObject.charData.charOption = this.formateCharOption(sampleIndex);
+            const tempOption = sampleObject.charData.charOption;
+            if (tempOption.series[0].data.length === 1 || sampleObject.onePoint) {
+              tempOption.series[0].showSymbol = true;
+            } else {
+              tempOption.series[0].showSymbol = false;
+            }
+
+            this.$forceUpdate();
+
+            this.$nextTick(() => {
+              if (sampleObject.charObj) {
+                sampleObject.charObj.hideLoading();
+              }
+              // Draw chart
+              if (!this.compare) {
+                this.updateOrCreateChar(sampleIndex, true);
               }
             });
+          })
+          .catch((e) => {
+            if (sampleObject.charObj) {
+              sampleObject.charObj.clear();
+            }
+          });
       });
     },
 
@@ -769,23 +769,23 @@ export default {
           position: (point, params, dom, rect, size) => {
             const curDom = document.getElementById(sampleObject.domId);
             if (!curDom) {
-              return {left: 0, bottom: '100%'};
+              return { left: 0, bottom: '100%' };
             }
             if (sampleObject.fullScreen) {
               if (point[0] + size.contentSize[0] <= size.viewSize[0]) {
-                return {left: point[0], bottom: '10%'};
+                return { left: point[0], bottom: '10%' };
               } else {
-                return {right: size.viewSize[0] - point[0], bottom: '10%'};
+                return { right: size.viewSize[0] - point[0], bottom: '10%' };
               }
             } else {
               const parentNode = curDom.parentNode;
               if (!parentNode) {
-                return {left: 0, bottom: '100%'};
+                return { left: 0, bottom: '100%' };
               }
               if (parentNode.offsetLeft > size.contentSize[0]) {
-                return {right: '100%', bottom: 0};
+                return { right: '100%', bottom: 0 };
               } else {
-                return {left: '100%', bottom: 0};
+                return { left: '100%', bottom: 0 };
               }
             }
           },
@@ -866,7 +866,7 @@ export default {
                     `<td>${curSerieOriData.stepData[parma.dataIndex][0]}</td>` +
                     `<td>${curSerieOriData.relativeData[parma.dataIndex][0].toFixed(3)}${unit}</td>` +
                     `<td>${that.dealrelativeTime(
-                        new Date(curSerieOriData.absData[parma.dataIndex][0] * 1000).toString(),
+                      new Date(curSerieOriData.absData[parma.dataIndex][0] * 1000).toString()
                     )}</td>` +
                     `</tr>`;
                 }
@@ -1275,56 +1275,56 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.getSingleTrainJob(params, ignoreError)
-          .then((res) => {
-            if (this.isReloading) {
-              this.$store.commit('setIsReload', false);
-              this.isReloading = false;
-            }
+        .then((res) => {
+          if (this.isReloading) {
+            this.$store.commit('setIsReload', false);
+            this.isReloading = false;
+          }
 
-            // Fault tolerance processing
-            if (!res || !res.data) {
-              return;
-            } else if (!res.data.train_jobs || !res.data.train_jobs.length) {
-              this.clearAllData();
-              return;
-            }
-            const data = res.data.train_jobs[0];
-            // Delete the data that does not exist
-            const tagRemoveFlag = this.removeNonexistentData(data);
+          // Fault tolerance processing
+          if (!res || !res.data) {
+            return;
+          } else if (!res.data.train_jobs || !res.data.train_jobs.length) {
+            this.clearAllData();
+            return;
+          }
+          const data = res.data.train_jobs[0];
+          // Delete the data that does not exist
+          const tagRemoveFlag = this.removeNonexistentData(data);
 
-            // Check whether new data exists and add it to the page
-            const tagAddFlag = this.checkNewDataAndComplete(data);
+          // Check whether new data exists and add it to the page
+          const tagAddFlag = this.checkNewDataAndComplete(data);
 
-            this.$nextTick(() => {
-              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-              this.updateTagInPage(!tagRemoveFlag && !tagAddFlag);
-              this.resizeCallback();
-            });
-
-            const tempTagList = [];
-            const propsList = [];
-            // Initial chart data
-            data.tags.forEach((tagObj) => {
-            // Check whether the tag with the same name exists
-              tempTagList.push({
-                label: tagObj,
-                checked: true,
-                show: true,
-              });
-
-              // Add the tag list
-              propsList.push({
-                tagName: tagObj,
-                runNames: data.name,
-                colors: '',
-              });
-            });
-            this.tagPropsList = tempTagList;
-            this.propsList = propsList;
-          }, this.requestErrorCallback)
-          .catch((e) => {
-            this.$message.error(this.$t('public.dataError'));
+          this.$nextTick(() => {
+            this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+            this.updateTagInPage(!tagRemoveFlag && !tagAddFlag);
+            this.resizeCallback();
           });
+
+          const tempTagList = [];
+          const propsList = [];
+          // Initial chart data
+          data.tags.forEach((tagObj) => {
+            // Check whether the tag with the same name exists
+            tempTagList.push({
+              label: tagObj,
+              checked: true,
+              show: true,
+            });
+
+            // Add the tag list
+            propsList.push({
+              tagName: tagObj,
+              runNames: data.name,
+              colors: '',
+            });
+          });
+          this.tagPropsList = tempTagList;
+          this.propsList = propsList;
+        }, this.requestErrorCallback)
+        .catch((e) => {
+          this.$message.error(this.$t('public.dataError'));
+        });
     },
 
     /**
@@ -1404,11 +1404,11 @@ export default {
             if (index % 2 === 0) {
               if (log) {
                 singleItem.data = this.formateSmoothData(
-                    sampleObject.charData.oriData[index / 2].logData[this.curBenchX],
+                  sampleObject.charData.oriData[index / 2].logData[this.curBenchX]
                 );
               } else {
                 singleItem.data = this.formateSmoothData(
-                    sampleObject.charData.oriData[index / 2].valueData[this.curBenchX],
+                  sampleObject.charData.oriData[index / 2].valueData[this.curBenchX]
                 );
               }
             }

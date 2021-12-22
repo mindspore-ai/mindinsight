@@ -152,10 +152,10 @@ limitations under the License.
 <script>
 import RequestService from '../../services/request-service';
 import CommonProperty from '@/common/common-property.js';
-import {select, selectAll, zoom} from 'd3';
-import {event as currentEvent} from 'd3-selection';
+import { select, selectAll, zoom } from 'd3';
+import { event as currentEvent } from 'd3-selection';
 import 'd3-graphviz';
-const d3 = {select, selectAll, zoom};
+const d3 = { select, selectAll, zoom };
 export default {
   data() {
     return {
@@ -182,7 +182,7 @@ export default {
       return;
     }
     this.trainJobID = this.$route.query.train_id;
-    document.title = `${decodeURIComponent(this.trainJobID)}-${this.$t('trainingDashboard.dataMap')}-MindInsight`;
+    document.title = `${this.trainJobID}-${this.$t('trainingDashboard.dataMap')}-MindInsight`;
     this.$nextTick(() => {
       this.queryGraphData();
     });
@@ -317,12 +317,12 @@ export default {
      */
     initGraph(dot) {
       this.graphviz = d3
-          .select('#graph')
-          .graphviz({useWorker: false, totalMemory: this.totalMemory})
-          .zoomScaleExtent(this.scaleRange)
-          .dot(dot)
-          .attributer(this.attributer)
-          .render(this.afterInitGraph);
+        .select('#graph')
+        .graphviz({ useWorker: false, totalMemory: this.totalMemory })
+        .zoomScaleExtent(this.scaleRange)
+        .dot(dot)
+        .attributer(this.attributer)
+        .render(this.afterInitGraph);
     },
     /**
      * Process other data after the dataset graph is initialized.
@@ -382,80 +382,80 @@ export default {
 
       const padding = 4;
       const minDistance = 50;
-      const pointer = {start: {x: 0, y: 0}, end: {x: 0, y: 0}};
+      const pointer = { start: { x: 0, y: 0 }, end: { x: 0, y: 0 } };
 
       const zoom = d3
-          .zoom()
-          .on('start', () => {
-            const event = currentEvent.sourceEvent;
-            pointer.start.x = event.x;
-            pointer.start.y = event.y;
-          })
-          .on('zoom', () => {
-            const event = currentEvent.sourceEvent;
-            const transformData = this.getTransformData(graphDom);
-            if (!Object.keys(graphTransform).length) {
-              graphTransform = {
-                x: transformData.translate[0],
-                y: transformData.translate[1],
-                k: transformData.scale[0],
-              };
-            }
-
-            let tempStr = '';
-            let change = {};
-            let scale = transformData.scale[0];
-            const graphRect = graphDom.getBoundingClientRect();
-            const transRate = graphBox.width / graphRect.width;
-            if (event.type === 'mousemove') {
-              pointer.end.x = event.x;
-              pointer.end.y = event.y;
-              let tempX = pointer.end.x - pointer.start.x;
-              let tempY = pointer.end.y - pointer.start.y;
-              const paddingTrans = Math.max(padding / transRate / scale, minDistance);
-              if (graphRect.left + paddingTrans + tempX >= svgRect.left + svgRect.width) {
-                tempX = Math.min(tempX, 0);
-              }
-              if (graphRect.left + graphRect.width - paddingTrans + tempX <= svgRect.left) {
-                tempX = Math.max(tempX, 0);
-              }
-              if (graphRect.top + paddingTrans + tempY >= svgRect.top + svgRect.height) {
-                tempY = Math.min(tempY, 0);
-              }
-              if (graphRect.top + graphRect.height - paddingTrans + tempY <= svgRect.top) {
-                tempY = Math.max(tempY, 0);
-              }
-
-              change = {
-                x: tempX * transRate * scale,
-                y: tempY * transRate * scale,
-              };
-              pointer.start.x = pointer.end.x;
-              pointer.start.y = pointer.end.y;
-            } else if (event.type === 'wheel') {
-              const wheelDelta = -event.deltaY;
-              const rate = 1.2;
-              scale = wheelDelta > 0 ? transformData.scale[0] * rate : transformData.scale[0] / rate;
-
-              scale = Math.max(this.scaleRange[0], scale, minScale);
-              scale = Math.min(this.scaleRange[1], scale);
-              change = {
-                x: (graphRect.x + padding / transRate - event.x) * transRate * (scale - transformData.scale[0]),
-                y: (graphRect.bottom - padding / transRate - event.y) * transRate * (scale - transformData.scale[0]),
-              };
-            }
-
+        .zoom()
+        .on('start', () => {
+          const event = currentEvent.sourceEvent;
+          pointer.start.x = event.x;
+          pointer.start.y = event.y;
+        })
+        .on('zoom', () => {
+          const event = currentEvent.sourceEvent;
+          const transformData = this.getTransformData(graphDom);
+          if (!Object.keys(graphTransform).length) {
             graphTransform = {
-              x: transformData.translate[0] + change.x,
-              y: transformData.translate[1] + change.y,
-              k: scale,
+              x: transformData.translate[0],
+              y: transformData.translate[1],
+              k: transformData.scale[0],
             };
+          }
 
-            tempStr = `translate(${graphTransform.x},${graphTransform.y}) scale(${graphTransform.k})`;
-            graphDom.setAttribute('transform', tempStr);
-            event.stopPropagation();
-            event.preventDefault();
-          });
+          let tempStr = '';
+          let change = {};
+          let scale = transformData.scale[0];
+          const graphRect = graphDom.getBoundingClientRect();
+          const transRate = graphBox.width / graphRect.width;
+          if (event.type === 'mousemove') {
+            pointer.end.x = event.x;
+            pointer.end.y = event.y;
+            let tempX = pointer.end.x - pointer.start.x;
+            let tempY = pointer.end.y - pointer.start.y;
+            const paddingTrans = Math.max(padding / transRate / scale, minDistance);
+            if (graphRect.left + paddingTrans + tempX >= svgRect.left + svgRect.width) {
+              tempX = Math.min(tempX, 0);
+            }
+            if (graphRect.left + graphRect.width - paddingTrans + tempX <= svgRect.left) {
+              tempX = Math.max(tempX, 0);
+            }
+            if (graphRect.top + paddingTrans + tempY >= svgRect.top + svgRect.height) {
+              tempY = Math.min(tempY, 0);
+            }
+            if (graphRect.top + graphRect.height - paddingTrans + tempY <= svgRect.top) {
+              tempY = Math.max(tempY, 0);
+            }
+
+            change = {
+              x: tempX * transRate * scale,
+              y: tempY * transRate * scale,
+            };
+            pointer.start.x = pointer.end.x;
+            pointer.start.y = pointer.end.y;
+          } else if (event.type === 'wheel') {
+            const wheelDelta = -event.deltaY;
+            const rate = 1.2;
+            scale = wheelDelta > 0 ? transformData.scale[0] * rate : transformData.scale[0] / rate;
+
+            scale = Math.max(this.scaleRange[0], scale, minScale);
+            scale = Math.min(this.scaleRange[1], scale);
+            change = {
+              x: (graphRect.x + padding / transRate - event.x) * transRate * (scale - transformData.scale[0]),
+              y: (graphRect.bottom - padding / transRate - event.y) * transRate * (scale - transformData.scale[0]),
+            };
+          }
+
+          graphTransform = {
+            x: transformData.translate[0] + change.x,
+            y: transformData.translate[1] + change.y,
+            k: scale,
+          };
+
+          tempStr = `translate(${graphTransform.x},${graphTransform.y}) scale(${graphTransform.k})`;
+          graphDom.setAttribute('transform', tempStr);
+          event.stopPropagation();
+          event.preventDefault();
+        });
 
       const svg = d3.select('#graph svg');
       svg.on('.zoom', null);
@@ -485,11 +485,11 @@ export default {
           const index2 = item.indexOf(')');
           const name = item.substring(0, index1);
           const params = item
-              .substring(index1 + 1, index2)
-              .split(',')
-              .map((i) => {
-                return parseFloat(i) || 0;
-              });
+            .substring(index1 + 1, index2)
+            .split(',')
+            .map((i) => {
+              return parseFloat(i) || 0;
+            });
           attrObj[name] = params;
         });
       }
@@ -525,7 +525,7 @@ export default {
           if (!ignoreKeys.includes(item)) {
             const value =
               select[item] instanceof Array ? select[item].join(', ') : select[item] === null ? 'None' : select[item];
-            this.selectedNode.push({key: item, value: value});
+            this.selectedNode.push({ key: item, value: value });
           }
         });
       }

@@ -108,7 +108,7 @@ limitations under the License.
                     </div>
                   </div>
                   <el-switch v-model="isOptimizeGraph"
-                             @change="handleGraphModeChange"/>
+                             @change="handleGraphModeChange" />
                 </el-tooltip>
                 {{ $t('components.optimize') }}
               </div>
@@ -515,9 +515,9 @@ limitations under the License.
 <script>
 import CommonProperty from '@/common/common-property.js';
 import RequestService from '@/services/request-service';
-import {select, selectAll, zoom} from 'd3';
+import { select, selectAll, zoom } from 'd3';
 import 'd3-graphviz';
-const d3 = {select, selectAll, zoom};
+const d3 = { select, selectAll, zoom };
 import commonGraph from '../../mixins/common-graph.vue';
 import smallMap from '../../mixins/small-map.vue';
 
@@ -642,7 +642,7 @@ export default {
       window.localStorage.setItem('milang', this.language);
     }
 
-    document.title = `${decodeURIComponent(this.trainJobID)}-${this.$t('graph.titleText')}-MindInsight`;
+    document.title = `${this.trainJobID}-${this.$t('graph.titleText')}-MindInsight`;
     window.onresize = () => {
       if (this.graph.dom) {
         this.$nextTick(() => {
@@ -804,7 +804,7 @@ export default {
       if (this.treeFlag) {
         this.selectNode(true);
       } else {
-        this.querySingleNode({value: data.name});
+        this.querySingleNode({ value: data.name });
       }
     },
 
@@ -853,9 +853,7 @@ export default {
      */
     queryGraphData(name, resolve) {
       const namescopeChildLimit = 3500;
-      const independentLayout = this.allGraphData[name]
-        ? this.allGraphData[name].independent_layout
-        : false;
+      const independentLayout = this.allGraphData[name] ? this.allGraphData[name].independent_layout : false;
       const params = {
         name: name,
         train_id: this.trainJobID,
@@ -865,89 +863,84 @@ export default {
       this.loading.info = this.$t('graph.queryLoading');
       this.loading.show = true;
       RequestService.queryGraphData(params)
-          .then(
-              (response) => {
-                if (response && response.data && response.data.nodes) {
-                  // If the namespace to be expanded is larger than the maximum number of subnodes,
-                  // an error is reported and the namespace is highlighted.
-                  const nodesCountLimit = name
-                ? this.nodesCountLimit
-                : namescopeChildLimit;
-                  if (
-                    !independentLayout &&
-                response.data.nodes.length > nodesCountLimit
-                  ) {
-                    this.$message.error(this.$t('graph.tooManyNodes'));
-                    this.packageDataToObject(name, false);
-                    this.loading.show = false;
-                    this.$refs.tree.getNode(name).loading = false;
-                  } else {
-                    const nodes = JSON.parse(JSON.stringify(response.data.nodes));
-                    if (nodes && nodes.length) {
-                      this.packageDataToObject(name, true, nodes);
-                      // If the name is empty, it indicates the outermost layer.
-                      if (!name) {
-                        this.initGraph();
-                      } else {
-                        if (this.allGraphData[name].type === 'aggregation_scope') {
-                          this.dealAggregationNodes(name);
-                          if (this.allGraphData[name].maxChainNum > this.maxChainNum) {
-                            this.$message.error(this.$t('graph.tooManyChain'));
-                            this.allGraphData[name].isUnfold = true;
-                            this.selectedNode.name = name;
-                            this.loading.show = false;
-                            this.deleteNamespace(name);
-                            this.$refs.tree.getNode(name).loading = false;
-                            return;
-                          }
-                        }
-                        this.allGraphData[name].isUnfold = true;
-                        this.selectedNode.name = `${name}_unfold`;
-                        this.layoutNamescope(name, true);
-                      }
-                    } else {
-                      this.initSmallMap();
-                      this.loading.show = false;
-                    }
-                    const data = response.data.nodes.map((val) => {
-                      return {
-                        label: val.name.split('/').pop(),
-                        leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
-                        ...val,
-                      };
-                    });
-                    if (name) {
-                      if (resolve) {
-                        resolve(JSON.parse(JSON.stringify(data)));
-                      } else {
-                        this.nodeExpandLinkage(response.data.nodes, name);
-                      }
-                    } else {
-                      this.node.childNodes = [];
-                      this.resolve(JSON.parse(JSON.stringify(data)));
-                    }
-                  }
-                }
-              },
-              (error) => {
+        .then(
+          (response) => {
+            if (response && response.data && response.data.nodes) {
+              // If the namespace to be expanded is larger than the maximum number of subnodes,
+              // an error is reported and the namespace is highlighted.
+              const nodesCountLimit = name ? this.nodesCountLimit : namescopeChildLimit;
+              if (!independentLayout && response.data.nodes.length > nodesCountLimit) {
+                this.$message.error(this.$t('graph.tooManyNodes'));
+                this.packageDataToObject(name, false);
                 this.loading.show = false;
-              },
-          )
-          .catch((error) => {
-          // A non-Google Chrome browser may not work properly.
+                this.$refs.tree.getNode(name).loading = false;
+              } else {
+                const nodes = JSON.parse(JSON.stringify(response.data.nodes));
+                if (nodes && nodes.length) {
+                  this.packageDataToObject(name, true, nodes);
+                  // If the name is empty, it indicates the outermost layer.
+                  if (!name) {
+                    this.initGraph();
+                  } else {
+                    if (this.allGraphData[name].type === 'aggregation_scope') {
+                      this.dealAggregationNodes(name);
+                      if (this.allGraphData[name].maxChainNum > this.maxChainNum) {
+                        this.$message.error(this.$t('graph.tooManyChain'));
+                        this.allGraphData[name].isUnfold = true;
+                        this.selectedNode.name = name;
+                        this.loading.show = false;
+                        this.deleteNamespace(name);
+                        this.$refs.tree.getNode(name).loading = false;
+                        return;
+                      }
+                    }
+                    this.allGraphData[name].isUnfold = true;
+                    this.selectedNode.name = `${name}_unfold`;
+                    this.layoutNamescope(name, true);
+                  }
+                } else {
+                  this.initSmallMap();
+                  this.loading.show = false;
+                }
+                const data = response.data.nodes.map((val) => {
+                  return {
+                    label: val.name.split('/').pop(),
+                    leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
+                    ...val,
+                  };
+                });
+                if (name) {
+                  if (resolve) {
+                    resolve(JSON.parse(JSON.stringify(data)));
+                  } else {
+                    this.nodeExpandLinkage(response.data.nodes, name);
+                  }
+                } else {
+                  this.node.childNodes = [];
+                  this.resolve(JSON.parse(JSON.stringify(data)));
+                }
+              }
+            }
+          },
+          (error) => {
             this.loading.show = false;
-            if (error && error.includes('larger than maximum 65535 allowed')) {
-              this.$message.error(this.$t('graph.dataTooLarge'));
-            } else {
-              this.$bus.$emit('showWarmText', true);
-            }
-            if (name && this.allGraphData[name]) {
-              this.allGraphData[name].isUnfold = false;
-              this.allGraphData[name].children = [];
-              this.allGraphData[name].size = [];
-              this.allGraphData[name].html = '';
-            }
-          });
+          }
+        )
+        .catch((error) => {
+          // A non-Google Chrome browser may not work properly.
+          this.loading.show = false;
+          if (error && error.includes('larger than maximum 65535 allowed')) {
+            this.$message.error(this.$t('graph.dataTooLarge'));
+          } else {
+            this.$bus.$emit('showWarmText', true);
+          }
+          if (name && this.allGraphData[name]) {
+            this.allGraphData[name].isUnfold = false;
+            this.allGraphData[name].children = [];
+            this.allGraphData[name].size = [];
+            this.allGraphData[name].html = '';
+          }
+        });
     },
     /**
      * To obtain datavisual plugins
@@ -958,33 +951,33 @@ export default {
         train_id: this.trainJobID,
       };
       RequestService.getDatavisualPlugins(params)
-          .then((res) => {
-            this.fileSearchBox.suggestions = [];
-            if (!res || !res.data || !res.data.plugins || !res.data.plugins.graph || !res.data.plugins.graph.length) {
-              this.initOver = true;
-              return;
-            }
-            const tags = this.graphMode === NORMAL_MODE ? res.data.plugins.graph : res.data.plugins.optimized_graph;
-            let hasFileSearchValue = false;
-            tags.forEach((k) => {
-              this.fileSearchBox.suggestions.push({
-                value: k,
-              });
-              hasFileSearchValue = k === this.fileSearchBox.value || hasFileSearchValue;
-            });
-            if (!this.initOver) {
-              this.initOver = true;
-              this.fileSearchBox.value = tags.length ? tags[0] : '';
-              this.queryGraphData();
-            } else if (!hasFileSearchValue) {
-              this.fileSearchBox.value = '';
-            }
-          })
-          .catch(() => {
-            this.fileSearchBox.suggestions = [];
+        .then((res) => {
+          this.fileSearchBox.suggestions = [];
+          if (!res || !res.data || !res.data.plugins || !res.data.plugins.graph || !res.data.plugins.graph.length) {
             this.initOver = true;
-            this.loading.show = false;
+            return;
+          }
+          const tags = this.graphMode === NORMAL_MODE ? res.data.plugins.graph : res.data.plugins.optimized_graph;
+          let hasFileSearchValue = false;
+          tags.forEach((k) => {
+            this.fileSearchBox.suggestions.push({
+              value: k,
+            });
+            hasFileSearchValue = k === this.fileSearchBox.value || hasFileSearchValue;
           });
+          if (!this.initOver) {
+            this.initOver = true;
+            this.fileSearchBox.value = tags.length ? tags[0] : '';
+            this.queryGraphData();
+          } else if (!hasFileSearchValue) {
+            this.fileSearchBox.value = '';
+          }
+        })
+        .catch(() => {
+          this.fileSearchBox.suggestions = [];
+          this.initOver = true;
+          this.loading.show = false;
+        });
     },
     /**
      * Close the expanded namespace.
@@ -1146,11 +1139,15 @@ export default {
       this.graph.transform.y -= screenChange.y * (this.graph.size.height / graph.initHeight);
 
       this.graph.dom.setAttribute(
-          'transform',
-          `translate(${this.graph.transform.x},${this.graph.transform.y}) scale(${this.graph.transform.k})`,
+        'transform',
+        `translate(${this.graph.transform.x},${this.graph.transform.y}) scale(${this.graph.transform.k})`
       );
 
-      const transitionTime = Math.min(Math.abs(screenChange.x) * 2, Math.abs(screenChange.y) * 2, needDelay ? 800 : 0);
+      const transitionTime = Math.min(
+        Math.abs(screenChange.x) * 2,
+        Math.abs(screenChange.y) * 2,
+        needDelay ? 800 : 0
+      );
 
       this.graph.dom.style.transition = `${transitionTime / 1000}s`;
       this.graph.dom.style['transition-timing-function'] = 'linear';
@@ -1174,7 +1171,8 @@ export default {
      */
     selectBoxVisibleTriggle(event) {
       setTimeout(() => {
-        document.querySelector('.el-autocomplete-suggestion').style.display = event.type === 'blur' ? 'none' : 'block';
+        document.querySelector('.el-autocomplete-suggestion').style.display =
+          event.type === 'blur' ? 'none' : 'block';
       }, 300);
     },
     /**
@@ -1229,40 +1227,40 @@ export default {
         mode: this.graphMode,
       };
       RequestService.searchNodesNames(params)
-          .then(
-              (response) => {
-                if (response && response.data) {
-                  this.treeFlag = false;
-                  this.treeWrapFlag = true;
-                  this.searchNode.childNodes = [];
-                  const data = response.data.nodes.map((val) => {
-                    return {
-                      label: val.name.split('/').pop(),
-                      ...val,
-                    };
+        .then(
+          (response) => {
+            if (response && response.data) {
+              this.treeFlag = false;
+              this.treeWrapFlag = true;
+              this.searchNode.childNodes = [];
+              const data = response.data.nodes.map((val) => {
+                return {
+                  label: val.name.split('/').pop(),
+                  ...val,
+                };
+              });
+              const currentData = JSON.parse(JSON.stringify(data));
+              currentData.forEach((val) => {
+                val.nodes = [];
+              });
+              this.searchResolve(currentData);
+              data.forEach((val, key) => {
+                if (val.nodes && val.nodes.length) {
+                  val.nodes.forEach((value) => {
+                    value.parentName = val.name;
                   });
-                  const currentData = JSON.parse(JSON.stringify(data));
-                  currentData.forEach((val) => {
-                    val.nodes = [];
-                  });
-                  this.searchResolve(currentData);
-                  data.forEach((val, key) => {
-                    if (val.nodes && val.nodes.length) {
-                      val.nodes.forEach((value) => {
-                        value.parentName = val.name;
-                      });
-                      this.dealSearchTreeData(val.nodes);
-                    }
-                  });
+                  this.dealSearchTreeData(val.nodes);
                 }
-              },
-              (e) => {
-                this.loading.show = false;
-              },
-          )
-          .catch((e) => {
-            this.$message.error(this.$t('public.dataError'));
-          });
+              });
+            }
+          },
+          (e) => {
+            this.loading.show = false;
+          }
+        )
+        .catch((e) => {
+          this.$message.error(this.$t('public.dataError'));
+        });
     },
     /**
      * Draw the tree
@@ -1340,26 +1338,26 @@ export default {
         this.loading.info = this.$t('graph.searchLoading');
         this.loading.show = true;
         RequestService.querySingleNode(params)
-            .then(
-                (response) => {
-                  if (response && response.data && response.data.children) {
-                    const data = this.findStartUnfoldNode(response.data.children);
-                    if (data) {
-                      this.dealAutoUnfoldNamescopesData(data);
-                    }
-                    if (response.data.children) {
-                      this.dealTreeData(response.data.children, option.value);
-                    }
-                  }
-                },
-                (e) => {
-                  this.loading.show = false;
-                },
-            )
-            .catch((e) => {
+          .then(
+            (response) => {
+              if (response && response.data && response.data.children) {
+                const data = this.findStartUnfoldNode(response.data.children);
+                if (data) {
+                  this.dealAutoUnfoldNamescopesData(data);
+                }
+                if (response.data.children) {
+                  this.dealTreeData(response.data.children, option.value);
+                }
+              }
+            },
+            (e) => {
               this.loading.show = false;
-              this.$message.error(this.$t('public.dataError'));
-            });
+            }
+          )
+          .catch((e) => {
+            this.loading.show = false;
+            this.$message.error(this.$t('public.dataError'));
+          });
       }
     },
     /**
@@ -1431,7 +1429,7 @@ export default {
           // an error is reported and the namespace is selected.
           if (this.allGraphData[data.scope_name].type === 'name_scope' && data.nodes.length > this.nodesCountLimit) {
             this.selectedNode.name = data.scope_name;
-            this.querySingleNode({value: data.scope_name});
+            this.querySingleNode({ value: data.scope_name });
             this.$message.error(this.$t('graph.tooManyNodes'));
             this.$nextTick(() => {
               this.loading.show = false;
@@ -1534,7 +1532,7 @@ export default {
       const downloadLink = document.createElement('a');
       downloadLink.download = 'graph.svg';
       downloadLink.style.display = 'none';
-      const blob = new Blob([encodeStr], {type: 'text/html'});
+      const blob = new Blob([encodeStr], { type: 'text/html' });
       downloadLink.href = URL.createObjectURL(blob);
       document.body.appendChild(downloadLink);
       downloadLink.click();
