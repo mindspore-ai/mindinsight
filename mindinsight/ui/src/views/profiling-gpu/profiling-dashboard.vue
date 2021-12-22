@@ -542,9 +542,7 @@ export default {
           this.relativePath = newValue.query.path;
           this.currentCard = newValue.curCardNum;
           if (this.trainingJobId) {
-            document.title = `${decodeURIComponent(this.trainingJobId)}-${this.$t(
-                'profiling.profilingDashboard',
-            )}-MindInsight`;
+            document.title = `${this.trainingJobId}-${this.$t('profiling.profilingDashboard')}-MindInsight`;
           } else {
             document.title = `${this.$t('profiling.profilingDashboard')}-MindInsight`;
           }
@@ -709,48 +707,48 @@ export default {
         },
       };
       RequestService.getProfilerOpData(params)
-          .then((res) => {
-            this.pieChart.initOver = true;
-            if (res && res.data) {
-              if (res.data.object) {
-                this.pieChart.data = [];
-                res.data.object.forEach((item) => {
-                  if (this.pieChart.data && this.pieChart.data.length < 5) {
-                    this.pieChart.data.push({
-                      name: item[0],
-                      value: item[4],
-                      frequency: item[1],
-                      percent: item[3],
-                    });
-                  } else {
-                    if (!this.pieChart.data[5]) {
-                      this.pieChart.data[5] = {
-                        name: 'Other',
-                        value: 0,
-                        percent: 0,
-                      };
-                    }
-                    this.pieChart.data[5].value += item[4];
-                    this.pieChart.data[5].percent += item[3];
+        .then((res) => {
+          this.pieChart.initOver = true;
+          if (res && res.data) {
+            if (res.data.object) {
+              this.pieChart.data = [];
+              res.data.object.forEach((item) => {
+                if (this.pieChart.data && this.pieChart.data.length < 5) {
+                  this.pieChart.data.push({
+                    name: item[0],
+                    value: item[4],
+                    frequency: item[1],
+                    percent: item[3],
+                  });
+                } else {
+                  if (!this.pieChart.data[5]) {
+                    this.pieChart.data[5] = {
+                      name: 'Other',
+                      value: 0,
+                      percent: 0,
+                    };
                   }
-                });
-                this.setPieOption();
-                this.pieChart.noData = !!!this.pieChart.data.length;
-                this.pieChart.topN = this.pieChart.data.slice(0, Math.min(this.pieChart.data.length, 5)).map((i) => {
-                  return {
-                    name: i.name,
-                    time: i.value,
-                    frequency: i.frequency,
-                  };
-                });
-              }
+                  this.pieChart.data[5].value += item[4];
+                  this.pieChart.data[5].percent += item[3];
+                }
+              });
+              this.setPieOption();
+              this.pieChart.noData = !!!this.pieChart.data.length;
+              this.pieChart.topN = this.pieChart.data.slice(0, Math.min(this.pieChart.data.length, 5)).map((i) => {
+                return {
+                  name: i.name,
+                  time: i.value,
+                  frequency: i.frequency,
+                };
+              });
             }
-          })
-          .catch(() => {
-            this.pieChart.data = [];
-            this.pieChart.noData = true;
-            this.pieChart.initOver = true;
-          });
+          }
+        })
+        .catch(() => {
+          this.pieChart.data = [];
+          this.pieChart.noData = true;
+          this.pieChart.initOver = true;
+        });
     },
     /**
      * Query the data of time line
@@ -762,40 +760,40 @@ export default {
         device_type: 'gpu',
       };
       RequestService.queryTimelineInfo(params)
-          .then((res) => {
-            this.timelineInfo.initOver = true;
-            if (res && res.data) {
-              this.timelineInfo.noData = false;
+        .then((res) => {
+          this.timelineInfo.initOver = true;
+          if (res && res.data) {
+            this.timelineInfo.noData = false;
 
-              this.timelineInfo.totalTime =
+            this.timelineInfo.totalTime =
               this.toFixedFun(res.data.total_time, 4) || (res.data.total_time === 0 ? 0 : '--');
-              this.timelineInfo.streamNum = res.data.num_of_streams || (res.data.num_of_streams === 0 ? 0 : '--');
-              this.timelineInfo.opNum = res.data.num_of_ops || (res.data.num_of_ops === 0 ? 0 : '--');
-              this.timelineInfo.opTimes = res.data.op_exe_times || (res.data.op_exe_times === 0 ? 0 : '--');
-              if (res.data.max_scope_name_num >= 0) {
-                this.timelineInfo.scopeNameNum = res.data.max_scope_name_num;
-                this.timelineInfo.scopeNameNumArr = Array(res.data.max_scope_name_num + 1)
-                    .fill()
-                    .map((value, key) => {
-                      return {
-                        label: key,
-                        value: key,
-                      };
-                    });
-                this.timeLine.disable = false;
-              } else {
-                this.timeLine.disable = true;
-              }
+            this.timelineInfo.streamNum = res.data.num_of_streams || (res.data.num_of_streams === 0 ? 0 : '--');
+            this.timelineInfo.opNum = res.data.num_of_ops || (res.data.num_of_ops === 0 ? 0 : '--');
+            this.timelineInfo.opTimes = res.data.op_exe_times || (res.data.op_exe_times === 0 ? 0 : '--');
+            if (res.data.max_scope_name_num >= 0) {
+              this.timelineInfo.scopeNameNum = res.data.max_scope_name_num;
+              this.timelineInfo.scopeNameNumArr = Array(res.data.max_scope_name_num + 1)
+                .fill()
+                .map((value, key) => {
+                  return {
+                    label: key,
+                    value: key,
+                  };
+                });
+              this.timeLine.disable = false;
             } else {
-              this.timelineInfo.noData = true;
               this.timeLine.disable = true;
             }
-          })
-          .catch(() => {
+          } else {
             this.timelineInfo.noData = true;
-            this.timelineInfo.initOver = true;
             this.timeLine.disable = true;
-          });
+          }
+        })
+        .catch(() => {
+          this.timelineInfo.noData = true;
+          this.timelineInfo.initOver = true;
+          this.timeLine.disable = true;
+        });
     },
     queryTimeline() {
       this.timeLine.waiting = true;
@@ -807,17 +805,17 @@ export default {
         scope_name_num: this.timelineInfo.scopeNameNum,
       };
       RequestService.queryTimeline(params)
-          .then((res) => {
-            this.timeLine.waiting = false;
-            this.timeLine.disable = false;
-            if (res && res.data && res.data.length) {
-              this.timeLine.data = JSON.stringify(res.data);
-              this.downloadTimelineFile();
-            }
-          })
-          .catch(() => {
-            this.timeLine.waiting = false;
-          });
+        .then((res) => {
+          this.timeLine.waiting = false;
+          this.timeLine.disable = false;
+          if (res && res.data && res.data.length) {
+            this.timeLine.data = JSON.stringify(res.data);
+            this.downloadTimelineFile();
+          }
+        })
+        .catch(() => {
+          this.timeLine.waiting = false;
+        });
     },
     /**
      * Download timeline data file
@@ -878,52 +876,52 @@ export default {
         device_id: this.currentCard,
       };
       RequestService.queryTrainingTrace(params).then(
-          (res) => {
-            this.svg.initOver = true;
-            this.isHeterogeneous = res.data.is_heterogeneous;
-            if (res && res.data && res.data.training_trace_graph && res.data.training_trace_graph.length) {
-              this.svg.noData = false;
-              this.removeTrace();
-              this.$nextTick(() => {
-                this.packageTraceData(JSON.parse(JSON.stringify(res.data.training_trace_graph)));
-              });
+        (res) => {
+          this.svg.initOver = true;
+          this.isHeterogeneous = res.data.is_heterogeneous;
+          if (res && res.data && res.data.training_trace_graph && res.data.training_trace_graph.length) {
+            this.svg.noData = false;
+            this.removeTrace();
+            this.$nextTick(() => {
+              this.packageTraceData(JSON.parse(JSON.stringify(res.data.training_trace_graph)));
+            });
 
-              // Set the display information in tip
-              if (res.data.summary) {
-                this.fpBpPercent = res.data.summary.fp_and_bp_percent;
-                this.fpPercent = res.data.summary.fp_percent;
-                this.iterationIntervalPercent = res.data.summary.iteration_interval_percent;
-                this.totalSteps = res.data.summary.total_steps;
-                this.totalTime = res.data.summary.total_time;
-                this.tailPercent = res.data.summary.tail_percent;
-              } else {
-                this.fpBpPercent = '--';
-                this.iterationIntervalPercent = '--';
-                this.totalSteps = '--';
-                this.totalTime = '--';
-                this.tailPercent = '--';
-              }
+            // Set the display information in tip
+            if (res.data.summary) {
+              this.fpBpPercent = res.data.summary.fp_and_bp_percent;
+              this.fpPercent = res.data.summary.fp_percent;
+              this.iterationIntervalPercent = res.data.summary.iteration_interval_percent;
+              this.totalSteps = res.data.summary.total_steps;
+              this.totalTime = res.data.summary.total_time;
+              this.tailPercent = res.data.summary.tail_percent;
             } else {
-              this.svg.totalHeight = 0;
-              this.svg.noData = true;
-              this.svg.data = [];
-              this.svg.initOver = true;
-              this.removeTrace();
+              this.fpBpPercent = '--';
+              this.iterationIntervalPercent = '--';
+              this.totalSteps = '--';
+              this.totalTime = '--';
+              this.tailPercent = '--';
             }
-          },
-          (error) => {
+          } else {
             this.svg.totalHeight = 0;
             this.svg.noData = true;
             this.svg.data = [];
             this.svg.initOver = true;
             this.removeTrace();
-            this.fpBpPercent = '--';
-            this.iterationIntervalPercent = '--';
-            this.totalSteps = '--';
-            this.totalTime = '--';
-            this.tailPercent = '--';
-            this.isHeterogeneous = false;
-          },
+          }
+        },
+        (error) => {
+          this.svg.totalHeight = 0;
+          this.svg.noData = true;
+          this.svg.data = [];
+          this.svg.initOver = true;
+          this.removeTrace();
+          this.fpBpPercent = '--';
+          this.iterationIntervalPercent = '--';
+          this.totalSteps = '--';
+          this.totalTime = '--';
+          this.tailPercent = '--';
+          this.isHeterogeneous = false;
+        }
       );
     },
     /**
@@ -1027,10 +1025,10 @@ export default {
       rect.setAttribute('height', item.height);
       rect.setAttribute('width', this.svg.totalWidth);
       rect.setAttribute(
-          'style',
-          `fill:${CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactContainerFill};stroke:${
-            CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactContainerStroke
-          };stroke-width:1`,
+        'style',
+        `fill:${CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactContainerFill};stroke:${
+          CommonProperty.stepTraceThemes[this.$store.state.themeIndex].reactContainerStroke
+        };stroke-width:1`
       );
       rectContainer.appendChild(rect);
 
@@ -1115,13 +1113,13 @@ export default {
       const foreignObject = document.createElementNS(this.svg.namespaceURI, 'foreignObject');
       foreignObject.textContent = textContent;
       foreignObject.setAttribute(
-          'x',
+        'x',
         normalSize
           ? x1
           : Math.min(
               this.svg.svgPadding * 2 + this.svg.totalWidth - textWidth - this.svg.textMargin,
-              Math.max(this.svg.textMargin, x1 + width / 2 - textWidth / 2),
-          ),
+              Math.max(this.svg.textMargin, x1 + width / 2 - textWidth / 2)
+            )
       );
 
       foreignObject.setAttribute('y', startY);
@@ -1173,11 +1171,11 @@ export default {
       const textWidth = text.textContent ? this.getTextWidth(text.textContent) : 0;
       // The position of the text cannot go beyond the border of the SVG
       text.setAttribute(
-          'x',
-          Math.min(
-              this.svg.svgPadding * 2 + this.svg.totalWidth - textWidth - this.svg.textMargin,
-              Math.max(this.svg.textMargin, width / 2 + x1 - textWidth / 2),
-          ),
+        'x',
+        Math.min(
+          this.svg.svgPadding * 2 + this.svg.totalWidth - textWidth - this.svg.textMargin,
+          Math.max(this.svg.textMargin, width / 2 + x1 - textWidth / 2)
+        )
       );
       text.setAttribute('y', centerY - this.svg.fontSize / 2);
       text.setAttribute('font-size', this.svg.fontSize);

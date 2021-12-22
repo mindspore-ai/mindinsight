@@ -69,7 +69,7 @@ limitations under the License.
 <script>
 import operatorUnit from '../../components/operator-unit.vue';
 export default {
-  components: {operatorUnit},
+  components: { operatorUnit },
   data() {
     return {
       apiType: 'op',
@@ -286,7 +286,7 @@ export default {
   },
   mounted() {
     if (this.train_id) {
-      document.title = `${decodeURIComponent(this.train_id)}-${this.$t('profiling.operatorDetail')}-MindInsight`;
+      document.title = `${this.train_id}-${this.$t('profiling.operatorDetail')}-MindInsight`;
     } else {
       document.title = `${this.$t('profiling.operatorDetail')}-MindInsight`;
     }

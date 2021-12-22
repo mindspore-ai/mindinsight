@@ -222,9 +222,7 @@ export default {
           this.trainInfo = newValue.query;
           this.currentCard = newValue.curCardNum;
           if (this.trainingJobId) {
-            document.title = `${decodeURIComponent(this.trainingJobId)}-${this.$t(
-                'profiling.profilingDashboard',
-            )}-MindInsight`;
+            document.title = `${this.trainingJobId}-${this.$t('profiling.profilingDashboard')}-MindInsight`;
           } else {
             document.title = `${this.$t('profiling.profilingDashboard')}-MindInsight`;
           }
@@ -325,48 +323,48 @@ export default {
         },
       };
       RequestService.getProfilerOpData(params)
-          .then((res) => {
-            this.pieChart.initOver = true;
-            if (res && res.data) {
-              if (res.data.object) {
-                this.pieChart.data = [];
-                res.data.object.forEach((item) => {
-                  if (this.pieChart.data && this.pieChart.data.length < 5) {
-                    this.pieChart.data.push({
-                      name: item[0],
-                      value: item[4],
-                      frequency: item[1],
-                      percent: item[3],
-                    });
-                  } else {
-                    if (!this.pieChart.data[5]) {
-                      this.pieChart.data[5] = {
-                        name: 'Other',
-                        value: 0,
-                        percent: 0,
-                      };
-                    }
-                    this.pieChart.data[5].value += item[4];
-                    this.pieChart.data[5].percent += item[3];
+        .then((res) => {
+          this.pieChart.initOver = true;
+          if (res && res.data) {
+            if (res.data.object) {
+              this.pieChart.data = [];
+              res.data.object.forEach((item) => {
+                if (this.pieChart.data && this.pieChart.data.length < 5) {
+                  this.pieChart.data.push({
+                    name: item[0],
+                    value: item[4],
+                    frequency: item[1],
+                    percent: item[3],
+                  });
+                } else {
+                  if (!this.pieChart.data[5]) {
+                    this.pieChart.data[5] = {
+                      name: 'Other',
+                      value: 0,
+                      percent: 0,
+                    };
                   }
-                });
-                this.setPieOption();
-                this.pieChart.noData = !this.pieChart.data.length;
-                this.pieChart.topN = this.pieChart.data.slice(0, Math.min(this.pieChart.data.length, 5)).map((i) => {
-                  return {
-                    name: i.name,
-                    time: i.value,
-                    frequency: i.frequency,
-                  };
-                });
-              }
+                  this.pieChart.data[5].value += item[4];
+                  this.pieChart.data[5].percent += item[3];
+                }
+              });
+              this.setPieOption();
+              this.pieChart.noData = !this.pieChart.data.length;
+              this.pieChart.topN = this.pieChart.data.slice(0, Math.min(this.pieChart.data.length, 5)).map((i) => {
+                return {
+                  name: i.name,
+                  time: i.value,
+                  frequency: i.frequency,
+                };
+              });
             }
-          })
-          .catch(() => {
-            this.pieChart.data = [];
-            this.pieChart.noData = true;
-            this.pieChart.initOver = true;
-          });
+          }
+        })
+        .catch(() => {
+          this.pieChart.data = [];
+          this.pieChart.noData = true;
+          this.pieChart.initOver = true;
+        });
     },
   },
 };

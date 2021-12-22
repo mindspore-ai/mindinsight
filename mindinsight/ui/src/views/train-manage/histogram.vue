@@ -128,13 +128,13 @@ limitations under the License.
 </template>
 
 <script>
-import echarts, {echartsThemeName} from '../../js/echarts';
+import echarts, { echartsThemeName } from '../../js/echarts';
 import multiselectGroupComponents from '../../components/multiselect-group.vue';
 import RequestService from '../../services/request-service';
 import CommonProperty from '../../common/common-property';
-import {format, precisionRound} from 'd3';
+import { format, precisionRound } from 'd3';
 import autoUpdate from '../../mixins/auto-update.vue';
-const d3 = {format, precisionRound};
+const d3 = { format, precisionRound };
 
 export default {
   mixins: [autoUpdate],
@@ -154,7 +154,7 @@ export default {
       pageIndex: 0, // Current page number.
       pageSizes: [6], // The number of records on each page is optional.
       pageNum: 6, // Number of records on each page.
-      zrDrawElement: {hoverDots: []},
+      zrDrawElement: { hoverDots: [] },
       chartTipFlag: false,
       charResizeTimer: null,
       changeAxisTimer: null,
@@ -211,8 +211,7 @@ export default {
         document.title = this.$t('histogram.titleText') + '-MindInsight';
         return;
       }
-      document.title =
-        decodeURIComponent(this.$route.query.train_id) + '-' + this.$t('histogram.titleText') + '-MindInsight';
+      document.title = this.$route.query.train_id + '-' + this.$t('histogram.titleText') + '-MindInsight';
       this.getOriginData();
       if (this.isTimeReload) {
         this.autoUpdateSamples();
@@ -238,50 +237,50 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.getSingleTrainJob(params)
-          .then((res) => {
-            if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
-              this.initOver = true;
-              return;
-            }
-            const data = res.data.train_jobs[0];
-            if (!data.tags) {
-              return;
-            }
-            const tagList = [];
-            const dataList = [];
-            data.tags.forEach((tagName) => {
-              if (!this.curFullTagDic[tagName]) {
-                this.curFullTagDic[tagName] = true;
-                tagList.push({
-                  label: tagName,
-                  checked: true,
-                  show: true,
-                });
-                dataList.push({
-                  tagName: tagName,
-                  zr: null,
-                  show: false,
-                  fullScreen: false,
-                  domId: `${tagName}`,
-                  oriData: {},
-                  charOption: {},
-                  chartData: [],
-                  charObj: null,
-                });
-              }
-            });
-            this.tagList = tagList;
-            this.originDataArr = dataList;
-            this.$nextTick(() => {
-              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-              this.initOver = true;
-              this.updateTagInPage();
-            });
-          }, this.requestErrorCallback)
-          .catch((e) => {
+        .then((res) => {
+          if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
             this.initOver = true;
-            this.$message.error(this.$t('public.dataError'));
+            return;
+          }
+          const data = res.data.train_jobs[0];
+          if (!data.tags) {
+            return;
+          }
+          const tagList = [];
+          const dataList = [];
+          data.tags.forEach((tagName) => {
+            if (!this.curFullTagDic[tagName]) {
+              this.curFullTagDic[tagName] = true;
+              tagList.push({
+                label: tagName,
+                checked: true,
+                show: true,
+              });
+              dataList.push({
+                tagName: tagName,
+                zr: null,
+                show: false,
+                fullScreen: false,
+                domId: `${tagName}`,
+                oriData: {},
+                charOption: {},
+                chartData: [],
+                charObj: null,
+              });
+            }
           });
+          this.tagList = tagList;
+          this.originDataArr = dataList;
+          this.$nextTick(() => {
+            this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+            this.initOver = true;
+            this.updateTagInPage();
+          });
+        }, this.requestErrorCallback)
+        .catch((e) => {
+          this.initOver = true;
+          this.$message.error(this.$t('public.dataError'));
+        });
     },
     /**
      * The selected label is changed.
@@ -449,35 +448,35 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.getSingleTrainJob(params, ignoreError)
-          .then((res) => {
-            if (this.isReloading) {
-              this.$store.commit('setIsReload', false);
-              this.isReloading = false;
-            }
-            // Fault tolerance processing
-            if (
-              !res ||
+        .then((res) => {
+          if (this.isReloading) {
+            this.$store.commit('setIsReload', false);
+            this.isReloading = false;
+          }
+          // Fault tolerance processing
+          if (
+            !res ||
             !res.data ||
             !res.data.train_jobs ||
             !res.data.train_jobs.length ||
             !res.data.train_jobs[0].tags
-            ) {
-              this.clearAllData();
-              return;
-            }
-            const data = res.data.train_jobs[0];
-            // Remove data that does not exist.
-            const dataRemoveFlag = this.removeNoneExistentData(data);
-            // Add new data.
-            const dataAddFlag = this.checkNewDataAndComplete(data);
-            this.$nextTick(() => {
-              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-              this.updateTagInPage(!dataAddFlag && !dataRemoveFlag);
-            });
-          }, this.requestErrorCallback)
-          .catch((e) => {
-            this.$message.error(this.$t('public.dataError'));
+          ) {
+            this.clearAllData();
+            return;
+          }
+          const data = res.data.train_jobs[0];
+          // Remove data that does not exist.
+          const dataRemoveFlag = this.removeNoneExistentData(data);
+          // Add new data.
+          const dataAddFlag = this.checkNewDataAndComplete(data);
+          this.$nextTick(() => {
+            this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+            this.updateTagInPage(!dataAddFlag && !dataRemoveFlag);
           });
+        }, this.requestErrorCallback)
+        .catch((e) => {
+          this.$message.error(this.$t('public.dataError'));
+        });
     },
     /**
      * Delete the data that does not exist
@@ -583,7 +582,7 @@ export default {
       const unit = 's';
       const nearestIndex = this.findNearestValue(sampleObject, [e.offsetX, e.offsetY]);
       if (nearestIndex && nearestIndex.yIndex !== null && nearestIndex.binIndex !== null) {
-        const {binIndex, yIndex} = nearestIndex;
+        const { binIndex, yIndex } = nearestIndex;
         const chartData = sampleObject.chartData;
         const hoveredItem = chartData[yIndex];
         const p = Math.max(0, d3.precisionRound(0.01, 1.01) - 1);
@@ -669,7 +668,7 @@ export default {
         htmlStr = `<td>${
           hoveredAxis.toString().length >= 6 ? yValueFormat(hoveredAxis) : hoveredAxis
         }</td><td style="text-align:center;">${this.formatNumber(hoveredItem.step)}</td><td>${this.formatNumber(
-            hoveredItem.relative_time.toFixed(0),
+          hoveredItem.relative_time.toFixed(0)
         )}${unit}</td><td>${this.dealrelativeTime(new Date(hoveredItem.wall_time * 1000).toString())}</td>`;
         const dom = document.querySelector('#tipTr');
         dom.innerHTML = htmlStr;
@@ -964,24 +963,24 @@ export default {
         xAxis: {
           max: oriData.maxX,
           min: oriData.minX,
-          axisLine: {onZero: false},
+          axisLine: { onZero: false },
           axisLabel: {
             fontSize: '11',
-            formatter: function(value) {
+            formatter: function (value) {
               return that.formatNumber(value);
             },
           },
-          splitLine: {show: false},
+          splitLine: { show: false },
         },
         yAxis: {
           position: 'right',
-          axisLine: {onZero: false, show: false},
-          splitLine: {show: true},
-          axisTick: {show: false},
+          axisLine: { onZero: false, show: false },
+          splitLine: { show: true },
+          axisTick: { show: false },
           boundaryGap: false,
           axisLabel: {
             fontSize: '11',
-            formatter: function(value) {
+            formatter: function (value) {
               return that.formatNumber(value);
             },
           },
@@ -1054,7 +1053,7 @@ export default {
           option.grid.right = 140;
         }
         option.yAxis.inverse = true;
-        option.yAxis.axisLabel.formatter = function(value) {
+        option.yAxis.axisLabel.formatter = function (value) {
           return that.yAxisFormatter(sampleObject, value);
         };
       } else if (this.curViewName === 0) {

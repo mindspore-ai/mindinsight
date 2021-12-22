@@ -30,28 +30,32 @@ limitations under the License.
     <div class="cluster-dashboard profiling-dashboard-tab">
       <div class="dashboard-tabs"
            v-show="!showDetail">
-           <div class="cluster-dashboard-tabs">
-<el-tabs v-model="tab"
-                 @tab-click="onTabClick">
-          <el-tab-pane v-for="tab in tabs"
-                       :key="tab.label"
-                       :label="tab.label"
-                       :name="tab.name"></el-tab-pane>
-        </el-tabs>
-        <div class="custer-dashboard-tabs-link"
-            :style="{
+        <div class="cluster-dashboard-tabs">
+          <el-tabs v-model="tab"
+                   @tab-click="onTabClick">
+            <el-tab-pane v-for="tab in tabs"
+                         :key="tab.label"
+                         :label="tab.label"
+                         :name="tab.name"></el-tab-pane>
+          </el-tabs>
+          <div class="custer-dashboard-tabs-link"
+               :style="{
              left: `${left}px`
            }">
-           <el-tooltip class="item" effect="dark" placement="bottom">
-           <div slot="content">
-           <p>{{$t("profiling.strategyReference")}}<a :href="$t('profiling.strategyTutorialUrl')" rel="nofollow noreferrer noopener" target="_blank">{{$t("profiling.strategyTutorials")}}</a></p> 
-           </div>
-           <i class="el-icon-info"></i>
-           </el-tooltip>
-            
-           </div>
-           </div>
-        
+            <el-tooltip class="item"
+                        effect="dark"
+                        placement="bottom">
+              <div slot="content">
+                <p>{{$t("profiling.strategyReference")}}<a :href="$t('profiling.strategyTutorialUrl')"
+                     rel="nofollow noreferrer noopener"
+                     target="_blank">{{$t("profiling.strategyTutorials")}}</a></p>
+              </div>
+              <i class="el-icon-info"></i>
+            </el-tooltip>
+
+          </div>
+        </div>
+
       </div>
       <div class="dashboard-content">
         <router-view @viewDetail="viewDetail"></router-view>
@@ -89,7 +93,7 @@ export default {
           label: this.$t('profiling.strategyPerception'),
         },
       ],
-      left:0,
+      left: 0,
     };
   },
   created() {
@@ -106,7 +110,9 @@ export default {
   },
   mounted() {
     let length = 0;
-    this.tabs.forEach((t) => length += t.label.length);
+    this.tabs.forEach((t) => {
+      length += t.label.length;
+    });
     // 6.5(px of en-us char), 14(px of zh-cn char), 81(padding) used to calculate the position of path label
     this.left = length * (this.$store.state.language === 'en-us' ? 6.5 : 14) + 81;
   },
@@ -185,7 +191,7 @@ export default {
 }
 </style>
 <style scoped>
-.cluster-dashboard-wrap{
+.cluster-dashboard-wrap {
   height: 100%;
   display: flex;
 }
@@ -246,11 +252,11 @@ export default {
   color: var(--theme-color);
   font-weight: bold;
 }
-.cluster-dashboard-tabs{
-  position:relative;
+.cluster-dashboard-tabs {
+  position: relative;
 }
-.custer-dashboard-tabs-link{
-  position:absolute;
-  top:2px;
+.custer-dashboard-tabs-link {
+  position: absolute;
+  top: 2px;
 }
 </style>

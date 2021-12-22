@@ -355,7 +355,7 @@ import selectGroup from '../../components/select-group';
 import superposeImg from '../../components/superpose-img';
 import searchSelect from '../../components/search-select';
 import requestService from '../../services/request-service.js';
-import {basePath} from '@/services/fetcher';
+import { basePath } from '@/services/fetcher';
 
 // The effective prediction types
 const [TP, FN, FP] = ['TP', 'FN', 'FP'];
@@ -518,33 +518,33 @@ export default {
     queryTrainInfo(params) {
       return new Promise((resolve, reject) => {
         requestService
-            .queryTrainInfo(params)
-            .then((res) => {
-              if (res && res.data) {
-                const status = res.data.status.toUpperCase();
-                if (status !== STATUS.LOADED) {
-                  resolve({
-                    again: true,
-                    continue: false,
-                  });
-                } else {
-                // status === 'LOADED'
-                  this.processTrainInfo(res.data);
-                  resolve({
-                    again: false,
-                    continue: true,
-                  });
-                }
-              } else {
+          .queryTrainInfo(params)
+          .then((res) => {
+            if (res && res.data) {
+              const status = res.data.status.toUpperCase();
+              if (status !== STATUS.LOADED) {
                 resolve({
-                  again: false,
+                  again: true,
                   continue: false,
                 });
+              } else {
+                // status === 'LOADED'
+                this.processTrainInfo(res.data);
+                resolve({
+                  again: false,
+                  continue: true,
+                });
               }
-            })
-            .catch((error) => {
-              reject(error);
-            });
+            } else {
+              resolve({
+                again: false,
+                continue: false,
+              });
+            }
+          })
+          .catch((error) => {
+            reject(error);
+          });
       });
     },
     /**
@@ -605,37 +605,37 @@ export default {
      * @param {Boolean} first If first query
      */
     queryPageInfo(params, first = false) {
-      params.train_id = decodeURIComponent(params.train_id);
+      params.train_id = params.train_id;
       this.queryParameters = params;
       requestService
-          .queryPageInfo(params)
-          .then(
-              (res) => {
-                // Make sure the offset of response is equal to offset of request
-                if (params.offset === this.queryParameters.offset) {
-                  if (res && res.data) {
-                    if (!res.data.count) {
-                      if (first) {
-                        this.isLoading = false;
-                      } else {
-                        this.tableData = this.processTableData(res.data.samples);
-                        this.pageInfo.total = 0;
-                      }
-                    } else {
-                      this.tableData = this.processTableData(res.data.samples);
-                      this.pageInfo.total = res.data.count;
-                      this.hasData = true;
-                    }
+        .queryPageInfo(params)
+        .then(
+          (res) => {
+            // Make sure the offset of response is equal to offset of request
+            if (params.offset === this.queryParameters.offset) {
+              if (res && res.data) {
+                if (!res.data.count) {
+                  if (first) {
+                    this.isLoading = false;
+                  } else {
+                    this.tableData = this.processTableData(res.data.samples);
+                    this.pageInfo.total = 0;
                   }
+                } else {
+                  this.tableData = this.processTableData(res.data.samples);
+                  this.pageInfo.total = res.data.count;
+                  this.hasData = true;
                 }
-              },
-              () => {
-                this.isLoading = false;
-              },
-          )
-          .catch(() => {
+              }
+            }
+          },
+          () => {
             this.isLoading = false;
-          });
+          }
+        )
+        .catch(() => {
+          this.isLoading = false;
+        });
     },
     /**
      * Process the original table data
@@ -703,7 +703,7 @@ export default {
      * @param {Object} params The specified object in element-ui table api
      * @return {Array<number>} Means [rowSpan, colSpan]
      */
-    mergeTable({row, column, rowIndex, columnIndex}) {
+    mergeTable({ row, column, rowIndex, columnIndex }) {
       if (this.selectedExplainers.length === 0) {
         if (columnIndex === 2) {
           // Merge the column which should has explainer but none now
@@ -720,7 +720,7 @@ export default {
     goMetric() {
       this.$router.push({
         path: '/explain/xai-metric',
-        query: {id: this.trainID},
+        query: { id: this.trainID },
       });
     },
     /**
@@ -731,38 +731,38 @@ export default {
         train_id: this.trainID,
       };
       this.queryTrainInfo(params)
-          .then(
-              (res) => {
-                if (res.again) {
-                  // Request again
-                  this.timer = setTimeout(() => {
-                    this.initPage();
-                    this.timer = null;
-                  }, this.requestDelay);
-                } else {
-                  // No need to request again
-                  if (res.continue) {
-                    this.updateTable(
-                        this.baseQueryParameters,
-                        {
-                          limit: this.pageInfo.pageSize,
-                          offset: this.pageInfo.currentPage - 1,
-                        },
-                        true,
-                    );
-                  } else {
-                    this.isLoading = false;
-                  }
-                }
-              },
-              () => {
-                // Has error
+        .then(
+          (res) => {
+            if (res.again) {
+              // Request again
+              this.timer = setTimeout(() => {
+                this.initPage();
+                this.timer = null;
+              }, this.requestDelay);
+            } else {
+              // No need to request again
+              if (res.continue) {
+                this.updateTable(
+                  this.baseQueryParameters,
+                  {
+                    limit: this.pageInfo.pageSize,
+                    offset: this.pageInfo.currentPage - 1,
+                  },
+                  true
+                );
+              } else {
                 this.isLoading = false;
-              },
-          )
-          .catch(() => {
+              }
+            }
+          },
+          () => {
+            // Has error
             this.isLoading = false;
-          });
+          }
+        )
+        .catch(() => {
+          this.isLoading = false;
+        });
     },
   },
   created() {
@@ -777,7 +777,7 @@ export default {
   mounted() {
     // Change the page title
     if (this.$route.query.id) {
-      document.title = `${decodeURIComponent(this.$route.query.id)}-${this.$t('explain.title')}-MindInsight`;
+      document.title = `${this.$route.query.id}-${this.$t('explain.title')}-MindInsight`;
     } else {
       document.title = `${this.$t('explain.title')}-MindInsight`;
     }

@@ -271,7 +271,7 @@ limitations under the License.
 </template>
 <script>
 import RequestService from '../../services/request-service';
-import {basePath} from '@/services/fetcher';
+import { basePath } from '@/services/fetcher';
 
 export default {
   data() {
@@ -341,9 +341,7 @@ export default {
       document.title = `${this.$t('explain.conterfactualInterpretation')}-MindInsight`;
       return;
     }
-    document.title = `${decodeURIComponent(this.trainId)}-${this.$t(
-        'explain.conterfactualInterpretation',
-    )}-MindInsight`;
+    document.title = `${this.trainId}-${this.$t('explain.conterfactualInterpretation')}-MindInsight`;
 
     window.addEventListener('resize', this.resizeCallback, false);
     this.$nextTick(() => {
@@ -368,34 +366,34 @@ export default {
         train_id: this.trainId,
       };
       RequestService.queryTrainInfo(params).then(
-          (res) => {
-            if (!res || !res.data || !res.data.classes || !res.data.saliency) {
-              this.initOver = true;
-              return;
-            }
-            const status = res.data.status;
-            // If status is not loaded, delay 500ms and request again
-            // 500ms: Buffer time for data loading(Asynchronous loading)
-            const delayTime = 500;
-            if (status !== this.status.loaded) {
-              if (this.dataWaitTimer) {
-                clearTimeout(this.dataWaitTimer);
-                this.dataWaitTimer = null;
-              }
-              this.dataWaitTimer = setTimeout(() => {
-                this.getMetaData();
-              }, delayTime);
-            } else {
-              this.fullTagList = res.data.classes;
-              const tempList = this.getFilterTagList();
-              this.labelLlist = [this.emptyLabelSelect].concat(tempList);
-              this.minConfidence = res.data.saliency.min_confidence;
-              this.getHOCData();
-            }
-          },
-          () => {
+        (res) => {
+          if (!res || !res.data || !res.data.classes || !res.data.saliency) {
             this.initOver = true;
-          },
+            return;
+          }
+          const status = res.data.status;
+          // If status is not loaded, delay 500ms and request again
+          // 500ms: Buffer time for data loading(Asynchronous loading)
+          const delayTime = 500;
+          if (status !== this.status.loaded) {
+            if (this.dataWaitTimer) {
+              clearTimeout(this.dataWaitTimer);
+              this.dataWaitTimer = null;
+            }
+            this.dataWaitTimer = setTimeout(() => {
+              this.getMetaData();
+            }, delayTime);
+          } else {
+            this.fullTagList = res.data.classes;
+            const tempList = this.getFilterTagList();
+            this.labelLlist = [this.emptyLabelSelect].concat(tempList);
+            this.minConfidence = res.data.saliency.min_confidence;
+            this.getHOCData();
+          }
+        },
+        () => {
+          this.initOver = true;
+        }
       );
     },
     /**
@@ -435,23 +433,23 @@ export default {
         params.labels = [this.curFilterLabel];
       }
       RequestService.queryHOCData(params).then(
-          (res) => {
-            this.initOver = true;
-            if (!res || !res.data) {
-              this.pageData.totalNum = 0;
-              this.resetIniitData();
-              return;
-            }
-            this.pageData.totalNum = res.data.count;
-            this.fullData = res.data.samples;
-            this.curSelectedDataIndex = 0;
-            this.formateCurrentHOCData();
-          },
-          () => {
+        (res) => {
+          this.initOver = true;
+          if (!res || !res.data) {
             this.pageData.totalNum = 0;
-            this.initOver = true;
             this.resetIniitData();
-          },
+            return;
+          }
+          this.pageData.totalNum = res.data.count;
+          this.fullData = res.data.samples;
+          this.curSelectedDataIndex = 0;
+          this.formateCurrentHOCData();
+        },
+        () => {
+          this.pageData.totalNum = 0;
+          this.initOver = true;
+          this.resetIniitData();
+        }
       );
     },
     /**
@@ -466,7 +464,7 @@ export default {
       const labelOptions = [];
       curData.inferences.forEach((inference, index) => {
         const label = `${inference.label}${this.$t('symbols.leftbracket')}${inference.confidence.toFixed(3)}${this.$t(
-            'symbols.rightbracket',
+          'symbols.rightbracket'
         )}`;
         labelOptions.push({
           label: label,
