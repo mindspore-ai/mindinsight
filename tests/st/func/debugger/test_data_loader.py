@@ -148,13 +148,13 @@ class TestDataLoader:
     @staticmethod
     def _compare_dumped_steps(actual_res, expect_res):
         """Compare dumped steps."""
-        for value in actual_res.values():
-            for step_ids in value.values():
-                step_ids.sort()
-        for value in expect_res.values():
-            for step_ids in value.values():
-                step_ids.sort()
-        assert actual_res == expect_res
+        convert_res = {}
+        for key, value in actual_res.items():
+            convert_res[key] = {}
+            for graph_id, step_ids in value.items():
+                convert_res[key][graph_id] = list(step_ids)
+                convert_res[key][graph_id].sort()
+        assert convert_res == expect_res
 
 
 class TestMultiNetDataLoader:
@@ -181,8 +181,8 @@ class TestMultiNetDataLoader:
     def test_get_graph_history(self):
         """Test load graph history."""
         res = self.data_loader.load_graph_history()
-        expect = {0: {0: [0, 2, 4], 3: [1, 3, 5, 6]},
-                  1: {0: [0, 2, 4], 3: [1, 3, 5, 6]}}
+        expect = {0: {0: {0, 2, 4}, 3: {1, 3, 5, 6}},
+                  1: {0: {0, 2, 4}, 3: {1, 3, 5, 6}}}
         assert res == expect
 
     @pytest.mark.level

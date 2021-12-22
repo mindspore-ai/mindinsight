@@ -304,7 +304,9 @@ class DumpAnalyzer:
         for rank_id in ranks:
             for iters_per_graph in total_dumped_steps.get(rank_id, {}).values():
                 iterations.update(iters_per_graph)
-        return list(iterations)
+        res = list(iterations)
+        res.sort()
+        return res
 
     def get_ranks(self) -> Iterable[int]:
         """
