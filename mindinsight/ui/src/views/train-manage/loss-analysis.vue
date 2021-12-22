@@ -639,6 +639,10 @@ export default {
         (resp) => {
           if (resp && resp.data) {
             if (resp.data.landscapes && resp.data.landscapes.length) {
+              if (resp.data.landscapes[0].error_code) {
+                this.$message.error(this.$t('error.' + resp.data.landscapes[0].error_code))
+                return
+              }
               const lossdata = JSON.parse(JSON.stringify(resp.data.landscapes[0]));
               if (lossdata.convergence_point) {
                 lossdata.convergence_point = null;
