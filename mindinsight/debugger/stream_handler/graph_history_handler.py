@@ -15,6 +15,7 @@
 """Define the GraphHistory stream handler."""
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
+from mindinsight.debugger.common.utils import enter_tag
 from mindinsight.debugger.stream_cache.graph_history import GraphHistory
 from mindinsight.debugger.stream_handler.base_handler import StreamHandlerBase
 
@@ -49,24 +50,24 @@ class GraphHistoryHandler(StreamHandlerBase):
         self._check_dumped_step(dumped_step)
         self._dumped_step = dumped_step
 
+    @enter_tag
     def _check_dumped_step(self, dumped_step):
         """Check if all dumped step in is graph history."""
         def _matched(dumped_steps, run_history):
-            step_set = set(dumped_steps)
-            run_set = set(run_history)
-            if step_set.issubset(run_set):
+            diff_set = dumped_steps - run_history
+            if not diff_set:
                 return True
+            if len(diff_set) != 1:
+                return False
             # check if it is a data sink exception case
             max_step_id = max(dumped_steps)
-            if max_step_id not in run_history and (max_step_id - 1) in run_history:
-                step_set.remove(max_step_id)
-                if step_set.issubset(run_set):
-                    msg = f"The dumped iteration {max_step_id} is not expected. It may be normal if " \
+            if max_step_id in diff_set and (max_step_id - 1) in run_history:
+                msg = f"The dumped iteration {max_step_id} is not expected. It may be normal if " \
                           f"the data is dumped in dataset sink mode and there is only AssignAdd operator " \
                           f"in that directory. Otherwise, the dump structure is not correct."
-                    log.warning(msg)
-                    dumped_steps.remove(max_step_id)
-                    return True
+                log.warning(msg)
+                dumped_steps.remove(max_step_id)
+                return True
             return False
 
         for rank_id, value in dumped_step.items():

@@ -14,21 +14,23 @@
 # ============================================================================
 """Define the utils."""
 import enum
+import gc
 import os
 import re
 import struct
 import tempfile
 import time
+from functools import wraps
 
 import numpy as np
 
 from mindinsight.conf import settings
-from mindinsight.domain.graph.base import NodeTypeEnum
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamTypeError, DebuggerParamValueError
+from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
+from mindinsight.domain.graph.base import NodeTypeEnum
 from mindinsight.domain.graph.proto.ms_graph_pb2 import DataType
 from mindinsight.utils.tensor import Statistics
-
 
 # translate the MindSpore type to numpy type.
 NUMPY_TYPE_MAP = {
@@ -372,7 +374,7 @@ def parse_param_to_iterable_obj(param, param_name, expected_range=None, error_re
     Args:
         param (Union[int, list[int], None], optional): The input param.
         param_name (str): The name of the param.
-        expected_range (list[int]): The acceptable range of param value. Default None,
+        expected_range (set[int]): The acceptable range of param value. Default None,
             no check for value.
         error_report (bool): Whether raise Exception if the value is not in expected_range.
 
@@ -403,3 +405,33 @@ def validate_slots(slots):
         raise TypeError(f"The param `slots` only support list[int] or None, but got {type(slots)}")
     for slot in slots:
         validate_type(slot, 'slot', int, 'list[int] or None')
+
+
+def gc_disable(func):
+    """Wrapper for disable gc."""
+
+    @wraps(func)
+    def disable(*args, **kwargs):
+        gc_threshold = gc.get_threshold()
+        # disable gc collection during parse graphs
+        gc.set_threshold(0)
+        try:
+            return func(*args, **kwargs)
+        finally:
+            gc.set_threshold(*gc_threshold)
+
+    return disable
+
+
+def enter_tag(func):
+    """Wrapper for add enter and exit log."""
+
+    @wraps(func)
+    def add_log(*args, **kwargs):
+        try:
+            log.debug("Enter func: %s", func.__name__)
+            return func(*args, **kwargs)
+        finally:
+            log.debug("Exit func: %s", func.__name__)
+
+    return add_log

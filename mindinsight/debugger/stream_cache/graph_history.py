@@ -13,7 +13,6 @@
 # limitations under the License.
 # ============================================================================
 """This file is used to define the GraphHistory."""
-from mindinsight.debugger.common.log import LOGGER as log
 
 
 class GraphHistory:
@@ -48,21 +47,9 @@ class GraphHistory:
         for history in self._graph_history.values():
             if not history:
                 continue
-            last_id = last_id if last_id > history[-1] else history[-1]
+            last_id = max(last_id, max(history))
         self._count = last_id + 1
-        self._check_history()
         return self._count
-
-    def _check_history(self):
-        """Check history."""
-        expect_count = self._count
-        total_count = 0
-        for history in self._graph_history.values():
-            total_count += len(history)
-        if total_count != expect_count:
-            msg = f"The graph history is missing graph runs. " \
-                  f"The total count is {total_count}/{expect_count}"
-            log.warning(msg)
 
     def get_run_ids(self, graph_id):
         """
@@ -72,6 +59,6 @@ class GraphHistory:
             graph_id (int): The root graph id.
 
         Returns:
-            list[int], the list of graph run ids.
+            set[int], the list of graph run ids.
         """
-        return self._graph_history.get(graph_id, [])
+        return self._graph_history.get(graph_id, set())

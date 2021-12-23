@@ -85,9 +85,9 @@ class TestGraphRunsOperator:
         """Test get graph run when graph history mismatch."""
         path = os.path.join(self.debugger_tmp_dir, 'exception')
         gen = DumpStructureGenerator(path)
-        history = {0: [0, 2, 4],
-                   3: [1, 3, 5, 6]}
-        steps = {0: [0, 2, 5]}
+        history = {0: {0, 2, 4},
+                   3: {1, 3, 5, 6}}
+        steps = {0: {0, 2, 5}}
         gen.generate(history=history, dump_steps=steps)
         cache_store = self.get_cache_store(path)
         res = GraphRunsOperator(cache_store).get_graph_runs(0)

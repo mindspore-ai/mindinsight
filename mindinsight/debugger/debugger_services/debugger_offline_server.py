@@ -14,12 +14,12 @@
 # ============================================================================
 """Debugger Offline server."""
 import copy
+import os
 import re
 from collections import defaultdict
 from importlib import import_module
 from multiprocessing import Process, Manager
 from threading import Event
-import os
 
 import mindinsight
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotFoundError, DebuggerParamValueError, \
@@ -27,12 +27,13 @@ from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotF
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import Streams, ServerStatus, version_match, DebuggerServerMode, get_ack_reply, \
     RunLevel, MAX_SINGLE_TENSOR_CACHE_BYTES, ViewCommandLevelEnum, convert_tensor_stats, put_tensor_base_in_cache, \
-    put_tensor_stats_in_cache, get_tensor_value, MAX_MS_CACHE_SPACE_MB, get_download_file_name, add_to_download_mgr
+    put_tensor_stats_in_cache, get_tensor_value, MAX_MS_CACHE_SPACE_MB, get_download_file_name, add_to_download_mgr, \
+    gc_disable, enter_tag
 from mindinsight.debugger.conditionmgr.condition import ParamNameEnum
 from mindinsight.debugger.debugger_services.debugger_server_base import DebuggerServerBase, debugger_server_wrap
+from mindinsight.debugger.dump.convert import get_msaccucmp_path
 from mindinsight.debugger.proto.debug_grpc_pb2 import EventReply
 from mindinsight.debugger.stream_cache.data_loader import DataLoader
-from mindinsight.debugger.dump.convert import get_msaccucmp_path
 from mindinsight.debugger.stream_operator.watchpoint_operator import WatchpointOperator
 from mindinsight.domain.graph.proto.ms_graph_pb2 import TensorProto
 from mindinsight.utils.exceptions import MindInsightException
@@ -209,10 +210,11 @@ class DebuggerOfflineManager:
         device_stream.add_step_num_info(step_num_per_rank)
         self._metadata_stream.max_step_num = max(step_num_per_rank.values()) if step_num_per_rank else 0
 
+    @gc_disable
+    @enter_tag
     def _load_graphs(self):
         """Load graphs."""
         # the format of graphs is a list of {'rank_id': int, 'graph_protos': [GraphProto]}}
-        log.debug("Begin to load graphs.")
         graphs = self._data_loader.load_graphs()
         device_stream = self._cache_store.get_stream_handler(Streams.DEVICE)
         graph_per_rank = {}
@@ -233,7 +235,6 @@ class DebuggerOfflineManager:
             log.warning("Parse graph failed. The graph file is invalid.")
             self._cache_store.get_stream_handler(Streams.GRAPH).clean()
         self._metadata_stream.state = ServerStatus.RECEIVE_GRAPH.value
-        log.debug("Finish to load graphs.")
 
     @debugger_server_wrap
     def wait_for_termination(self):

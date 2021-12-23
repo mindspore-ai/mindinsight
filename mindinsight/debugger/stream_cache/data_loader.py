@@ -208,7 +208,7 @@ class DataLoader:
 
         Returns:
             dict, the dumped step info among all devices. The key is rank_id,
-            the value is like Dict[int, list[int]].
+            the value is like Dict[int, set[int]].
         """
         def _load_iters_per_rank(net_dir):
             res = {}
@@ -221,15 +221,16 @@ class DataLoader:
             return res
 
         def _load_iters_per_graph(graph_dir):
-            iters = []
+            iters = set()
             for iteration_dir in graph_dir.iterdir():
                 iter_id_str = iteration_dir.name
                 if not iter_id_str.isdigit():
                     log.debug("Ignore iteration dir: %s", str(iteration_dir))
                     continue
-                iters.append(int(iter_id_str))
+                iters.add(int(iter_id_str))
             return iters
 
+        log.debug("Start to load dumped steps.")
         step_num = {}
         rank_dirs = [self.get_rank_dir(rank_id)] if rank_id is not None else self._rank_dirs
         for rank_dir in rank_dirs:
@@ -288,8 +289,9 @@ class DataLoader:
         Load graph history of all devices.
 
         Returns:
-            dict, graph history. The key is rank id, the value is Dict[int, list[int]].
+            dict, graph history. The key is rank id, the value is Dict[int, set[int]].
         """
+        log.debug("Start to load graph history.")
         all_graph_history = {}
         for rank_dir in self._rank_dirs:
             execution_order_dir = rank_dir.path / self.EXECUTION_ORDER
@@ -340,11 +342,11 @@ def read_graph_history(file_path):
         file_path (str): File path contains the graph execution order info.
 
     Returns:
-        list[int], the executed iteration ids of each graph.
+        set[int], the executed iteration ids of each graph.
     """
     with open(file_path, 'r') as handler:
         csv_reader = csv.reader(handler)
-        history = [int(row[0]) for row in csv_reader]
+        history = set(int(row[0]) for row in csv_reader)
         return history
 
 
