@@ -1282,12 +1282,12 @@ function _setNodeTag(visGraph) {
 function buildGraph(data) {
   _resetData();
   _processSourceData(JSON.parse(JSON.stringify(data)));
-  bipartiteGraphOptimzer.init(processedGraph);
-  _optimizeNodes();
   let visGraph = _produceVisGraph();
   const notExtractSet = _setNodeTag(visGraph);
   _resetData();
   _processSourceData(data, notExtractSet);
+  bipartiteGraphOptimzer.init(processedGraph);
+  _optimizeNodes();
   visGraph = _produceVisGraph();
   processVisGraph(visGraph);
   return visGraph;
