@@ -464,12 +464,14 @@ class Constant(Node):
     def __init__(self, raw):
         super().__init__(raw)
         self.name = raw.key
+        self.full_name = raw.full_name
 
     def __repr__(self):
         return str({
             'name': self.name,
             'output': self.output,
             'downstream': self.downstream,
+            'full_name': self.full_name
         })
 
 
