@@ -190,7 +190,7 @@ class DebuggerTensorImpl(DebuggerTensor):
                 return info.get("np_value")
         debugger_engine = self.node.debugger_engine
         tensor_info = debugger_engine.dbg_services_module.TensorInfo(
-            node_name=self.node.name,
+            node_name=base_node.full_name if self.node.node_type == NodeType.CONSTANT else self.node.name,
             slot=self.slot,
             iteration=self.iteration,
             rank_id=self.rank,

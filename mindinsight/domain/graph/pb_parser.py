@@ -89,6 +89,11 @@ class PBParser(Parser):
             pb_constant (Protobuf): Constant node.
         """
         constant = Constant(pb_constant)
+        if not pb_constant.HasField('value'):
+            constant.output = NodeOutput(OutputType.TENSOR)
+            self.constants.append(constant)
+            return
+
         if pb_constant.value.dtype in self.int_types:
             constant.output = NodeOutput(OutputType(self.dtype_mapping[pb_constant.value.dtype]))
             constant.output.info['value'] = pb_constant.value.int_val
