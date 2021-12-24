@@ -703,7 +703,19 @@ limitations under the License.
             <div class="content"
                  v-show="showGraphCount">
               <div class="left">
-                <div class="graph-count">{{$t('debugger.graphExecutionStep')}}</div>
+                <div class="graph-count">
+                  {{$t('debugger.graphExecutionStep')}}
+                  <el-tooltip class="tooltip"
+                              effect="light"
+                              placement="right-start">
+                    <div slot="content">
+                      <div class="graph-execute">
+                        <div class="graph-execute-step">{{$t('debugger.graphExecutionCountTip')}}</div>
+                      </div>
+                    </div>
+                    <i class="el-icon-info"></i>
+                  </el-tooltip>
+                </div>
                 <div class="graph-id">{{$t('debugger.graphName')}}</div>
               </div>
               <div class="right"
@@ -3316,5 +3328,8 @@ export default {
   margin-right: 10px;
   vertical-align: middle;
   margin-left: 20px;
+}
+.graph-execute .graph-execute-step {
+  white-space: pre-line;
 }
 </style>
