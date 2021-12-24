@@ -794,6 +794,8 @@ export default {
       if (!oriData.points) {
         return;
       }
+      const oriName = oriData.train_id;
+      this.curName = oriName.length > 20 ? oriName.slice(0, 20) + '...' : oriName;
       const seriesSurface = this.getSurfaceData(oriData, true);
       if (this.chartObj) {
         const seriesLength = this.seriesArr.length;
@@ -834,6 +836,7 @@ export default {
      * @param {String} dataName Name of the surface to be removed
      */
     removeData(dataName) {
+      dataName = dataName.length > 20 ? dataName.slice(0, 20) + '...' : dataName;
       let allEmptyData = true;
       const seriesLength = this.seriesArr.length;
       for (let i = 0; i < seriesLength; i++) {
