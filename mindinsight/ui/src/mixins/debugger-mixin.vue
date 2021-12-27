@@ -1361,6 +1361,12 @@ export default {
           this.initFail = false;
           this.dialogVisible = false;
           if (res.data) {
+            if (res.data.metadata && res.data.metadata.state === this.state.node_too_large) {
+              this.loadingInstance.close();
+              this.dialogVisible = true;
+              this.nodeDataIsLarge = true;
+              return
+            }
             if (res.data.graph && res.data.graph.nodes) {
               this.origialTree = res.data.graph.nodes.map((val) => {
                 return {

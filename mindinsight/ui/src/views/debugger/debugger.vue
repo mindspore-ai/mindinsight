@@ -1070,6 +1070,8 @@ limitations under the License.
             class="dialog-content">{{ $t('debugger.noOfflineGraphName') }}</span>
       <span v-else-if="noOfflineGraph"
             class="dialog-content">{{ $t('debugger.noOfflineGraphData') }}</span>
+      <span v-else-if="nodeDataIsLarge"
+            class="dialog-content">{{ $t('debugger.nodeIsLargeTip') }}</span>
       <span v-else-if="initFail"
             class="dialog-content">{{ $t('debugger.debuggerError') }}</span>
       <span v-else
@@ -1281,6 +1283,7 @@ export default {
         mismatch: 'mismatch',
         sending: 'sending',
         waiting: 'waiting',
+        node_too_large: 'node_too_large',
       },
       loadingInstance: null,
       paramErrorMsg: '',
@@ -1363,6 +1366,7 @@ export default {
       isGraphRunsInit: false,
       timer: null,
       themeIndex: this.$store.state.themeIndex,  // current theme index
+      nodeDataIsLarge: false,  // the dialog will display when node data is too large
     };
   },
   components: { debuggerTensor, tree, FlexibleGrid },
@@ -1376,6 +1380,11 @@ export default {
   watch: {
     'metadata.state': {
       handler(newValue, oldValue) {
+        if (newValue === this.state.node_too_large) {
+          this.dialogVisible = true;
+        } else {
+          this.dialogVisible = false;
+        }
         if (newValue === this.state.mismatch) {
           this.conflictFlag = true;
         } else {
