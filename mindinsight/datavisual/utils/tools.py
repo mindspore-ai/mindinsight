@@ -18,7 +18,6 @@ import math
 import os
 
 from numbers import Number
-from urllib.parse import unquote
 
 from mindinsight.datavisual.common.exceptions import MaxCountExceededError
 from mindinsight.datavisual.common.exceptions import PathNotDirectoryError
@@ -138,85 +137,6 @@ def get_img_mimetype(img_data):
     image_type = imghdr.what(None, img_data)
     mimetype = _IMG_EXT_TO_MIMETYPE.get(image_type, _DEFAULT_IMAGE_MIMETYPE)
     return mimetype
-
-
-def get_train_id(request):
-    """
-    Get train ID from request query string and unquote content.
-
-    Args:
-        request (FlaskRequest): Http request instance.
-
-    Returns:
-        str, unquoted train ID.
-    """
-    train_id = request.args.get('train_id')
-    if train_id is not None:
-        try:
-            train_id = unquote(train_id, errors='strict')
-        except UnicodeDecodeError:
-            raise exceptions.UrlDecodeError('Unquote train id error with strict mode')
-    return train_id
-
-
-def get_profiler_dir(request):
-    """
-    Get train ID from request query string and unquote content.
-
-    Args:
-        request (FlaskRequest): Http request instance.
-
-    Returns:
-        str, unquoted train ID.
-    """
-    profiler_dir = request.args.get('profile')
-    if profiler_dir is not None:
-        try:
-            profiler_dir = unquote(profiler_dir, errors='strict')
-        except UnicodeDecodeError:
-            raise exceptions.UrlDecodeError('Unquote profiler_dir error with strict mode')
-    return profiler_dir
-
-
-def unquote_args(request, arg_name):
-    """
-    Get args from request query string and unquote content.
-
-    Args:
-        request (FlaskRequest): Http request instance.
-        arg_name (str): The name of arg.
-
-    Returns:
-        str, unquoted arg.
-    """
-    arg_value = request.args.get(arg_name, "")
-    if arg_value is not None:
-        try:
-            arg_value = unquote(arg_value, errors='strict')
-        except UnicodeDecodeError:
-            raise exceptions.ParamValueError('Unquote error with strict mode')
-    return arg_value
-
-
-def get_device_id(request):
-    """
-    Get device ID from request query string and unquote content.
-
-    Args:
-        request (FlaskRequest): Http request instance.
-
-    Returns:
-        str, unquoted device ID.
-    """
-    device_id = request.args.get('device_id')
-    if device_id is not None:
-        try:
-            device_id = unquote(device_id, errors='strict')
-        except UnicodeDecodeError:
-            raise exceptions.UrlDecodeError('Unquote train id error with strict mode')
-    else:
-        device_id = "0"
-    return device_id
 
 
 def if_nan_inf_to_none(name, value):

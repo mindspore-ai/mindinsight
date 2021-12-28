@@ -13,9 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Scalar Processor APIs."""
-from urllib.parse import unquote
-
-from mindinsight.utils.exceptions import ParamValueError, UrlDecodeError
+from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.utils.tools import if_nan_inf_to_none
 from mindinsight.datavisual.common.exceptions import ScalarNotExistError
@@ -63,14 +61,6 @@ class ScalarsProcessor(BaseProcessor):
         Returns:
             list[dict], a list of dictionaries containing the `wall_time`, `step`, `value` for each scalar.
         """
-        for index, train_id in enumerate(train_ids):
-            try:
-                train_id = unquote(train_id, errors='strict')
-            except UnicodeDecodeError:
-                raise UrlDecodeError('Unquote train id error with strict mode')
-            else:
-                train_ids[index] = train_id
-
         scalars = []
         for train_id in train_ids:
             scalars += self._get_train_scalars(train_id, tags)

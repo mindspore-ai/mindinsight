@@ -15,7 +15,6 @@
 """Implement the session manager."""
 import os
 import threading
-from urllib.parse import unquote
 
 import _thread
 
@@ -96,8 +95,7 @@ class SessionManager:
             logger.error('The train job path should be string.')
             raise ValueError("The train job path should be string.")
         summary_base_dir = settings.SUMMARY_BASE_DIR
-        unquote_path = unquote(train_job, errors='strict')
-        whole_path = os.path.join(summary_base_dir, unquote_path)
+        whole_path = os.path.join(summary_base_dir, train_job)
         normalized_path = validate_and_normalize_path(whole_path)
         context = DebuggerServerContext(dbg_mode='offline', train_job=train_job, dbg_dir=normalized_path)
         session = DebuggerSession(context)

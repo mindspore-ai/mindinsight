@@ -20,7 +20,6 @@ Usage:
 """
 import os
 import time
-from urllib.parse import quote
 
 import pytest
 
@@ -238,7 +237,7 @@ class TestAscendDebugger:
             body_data = {
                 'name': node_name + ':0',
                 'detail': 'data',
-                'shape': quote('[1, 1:3]')
+                'shape': '[1, 1:3]'
             }
             get_request_result(app_client, url, body_data, method='GET')
             # sleep 0.01 second to  wait the tensor update.
@@ -279,7 +278,7 @@ class TestAscendDebugger:
             body_data = {
                 'name': node_name + ':0',
                 'detail': 'data',
-                'shape': quote('[:, :]'),
+                'shape': '[:, :]',
                 'tolerance': 1,
                 'rank_id': 0}
             get_request_result(app_client, url, body_data, method='GET')

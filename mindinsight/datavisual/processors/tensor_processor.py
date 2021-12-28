@@ -13,12 +13,10 @@
 # limitations under the License.
 # ============================================================================
 """Tensor Processor APIs."""
-from urllib.parse import unquote
-
 import numpy as np
 
 from mindinsight.datavisual.utils.tools import to_int
-from mindinsight.utils.exceptions import ParamValueError, UrlDecodeError
+from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.utils.tensor import TensorUtils, MAX_DIMENSIONS_FOR_TENSOR
 from mindinsight.conf.constants import MAX_TENSOR_RESPONSE_DATA_SIZE
 from mindinsight.datavisual.common.validation import Validation
@@ -45,23 +43,8 @@ class TensorProcessor(BaseProcessor):
         Returns:
             dict, a dict including the `tensors`.
 
-        Raises:
-            UrlDecodeError, If unquote train id error with strict mode.
         """
         Validation.check_param_empty(train_id=train_ids, tag=tags)
-
-        try:
-            dims = unquote(dims, errors='strict') if dims else None
-        except UnicodeDecodeError:
-            raise UrlDecodeError('Unquote dims error with strict mode')
-
-        for index, train_id in enumerate(train_ids):
-            try:
-                train_id = unquote(train_id, errors='strict')
-            except UnicodeDecodeError:
-                raise UrlDecodeError('Unquote train id error with strict mode')
-            else:
-                train_ids[index] = train_id
 
         tensors = []
         for train_id in train_ids:
