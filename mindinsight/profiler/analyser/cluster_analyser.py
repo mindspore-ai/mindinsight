@@ -60,10 +60,11 @@ class ClusterAnalyser(BaseAnalyser):
                     raise TypeError("The value of rank id should be a number.")
                 cluster_rank_ids.append(int(rank_id))
         cluster_rank_ids.sort()
-        # Judge whether the rank ids are continuous.
-        if (cluster_rank_ids[-1] - cluster_rank_ids[0]) != len(cluster_rank_ids) - 1:
-            log.warning("The rank ids are not continuous，"
-                        "please check for missing files. Rank ids: %s", cluster_rank_ids)
+        if cluster_rank_ids:
+            # Judge whether the rank ids are continuous.
+            if (cluster_rank_ids[-1] - cluster_rank_ids[0]) != len(cluster_rank_ids) - 1:
+                log.warning("The rank ids are not continuous，"
+                            "please check for missing files. Rank ids: %s", cluster_rank_ids)
         return cluster_rank_ids
 
     def _load(self):
