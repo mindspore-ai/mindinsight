@@ -53,7 +53,11 @@ class SummaryBaseDirAction(argparse.Action):
             values (object): Argument values with type depending on argument definition.
             option_string (str): Option string for specific argument name.
         """
-        summary_base_dir = os.path.realpath(values)
+
+        if str(values).startswith('obs://'):
+            summary_base_dir = str(values)
+        else:
+            summary_base_dir = os.path.realpath(values)
         if not os.path.exists(summary_base_dir):
             print('Warning: summary-base-dir does not exist')
         setattr(namespace, self.dest, summary_base_dir)

@@ -162,6 +162,16 @@ class FileSystemPermissionError(MindInsightException):
             http_code=400)
 
 
+class PortReuseException(MindInsightException):
+    """Port not available error.."""
+    def __init__(self, error_detail):
+        error_msg = '{}'.format(error_detail)
+        super(PortReuseException, self).__init__(
+            GeneralErrors.PORT_NOT_AVAILABLE_ERROR,
+            error_msg,
+            http_code=400)
+
+
 class PortNotAvailableError(MindInsightException):
     """Port not available error.."""
     def __init__(self, error_detail):
@@ -197,7 +207,6 @@ class MindInsightMemoryError(MindInsightException):
             GeneralErrors.MEMORY_ERROR,
             error_msg,
             http_code=400)
-
 
 class SettingValueError(MindInsightException):
     """Setting value error."""

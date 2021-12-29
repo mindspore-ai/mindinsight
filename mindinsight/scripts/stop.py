@@ -25,6 +25,7 @@ import psutil
 from mindinsight.conf import settings
 from mindinsight.utils.command import BaseCommand
 from mindinsight.utils.hook import HookUtils
+from mindinsight.modelarts.utils.utils import get_notebook_registry
 
 
 class PortAction(argparse.Action):
@@ -82,8 +83,9 @@ class Command(BaseCommand):
         if args.port is None:
             args.port = settings.PORT
 
-        pid, workspace = self.get_process(args.port)
+        pid, workspace, log_base_dir = self.get_process(args.port)
         setattr(args, 'pid', pid)
+        setattr(args, 'log_base_dir', log_base_dir)
 
         os.environ['MINDINSIGHT_PORT'] = str(args.port)
         os.environ['MINDINSIGHT_WORKSPACE'] = workspace
@@ -97,6 +99,10 @@ class Command(BaseCommand):
             args (Namespace): Parsed arguments to hold customized parameters.
         """
         port, pid = args.port, args.pid
+        notebook_register = get_notebook_registry()
+        if notebook_register:
+            notebook_register.stop(port)
+
         if not pid:
             msg = f'No mindinsight service started by current user found for port {port}'
             self.console.error(msg)
@@ -142,6 +148,7 @@ class Command(BaseCommand):
         pid, workspace = 0, settings.WORKSPACE
         user = getpass.getuser()
         connections = psutil.net_connections()
+        log_base_dir = ''
         for connection in connections:
             if connection.status != 'LISTEN':
                 continue
@@ -181,4 +188,4 @@ class Command(BaseCommand):
                     break
             break
 
-        return pid, workspace
+        return pid, workspace, log_base_dir

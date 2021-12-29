@@ -26,6 +26,7 @@ import psutil
 from mindinsight.conf import settings
 from mindinsight.utils.command import BaseCommand
 from mindinsight.utils.exceptions import PortNotAvailableError, SettingValueError
+from mindinsight.modelarts.exceptions import PortReuseException
 from mindinsight.utils.hook import HookUtils
 from mindinsight.utils.hook import init
 
@@ -185,14 +186,21 @@ class Command(BaseCommand):
             self.console.error(error.message)
             self.logfile.error(error.message)
             sys.exit(1)
+        except PortReuseException as ex:
+            self.console.error(ex.message)
+            self.logfile.error(ex.message)
+            sys.exit(2)
 
         self.console.info('Workspace: %s', os.path.realpath(settings.WORKSPACE))
         self.console.info('Summary base dir: %s', os.path.realpath(settings.SUMMARY_BASE_DIR))
 
         run_module = import_module('mindinsight.backend.run')
-        run_module.start()
+        state_result = run_module.start()
 
-        self.logfile.info('Start mindinsight done.')
+        self.logfile.info('Start mindinsight done. Workspace is %s,', settings.WORKSPACE)
+        self.logfile.info('Port is %s,', settings.PORT)
+        self.logfile.info('Summary base dir is %s', settings.SUMMARY_BASE_DIR)
+        return state_result
 
     def check_port(self):
         """Check port."""
@@ -205,7 +213,28 @@ class Command(BaseCommand):
             if connection.status != 'LISTEN':
                 continue
             if connection.laddr.port == settings.PORT:
-                raise PortNotAvailableError(f'Port {settings.PORT} is no available for MindInsight')
+                last_log_base_dir = self._get_log_base_dir(settings.PORT)
+                if last_log_base_dir == settings.SUMMARY_BASE_DIR:
+                    raise PortReuseException(
+                        f'Reusing MindInsight on port {settings.PORT} (pid {connection.pid}, ' \
+                        f'Use "mindinsight stop --port {settings.PORT}" to stop it.)')
+                raise PortNotAvailableError(
+                    f'MindInsight could not bind to port {settings.PORT}, ' \
+                    f'it was already in use (pid {connection.pid})')
+
+    def _get_log_base_dir(self, port):
+        """Get log base dir."""
+        log_base_dir = ''
+        log_path = os.path.join(settings.WORKSPACE, 'log/scripts/start.{}.log'.format(port))
+        log_key_word = 'Summary base dir is '
+        with open(log_path) as f:
+            logs = f.readlines()
+            for line in reversed(logs):
+                if log_key_word in line:
+                    log_base_dir = line.split(log_key_word)[1].strip()
+                    break
+
+        return log_base_dir
 
     def check_debugger_port(self):
         """Check if the debugger_port is available"""

@@ -1,4 +1,4 @@
-# Copyright 2019 Huawei Technologies Co., Ltd
+# Copyright 2020-2021 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,28 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-"""Mindinsight init module."""
-
-from mindinsight._version import VERSION
-from mindinsight.modelarts import notebook
-
-
-__version__ = VERSION
-__version_info__ = tuple(VERSION.split('.'))
-
-__all__ = [
-    '__version__',
-    '__version_info__'
-]
+"""Modelarts exceptions module."""
+from mindinsight.utils.exceptions import MindInsightException
+from mindinsight.utils.constant import GeneralErrors
 
 
-def load_ipython_extension(ipython):
-    """
-    IPython API entry point.
-
-    Only intended to be called by the IPython runtime.
-
-    See:
-       The IPython extension guide.
-    """
-    notebook.notebook_load_ipython_extension(ipython)
+class PortReuseException(MindInsightException):
+    """Port reuse exception."""
+    def __init__(self, error_detail):
+        error_msg = '{}'.format(error_detail)
+        super(PortReuseException, self).__init__(
+            GeneralErrors.PORT_NOT_AVAILABLE_ERROR,
+            error_msg,
+            http_code=400)
