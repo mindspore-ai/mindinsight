@@ -288,11 +288,9 @@ class MinddataAnalyser(BaseAnalyser):
         Returns:
             str, the abs file path.
         """
-        target_file_path = ""
-        for root_path, _, file_names in os.walk(file_dir):
-            for item in file_names:
-                if item == file_name:
-                    target_file_path = os.path.join(root_path, file_name)
+        target_file_path = os.path.join(file_dir, file_name)
+        if not os.path.exists(target_file_path):
+            return ""
 
         return target_file_path
 
