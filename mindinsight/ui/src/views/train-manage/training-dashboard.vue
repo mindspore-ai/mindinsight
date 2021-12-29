@@ -285,7 +285,7 @@ limitations under the License.
 <script>
 import echarts, { echartsThemeName } from '../../js/echarts';
 import RequestService from '@/services/request-service';
-import { basePath } from '@/services/fetcher';
+import { basePath, transCode } from '@/services/fetcher';
 import CommonProperty from '@/common/common-property.js';
 import { select, selectAll, format, precisionRound } from 'd3';
 import 'd3-graphviz';
@@ -501,7 +501,7 @@ export default {
           const resArr = res.data.intervals;
           if (resArr instanceof Array && resArr.length) {
             const params = {
-              train_id: encodeURIComponent(this.trainingJobId),
+              train_id: this.trainingJobId,
               type: 'interval',
               metadata: true,
               interval_id: resArr[0].id,
@@ -1141,7 +1141,7 @@ export default {
         tag: this.tensorTag,
         detail: 'data',
         step: step,
-        dims: encodeURIComponent(filterStr),
+        dims: filterStr,
       };
       RequestService.getTensorsSample(params).then(
         (res) => {
@@ -1561,7 +1561,7 @@ export default {
               const sampleWallTime = sampleItem.sampleData[sampleIndex].wall_time;
               sampleItem.curImgUrl =
                 `${basePath}${this.imageBasePath}` +
-                `train_id=${encodeURIComponent(sampleItem.runId)}&tag=${encodeURIComponent(sampleItem.tagName)}` +
+                `train_id=${transCode(sampleItem.runId)}&tag=${transCode(sampleItem.tagName)}` +
                 `&step=-1&wt=${sampleWallTime}`;
             } else {
               this.curImageShowSample = {};

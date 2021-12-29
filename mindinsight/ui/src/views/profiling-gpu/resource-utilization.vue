@@ -320,7 +320,7 @@ export default {
       this.deviceCpuChart.cpuAvgSystem = deviceInfo.sys_utilization.avg_value;
       this.deviceCpuChart.cpuAvgIO = deviceInfo.io_utilization.avg_value;
       this.deviceCpuChart.cpuAvgFree = deviceInfo.idle_utilization.avg_value;
-      this.deviceCpuChart.cpuAvgProcess = deviceInfo.runnable_process.avg_value;
+      this.deviceCpuChart.cpuAvgProcess = deviceInfo.runable_processes.avg_value;
       this.deviceCpuChart.cpuAvgSwitch = deviceInfo.context_switch_count.avg_value;
       this.deviceCpuChart.option.series = series;
       this.deviceCpuChart.option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;

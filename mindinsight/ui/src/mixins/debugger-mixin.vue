@@ -495,19 +495,21 @@ export default {
      * @param {Boolean} isQuery whether to query tree data
      */
     dealMetadata(metadata) {
-      if (metadata.graph_name 
-          && metadata.graph_name !== this.metadata.graph_name 
-          && this.graphFiles.value !== this.$t('debugger.all')     
+      if (
+        metadata.graph_name &&
+        metadata.graph_name !== this.metadata.graph_name &&
+        this.graphFiles.value !== this.$t('debugger.all')
       ) {
         this.graphFiles.value = metadata.graph_name;
         this.isCurrentGraph = false;
       }
-      if (metadata.graph_name 
-          && metadata.step !== undefined 
-          && metadata.step !== this.metadata.step 
-          && metadata.graph_name === this.metadata.graph_name 
-          && this.graphFiles.value !== metadata.graph_name 
-          && this.graphFiles.value !== this.$t('debugger.all')    
+      if (
+        metadata.graph_name &&
+        metadata.step !== undefined &&
+        metadata.step !== this.metadata.step &&
+        metadata.graph_name === this.metadata.graph_name &&
+        this.graphFiles.value !== metadata.graph_name &&
+        this.graphFiles.value !== this.$t('debugger.all')
       ) {
         this.graphFiles.value = metadata.graph_name;
         this.isCurrentGraph = false;
@@ -615,9 +617,9 @@ export default {
             if (res.data.metadata) {
               this.dealMetadata(res.data.metadata);
             }
-            if(res.data.graph?.graph_names?.length && this.graphFiles.options.length){
-              let graphNames = res.data.graph.graph_names.filter(val=>!this.graphFiles.options.includes(val));
-              if(graphNames.length){
+            if (res.data.graph?.graph_names?.length && this.graphFiles.options.length) {
+              let graphNames = res.data.graph.graph_names.filter((val) => !this.graphFiles.options.includes(val));
+              if (graphNames.length) {
                 this.$message.success(this.$t('debugger.newGraphName', { graphNames }));
                 setTimeout(() => {
                   location.reload();
@@ -1112,7 +1114,10 @@ export default {
     },
     dealParentNode(node) {
       const parent = node.parent;
-      if (parent && !parent.childNodes.filter((val) => val.data.watched !== -1).find((val) => val.checked === false)) {
+      if (
+        parent &&
+        !parent.childNodes.filter((val) => val.data.watched !== -1).find((val) => val.checked === false)
+      ) {
         parent.checked = true;
         parent.indeterminate = false;
         this.dealParentNode(parent);
@@ -1245,7 +1250,7 @@ export default {
           watch_point_id: this.curWatchPointId ? this.curWatchPointId : 0,
           graph_name: this.graphFiles.value,
           rank_id: this.logicCard.value,
-          stack_info_key_word: encodeURIComponent(this.searchStackContent),
+          stack_info_key_word: this.searchStackContent,
         };
         if (this.graphFiles.value === this.$t('debugger.all')) {
           delete params.graph_name;
@@ -1365,7 +1370,7 @@ export default {
               this.loadingInstance.close();
               this.dialogVisible = true;
               this.nodeDataIsLarge = true;
-              return
+              return;
             }
             if (res.data.graph && res.data.graph.nodes) {
               this.origialTree = res.data.graph.nodes.map((val) => {
@@ -1393,13 +1398,14 @@ export default {
                 this.graphFiles.options.unshift(this.$t('debugger.all'));
               }
               this.graphFiles.value = this.graphFiles.options[0];
-              if(this.trainId){
+              if (this.trainId) {
                 this.getGraphRuns();
-              }             
-              if (res.data.metadata 
-                  && res.data.metadata.state === this.state.waiting 
-                  && this.trainId 
-                  && !this.graphFiles.value
+              }
+              if (
+                res.data.metadata &&
+                res.data.metadata.state === this.state.waiting &&
+                this.trainId &&
+                !this.graphFiles.value
               ) {
                 this.noOfflineGraphName = true;
                 this.dialogVisible = true;
@@ -1977,7 +1983,10 @@ export default {
           if (res.data && res.data.graph) {
             const graph = res.data.graph;
 
-            if (this.graphFiles.value !== currentHit.graph_name && this.graphFiles.value !== this.$t('debugger.all')) {
+            if (
+              this.graphFiles.value !== currentHit.graph_name &&
+              this.graphFiles.value !== this.$t('debugger.all')
+            ) {
               this.graphFiles.value = currentHit.graph_name;
               this.resetAllData(graph, params.params.name);
             } else {
@@ -2147,7 +2156,7 @@ export default {
       const param = {
         offset: this.stacks.currentPage - 1,
         limit: this.stacks.pageSize.size,
-        key_word: encodeURIComponent(this.stacks.searchContent),
+        key_word: this.stacks.searchContent,
       };
       RequestService.queryStackList(param, this.sessionId).then(
         (res) => {

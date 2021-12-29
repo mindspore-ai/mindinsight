@@ -435,7 +435,7 @@ export default {
   },
   methods: {
     resizeGridStyle(resizeObj) {
-      if(!this.showTensorValue && !resizeObj.rightTop.isHide && !this.tensorValue.length){
+      if (!this.showTensorValue && !resizeObj.rightTop.isHide && !this.tensorValue.length) {
         this.showTensorValue = !resizeObj.rightTop.isHide;
         this.foldTensorValue();
       }
@@ -1110,7 +1110,7 @@ export default {
       const params = {
         name: row.name,
         detail: 'data',
-        shape: encodeURIComponent(shape),
+        shape: shape,
         tolerance: this.tolerance / 100,
         graph_name: row.graph_name,
         rank_id: row.rank_id,
@@ -1217,7 +1217,7 @@ export default {
       const params = {
         name: row.name,
         detail: 'data',
-        shape: encodeURIComponent(shape),
+        shape: shape,
         graph_name: row.graph_name,
         prev: this.gridType === 'preStep' ? true : false,
         rank_id: row.rank_id,
@@ -1245,12 +1245,12 @@ export default {
                   this.$t('debugger.largeDataTip'),
                   JSON.parse(row.shape),
                   shape,
-                  true);
+                  true
+                );
               });
               this.dealLoading();
               return;
-            }
-            else if (tensorStatus === 'uncached' || tensorStatus === 'oversize') {
+            } else if (tensorStatus === 'uncached' || tensorStatus === 'oversize') {
               let errorMsg = null;
               if (tensorStatus === 'uncached') {
                 errorMsg = this.$t('debugger.largeDataLoading');

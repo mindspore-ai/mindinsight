@@ -218,7 +218,7 @@ export default {
       loading: true,
       currentFolder: '--',
       // table filter condition
-      tableFilter: {lineage_type: {in: ['model']}},
+      tableFilter: { lineage_type: { in: ['model'] } },
       showDialogModel: false,
       summaryList: [],
       disableState: true,
@@ -339,43 +339,43 @@ export default {
      */
     querySummaryList(params) {
       RequestService.querySummaryList(params, false)
-          .then(
-              (res) => {
-                this.loading = false;
-                if (res && res.data && res.data.train_jobs) {
-                  const summaryList = JSON.parse(JSON.stringify(res.data.train_jobs));
-                  if (params.offset > 0 && !summaryList.length) {
-                    this.currentPage.currentPage = 1;
-                    this.currentPageChange();
-                    return;
-                  }
-                  summaryList.forEach((i) => {
-                    i.relative_path = i.relative_path ? i.relative_path : '--';
-                    i.update_time = i.update_time ? i.update_time : '--';
-                    i.viewProfiler = i.profiler_dir && i.profiler_dir.length;
-                    i.viewDashboard = i.summary_files || i.graph_files || i.lineage_files;
-                    i.viewOfflineDebugger = i.dump_dir;
-                    i.paramDetails = i.lineage_files;
-                  });
-                  this.currentFolder = res.data.name ? res.data.name : '--';
-                  this.pagination.total = res.data.total;
-                  this.summaryList = summaryList;
-                  this.disableState = !summaryList.length;
-                } else {
-                  this.currentFolder = '--';
-                  this.pagination.total = 0;
-                  this.pagination.currentPage = 1;
-                  this.summaryList = [];
-                  this.disableState = true;
-                }
-              },
-              (error) => {
-                this.loading = false;
-              },
-          )
-          .catch((e) => {
+        .then(
+          (res) => {
             this.loading = false;
-          });
+            if (res && res.data && res.data.train_jobs) {
+              const summaryList = JSON.parse(JSON.stringify(res.data.train_jobs));
+              if (params.offset > 0 && !summaryList.length) {
+                this.currentPage.currentPage = 1;
+                this.currentPageChange();
+                return;
+              }
+              summaryList.forEach((i) => {
+                i.relative_path = i.relative_path ? i.relative_path : '--';
+                i.update_time = i.update_time ? i.update_time : '--';
+                i.viewProfiler = i.profiler_dir && i.profiler_dir.length;
+                i.viewDashboard = i.summary_files || i.graph_files || i.lineage_files;
+                i.viewOfflineDebugger = i.dump_dir;
+                i.paramDetails = i.lineage_files;
+              });
+              this.currentFolder = res.data.name ? res.data.name : '--';
+              this.pagination.total = res.data.total;
+              this.summaryList = summaryList;
+              this.disableState = !summaryList.length;
+            } else {
+              this.currentFolder = '--';
+              this.pagination.total = 0;
+              this.pagination.currentPage = 1;
+              this.summaryList = [];
+              this.disableState = true;
+            }
+          },
+          (error) => {
+            this.loading = false;
+          }
+        )
+        .catch((e) => {
+          this.loading = false;
+        });
     },
     currentPagesizeChange(pageSize) {
       this.pagination.pageSize = pageSize;
@@ -400,7 +400,7 @@ export default {
       const trainId = row.train_id;
       this.$router.push({
         path: '/train-manage/training-dashboard',
-        query: {id: trainId},
+        query: { id: trainId },
       });
     },
     /**
@@ -459,19 +459,19 @@ export default {
     getSessionId(params) {
       const loadingInstance = this.$loading(this.loadingOption);
       return RequestService.getSession(params).then(
-          (res) => {
-            loadingInstance.close();
-            if (res && res.data) {
-              const sessionId = res.data;
-              return sessionId;
-            }
-          },
-          (error) => {
-            loadingInstance.close();
-            if (error && error.response && error.response.data && error.response.data.error_code === '5054B280') {
-              this.checkSessions();
-            }
-          },
+        (res) => {
+          loadingInstance.close();
+          if (res && res.data) {
+            const sessionId = res.data;
+            return sessionId;
+          }
+        },
+        (error) => {
+          loadingInstance.close();
+          if (error && error.response && error.response.data && error.response.data.error_code === '5054B280') {
+            this.checkSessions();
+          }
+        }
       );
     },
     deleteSession(sessionId) {
@@ -495,7 +495,7 @@ export default {
           const trainJobs = res.data.train_jobs;
           this.debuggerDialog.trainJobs = Object.keys(trainJobs).map((val) => {
             return {
-              relative_path: decodeURIComponent(val),
+              relative_path: val,
               session_id: trainJobs[val],
             };
           });
@@ -583,7 +583,7 @@ export default {
 
         const routeUrl = this.$router.resolve({
           path: '/train-manage/training-dashboard',
-          query: {id: trainId},
+          query: { id: trainId },
         });
         window.open(routeUrl.href, '_blank');
       }
@@ -627,49 +627,49 @@ export default {
       const params = {
         body: {},
       };
-      this.tableFilter.summary_dir = {in: [row.train_id]};
+      this.tableFilter.summary_dir = { in: [row.train_id] };
       params.body = Object.assign({}, this.tableFilter);
       RequestService.queryLineagesData(params)
-          .then((resp) => {
-            this.showDialogModel = true;
-            if (resp && resp.data && resp.data.object && resp.data.object.length) {
-              const resultArr = [];
-              const tempdata = resp.data.object[0].model_lineage;
-              const keys = Object.keys(tempdata);
-              keys.forEach((key, index) => {
-                const data = {
-                  id: index + 1,
-                  hasChildren: false,
-                  key: this.dialogKeys[key] ? this.dialogKeys[key].label : key,
-                  value: '',
-                };
-                if (tempdata[key] === null) {
-                  data.value = 'None';
-                } else if (typeof tempdata[key] === this.objectType && tempdata[key] !== null) {
-                  if (!(tempdata[key] instanceof Array) && JSON.stringify(tempdata[key]) !== '{}') {
-                    data.hasChildren = true;
-                    data.children = [];
-                    Object.keys(tempdata[key]).forEach((k, j) => {
-                      const item = {};
-                      item.key = k;
-                      item.value = tempdata[key][k];
-                      item.id = `model` + `${new Date().getTime()}` + `${this.$store.state.tableId}`;
-                      this.$store.commit('increaseTableId');
-                      data.children.push(item);
-                    });
-                  }
-                  data.value = JSON.stringify(tempdata[key]);
-                } else {
-                  data.value = tempdata[key];
+        .then((resp) => {
+          this.showDialogModel = true;
+          if (resp && resp.data && resp.data.object && resp.data.object.length) {
+            const resultArr = [];
+            const tempdata = resp.data.object[0].model_lineage;
+            const keys = Object.keys(tempdata);
+            keys.forEach((key, index) => {
+              const data = {
+                id: index + 1,
+                hasChildren: false,
+                key: this.dialogKeys[key] ? this.dialogKeys[key].label : key,
+                value: '',
+              };
+              if (tempdata[key] === null) {
+                data.value = 'None';
+              } else if (typeof tempdata[key] === this.objectType && tempdata[key] !== null) {
+                if (!(tempdata[key] instanceof Array) && JSON.stringify(tempdata[key]) !== '{}') {
+                  data.hasChildren = true;
+                  data.children = [];
+                  Object.keys(tempdata[key]).forEach((k, j) => {
+                    const item = {};
+                    item.key = k;
+                    item.value = tempdata[key][k];
+                    item.id = `model` + `${new Date().getTime()}` + `${this.$store.state.tableId}`;
+                    this.$store.commit('increaseTableId');
+                    data.children.push(item);
+                  });
                 }
-                resultArr.push(data);
-              });
-              this.modelData = resultArr;
-            } else {
-              this.modelData = [];
-            }
-          })
-          .catch(() => {});
+                data.value = JSON.stringify(tempdata[key]);
+              } else {
+                data.value = tempdata[key];
+              }
+              resultArr.push(data);
+            });
+            this.modelData = resultArr;
+          } else {
+            this.modelData = [];
+          }
+        })
+        .catch(() => {});
     },
   },
   components: {},
