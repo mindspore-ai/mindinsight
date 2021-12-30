@@ -28,7 +28,8 @@ limitations under the License.
       <div class="path-message">
         <span>{{$t('symbols.leftbracket')}}</span>
         <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
-        <span>{{summaryPath}}</span>
+        <span class="path-name"
+              :title="this.summaryPath">{{summaryPath}}</span>
         <span>{{$t('symbols.rightbracket')}}</span>
       </div>
     </div>
@@ -2125,6 +2126,13 @@ export default {
 };
 </script>
 <style>
+.path-name {
+  vertical-align: bottom;
+  display: inline-block;
+  max-width: 30em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .cl-dashboard {
   height: 100%;
   overflow-y: auto;
