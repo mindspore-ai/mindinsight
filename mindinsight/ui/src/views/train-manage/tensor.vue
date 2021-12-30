@@ -306,64 +306,64 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.getSingleTrainJob(params)
-          .then((res) => {
-            if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
-              this.initOver = true;
-              return;
-            }
-            const data = res.data.train_jobs[0];
-            if (!data.tags) {
-              return;
-            }
-            const tagList = [];
-            const dataList = [];
-            data.tags.forEach((tagName, tagIndex) => {
-              if (!this.curFullTagDic[tagName]) {
-                this.curFullTagDic[tagName] = true;
-                tagList.push({
-                  label: tagName,
-                  checked: true,
-                  show: true,
-                });
-                dataList.push({
-                  tagName: tagName,
-                  summaryName: this.trainingJobId,
-                  show: false,
-                  showLoading: false,
-                  sliderValue: 0,
-                  newDataFlag: true,
-                  totalStepNum: 0,
-                  curStep: '',
-                  curTime: '',
-                  curDims: '',
-                  curDataType: '',
-                  fullScreen: false,
-                  ref: tagName,
-                  sliderChangeTimer: null,
-                  curData: [],
-                  formateData: [],
-                  fullData: [],
-                  filterStr: '',
-                  curMartixShowSliderValue: 0,
-                  showErrorTip: false,
-                });
-              }
-            });
-            if (dataList.length === 1) {
-              dataList[0].fullScreen = true;
-            }
-            this.tagList = tagList;
-            this.originDataArr = dataList;
-            this.$nextTick(() => {
-              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-              this.initOver = true;
-              this.updateTagInPage();
-            });
-          }, this.requestErrorCallback)
-          .catch((e) => {
+        .then((res) => {
+          if (!res || !res.data || !res.data.train_jobs || !res.data.train_jobs.length) {
             this.initOver = true;
-            this.$message.error(this.$t('public.dataError'));
+            return;
+          }
+          const data = res.data.train_jobs[0];
+          if (!data.tags) {
+            return;
+          }
+          const tagList = [];
+          const dataList = [];
+          data.tags.forEach((tagName, tagIndex) => {
+            if (!this.curFullTagDic[tagName]) {
+              this.curFullTagDic[tagName] = true;
+              tagList.push({
+                label: tagName,
+                checked: true,
+                show: true,
+              });
+              dataList.push({
+                tagName: tagName,
+                summaryName: this.trainingJobId,
+                show: false,
+                showLoading: false,
+                sliderValue: 0,
+                newDataFlag: true,
+                totalStepNum: 0,
+                curStep: '',
+                curTime: '',
+                curDims: '',
+                curDataType: '',
+                fullScreen: false,
+                ref: tagName,
+                sliderChangeTimer: null,
+                curData: [],
+                formateData: [],
+                fullData: [],
+                filterStr: '',
+                curMartixShowSliderValue: 0,
+                showErrorTip: false,
+              });
+            }
           });
+          if (dataList.length === 1) {
+            dataList[0].fullScreen = true;
+          }
+          this.tagList = tagList;
+          this.originDataArr = dataList;
+          this.$nextTick(() => {
+            this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+            this.initOver = true;
+            this.updateTagInPage();
+          });
+        }, this.requestErrorCallback)
+        .catch((e) => {
+          this.initOver = true;
+          this.$message.error(this.$t('public.dataError'));
+        });
     },
     /**
      * Table dimension change callback
@@ -481,29 +481,29 @@ export default {
         detail: 'histogram',
       };
       RequestService.getTensorsSample(params).then(
-          (res) => {
-            sampleItem.showErrorTip = false;
-            sampleItem.showLoading = false;
-            if (!res || !res.data || !this.curDataType) {
-              return;
+        (res) => {
+          sampleItem.showErrorTip = false;
+          sampleItem.showLoading = false;
+          if (!res || !res.data || !this.curDataType) {
+            return;
+          }
+          if (!res.data.tensors || !res.data.tensors.length) {
+            return;
+          }
+          const resData = JSON.parse(JSON.stringify(res.data.tensors[0]));
+          sampleItem.summaryName = resData.train_id;
+          sampleItem.fullData = resData;
+          sampleItem.curData = this.formHistogramOriData(resData);
+          this.$nextTick(() => {
+            const elementItem = this.$refs[sampleItem.ref];
+            if (elementItem) {
+              elementItem[0].updateHistogramData();
             }
-            if (!res.data.tensors || !res.data.tensors.length) {
-              return;
-            }
-            const resData = JSON.parse(JSON.stringify(res.data.tensors[0]));
-            sampleItem.summaryName = resData.train_id;
-            sampleItem.fullData = resData;
-            sampleItem.curData = this.formHistogramOriData(resData);
-            this.$nextTick(() => {
-              const elementItem = this.$refs[sampleItem.ref];
-              if (elementItem) {
-                elementItem[0].updateHistogramData();
-              }
-            });
-          },
-          (e) => {
-            this.freshDataErrorCallback(e, sampleItem, false);
-          },
+          });
+        },
+        (e) => {
+          this.freshDataErrorCallback(e, sampleItem, false);
+        }
       );
     },
     /**
@@ -517,56 +517,18 @@ export default {
         detail: 'stats',
       };
       RequestService.getTensorsSample(params).then(
-          (res) => {
-            if (!res || !res.data || this.curDataType) {
-              sampleItem.showLoading = false;
-              return;
-            }
-            if (!res.data.tensors.length) {
-              sampleItem.showLoading = false;
-              return;
-            }
-            const resData = JSON.parse(JSON.stringify(res.data.tensors[0]));
-            sampleItem.summaryName = resData.train_id;
-            if (!resData.values.length) {
-              sampleItem.fullData = [];
-              sampleItem.formateData = [];
-              sampleItem.curData = [];
-              sampleItem.curTime = '';
-              sampleItem.curDims = '';
-              sampleItem.curDataType = '';
-              sampleItem.curStep = '';
-              sampleItem.sliderValue = 0;
-              sampleItem.totalStepNum = 0;
-              this.clearMartixData(sampleItem);
-              sampleItem.showLoading = false;
-              return;
-            }
-            const oldTotalStepNum = sampleItem.totalStepNum;
-            sampleItem.totalStepNum = resData.values.length - 1;
-            if (sampleItem.sliderValue === oldTotalStepNum) {
-              sampleItem.sliderValue = sampleItem.totalStepNum;
-            }
-            if (sampleItem.sliderValue > sampleItem.totalStepNum) {
-              sampleItem.sliderValue = sampleItem.totalStepNum;
-            }
-            sampleItem.fullData = resData.values;
-            sampleItem.formateData = sampleItem.fullData[sampleItem.sliderValue];
-            const oldStep = sampleItem.curStep;
-            sampleItem.curStep = sampleItem.formateData.step;
-            if (!sampleItem.filterStr) {
-              sampleItem.filterStr = this.initFilterStr(sampleItem.formateData.value.dims);
-              sampleItem.newDataFlag = true;
-            }
-            if (sampleItem.curStep !== oldStep) {
-              sampleItem.newDataFlag = true;
-            }
-            sampleItem.curTime = this.dealrelativeTime(new Date(sampleItem.formateData.wall_time * 1000).toString());
-            sampleItem.curDataType = sampleItem.formateData.value.data_type;
-            sampleItem.curDims = JSON.stringify(sampleItem.formateData.value.dims);
-            this.freshtMartixData(sampleItem);
-          },
-          () => {
+        (res) => {
+          if (!res || !res.data || this.curDataType) {
+            sampleItem.showLoading = false;
+            return;
+          }
+          if (!res.data.tensors.length) {
+            sampleItem.showLoading = false;
+            return;
+          }
+          const resData = JSON.parse(JSON.stringify(res.data.tensors[0]));
+          sampleItem.summaryName = resData.train_id;
+          if (!resData.values.length) {
             sampleItem.fullData = [];
             sampleItem.formateData = [];
             sampleItem.curData = [];
@@ -578,7 +540,45 @@ export default {
             sampleItem.totalStepNum = 0;
             this.clearMartixData(sampleItem);
             sampleItem.showLoading = false;
-          },
+            return;
+          }
+          const oldTotalStepNum = sampleItem.totalStepNum;
+          sampleItem.totalStepNum = resData.values.length - 1;
+          if (sampleItem.sliderValue === oldTotalStepNum) {
+            sampleItem.sliderValue = sampleItem.totalStepNum;
+          }
+          if (sampleItem.sliderValue > sampleItem.totalStepNum) {
+            sampleItem.sliderValue = sampleItem.totalStepNum;
+          }
+          sampleItem.fullData = resData.values;
+          sampleItem.formateData = sampleItem.fullData[sampleItem.sliderValue];
+          const oldStep = sampleItem.curStep;
+          sampleItem.curStep = sampleItem.formateData.step;
+          if (!sampleItem.filterStr) {
+            sampleItem.filterStr = this.initFilterStr(sampleItem.formateData.value.dims);
+            sampleItem.newDataFlag = true;
+          }
+          if (sampleItem.curStep !== oldStep) {
+            sampleItem.newDataFlag = true;
+          }
+          sampleItem.curTime = this.dealrelativeTime(new Date(sampleItem.formateData.wall_time * 1000).toString());
+          sampleItem.curDataType = sampleItem.formateData.value.data_type;
+          sampleItem.curDims = JSON.stringify(sampleItem.formateData.value.dims);
+          this.freshtMartixData(sampleItem);
+        },
+        () => {
+          sampleItem.fullData = [];
+          sampleItem.formateData = [];
+          sampleItem.curData = [];
+          sampleItem.curTime = '';
+          sampleItem.curDims = '';
+          sampleItem.curDataType = '';
+          sampleItem.curStep = '';
+          sampleItem.sliderValue = 0;
+          sampleItem.totalStepNum = 0;
+          this.clearMartixData(sampleItem);
+          sampleItem.showLoading = false;
+        }
       );
     },
     /**
@@ -591,46 +591,46 @@ export default {
         tag: sampleItem.tagName,
         detail: 'data',
         step: sampleItem.curStep,
-        dims: encodeURIComponent(sampleItem.filterStr),
+        dims: sampleItem.filterStr,
       };
       sampleItem.curMartixShowSliderValue = sampleItem.sliderValue;
       RequestService.getTensorsSample(params).then(
-          (res) => {
-            sampleItem.showErrorTip = false;
-            sampleItem.showLoading = false;
-            if (!res || !res.data || this.curDataType) {
-              return;
-            }
-            if (!res.data.tensors.length) {
-              return;
-            }
-            const resData = res.data.tensors[0];
-            const curStepData = resData.values[0];
-            let statistics = {};
-            if (curStepData) {
-              sampleItem.curData =
+        (res) => {
+          sampleItem.showErrorTip = false;
+          sampleItem.showLoading = false;
+          if (!res || !res.data || this.curDataType) {
+            return;
+          }
+          if (!res.data.tensors.length) {
+            return;
+          }
+          const resData = res.data.tensors[0];
+          const curStepData = resData.values[0];
+          let statistics = {};
+          if (curStepData) {
+            sampleItem.curData =
               curStepData.value.data instanceof Array ? curStepData.value.data : [curStepData.value.data];
-              statistics = curStepData.value.statistics;
-            } else {
-              sampleItem.curData = [[]];
+            statistics = curStepData.value.statistics;
+          } else {
+            sampleItem.curData = [[]];
+          }
+          let elementItem = null;
+          this.$nextTick(() => {
+            elementItem = this.$refs[sampleItem.ref];
+            if (elementItem) {
+              elementItem[0].updateGridData(
+                sampleItem.newDataFlag,
+                curStepData.value.dims,
+                statistics,
+                sampleItem.filterStr
+              );
             }
-            let elementItem = null;
-            this.$nextTick(() => {
-              elementItem = this.$refs[sampleItem.ref];
-              if (elementItem) {
-                elementItem[0].updateGridData(
-                    sampleItem.newDataFlag,
-                    curStepData.value.dims,
-                    statistics,
-                    sampleItem.filterStr,
-                );
-              }
-              sampleItem.newDataFlag = false;
-            });
-          },
-          (e) => {
-            this.freshDataErrorCallback(e, sampleItem, true);
-          },
+            sampleItem.newDataFlag = false;
+          });
+        },
+        (e) => {
+          this.freshDataErrorCallback(e, sampleItem, true);
+        }
       );
     },
     /**
@@ -819,35 +819,35 @@ export default {
         train_id: this.trainingJobId,
       };
       RequestService.getSingleTrainJob(params, ignoreError)
-          .then((res) => {
-            if (this.isReloading) {
-              this.$store.commit('setIsReload', false);
-              this.isReloading = false;
-            }
-            // Fault tolerance processing
-            if (
-              !res ||
+        .then((res) => {
+          if (this.isReloading) {
+            this.$store.commit('setIsReload', false);
+            this.isReloading = false;
+          }
+          // Fault tolerance processing
+          if (
+            !res ||
             !res.data ||
             !res.data.train_jobs ||
             !res.data.train_jobs.length ||
             !res.data.train_jobs[0].tags
-            ) {
-              this.clearAllData();
-              return;
-            }
-            const data = res.data.train_jobs[0];
-            // Remove data that does not exist.
-            const dataRemoveFlag = this.removeNoneExistentData(data);
-            // Add new data.
-            const dataAddFlag = this.checkNewDataAndComplete(data);
-            this.$nextTick(() => {
-              this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
-              this.updateTagInPage(!dataAddFlag && !dataRemoveFlag);
-            });
-          }, this.requestErrorCallback)
-          .catch((e) => {
-            this.$message.error(this.$t('public.dataError'));
+          ) {
+            this.clearAllData();
+            return;
+          }
+          const data = res.data.train_jobs[0];
+          // Remove data that does not exist.
+          const dataRemoveFlag = this.removeNoneExistentData(data);
+          // Add new data.
+          const dataAddFlag = this.checkNewDataAndComplete(data);
+          this.$nextTick(() => {
+            this.multiSelectedTagNames = this.$refs.multiselectGroupComponents.updateSelectedDic();
+            this.updateTagInPage(!dataAddFlag && !dataRemoveFlag);
           });
+        }, this.requestErrorCallback)
+        .catch((e) => {
+          this.$message.error(this.$t('public.dataError'));
+        });
     },
     /**
      * Delete the data that does not exist

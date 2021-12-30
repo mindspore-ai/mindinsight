@@ -607,7 +607,7 @@ export default {
             this.steps.id = resArr[0].id;
 
             const params = {
-              train_id: encodeURIComponent(id),
+              train_id: id,
               type: 'interval',
               metadata: true,
               interval_id: this.steps.id,
@@ -640,8 +640,8 @@ export default {
           if (resp && resp.data) {
             if (resp.data.landscapes && resp.data.landscapes.length) {
               if (resp.data.landscapes[0].error_code) {
-                this.$message.error(this.$t('error.' + resp.data.landscapes[0].error_code))
-                return
+                this.$message.error(this.$t('error.' + resp.data.landscapes[0].error_code));
+                return;
               }
               const lossdata = JSON.parse(JSON.stringify(resp.data.landscapes[0]));
               if (lossdata.convergence_point) {
@@ -1032,7 +1032,7 @@ export default {
       });
       if (this.chartObj) {
         const params = {
-          train_id: encodeURIComponent(this.trainInfo.id),
+          train_id: this.trainInfo.id,
           type: 'interval',
           metadata: true,
           interval_id: this.steps.id,

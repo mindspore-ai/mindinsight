@@ -19,28 +19,49 @@ import i18n from '@/i18n';
 import axios from 'axios';
 import Vue from 'vue';
 
-export {default} from 'axios';
+export { default } from 'axios';
 export const basePath = location.origin + location.pathname;
+export function transCode(url) {
+  const encoedUrl = encodeURIComponent(url)
+    .replace(/\(/g, "%28")
+    .replace(/\)/g, "%29")
+    .replace(/\*/g, "%2a")
+    .replace(/\!/g, "%21")
+    .replace(/\'/g, "%27")
+  return encoedUrl
+}
 
 axios.defaults.timeout = 30000;
 axios.defaults.baseURL = basePath;
 axios.interceptors.request.use(
-    function(config) {
-      config.headers['Pragma'] = 'no-cache';
-      config.headers['Cache-Control'] = 'no-cache,no-store,must-revalidate';
-      if (router.currentRoute.path !== '/debugger') {
-        config.cancelToken = new axios.CancelToken((cancel) => {
-          store.commit('pushToken', {
-            cancelToken: cancel,
-          });
+  function (config) {
+    config.headers['Pragma'] = 'no-cache';
+    config.headers['Cache-Control'] = 'no-cache,no-store,must-revalidate';
+    if (router.currentRoute.path !== '/debugger') {
+      config.cancelToken = new axios.CancelToken((cancel) => {
+        store.commit('pushToken', {
+          cancelToken: cancel,
         });
+      });
+    }
+    let url = config.url
+    if (config.method === 'get' && config.params) {
+      url += '?'
+      let keys = Object.keys(config.params)
+      for (let key of keys) {
+        if (typeof (config.params[key]) != 'undefined') {
+          url += `${key}=${transCode(config.params[key])}&`
+        }
       }
-
-      return config;
-    },
-    function(error) {
-      return Promise.reject(error);
-    },
+      url = url.substring(0, url.length - 1)
+      config.params = {}
+    }
+    config.url = url
+    return config;
+  },
+  function (error) {
+    return Promise.reject(error);
+  },
 );
 
 const ignoreCode = {
@@ -50,64 +71,64 @@ const ignoreCode = {
 
 // Add a response interceptor
 axios.interceptors.response.use(
-    function(response) {
-      if (typeof response.data === 'string' && router.currentRoute.path !== '/train-manage/image') {
-        const variant = new Date().getTime();
-        response.data = JSON.parse(
-            response.data
-                .replace(/NaN/g, '"NaN"')
-                .replace(/-Infinity/g, variant)
-                .replace(/Infinity/g, '"Infinity"')
-                .replace(new RegExp(variant, 'g'), '"-Infinity"'),
-        );
-      }
-      return response;
-    },
-    function(error) {
-      const errorData = i18n.messages[i18n.locale].error;
-      const path = router.currentRoute.path;
-      if (path === '/debugger' || path === '/offline-debugger') {
-        if (error.response?.data?.error_code === '5054B281') router.push('/');
-        return Promise.reject(error);
-      }
-      // error returned by backend
-      if (
-        error.response &&
+  function (response) {
+    if (typeof response.data === 'string' && router.currentRoute.path !== '/train-manage/image') {
+      const variant = new Date().getTime();
+      response.data = JSON.parse(
+        response.data
+          .replace(/NaN/g, '"NaN"')
+          .replace(/-Infinity/g, variant)
+          .replace(/Infinity/g, '"Infinity"')
+          .replace(new RegExp(variant, 'g'), '"-Infinity"'),
+      );
+    }
+    return response;
+  },
+  function (error) {
+    const errorData = i18n.messages[i18n.locale].error;
+    const path = router.currentRoute.path;
+    if (path === '/debugger' || path === '/offline-debugger') {
+      if (error.response?.data?.error_code === '5054B281') router.push('/');
+      return Promise.reject(error);
+    }
+    // error returned by backend
+    if (
+      error.response &&
       error.response.data &&
       error.response.data.error_code
-      ) {
-        const errorCode = error.response.data.error_code.toString();
-        if (ignoreCode.ignoreError.includes(errorCode)) {
-          if (errorData[errorCode]) {
-            Vue.prototype.$message.error(errorData[errorCode]);
-          }
-          setTimeout(() => router.push('/'), 2500);
-          return Promise.reject(error);
-        }
-        if (path.includes('-dashboard') || ignoreCode.regardError.includes(errorCode)) {
-          return Promise.reject(error);
-        }
+    ) {
+      const errorCode = error.response.data.error_code.toString();
+      if (ignoreCode.ignoreError.includes(errorCode)) {
         if (errorData[errorCode]) {
           Vue.prototype.$message.error(errorData[errorCode]);
         }
+        setTimeout(() => router.push('/'), 2500);
         return Promise.reject(error);
-      } else {
-        // error returned by browser
-        if (error.code === 'ECONNABORTED' && /^timeout/.test(error.message)) {
-          if (error.config.headers.ignoreError) return Promise.reject(error);
-          // timeout processing
-          Vue.prototype.$message.error(i18n.messages[i18n.locale].public.timeout);
-          return Promise.reject(error);
-        } else if (error.message === 'routeJump') {
-          // route jump
-          return false;
-        } else {
-          // show network error
-          Vue.prototype.$message.error(
-              i18n.messages[i18n.locale].public.netWorkError,
-          );
-          return Promise.reject(error);
-        }
       }
-    },
+      if (path.includes('-dashboard') || ignoreCode.regardError.includes(errorCode)) {
+        return Promise.reject(error);
+      }
+      if (errorData[errorCode]) {
+        Vue.prototype.$message.error(errorData[errorCode]);
+      }
+      return Promise.reject(error);
+    } else {
+      // error returned by browser
+      if (error.code === 'ECONNABORTED' && /^timeout/.test(error.message)) {
+        if (error.config.headers.ignoreError) return Promise.reject(error);
+        // timeout processing
+        Vue.prototype.$message.error(i18n.messages[i18n.locale].public.timeout);
+        return Promise.reject(error);
+      } else if (error.message === 'routeJump') {
+        // route jump
+        return false;
+      } else {
+        // show network error
+        Vue.prototype.$message.error(
+          i18n.messages[i18n.locale].public.netWorkError,
+        );
+        return Promise.reject(error);
+      }
+    }
+  },
 );

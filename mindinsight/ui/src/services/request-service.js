@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import axios from './fetcher';
+import { transCode } from './fetcher';
 
 export default {
   // query dataset graph data
@@ -37,7 +38,7 @@ export default {
   putLineagesData(params) {
     return axios({
       method: 'put',
-      url: 'v1/mindinsight/lineagemgr/lineages?train_id=' + encodeURIComponent(params.train_id),
+      url: 'v1/mindinsight/lineagemgr/lineages?train_id=' + transCode(params.train_id),
       data: params.body,
     });
   },
@@ -136,15 +137,14 @@ export default {
 
   // query metedata
   getSummarySample(params) {
-    const trainIdsStr = params.train_id;
-    const trainIdsArr = trainIdsStr.split('&');
+    const trainIds = params.train_id;
     let requestStr = '';
-    trainIdsArr.forEach((item) => {
+    trainIds.forEach((item) => {
       if (item) {
-        requestStr += `train_id=${item}&`;
+        requestStr += `train_id=${transCode(item)}&`;
       }
     });
-    requestStr += `tag=${encodeURIComponent(params.tag)}`;
+    requestStr += `tag=${transCode(params.tag)}`;
     return axios({
       method: 'get',
       url: `v1/mindinsight/datavisual/scalars?${requestStr}`,
@@ -609,14 +609,17 @@ export default {
     });
   },
   queryLossGraph(params) {
-    const trainIdsStr = params.train_id;
-    const trainIdsArr = trainIdsStr.split('&');
+    const trainIds = params.train_id;
     let requestStr = '';
-    trainIdsArr.forEach((item) => {
-      if (item) {
-        requestStr += `train_id=${(item)}&`;
-      }
-    });
+    if (Array.isArray(trainIds)) {
+      trainIds.forEach((item) => {
+        if (item) {
+          requestStr += `train_id=${(transCode(item))}&`;
+        }
+      });
+    } else {
+      requestStr += `train_id=${(transCode(trainIds))}&`;
+    }
     requestStr += `type=${params.type}`;
     if (params.metadata || params.metadata === false) {
       requestStr += `&metadata=${params.metadata}`;

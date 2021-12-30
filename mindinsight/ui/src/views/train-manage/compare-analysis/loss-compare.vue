@@ -633,7 +633,6 @@ export default {
     } catch {}
   },
   destroyed() {
-    this.$store.commit('setActiveTabName', '');
     if (this.isReloading) {
       this.$store.commit('setIsReload', false);
       this.isReloading = false;
@@ -835,7 +834,6 @@ export default {
      * @param {Number} val Current type
      */
     viewGraphChange(val) {
-      this.$store.commit('setActiveTabName', val);
       this.updateView();
       this.$nextTick(() => {
         this.resizeCallback();
@@ -937,12 +935,12 @@ export default {
       const trainIds = [];
       this.curPageArr.forEach((sampleItem) => {
         if (sampleItem.label) {
-          trainIds.push(encodeURIComponent(sampleItem.label));
+          trainIds.push(sampleItem.label);
         }
       });
 
       const params = {
-        train_id: trainIds.join('&'),
+        train_id: trainIds,
         type: 'final',
         metadata: true,
       };
@@ -972,8 +970,12 @@ export default {
             info.optimizer = landscape.metadata.optimizer ?? '--';
             info.learning_rate = landscape.metadata.learning_rate ?? '--';
             info.metric = landscape.metadata.metric ?? {};
-            info.loss = landscape.convergence_point === '' || landscape.convergence_point === null || !landscape.convergence_point instanceof Array
-              ? '--' : landscape.convergence_point[2];
+            info.loss =
+              landscape.convergence_point === '' ||
+              landscape.convergence_point === null ||
+              !landscape.convergence_point instanceof Array
+                ? '--'
+                : landscape.convergence_point[2];
             const keys = Object.keys(info.metric);
             if (keys.length) {
               showMetric.label = keys[0];

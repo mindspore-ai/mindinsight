@@ -155,7 +155,7 @@ limitations under the License.
 <script>
 import multiselectGroupComponents from '../../components/multiselect-group.vue';
 import RequestService from '../../services/request-service';
-import { basePath } from '@/services/fetcher';
+import { basePath, transCode } from '@/services/fetcher';
 import autoUpdate from '../../mixins/auto-update.vue';
 export default {
   mixins: [autoUpdate],
@@ -381,8 +381,8 @@ export default {
         (res) => {
           sampleItem.showErrMsg = false;
           sampleItem.curImgUrl =
-            `${basePath}${this.imageBasePath}train_id=${encodeURIComponent(sampleItem.summaryId)}` +
-            `&tag=${encodeURIComponent(sampleItem.tagName)}&step=${params.step}&wt=${params.wt}`;
+            `${basePath}${this.imageBasePath}train_id=${transCode(sampleItem.summaryId)}` +
+            `&tag=${transCode(sampleItem.tagName)}&step=${params.step}&wt=${params.wt}`;
         },
         (e) => {
           if (e.response && e.response.data && e.response.data.error_code) {
