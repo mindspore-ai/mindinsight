@@ -24,7 +24,7 @@ from enum import Enum, unique
 
 from gunicorn.glogging import Logger
 from mindinsight.backend.config import WEB_CONFIG_DIR
-from mindinsight.conf import settings
+from mindinsight.conf import settings, get_web_address
 from mindinsight.utils.log import setup_logger
 
 MINDBOARD_APP_MODULE = "mindinsight.backend.application:APP"
@@ -277,9 +277,8 @@ def start():
     else:
         state_result = _check_server_start_stat(process.pid, error_log_abspath, pre_log_pos)
         # print gunicorn start state to stdout
-        label = 'Web address:'
-        format_args = label, settings.HOST, str(settings.PORT), settings.URL_PATH_PREFIX
-        console.info('%s http://%s:%s%s', *format_args)
+        web_address = get_web_address()
+        console.info(web_address)
         for line in state_result["prompt_message"]:
             console.info(line)
         if state_result["state"] == ServerStateEnum.FAILED.value:
