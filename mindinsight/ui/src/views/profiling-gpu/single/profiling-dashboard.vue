@@ -415,9 +415,9 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from '../../js/echarts';
-import RequestService from '../../services/request-service';
-import CommonProperty from '../../common/common-property';
+import echarts from '@/js/echarts';
+import RequestService from '@/services/request-service';
+import CommonProperty from '@/common/common-property';
 export default {
   data() {
     return {

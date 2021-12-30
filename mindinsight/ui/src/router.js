@@ -112,35 +112,58 @@ export default new Router({
         },
       ],
     },
+    // add single and cluster tab for profiling of gpu
     {
       path: '/profiling-gpu',
-      component: () => import('./views/profiling-gpu/profiling.vue'),
-      redirect: '/profiling-gpu/profiling-dashboard',
+      component: () => import('./views/profiling-gpu/profiling-gpu-dashboard.vue'),
+      redirect: '/profiling-gpu/single',
       children: [
         {
-          path: 'profiling-dashboard',
-          component: () => import('./views/profiling-gpu/profiling-dashboard.vue'),
+          path: 'single',
+          component: () => import('./views/profiling-gpu/single/profiling.vue'),
+          redirect: '/profiling-gpu/single/profiling-dashboard',
+          children: [
+            {
+              path: 'profiling-dashboard',
+              component: () => import('./views/profiling-gpu/single/profiling-dashboard.vue'),
+            },
+            {
+              path: 'data-process',
+              component: () => import('./views/profiling/single/performance/data-process.vue'),
+            },
+            {
+              path: 'operator',
+              component: () => import('./views/profiling-gpu/single/operator.vue'),
+            },
+            {
+              path: 'resource-utilization',
+              component: () => import('./views/profiling-gpu/single/resource-utilization.vue'),
+            },
+            {
+              path: 'step-trace',
+              component: () => import('./views/profiling/single/performance/step-trace.vue'),
+            },
+            {
+              path: 'cpu-detail',
+              component: () => import('./views/profiling/single/resource/cpu-utilization.vue'),
+            },
+          ]
         },
         {
-          path: 'data-process',
-          component: () => import('./views/profiling/single/performance/data-process.vue'),
-        },
-        {
-          path: 'operator',
-          component: () => import('./views/profiling-gpu/operator.vue'),
-        },
-        {
-          path: 'resource-utilization',
-          component: () => import('./views/profiling-gpu/resource-utilization.vue'),
-        },
-        {
-          path: 'step-trace',
-          component: () => import('./views/profiling/single/performance/step-trace.vue'),
-        },
-        {
-          path: 'cpu-detail',
-          component: () => import('./views/profiling/single/resource/cpu-utilization.vue'),
-        },
+          path: 'cluster',
+          component: () => import('./views/profiling-gpu/cluster/cluster-dashboard.vue'),
+          redirect: '/profiling-gpu/cluster/performance',
+          children: [
+            {
+              path: 'performance',
+              component: () => import('./views/profiling-gpu/cluster/performance-dashboard.vue'),
+            },
+            {
+              path: 'step-trace',
+              component: () => import('./views/profiling-gpu/cluster/step-trace.vue')
+            },
+          ]
+        }
       ],
     },
     {

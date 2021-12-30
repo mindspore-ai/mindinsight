@@ -15,15 +15,6 @@ limitations under the License.
 -->
 <template>
   <div class="prof-wrap">
-    <div class="prof-head">
-      <span class="cl-title-left">{{$t('profiling.titleText')}}</span>
-      <div class="path-message">
-        <span>{{$t('symbols.leftbracket')}}</span>
-        <span>{{$t('trainingDashboard.summaryDirPath')}}</span>
-        <span>{{summaryPath}}</span>
-        <span>{{$t('symbols.rightbracket')}}</span>
-      </div>
-    </div>
     <div class="prof-content">
       <div class="prof-content-left"
            :class="{collapse:collapse}">
@@ -56,8 +47,8 @@ limitations under the License.
       <div class="prof-content-right"
            :class="{collapse:collapse}">
         <div class="tab-container"
-             v-show="$route.path === '/profiling-gpu/profiling-dashboard'
-                || $route.path === '/profiling-gpu/resource-utilization'">
+             v-show="$route.path === '/profiling-gpu/single/profiling-dashboard'
+                || $route.path === '/profiling-gpu/single/resource-utilization'">
           <el-tabs v-model="tabData.activeName"
                    @tab-click="paneChange">
             <el-tab-pane v-for="pane in tabData.tabPanes"
@@ -67,22 +58,22 @@ limitations under the License.
           </el-tabs>
         </div>
         <div class="router-container"
-             :class="$route.path === '/profiling-gpu/profiling-dashboard'
-           || $route.path === '/profiling-gpu/resource-utilization'?'dashboard':'detail'">
+             :class="$route.path === '/profiling-gpu/single/profiling-dashboard'
+           || $route.path === '/profiling-gpu/single/resource-utilization'?'dashboard':'detail'">
           <router-view :rankID="curDashboardInfo.curCardNum"></router-view>
         </div>
-        <div class="close"
-             @click="backToDashboard"
-             v-if="$route.path !== '/profiling-gpu/profiling-dashboard'
-            && $route.path !== '/profiling-gpu/resource-utilization'">
-          <img src="@/assets/images/close-page.png">
-        </div>
+      </div>
+      <div class="close"
+           @click="backToDashboard"
+           v-if="$route.path !== '/profiling-gpu/single/profiling-dashboard'
+           && $route.path !== '/profiling-gpu/single/resource-utilization'">
+        <img src="@/assets/images/close-page.png">
       </div>
     </div>
   </div>
 </template>
 <script>
-import RequestService from '../../services/request-service';
+import RequestService from '@/services/request-service';
 export default {
   data() {
     return {
@@ -142,6 +133,10 @@ export default {
         this.summaryPath = this.$route.query.path;
         if (!isNaN(this.$route.query.deviceid)) {
           this.curDashboardInfo.curCardNum = this.$route.query.deviceid;
+        }
+        // The cardNum changes with route rankID
+        if (!isNaN(this.$route.query.rankID)) {
+          this.curDashboardInfo.curCardNum = this.$route.query.rankID;
         }
         this.getDeviceList();
       } else {
@@ -319,9 +314,9 @@ export default {
      * Router back to profiling-dashboard
      */
     backToDashboard() {
-      let path = '/profiling-gpu/profiling-dashboard';
+      let path = '/profiling-gpu/single/profiling-dashboard';
       if (this.tabData.activeName === this.tabData.tabPanes[1].name) {
-        path = '/profiling-gpu/resource-utilization';
+        path = '/profiling-gpu/single/resource-utilization';
       }
       this.$router.push({
         path: path,
@@ -347,10 +342,10 @@ export default {
         let path = '';
         switch (tabItem.name) {
           case this.tabData.tabPanes[0].name:
-            path = '/profiling-gpu/profiling-dashboard';
+            path = '/profiling-gpu/single/profiling-dashboard';
             break;
           case this.tabData.tabPanes[1].name:
-            path = '/profiling-gpu/resource-utilization';
+            path = '/profiling-gpu/single/resource-utilization';
             break;
         }
         if (path) {
@@ -395,8 +390,7 @@ export default {
   margin-left: 5px;
 }
 .prof-wrap .prof-content {
-  height: calc(100% - 50px);
-  padding: 0 24px 24px 0;
+  height: 100%;
 }
 .prof-wrap .prof-content > div {
   float: left;
@@ -415,7 +409,6 @@ export default {
   padding-top: 20px;
   height: 100%;
   overflow-y: auto;
-  margin-left: 24px;
   background: var(--module-bg-color);
   word-wrap: break-word;
 }
@@ -501,22 +494,22 @@ export default {
   text-align: center;
 }
 .prof-wrap .prof-content .prof-content-left .collapse-btn-0 {
-  background-image: url('../../assets/images/0/collapse-left.svg');
+  background-image: url('../../../assets/images/0/collapse-left.svg');
 }
 .prof-wrap .prof-content .prof-content-left .collapse-btn-1 {
-  background-image: url('../../assets/images/1/collapse-left.svg');
+  background-image: url('../../../assets/images/1/collapse-left.svg');
 }
 .prof-wrap .prof-content .prof-content-left .collapse-btn-0.collapse {
-  background-image: url('../../assets/images/0/collapse-right.svg');
+  background-image: url('../../../assets/images/0/collapse-right.svg');
 }
 .prof-wrap .prof-content .prof-content-left .collapse-btn-1.collapse {
-  background-image: url('../../assets/images/1/collapse-right.svg');
+  background-image: url('../../../assets/images/1/collapse-right.svg');
 }
 .prof-wrap .prof-content .prof-content-left.collapse {
   width: 0;
 }
 .prof-wrap .prof-content .prof-content-right {
-  width: 78%;
+  width: 76%;
   padding-left: 20px;
   transition: width 0.2s;
   position: relative;
@@ -540,8 +533,8 @@ export default {
 .prof-content-right .router-container.dashboard {
   height: calc(100% - 46px);
 }
-.prof-wrap .prof-content .prof-content-right .close {
-  position: absolute;
+.prof-wrap .prof-content .close {
+  width: 2%;
   right: 0;
   top: -10px;
   cursor: pointer;
