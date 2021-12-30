@@ -77,3 +77,8 @@ class Settings:
 
 
 settings = Settings()
+
+def get_web_address():
+    """Get web address."""
+    web_address = 'Web address: http://{}:{}{}'.format(settings.HOST, str(settings.PORT), settings.URL_PATH_PREFIX)
+    return web_address

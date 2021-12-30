@@ -23,7 +23,7 @@ from importlib import import_module
 
 import psutil
 
-from mindinsight.conf import settings
+from mindinsight.conf import settings, get_web_address
 from mindinsight.utils.command import BaseCommand
 from mindinsight.utils.exceptions import PortNotAvailableError, SettingValueError
 from mindinsight.modelarts.exceptions import PortReuseException
@@ -214,10 +214,12 @@ class Command(BaseCommand):
                 continue
             if connection.laddr.port == settings.PORT:
                 last_log_base_dir = self._get_log_base_dir(settings.PORT)
+                web_address = get_web_address()
                 if last_log_base_dir == settings.SUMMARY_BASE_DIR:
                     raise PortReuseException(
-                        f'Reusing MindInsight on port {settings.PORT} (pid {connection.pid}, ' \
-                        f'Use "mindinsight stop --port {settings.PORT}" to stop it.)')
+                        f'Reusing MindInsight on port {settings.PORT}. (pid {connection.pid}, ' \
+                        f'Use "mindinsight stop --port {settings.PORT}" to stop it.)\n' \
+                        f'{web_address}')
                 raise PortNotAvailableError(
                     f'MindInsight could not bind to port {settings.PORT}, ' \
                     f'it was already in use (pid {connection.pid})')
@@ -227,12 +229,16 @@ class Command(BaseCommand):
         log_base_dir = ''
         log_path = os.path.join(settings.WORKSPACE, 'log/scripts/start.{}.log'.format(port))
         log_key_word = 'Summary base dir is '
-        with open(log_path) as f:
-            logs = f.readlines()
-            for line in reversed(logs):
-                if log_key_word in line:
-                    log_base_dir = line.split(log_key_word)[1].strip()
-                    break
+        try:
+            with open(log_path) as f:
+                logs = f.readlines()
+                for line in reversed(logs):
+                    if log_key_word in line:
+                        log_base_dir = line.split(log_key_word)[1].strip()
+                        break
+        except (FileNotFoundError, PermissionError) as error:
+            log.info("Get log base dir error.")
+            log.info(str(error))
 
         return log_base_dir
 
