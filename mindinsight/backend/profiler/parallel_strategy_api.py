@@ -23,7 +23,6 @@ from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
 
 from mindinsight.conf import settings
-from mindinsight.datavisual.utils.tools import get_train_id
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
@@ -46,7 +45,7 @@ def init_module(app):
 @BLUEPRINT.route("/profile/parallel-strategy/graphs", methods=["GET"])
 def get_parallel_strategy():
     """Get parallel strategy by train id."""
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
     profiler_dir = os.path.realpath(os.path.join(settings.SUMMARY_BASE_DIR, train_id))
     try:
         profiler_dir = validate_and_normalize_path(profiler_dir, 'profiler')

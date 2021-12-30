@@ -16,7 +16,6 @@
 import os
 import re
 from typing import Union, List
-from urllib.parse import unquote
 
 from marshmallow import ValidationError
 
@@ -141,11 +140,7 @@ def validate_and_normalize_profiler_path(summary_dir, summary_base_dir):
     profiler_directory_pattern = r'^profiler.*'
     if not summary_dir:
         raise ProfilerParamValueErrorException('The file dir does not exist.')
-    try:
-        unquote_path = unquote(summary_dir, errors='strict')
-    except UnicodeDecodeError:
-        raise ProfilerParamValueErrorException('Unquote error with strict mode')
-    train_job_dir = os.path.join(summary_base_dir, unquote_path)
+    train_job_dir = os.path.join(summary_base_dir, summary_dir)
     try:
         train_job_dir_abs = validate_and_normalize_path(train_job_dir, 'train_job_dir')
     except ValidationError:
@@ -162,7 +157,7 @@ def validate_and_normalize_profiler_path(summary_dir, summary_base_dir):
                 profiler_name_list.append(search_res[0])
         profiler_name_list.sort()
         profiler_name_newest = profiler_name_list[-1]
-        profiler_dir = os.path.join(summary_base_dir, unquote_path, profiler_name_newest)
+        profiler_dir = os.path.join(summary_base_dir, summary_dir, profiler_name_newest)
     except ValidationError:
         log.error('no valid profiler dir under <%s>', train_job_dir_abs)
         raise ProfilerDirNotFoundException('Profiler dir not found.')

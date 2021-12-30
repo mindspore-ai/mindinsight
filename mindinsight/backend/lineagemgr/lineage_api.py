@@ -18,7 +18,6 @@ import json
 from flask import Blueprint, jsonify, request
 
 from mindinsight.conf import settings
-from mindinsight.datavisual.utils.tools import get_train_id
 from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
 from mindinsight.lineagemgr.cache_item_updater import update_lineage_object
 from mindinsight.lineagemgr.common.validator.validate import validate_train_id
@@ -90,7 +89,7 @@ def update_lineage():
     Examples:
         >>> PUT http://xxxx/v1/mindinsight/lineagemgr/lineages?train_id=./run1
     """
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
     added_info = request.json
     if not isinstance(added_info, dict):
         raise ParamValueError("The request body should be a dict.")
@@ -116,7 +115,7 @@ def get_dataset_graph():
         >>> GET http://xxxx/v1/mindinsight/datasets/dataset_graph?train_id=xxx
     """
 
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
     validate_train_id(train_id)
     search_condition = {
         'summary_dir': {

@@ -15,7 +15,6 @@
 """Debugger restful api."""
 import json
 import weakref
-from urllib.parse import unquote
 
 from flask import Blueprint, jsonify, request, Response
 
@@ -25,24 +24,6 @@ from mindinsight.utils.exceptions import ParamMissError, ParamValueError, ParamT
 
 BLUEPRINT = Blueprint("debugger", __name__,
                       url_prefix=settings.URL_PATH_PREFIX + settings.API_PREFIX)
-
-
-def _unquote_param(param):
-    """
-    Decode parameter value.
-
-    Args:
-        param (str): Encoded param value.
-
-    Returns:
-        str, decoded param value.
-    """
-    if isinstance(param, str):
-        try:
-            param = unquote(param, errors='strict')
-        except UnicodeDecodeError:
-            raise ParamValueError('Unquote error with strict mode.')
-    return param
 
 
 def _read_post_request(post_request):
@@ -114,7 +95,7 @@ def search(session_id):
     watch_point_id = to_int(request.args.get('watch_point_id', 0), 'watch_point_id')
     node_category = request.args.get('node_category')
     rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
-    stack_pattern = _unquote_param(request.args.get('stack_info_key_word'))
+    stack_pattern = request.args.get('stack_info_key_word')
     reply = _wrap_reply(_session_manager.get_session(session_id).search,
                         {'name': name,
                          'graph_name': graph_name,
@@ -139,7 +120,7 @@ def tensor_comparisons(session_id):
     """
     name = request.args.get('name')
     detail = request.args.get('detail', 'data')
-    shape = _unquote_param(request.args.get('shape'))
+    shape = request.args.get('shape')
     graph_name = request.args.get('graph_name', '')
     tolerance = request.args.get('tolerance', '0')
     rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
@@ -200,7 +181,7 @@ def retrieve_tensor_value(session_id):
     """
     name = request.args.get('name')
     detail = request.args.get('detail')
-    shape = _unquote_param(request.args.get('shape'))
+    shape = request.args.get('shape')
     graph_name = request.args.get('graph_name')
     prev = bool(request.args.get('prev') == 'true')
     rank_id = to_int(request.args.get('rank_id', 0), 'rank_id')
@@ -488,7 +469,7 @@ def get_stack_infos(session_id):
     Examples:
         >>> GET /v1/mindsight/debugger/sessions/<session_id>/stacks?key_word=xxx&offset=0
     """
-    key_word = _unquote_param(request.args.get('key_word'))
+    key_word = request.args.get('key_word')
     limit = int(request.args.get('limit', 10))
     offset = int(request.args.get('offset', 0))
     filter_condition = {

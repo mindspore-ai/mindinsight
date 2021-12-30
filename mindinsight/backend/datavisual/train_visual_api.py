@@ -22,7 +22,6 @@ from flask import request
 from flask import jsonify
 
 from mindinsight.conf import settings
-from mindinsight.datavisual.utils.tools import get_train_id
 from mindinsight.datavisual.utils.tools import if_nan_inf_to_none
 from mindinsight.datavisual.processors.histogram_processor import HistogramProcessor
 from mindinsight.datavisual.processors.tensor_processor import TensorProcessor
@@ -49,7 +48,7 @@ def image_metadata():
             height, and query.
     """
     tag = request.args.get("tag")
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
 
     processor = ImageProcessor(DATA_MANAGER)
     response = processor.get_metadata_list(train_id, tag)
@@ -66,7 +65,7 @@ def single_image():
     """
     tag = request.args.get("tag")
     step = request.args.get("step")
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
 
     processor = ImageProcessor(DATA_MANAGER)
     img_data = processor.get_single_image(train_id, tag, step)
@@ -83,7 +82,7 @@ def scalar_metadata():
             one of which is an object containing items' wall_time, step and value.
     """
     tag = request.args.get("tag")
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
 
     processor = ScalarsProcessor(DATA_MANAGER)
     response = processor.get_metadata_list(train_id, tag)
@@ -108,7 +107,7 @@ def graph_nodes():
     name = request.args.get('name', default=None)
     tag = request.args.get("tag", default=None)
     mode = request.args.get("mode", default="normal")
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
     if mode not in VALID_MODE:
         raise ParamValueError("Invalid mode")
 
@@ -130,7 +129,7 @@ def graph_node_names():
     limit = request.args.get("limit", default=100)
     tag = request.args.get("tag", default=None)
     mode = request.args.get("mode", default="normal")
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
     if mode not in VALID_MODE:
         raise ParamValueError("Invalid mode")
 
@@ -150,7 +149,7 @@ def graph_search_single_node():
     name = request.args.get("name")
     tag = request.args.get("tag", default=None)
     mode = request.args.get("mode", default="normal")
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
     if mode not in VALID_MODE:
         raise ParamValueError("Invalid mode")
 
@@ -168,7 +167,7 @@ def histogram():
         Response, which contains a JSON object.
     """
     tag = request.args.get("tag", default=None)
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
 
     processor = HistogramProcessor(DATA_MANAGER)
     response = processor.get_histograms(train_id, tag)
@@ -223,7 +222,7 @@ def list_intervals():
     Returns:
         Response, which contains a JSON object.
     """
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
     processor = LandscapeProcessor(DATA_MANAGER)
     response = processor.list_intervals(train_id)
     return jsonify(response)

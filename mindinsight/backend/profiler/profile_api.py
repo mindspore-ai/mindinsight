@@ -26,8 +26,7 @@ from flask import request
 from marshmallow import ValidationError
 
 from mindinsight.conf import settings
-from mindinsight.datavisual.utils.tools import get_train_id, get_profiler_dir, to_int, get_device_id
-from mindinsight.datavisual.utils.tools import unquote_args
+from mindinsight.datavisual.utils.tools import to_int
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.analyser.minddata_analyser import MinddataAnalyser
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException
@@ -61,8 +60,8 @@ def get_profile_op_info():
     Examples:
         >>> POST http://xxxx/v1/mindinsight/profile/ops/search
     """
-    profiler_dir = get_profiler_dir(request)
-    train_id = get_train_id(request)
+    profiler_dir = request.args.get('profile')
+    train_id = request.args.get('train_id')
     if not profiler_dir or not train_id:
         raise ParamValueError("No profiler_dir or train_id.")
 
@@ -107,8 +106,8 @@ def get_profile_device_list():
     Examples:
         >>> POST http://xxxx/v1/mindinsight/profile/devices
     """
-    profiler_dir = get_profiler_dir(request)
-    train_id = get_train_id(request)
+    profiler_dir = request.args.get('profile')
+    train_id = request.args.get('train_id')
     if not profiler_dir or not train_id:
         raise ParamValueError("No profiler_dir or train_id.")
 
@@ -212,9 +211,9 @@ def get_queue_info():
     profiler_dir_abs = get_profiler_abs_dir(request)
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
-    device_id = unquote_args(request, "device_id")
+    device_id = request.args.get("device_id", "")
     to_int(device_id, 'device_id')
-    queue_type = unquote_args(request, "type")
+    queue_type = request.args.get("type", "")
     queue_info = {}
 
     minddata_analyser = AnalyserFactory.instance().get_analyser(
@@ -241,9 +240,9 @@ def get_time_info():
     profiler_dir_abs = get_profiler_abs_dir(request)
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
-    device_id = unquote_args(request, "device_id")
+    device_id = request.args.get("device_id", "")
     to_int(device_id, 'device_id')
-    op_type = unquote_args(request, "type")
+    op_type = request.args.get("type", "")
 
     time_info = {
         'size': 0,
@@ -275,7 +274,7 @@ def get_process_summary():
     profiler_dir_abs = get_profiler_abs_dir(request)
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
-    device_id = unquote_args(request, "device_id")
+    device_id = request.args.get("device_id", "")
     to_int(device_id, 'device_id')
 
     minddata_analyser = AnalyserFactory.instance().get_analyser(
@@ -298,8 +297,8 @@ def get_profiler_abs_dir(requests):
     Returns:
         str, the profiler abs dir.
     """
-    profiler_dir = get_profiler_dir(requests)
-    train_id = get_train_id(requests)
+    profiler_dir = requests.args.get('profile')
+    train_id = requests.args.get('train_id')
     if not profiler_dir or not train_id:
         raise ParamValueError("No profiler_dir or train_id.")
 
@@ -326,9 +325,9 @@ def get_profile_summary_proposal():
     Examples:
         >>> GET http://xxxx/v1/mindinsight/profile/summary/propose
     """
-    profiler_dir = get_profiler_dir(request)
-    train_id = get_train_id(request)
-    device_id = get_device_id(request)
+    profiler_dir = request.args.get('profile')
+    train_id = request.args.get('train_id')
+    device_id = request.args.get('device_id', "0")
     if not profiler_dir or not train_id:
         raise ParamValueError("No profiler_dir or train_id.")
     to_int(device_id, 'device_id')
@@ -367,7 +366,7 @@ def get_profile_summary_cluster_proposal():
     Examples:
         >>> GET http://xxxx/v1/mindinsight/profile/summary/cluster-propose
     """
-    summary_dir = get_train_id(request)
+    summary_dir = request.args.get('train_id')
     profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
@@ -393,8 +392,8 @@ def get_minddata_pipeline_op_queue_info():
     Examples:
         >>> POST http://xxxx/v1/mindinsight/profile/minddata-pipeline/op-queue
     """
-    profiler_dir = get_profiler_dir(request)
-    train_id = get_train_id(request)
+    profiler_dir = request.args.get('profile')
+    train_id = request.args.get('train_id')
     if not profiler_dir or not train_id:
         raise ParamValueError("No profiler_dir or train_id.")
 
@@ -439,8 +438,8 @@ def get_minddata_pipeline_queue_info():
     Examples:
         >>> GET http://xxxx/v1/mindinsight/profile/minddata-pipeline/queue
     """
-    profiler_dir = get_profiler_dir(request)
-    train_id = get_train_id(request)
+    profiler_dir = request.args.get('profile')
+    train_id = request.args.get('train_id')
     if not profiler_dir or not train_id:
         raise ParamValueError("No profiler_dir or train_id.")
 
@@ -639,8 +638,8 @@ def get_minddata_cpu_utilization_info():
     Examples:
         >>>POST http://xxx/v1/mindinsight/profile/minddata-cpu-utilization-summary
     """
-    profiler_dir = get_profiler_dir(request)
-    train_id = get_train_id(request)
+    profiler_dir = request.args.get('profile')
+    train_id = request.args.get('train_id')
     if not profiler_dir or not train_id:
         raise ParamValueError("No profiler_dir or train_id.")
 
@@ -685,7 +684,7 @@ def get_cluster_step_trace_info():
     Examples:
         >>>POST http://xxx/v1/mindinsight/profile/cluster-step-trace-summary
     """
-    summary_dir = get_train_id(request)
+    summary_dir = request.args.get('train_id')
     profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
@@ -726,7 +725,7 @@ def get_cluster_peak_memory():
     Examples:
         >>>GET http://xxx/v1/mindinsight/profile/cluster-peak-memory
     """
-    summary_dir = get_train_id(request)
+    summary_dir = request.args.get('train_id')
     profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
@@ -758,7 +757,7 @@ def get_cluster_flops():
     Examples:
         >>>GET http://xxx/v1/mindinsight/profile/cluster-flops
     """
-    summary_dir = get_train_id(request)
+    summary_dir = request.args.get('train_id')
     profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
@@ -832,7 +831,7 @@ def get_cluster_communication_info():
     Examples:
         >>>POST http://xxx/v1/mindinsight/profile/search-cluster-communication
     """
-    summary_dir = get_train_id(request)
+    summary_dir = request.args.get('train_id')
     profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
@@ -866,7 +865,7 @@ def get_cluster_link_info():
     Examples:
         >>>POST http://xxx/v1/mindinsight/profile/search-cluster-link
     """
-    summary_dir = get_train_id(request)
+    summary_dir = request.args.get('train_id')
     profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
     check_train_job_and_profiler_dir(profiler_dir_abs)
 

@@ -25,7 +25,6 @@ from flask import request
 from mindinsight.conf import settings
 from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.data_transform.summary_watcher import SummaryWatcher
-from mindinsight.datavisual.utils.tools import get_train_id
 from mindinsight.explainer.encapsulator.datafile_encap import DatafileEncap
 from mindinsight.explainer.encapsulator.evaluation_encap import EvaluationEncap
 from mindinsight.explainer.encapsulator.explain_job_encap import ExplainJobEncap
@@ -205,7 +204,7 @@ def query_explain_job():
     Raises:
         ParamMissError: If train_id info is not in the request.
     """
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
     if train_id is None:
         raise ParamMissError("train_id")
     encapsulator = ExplainJobEncap(EXPLAIN_MANAGER)
@@ -292,7 +291,7 @@ def query_evaluation():
     Raises:
         ParamMissError: If train_id info is not in the request.
     """
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
     if train_id is None:
         raise ParamMissError("train_id")
     encapsulator = EvaluationEncap(EXPLAIN_MANAGER)
@@ -310,7 +309,7 @@ def query_image():
     Returns:
         bytes, image binary content for UI to demonstrate.
     """
-    train_id = get_train_id(request)
+    train_id = request.args.get('train_id')
     if train_id is None:
         raise ParamMissError("train_id")
     image_path = request.args.get("path")
