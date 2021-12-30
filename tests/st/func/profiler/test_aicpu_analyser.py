@@ -69,9 +69,9 @@ class TestAicpuAnalyser:
     def test_query_aicpu_detail(self):
         """Test the function of querying AICPU operator type information."""
         expect_result = {
-            'col_name': ['serial_number', 'op_type', 'total_time',
-                         'dispatch_time', 'run_start', 'run_end'],
-            'size': 5
+            'col_name': ['op_name', 'op_type', 'total_time',
+                         'dispatch_time', 'execution_frequency'],
+            'size': 3
         }
         result = self._analyser_aicpu_detail.query()
         del result["object"]
