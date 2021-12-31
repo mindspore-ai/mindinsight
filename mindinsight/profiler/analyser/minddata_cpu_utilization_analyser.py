@@ -186,16 +186,24 @@ class MinddataCpuUtilizationAnalyser(BaseAnalyser):
             log.error('Did not find the device queue file: %s', file_path)
             raise ProfilerFileNotFoundException(msg='Did not find the device queue file.')
 
+        first_line = True
+        expect_first_step_num = 1
+        diff_value = 0
         with open(file_path) as data_file:
             for line in data_file.readlines():
                 op_info = line.split()
+                if first_line:
+                    # if profiler is started in the process of training, the first step_num(op_info[2]) may not be 1.
+                    # so we need convert it to start with 1.
+                    diff_value = int(op_info[2]) - expect_first_step_num
+                    first_line = False
                 # op_info is a list like:['1','64','8','2','85406783']
                 # The value of the first element in op_info is '0' or '1'.
                 # '0' means that the time information is recorded.
                 # '1' means that the queue information is recorded.
                 # '1':queue info , '64':queue capacity, '8':step_num, '2':queue size, '85406783':sampling time.
                 if op_info and op_info[0] == "1":
-                    minddata_queue_step_time_info.append([op_info[2], op_info[4]])
+                    minddata_queue_step_time_info.append([str(int(op_info[2]) - diff_value), op_info[4]])
         return minddata_queue_step_time_info
 
     def _get_minddata_pipeline_info(self):
