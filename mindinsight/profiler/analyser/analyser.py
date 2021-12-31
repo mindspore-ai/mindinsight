@@ -336,7 +336,7 @@ class AicpuTypeAnalyser(BaseAnalyser):
             csv_reader = csv.reader(file)
             next(csv_reader)
             for item in csv_reader:
-                op_type = item[1]
+                op_type = item[1].split('-')[0]
                 info = type_detail_cache.get(op_type)
                 if info:
                     info.append(item)
@@ -385,8 +385,8 @@ class AicpuDetailAnalyser(BaseAnalyser):
     Raises:
         ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    _col_names = ['serial_number', 'op_type', 'total_time', 'dispatch_time',
-                  'run_start', 'run_end']
+    _col_names = ['op_name', 'op_type', 'total_time', 'dispatch_time',
+                  'execution_frequency']
     _file_name_aicpu_time = 'aicpu_intermediate_{}.csv'
 
     def _load(self):
@@ -402,12 +402,20 @@ class AicpuDetailAnalyser(BaseAnalyser):
             logger.warning('The file <%s> does not exist.', aicpu_file_path)
             return
 
+        temp_dict = dict()
         with open(aicpu_file_path, 'r') as file:
             csv_reader = csv.reader(file)
             next(csv_reader)
             for info in csv_reader:
                 aicpu_info = self._convert_field_type(info)
-                self._data.append(aicpu_info)
+                key = aicpu_info[0]
+                if key not in temp_dict:
+                    temp_dict[key] = [0, 0, 0]
+                temp_dict[key][0] += aicpu_info[2]
+                temp_dict[key][1] += aicpu_info[3]
+                temp_dict[key][2] += 1
+        for k, v in temp_dict.items():
+            self._data.append([k, k.split('-')[0], v[0] / v[2], v[1] / v[2], v[2]])
 
     def _filter(self, filter_condition):
         """
@@ -433,5 +441,5 @@ class AicpuDetailAnalyser(BaseAnalyser):
         # Make the previous data (mindspore version before 2021.06.02) compatible.
         if len(row) == 6:
             row.insert(4, '0')
-        return [int(row[0]), row[1], self._format_float_data(float(row[2])),
-                self._format_float_data(float(row[3])), float(row[5]), float(row[6])]
+        return [row[1], row[1].split('-')[0], self._format_float_data(float(row[2])),
+                self._format_float_data(float(row[3]))]

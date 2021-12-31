@@ -3,7 +3,6 @@
   "aten::add_": "mindconverter.graph_based_converter.mapper.aten.prim.add_mapper.AddMapper",
   "aten::add": "mindconverter.graph_based_converter.mapper.aten.prim.add_mapper.AddMapper",
   "aten::addmm": "mindconverter.graph_based_converter.mapper.aten.ops.addmm_mapper.AddmmMapper",
-  "aten::bmm": "mindconverter.graph_based_converter.mapper.aten.ops.batch_matmul_mapper.BatchMatMulMapper",
   "aten::_convolution": "mindconverter.graph_based_converter.mapper.aten.nn.conv_mapper.ConvMapper",
   "aten::cat": "mindconverter.graph_based_converter.mapper.aten.ops.concat_mapper.ConcatMapper",
   "aten::chunk": "mindconverter.graph_based_converter.mapper.aten.ops.chunk_mapper.SplitMapper",
