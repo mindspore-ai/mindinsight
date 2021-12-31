@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -331,5 +331,16 @@ class DebuggerToolkitNotFoundError(MindInsightException):
         super(DebuggerToolkitNotFoundError, self).__init__(
             error=DebuggerErrors.TOOLKIT_NOT_FOUND_ERROR,
             message=DebuggerErrorMsg.TOOLKIT_NOT_FOUND_ERROR.value.format(msg),
+            http_code=500
+        )
+
+
+class DebuggerNodeTooLarge(MindInsightException):
+    """The error of that the module is not found."""
+
+    def __init__(self, limit, actual_val):
+        super(DebuggerNodeTooLarge, self).__init__(
+            error=DebuggerErrors.NODE_TOO_LARGE_ERROR,
+            message=DebuggerErrorMsg.NODE_TOO_LARGE_ERROR.value.format(limit, actual_val),
             http_code=500
         )

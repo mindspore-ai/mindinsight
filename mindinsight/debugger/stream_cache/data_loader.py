@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2021-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ from pathlib import Path
 from google.protobuf.message import DecodeError
 
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError, RankDirNotFound, \
-    DebuggerJsonFileParseError
+    DebuggerJsonFileParseError, DebuggerNodeTooLarge
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import DumpSettings, is_valid_rank_dir_name
 from mindinsight.domain.graph.proto.ms_graph_pb2 import ModelProto
@@ -136,15 +136,19 @@ class DataLoader:
         if self._rank_dirs:
             self._rank_dirs.sort(key=lambda x: x.rank_id)
 
-    def load_graphs(self):
+    def load_graphs(self, threshold=None):
         """
         Load graphs from the debugger_base_dir.
+
+        Args:
+            threshold (int): Node limit during load graphs.
 
         Returns:
             list, list of graph protos from all ranks. Each item is like:
                 {'rank_id': int,
                 'graph_protos': [GraphProto]}
         """
+        graph_loader = GraphLoader(threshold)
         res = []
         for rank_dir in self._rank_dirs:
             rank_id, rank_path = rank_dir.rank_id, rank_dir.path
@@ -153,7 +157,7 @@ class DataLoader:
                 log.debug("Directory '%s' doesn't exist.", graphs_dir)
                 res.append({'rank_id': rank_id, 'graph_protos': []})
                 continue
-            graph_protos = get_graph_protos_from_dir(graphs_dir)
+            graph_protos = graph_loader.get_graph_protos_from_dir(graphs_dir)
             res.append({'rank_id': rank_id, 'graph_protos': graph_protos})
 
         return res
@@ -350,43 +354,70 @@ def read_graph_history(file_path):
         return history
 
 
-def load_graph_from_file(graph_file_path):
+class GraphLoader:
     """
-    Load graph from file.
+    Load graph proto object in control.
 
     Args:
-        graph_file_path (Path): Graph file path.
+        threshold (int): The node limit for load graphs. If None, there is no limit.
+            Default: None.
 
-    Returns:
-        GraphProto, the parsed GraphProto object.
+    Raises:
+        DebuggerNodeTooLarge: When load new graph, the total node count is over node threshold.
     """
-    with graph_file_path.open('rb') as file_handler:
-        model_bytes = file_handler.read()
-        model = ModelProto.FromString(model_bytes)
-        graph = model.graph
+    def __init__(self, threshold=None):
+        self._node_limit = threshold
+        # node number loaded currently
+        self._total_node_num = 0
 
-    return graph
+    @staticmethod
+    def load_graph_from_file(graph_file_path):
+        """
+        Load graph from file.
 
+        Args:
+            graph_file_path (Path): Graph file path.
 
-def get_graph_protos_from_dir(graphs_dir):
-    """
-    Get graph from graph directory.
+        Returns:
+            GraphProto, the parsed GraphProto object.
+        """
+        with graph_file_path.open('rb') as file_handler:
+            model_bytes = file_handler.read()
+            model = ModelProto.FromString(model_bytes)
+            graph = model.graph
 
-    Args:
-        graphs_dir (Path): The Path object of graph directory.
+        return graph
 
-    Returns:
-        list, list of 'GraphProto' object.
-    """
-    graph_protos = []
-    pre_file_name = "ms_output_trace_code_graph_"
-    for file_in_device in graphs_dir.iterdir():
-        file_name = file_in_device.name
-        if file_name.startswith(pre_file_name) and file_name.endswith(".pb"):
-            try:
-                graph_proto = load_graph_from_file(file_in_device)
-            except DecodeError:
-                log.warning("Load graph failed. The graph file is invalid.")
-                return []
-            graph_protos.append(graph_proto)
-    return graph_protos
+    def _add_node_count(self, graph_proto):
+        """Accumulate node count."""
+        if self._node_limit is None:
+            return
+        node_cnt = len(graph_proto.parameters) + len(graph_proto.const_vals) + len(graph_proto.node)
+        self._total_node_num += node_cnt
+        if self._total_node_num > self._node_limit:
+            raise DebuggerNodeTooLarge(self._node_limit, self._total_node_num)
+
+    def get_graph_protos_from_dir(self, graphs_dir):
+        """
+        Get graph from graph directory.
+
+        Args:
+            graphs_dir (Union[Path, str]): The path of graph directory.
+
+        Returns:
+            list, list of 'GraphProto' object.
+        """
+        graphs_dir = graphs_dir if isinstance(graphs_dir, Path) else Path(graphs_dir)
+        graph_protos = []
+        pre_file_name = "ms_output_trace_code_graph_"
+        for file_in_device in graphs_dir.iterdir():
+            file_name = file_in_device.name
+            if file_name.startswith(pre_file_name) and file_name.endswith(".pb"):
+                try:
+                    graph_proto = self.load_graph_from_file(file_in_device)
+                except DecodeError:
+                    log.warning("Load graph failed. The graph file is invalid.")
+                    return []
+                self._add_node_count(graph_proto)
+                graph_protos.append(graph_proto)
+        return graph_protos

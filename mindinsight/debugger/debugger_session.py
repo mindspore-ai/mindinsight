@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -830,7 +830,8 @@ class DebuggerSession:
                 "sub_graph_names": List[str]
             }
         """
-        if self.cache_store.get_stream_handler(Streams.METADATA).state == ServerStatus.PENDING.value:
-            log.error("Failed to get graph runs as the MindSpore is in pending state.")
+        state = self.cache_store.get_stream_handler(Streams.METADATA).state
+        if not ServerStatus.is_normal_state(state):
+            log.error("Failed to get graph runs as the MindSpore is not in %s state.", state)
             return {}
         return GraphRunsOperator(self.cache_store).get_graph_runs(rank_id)

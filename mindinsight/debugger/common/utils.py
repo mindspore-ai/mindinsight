@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -76,11 +76,29 @@ class ReplyStates(enum.Enum):
 class ServerStatus(enum.Enum):
     """The status of debugger server."""
     PENDING = 'pending'  # no client session has been connected
-    RECEIVE_GRAPH = 'receive graph'  # the client session has sent the graph
+    RECEIVE_GRAPH = 'receive_graph'  # the client session has sent the graph
     WAITING = 'waiting'  # the client session is ready
     RUNNING = 'running'  # the client session is running a script
-    MISMATCH = 'mismatch'  # the version of Mindspore and Mindinsight is not matched
+    MISMATCH = 'mismatch'  # the version of MindSpore and MindInsight is not matched
     SENDING = 'sending'  # the request is in cache but not be sent to client
+    NODE_TOO_LARGE = 'node_too_large'  # the nodes is too large to analyze
+
+    @classmethod
+    def is_normal_state(cls, state):
+        """
+        Check the server is in normal state.
+
+        Args:
+            state (str): The value of ServerStatus.
+
+        Returns:
+            bool, if current server is working successfully.
+        """
+        normal_state = [cls.RECEIVE_GRAPH.value,
+                        cls.WAITING.value,
+                        cls.RUNNING.value,
+                        cls.SENDING.value]
+        return state in normal_state
 
 
 @enum.unique

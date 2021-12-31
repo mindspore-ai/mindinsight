@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2021-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,8 +21,9 @@ from importlib import import_module
 from threading import Event
 
 import mindinsight
+from mindinsight.conf.constants import MAX_GRAPH_NODE_SIZE
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotFoundError, DebuggerParamValueError, \
-    DebuggerToolkitNotFoundError
+    DebuggerToolkitNotFoundError, DebuggerNodeTooLarge
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import Streams, ServerStatus, version_match, DebuggerServerMode, get_ack_reply, \
     RunLevel, MAX_SINGLE_TENSOR_CACHE_BYTES, ViewCommandLevelEnum, convert_tensor_stats, put_tensor_base_in_cache, \
@@ -116,7 +117,7 @@ class DebuggerOfflineManager:
     def is_runnable(self):
         """Check if the offline manager is runnable."""
         state = self._metadata_stream.state
-        flag = self._is_running_flag and state not in [ServerStatus.MISMATCH.value, ServerStatus.PENDING.value]
+        flag = self._is_running_flag and ServerStatus.is_normal_state(state)
         if not flag:
             log.debug("The offline manager is not runnable, is_running_flag: %s, metadata state: %s",
                       self._is_running_flag, state)
@@ -214,7 +215,12 @@ class DebuggerOfflineManager:
     def _load_graphs(self):
         """Load graphs."""
         # the format of graphs is a list of {'rank_id': int, 'graph_protos': [GraphProto]}}
-        graphs = self._data_loader.load_graphs()
+        try:
+            graphs = self._data_loader.load_graphs(threshold=MAX_GRAPH_NODE_SIZE)
+        except DebuggerNodeTooLarge as err:
+            self._update_state(ServerStatus.NODE_TOO_LARGE)
+            log.exception(err)
+            return
         device_stream = self._cache_store.get_stream_handler(Streams.DEVICE)
         graph_per_rank = {}
         for graph in graphs:
