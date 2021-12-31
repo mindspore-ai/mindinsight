@@ -67,7 +67,7 @@ limitations under the License.
   </div>
 </template>
 <script>
-import operatorUnit from '../../components/operator-unit.vue';
+import operatorUnit from '@/components/operator-unit.vue';
 export default {
   components: { operatorUnit },
   data() {

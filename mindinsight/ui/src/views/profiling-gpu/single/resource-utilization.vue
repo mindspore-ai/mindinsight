@@ -74,9 +74,9 @@ limitations under the License.
   </div>
 </template>
 <script>
-import RequestService from '../../services/request-service';
-import echarts, { echartsThemeName } from '../../js/echarts';
-import CommonProperty from '../../common/common-property';
+import RequestService from '@/services/request-service';
+import echarts, { echartsThemeName } from '@/js/echarts';
+import CommonProperty from '@/common/common-property';
 export default {
   data() {
     return {
@@ -345,7 +345,7 @@ export default {
      */
     jumpToCpuDetail() {
       this.$router.push({
-        path: '/profiling-gpu/cpu-detail',
+        path: '/profiling-gpu/single/cpu-detail',
         query: {
           dir: this.queryData.dir,
           id: this.queryData.id,
