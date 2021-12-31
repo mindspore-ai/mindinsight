@@ -18,7 +18,6 @@ import os
 import re
 from collections import defaultdict
 from importlib import import_module
-from multiprocessing import Process, Manager
 from threading import Event
 
 import mindinsight
@@ -366,11 +365,11 @@ class DebuggerOfflineManager:
 
     def _read_tensor_base(self, cur_step, node_info, tensor_infos, tensor_protos):
         """Read tensor base from debugger service."""
-        res = Manager().list()
-        read_tensor_process = Process(target=self._read_tensor_base_work, args=(tensor_infos, res,))
-        read_tensor_process.start()
-        read_tensor_process.join()
-
+        res = []
+        tensor_data_res = self._dbg_service.read_tensor_base(tensor_infos)
+        for tensor_data in tensor_data_res:
+            tensor_data_dict = _convert_tensor_base(tensor_data)
+            res.append(tensor_data_dict)
         rank_id = node_info.get('rank_id', 0)
         tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR). \
             get_tensor_handler_by_rank_id(rank_id)
@@ -382,11 +381,14 @@ class DebuggerOfflineManager:
 
     def _read_tensor_stats(self, cur_step, node_info, tensor_infos, tensor_protos):
         """Read tensor stats from debugger service."""
-        res = Manager().list()
-        read_tensor_process = Process(target=self._read_tensor_stats_work, args=(tensor_infos, res,))
-        read_tensor_process.start()
-        read_tensor_process.join()
-
+        res = []
+        tensor_data_res = self._dbg_service.read_tensor_stats(tensor_infos)
+        for tensor_data in tensor_data_res:
+            tensor_data_dict = {
+                'tensor_base': _convert_tensor_base(tensor_data),
+                'tensor_stats': convert_tensor_stats(tensor_data)
+            }
+            res.append(tensor_data_dict)
         rank_id = node_info.get('rank_id', 0)
         tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR). \
             get_tensor_handler_by_rank_id(rank_id)
@@ -398,11 +400,11 @@ class DebuggerOfflineManager:
 
     def _read_tensor_value(self, cur_step, node_info, tensor_infos, tensor_protos):
         """Read tensor value from debugger service."""
-        res = Manager().list()
-        read_tensor_process = Process(target=self._read_tensor_value_work, args=(tensor_infos, res,))
-        read_tensor_process.start()
-        read_tensor_process.join()
-
+        res = []
+        tensor_data_res = self._dbg_service.read_tensors(tensor_infos)
+        for tensor_data in tensor_data_res:
+            tensor_data_dict = _convert_tensor_value(tensor_data)
+            res.append(tensor_data_dict)
         if len(tensor_protos) != len(res):
             log.error("Invalid view command. The result unmatched. %d/%d", len(tensor_protos), len(res))
         else:
@@ -418,40 +420,6 @@ class DebuggerOfflineManager:
 
         self._put_tensor_value_into_cache(cur_step, node_info, tensor_protos)
         log.info("Put tensor value into cache.")
-
-    def _read_tensor_base_work(self, tensor_infos, res):
-        """The read tensor base function work in another process."""
-        log.info("Start read tensor base process.")
-        for tensor_info in tensor_infos:
-            tensor_data_res = self._dbg_service.read_tensor_base([tensor_info])
-            tensor_data_dict = None
-            for tensor_data in tensor_data_res:
-                tensor_data_dict = _convert_tensor_base(tensor_data)
-            res.append(tensor_data_dict)
-        log.info("Reading tensor process is finished.")
-
-    def _read_tensor_stats_work(self, tensor_infos, res):
-        """The read tensor stats function work in another process."""
-        log.info("Start read tensor stats process.")
-        for tensor_info in tensor_infos:
-            tensor_data_res = self._dbg_service.read_tensor_stats([tensor_info])
-            tensor_data_dict = None
-            for tensor_data in tensor_data_res:
-                tensor_data_dict = {
-                    'tensor_base': _convert_tensor_base(tensor_data),
-                    'tensor_stats': convert_tensor_stats(tensor_data)
-                }
-            res.append(tensor_data_dict)
-        log.info("Reading tensor process is finished.")
-
-    def _read_tensor_value_work(self, tensor_infos, res):
-        """The read tensor value function work in another process."""
-        log.info("Start read tensor value process.")
-        tensor_data_res = self._dbg_service.read_tensors(tensor_infos)
-        for tensor_data in tensor_data_res:
-            tensor_data_dict = _convert_tensor_value(tensor_data)
-            res.append(tensor_data_dict)
-        log.info("Reading tensor process is finished.")
 
     def get_root_graph_id(self, rank_id, graph_name, node_name=None):
         """Get root graph id."""
@@ -562,10 +530,15 @@ class DebuggerOfflineManager:
         if not self._data_loader.has_data(iteration_id):
             log.info("No data dumped with iteration id: %s. Ignore checking watchpoint.", iteration_id)
             return
-        hits = Manager().list()
-        check_watchpoints_process = Process(target=self._check_watchpoint_work, args=(hits, iteration_id,))
-        check_watchpoints_process.start()
-        check_watchpoints_process.join()
+        hits = []
+        res = self._dbg_service.check_watchpoints(step)
+        for watchpoint_hit in res:
+            hit_dict = convert_watchpointhit(watchpoint_hit)
+            hits.append(hit_dict)
+        log.debug("Before sorting, unsorted_hits are: %s.", hits)
+        # Sort the watchpointhits by timestamp
+        hits.sort(key=lambda x: self.find_timestamp(x, step))
+        log.debug("After sorting, hits are: %s.", hits)
         log.info("finish check watchpoint of %s", step)
         if hits:
             log.info("Received WatchpointHits. Left run cmd %s change to empty.", self._old_run_cmd)
@@ -702,21 +675,6 @@ class DebuggerOfflineManager:
             self._metadata_stream.state = server_status.value
             self._cache_store.clean_data()
             self._cache_store.put_data(self._metadata_stream.get())
-
-    def _check_watchpoint_work(self, hits, step):
-        """The check WatchPoint function work in another process."""
-        log.info("Start checking WatchPointHit process.")
-        res = self._dbg_service.check_watchpoints(step)
-        unsorted_hits = []
-        for watchpoint_hit in res:
-            hit_dict = convert_watchpointhit(watchpoint_hit)
-            unsorted_hits.append(hit_dict)
-        log.debug("Before sorting, unsorted_hits are: %s.", unsorted_hits)
-        # Sort the watchpointhits by timestamp
-        unsorted_hits.sort(key=lambda x: self.find_timestamp(x, step))
-        log.debug("After sorting, hits are: %s.", unsorted_hits)
-        hits.extend(unsorted_hits)
-        log.info("Checking WatchPointHit process is finished.")
 
     def find_timestamp(self, watchpointhit, step):
         """
