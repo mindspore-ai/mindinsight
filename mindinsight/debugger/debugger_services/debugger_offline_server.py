@@ -531,13 +531,13 @@ class DebuggerOfflineManager:
             log.info("No data dumped with iteration id: %s. Ignore checking watchpoint.", iteration_id)
             return
         hits = []
-        res = self._dbg_service.check_watchpoints(step)
+        res = self._dbg_service.check_watchpoints(iteration_id)
         for watchpoint_hit in res:
             hit_dict = convert_watchpointhit(watchpoint_hit)
             hits.append(hit_dict)
         log.debug("Before sorting, unsorted_hits are: %s.", hits)
         # Sort the watchpointhits by timestamp
-        hits.sort(key=lambda x: self.find_timestamp(x, step))
+        hits.sort(key=lambda x: self.find_timestamp(x, iteration_id))
         log.debug("After sorting, hits are: %s.", hits)
         log.info("finish check watchpoint of %s", step)
         if hits:
