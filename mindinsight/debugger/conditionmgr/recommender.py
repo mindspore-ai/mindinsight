@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ from mindinsight.debugger.conditionmgr.condition import ActivationFuncEnum
 from mindinsight.debugger.conditionmgr.common.utils import NodeBasicInfo
 from mindinsight.debugger.common.log import LOGGER as logger
 from mindinsight.conf import settings
+from mindinsight.debugger.stream_cache.node_type_identifier import is_gradient_node
 from mindinsight.debugger.stream_cache.watchpoint import WatchNodeTree
 
 
@@ -322,6 +323,8 @@ def _recommend_activation_range(basic_info_nodes, condition_mgr, watch_points, c
 
 def get_basic_node_info(node_category, multi_card_graph_stream, activation_func=None):
     """Get node merged info."""
+    if node_category in [TargetTypeEnum.TENSOR.value, TargetTypeEnum.GRADIENT.value]:
+        return _get_top_nodes(node_category, multi_card_graph_stream)
     nodes_for_devices = {}
     has_node = False
     for rank_id, graph_stream in multi_card_graph_stream.graph_handlers.items():
@@ -335,6 +338,34 @@ def get_basic_node_info(node_category, multi_card_graph_stream, activation_func=
         return nodes_for_devices
 
     return {}
+
+
+def _get_top_nodes(node_category, multi_card_graph_stream):
+    """Get top scope nodes, only for tensor and gradient nodes."""
+    nodes_for_devices = {}
+    for rank_id, graph_stream in multi_card_graph_stream.graph_handlers.items():
+        nodes_info = []
+        nodes = []
+        if node_category == TargetTypeEnum.TENSOR.value:
+            graph = graph_stream.get()
+            if graph is not None:
+                nodes = graph.get('graph', {}).get('nodes', [])
+            for node in nodes:
+                node_basic_info = NodeBasicInfo(name=node.get('name', ''), full_name=node.get('full_name', ''),
+                                                type=node.get('type', ''))
+                nodes_info.append(node_basic_info)
+        else:
+            pattern = {'name': TargetTypeEnum.GRADIENT.value}
+            nodes = graph_stream.search_in_graph(pattern)
+            for node in nodes:
+                if not is_gradient_node(node):
+                    continue
+                node_basic_info = NodeBasicInfo(name=node.name, full_name=node.full_name, type=node.type)
+                nodes_info.append(node_basic_info)
+        if nodes_for_devices.get(rank_id) is None:
+            nodes_for_devices[rank_id] = []
+        nodes_for_devices[rank_id].extend(_add_graph_name(nodes_info, graph_stream))
+    return nodes_for_devices
 
 
 def _get_basic_node_info_by_node_category(node_category, graph_stream, activation_func=None):
