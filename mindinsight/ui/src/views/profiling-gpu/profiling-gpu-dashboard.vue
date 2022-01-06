@@ -52,8 +52,7 @@ export default {
       },
       tab: null,
       tabs: [
-        this.$t('profiling.singleHost'),
-        this.$t('profiling.cluster'),
+        this.$t('profiling.singleHost'), // temporarily remove cluster tab of gpu 
       ],
       left: 0,
     };
