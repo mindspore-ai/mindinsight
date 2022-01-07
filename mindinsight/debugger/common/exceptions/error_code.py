@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ class DebuggerErrors(DebuggerErrorCodes):
 
     NODE_NOT_IN_GRAPH_ERROR = 0 | _DEBUGGER_GRAPH_ERROR
     GRAPH_NOT_EXIST_ERROR = 1 | _DEBUGGER_GRAPH_ERROR
+    NODE_TOO_LARGE_ERROR = 2 | _DEBUGGER_GRAPH_ERROR
 
     CREATE_WATCHPOINT_ERROR = 0 | _DEBUGGER_RUNNING_ERROR
     UPDATE_WATCHPOINT_ERROR = 1 | _DEBUGGER_RUNNING_ERROR
@@ -72,6 +73,8 @@ class DebuggerErrorMsg(Enum):
     DEBUGGER_CONDITION_UNAVAILABLE_ERROR = "Condition is unavailable. {}"
 
     GRAPH_NOT_EXIST_ERROR = "The graph does not exist."
+    NODE_TOO_LARGE_ERROR = "The nodes in dump directory is too large to analyze. " \
+                           "Node limit: {}, current node num: {}."
 
     CREATE_WATCHPOINT_ERROR = "Create watchpoint failed. {}"
     UPDATE_WATCHPOINT_ERROR = "Update watchpoint failed. {}"

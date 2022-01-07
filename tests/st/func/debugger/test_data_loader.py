@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2021-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import shutil
 
 import pytest
 
+from mindinsight.debugger.common.exceptions.exceptions import DebuggerNodeTooLarge
 from mindinsight.debugger.stream_cache.data_loader import DataLoader
 from tests.st.func.debugger.conftest import GRAPH_PROTO_FILE
 from tests.st.func.debugger.utils import build_dump_file_structure, build_multi_net_dump_structure
@@ -49,7 +50,7 @@ class TestDataLoader:
         if os.path.exists(cls.debugger_tmp_dir):
             shutil.rmtree(cls.debugger_tmp_dir)
 
-    @pytest.mark.level
+    @pytest.mark.level0
     @pytest.mark.env_single
     @pytest.mark.platform_x86_cpu
     @pytest.mark.platform_arm_ascend_training
@@ -61,6 +62,18 @@ class TestDataLoader:
         expected_result0 = GRAPH_PROTO_FILE
         res0 = res[0]['graph_protos'][0].SerializeToString()
         compare_result_with_binary_file(res0, expected_result0)
+
+    @pytest.mark.level0
+    @pytest.mark.env_single
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    def test_load_graphs_ascend_except(self):
+        """Test load_graphs function of offline-debugger when node too large."""
+        with pytest.raises(DebuggerNodeTooLarge) as exc_info:
+            self.data_loader_ascend.load_graphs(321)
+        assert "Node limit: 321, current node num: 322." in exc_info.value.message
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -172,7 +185,7 @@ class TestMultiNetDataLoader:
         if os.path.exists(cls.debugger_tmp_dir):
             shutil.rmtree(cls.debugger_tmp_dir)
 
-    @pytest.mark.level
+    @pytest.mark.level0
     @pytest.mark.env_single
     @pytest.mark.platform_x86_cpu
     @pytest.mark.platform_arm_ascend_training
@@ -185,7 +198,7 @@ class TestMultiNetDataLoader:
                   1: {0: {0, 2, 4}, 3: {1, 3, 5, 6}}}
         assert res == expect
 
-    @pytest.mark.level
+    @pytest.mark.level0
     @pytest.mark.env_single
     @pytest.mark.platform_x86_cpu
     @pytest.mark.platform_arm_ascend_training
