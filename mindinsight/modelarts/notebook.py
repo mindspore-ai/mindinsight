@@ -28,7 +28,7 @@ from mindinsight.utils.log import setup_logger
 from mindinsight.modelarts.utils.utils import get_notebook_registry
 
 
-logger = setup_logger(__name__, "logger", console=True, level=logging.INFO)
+logger = setup_logger("notebook", "notebook", console=True, level=logging.INFO)
 
 _OK = 0
 _NOK = 1
