@@ -615,6 +615,11 @@ export default {
         (res) => {
           if (res.data) {
             if (res.data.metadata) {
+              if (res.data.metadata.state === this.state.node_too_large) {
+                this.dialogVisible = true;
+                this.nodeDataIsLarge = true;
+                return;
+              }
               this.dealMetadata(res.data.metadata);
             }
             if (res.data.graph?.graph_names?.length && this.graphFiles.options.length) {

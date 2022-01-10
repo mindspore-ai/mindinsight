@@ -2372,6 +2372,11 @@ export default {
      */
     toSummeryList() {
       this.dialogVisible = false;
+      if (this.nodeDataIsLarge) {
+        this.nodeDataIsLarge = false;
+        this.deleteSession();
+        return
+      }
       this.$router.push({
         path: '/summary-manage',
       });
