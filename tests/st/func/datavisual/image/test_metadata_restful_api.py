@@ -73,7 +73,11 @@ class TestMetadata:
         response = client.get(url)
         metadata = response.get_json().get("metadatas")
 
-        assert metadata == expected_metadata
+        assert len(metadata) == len(expected_metadata)
+        for i in range(len(metadata)):
+            assert metadata[i]['step'] == expected_metadata[i]['step'] \
+                   and metadata[i]['width'] == expected_metadata[i]['width'] \
+                   and metadata[i]['height'] == expected_metadata[i]['height']
 
     @pytest.mark.level1
     @pytest.mark.env_single
