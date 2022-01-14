@@ -89,13 +89,13 @@
     "graphTipSecond": "structure data.",
     "dataProcessTipFirst": "data processing process",
     "imageTipFirst": "specified image",
-    "guidUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/summary_record.html",
-    "scalarUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/dashboard.html#scalar-visualization",
-    "histogramUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/dashboard.html#parameter-distribution-visualization",
-    "tensorUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/dashboard.html#tensor-visualization",
-    "graphUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/dashboard.html#computational-graph-visualization",
-    "dataProcessUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/dashboard.html#dataset-graph-visualization",
-    "imageUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/dashboard.html#image-visualization",
+    "guidUrl": "https://www.mindspore.cn/mindinsight/docs/en/r1.6/summary_record.html",
+    "scalarUrl": "https://www.mindspore.cn/mindinsight/docs/en/r1.6/dashboard.html#scalar-visualization",
+    "histogramUrl": "https://www.mindspore.cn/mindinsight/docs/en/r1.6/dashboard.html#parameter-distribution-visualization",
+    "tensorUrl": "https://www.mindspore.cn/mindinsight/docs/en/r1.6/dashboard.html#tensor-visualization",
+    "graphUrl": "https://www.mindspore.cn/mindinsight/docs/en/r1.6/dashboard.html#computational-graph-visualization",
+    "dataProcessUrl": "https://www.mindspore.cn/mindinsight/docs/en/r1.6/dashboard.html#dataset-graph-visualization",
+    "imageUrl": "https://www.mindspore.cn/mindinsight/docs/en/r1.6/dashboard.html#image-visualization",
     "sessionLimit": "The number of offline debugger sessions exceeds the upper limit.",
     "sessionLimitNum": "A maximum of two sessions are allowed.",
     "sessionLists": "Existing Sessions List",
@@ -339,10 +339,10 @@
       "desc": "How Do I Use Profiler for Profiling?",
       "anchor": ["desc"],
       "url": [
-        "https://www.mindspore.cn/mindinsight/docs/en/master/performance_profiling_ascend.html"
+        "https://www.mindspore.cn/mindinsight/docs/en/r1.6/performance_profiling_ascend.html"
       ],
       "gpuUrl": [
-        "https://www.mindspore.cn/mindinsight/docs/en/master/performance_profiling_gpu.html"
+        "https://www.mindspore.cn/mindinsight/docs/en/r1.6/performance_profiling_gpu.html"
       ]
     },
     "step_trace-proposer_type_label": {
@@ -535,7 +535,7 @@
     "strategyPerception": "Strategy Perception",
     "strategyReference": "Please refer to the detailed tutorial",
     "strategyTutorials": "Strategy Perception Tutorial",
-    "strategyTutorialUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/performance_profiling_ascend_of_cluster.html#strategy-perception",
+    "strategyTutorialUrl": "https://www.mindspore.cn/mindinsight/docs/en/r1.6/performance_profiling_ascend_of_cluster.html#strategy-perception",
     "rankSelector": "Stage Selector",
     "parallelStrategy": "Parallel Strategy",
     "hasStrategy": "Operator with Strategy",
@@ -673,8 +673,8 @@
     "cluster_link_title": "Inter-Device Link Bandwidth Profiling",
     "parallel_strategy_title": "Communication Operator Sharding Reasonability Analysis",
     "clusterPerformanceTest": "How do I use Profiler for cluster performance debugging?",
-    "clusterGuideUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/performance_profiling_ascend_of_cluster.html",
-    "clusterGPUGuideUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/performance_profiling_gpu.html"
+    "clusterGuideUrl": "https://www.mindspore.cn/mindinsight/docs/en/r1.6/performance_profiling_ascend_of_cluster.html",
+    "clusterGPUGuideUrl": "https://www.mindspore.cn/mindinsight/docs/en/r1.6/performance_profiling_gpu.html"
   },
   "components": {
     "summaryTitle": "Training Selection",

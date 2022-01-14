@@ -333,8 +333,10 @@ class DumpAnalyzer:
         given iterations(if available) in a batch.
 
         Note:
-            For speed, all watchpoints for the iteration should be given at
+            1. For speed, all watchpoints for the iteration should be given at
             the same time to avoid reading tensors len(watchpoints) times.
+            2. The check_watchpoints function start a new process needs to be
+            called through the main entry
 
         Args:
             watchpoints (Iterable[Watchpoint]): The list of watchpoints.
@@ -365,6 +367,7 @@ class DumpAnalyzer:
                 ...                                         )
                 >>>     watchpoint = Watchpoint(tensors=tensors,
                 ...                             condition=TensorTooLargeCondition(abs_mean_gt=0.0))
+                >>>     # the check_watchpoints function start a new process needs to be called through the main entry
                 >>>     hit = list(my_run.check_watchpoints(watchpoints=[watchpoint]))[0]
                 >>>     print(str(hit))
                 >>>

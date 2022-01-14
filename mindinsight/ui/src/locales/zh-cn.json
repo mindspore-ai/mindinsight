@@ -90,13 +90,13 @@
     "graphTipSecond": "结构数据。",
     "dataProcessTipFirst": "数据处理过程",
     "imageTipFirst": "指定图片",
-    "guidUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/summary_record.html",
-    "scalarUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/dashboard.html#id3",
-    "histogramUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/dashboard.html#id4",
-    "tensorUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/dashboard.html#id8",
-    "graphUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/dashboard.html#id5",
-    "dataProcessUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/dashboard.html#id6",
-    "imageUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/dashboard.html#id7",
+    "guidUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.6/summary_record.html",
+    "scalarUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.6/dashboard.html#id3",
+    "histogramUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.6/dashboard.html#id4",
+    "tensorUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.6/dashboard.html#id8",
+    "graphUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.6/dashboard.html#id5",
+    "dataProcessUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.6/dashboard.html#id6",
+    "imageUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.6/dashboard.html#id7",
     "sessionLimit": "离线调试器的session个数超过上限",
     "sessionLimitNum": "最多同时存在2个",
     "sessionLists": "目前存在的session列表",
@@ -339,10 +339,10 @@
       "desc": "如何使用Profiler进行性能分析",
       "anchor": ["desc"],
       "url": [
-        "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_ascend.html"
+        "https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.6/performance_profiling_ascend.html"
       ],
       "gpuUrl": [
-        "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_gpu.html"
+        "https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.6/performance_profiling_gpu.html"
       ]
     },
     "step_trace-proposer_type_label": {
@@ -535,7 +535,7 @@
     "strategyPerception": "策略感知",
     "strategyReference": "详细教程请参考",
     "strategyTutorials": "策略感知教程",
-    "strategyTutorialUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_ascend_of_cluster.html#id11",
+    "strategyTutorialUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.6/performance_profiling_ascend_of_cluster.html#id11",
     "rankSelector": "Stage 选择",
     "parallelStrategy": "并行方式",
     "hasStrategy": "含切分策略算子",
@@ -673,8 +673,8 @@
     "cluster_link_title": "卡之间链路带宽性能分析",
     "parallel_strategy_title": "通信算子切分合理性分析",
     "clusterPerformanceTest": "如何使用Profiler进行集群性能调试",
-    "clusterGuideUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_ascend_of_cluster.html",
-    "clusterGPUGuideUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_gpu.html"
+    "clusterGuideUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.6/performance_profiling_ascend_of_cluster.html",
+    "clusterGPUGuideUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.6/performance_profiling_gpu.html"
   },
   "components": {
     "summaryTitle": "训练选择",
