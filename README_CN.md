@@ -102,8 +102,10 @@ git clone https://gitee.com/mindspore/mindinsight.git
 执行如下命令：
 
 ```bash
-mindinsight start
+mindinsight start [--port PORT]
 ```
+
+*注：--port 参数默认值为8080*
 
 如果出现下列提示，说明安装成功：
 
@@ -133,16 +135,22 @@ model.train(epoch=1, ds_train, callbacks=[summary_collector])
 收集好数据后，启动MindInsight时指定存放数据的目录。
 
 ```bash
-mindinsight start --summary-base-dir ./summary_dir
+mindinsight start --summary-base-dir ./summary_dir [--port PORT]
 ```
+
+*注：--port 参数默认值为8080*
 
 启动成功后，通过浏览器访问 `http://127.0.0.1:8080`，查看可视化页面。
 
 停止MindInsight服务的命令：
 
 ```bash
-mindinsight stop
+mindinsight stop [--port PORT]
 ```
+
+*注：--port 参数默认值为8080，停止指定端口服务*
+
+更多MindInsight命令行参数使用方法，请点击查看[MindInsight命令行简介](https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.5/mindinsight_commands.html)。
 
 ## 文档
 

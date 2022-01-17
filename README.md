@@ -103,8 +103,10 @@ You can choose any of the following installation methods:
 Execute the following command:
 
 ```bash
-mindinsight start
+mindinsight start [--port PORT]
 ```
+
+*notes: the param --port default value is 8080*
 
 If it prompts the following information, the installation is successful:
 
@@ -132,16 +134,22 @@ For more ways to record visual data, see the [MindInsight Tutorial](https://www.
 After you've collected the data, when you launch MindInsight, specify the directory in which the data has been stored.
 
 ```bash
-mindinsight start --summary-base-dir ./summary_dir
+mindinsight start --summary-base-dir ./summary_dir [--port PORT]
 ```
+
+*notes: the param --port default value is 8080*
 
 After successful startup, visit `http://127.0.0.1:8080` through the browser to view the web page.
 
 Command of stopping the MindInsight service:
 
 ```bash
-mindinsight stop
+mindinsight stop [--port PORT]
 ```
+
+*notes: the param --port default value is 8080, you can stop the specified port MI service.*
+
+For more about MindInsight command_line，see the [MindInsight Command_line](https://www.mindspore.cn/mindinsight/docs/en/r1.5/index.html).
 
 ## Docs
 
