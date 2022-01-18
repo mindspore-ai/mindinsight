@@ -64,7 +64,7 @@ class DebuggerTensor(ABC):
                 >>> print(tensors[0].node)
                 rank: 0
                 graph_name: kernel_graph_0
-                node_name: conv5.bias
+                node_name: conv1.weight
         """
         return self._node
 
@@ -129,9 +129,14 @@ class DebuggerTensor(ABC):
 
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
-                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
-                >>> tensors = list(my_run.select_tensors("conv"))
-                >>> value = tensors[0].value()
+                >>>
+                >>> def test_debugger_tensor():
+                >>>     my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>>     tensors = list(my_run.select_tensors("conv"))
+                >>>     value = tensors[0].value()
+                >>>
+                >>> if __name__ == "__main__":
+                >>>     test_debugger_tensor()
         """
         raise NotImplementedError
 
