@@ -19,6 +19,7 @@ limitations under the License.
     @mousedown="isDrag = false"
     @mousemove="isDrag = true"
     class="graph-container"
+    @mousewheel.stop="preventMousewheelDefault"
   >
     <div
       id="graph"
@@ -894,6 +895,15 @@ export default {
   },
 
   methods: {
+    /**
+     * prevent the mousewheel default trigger
+     * @param {Object} event
+     */
+    preventMousewheelDefault(event) {
+      if (typeof event.target.className === 'object') {
+        event.preventDefault();
+      }
+    },
     /**
      * Get special nodes map.
      * @return {Object}
