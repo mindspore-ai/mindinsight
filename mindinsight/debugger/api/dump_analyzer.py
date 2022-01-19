@@ -180,7 +180,7 @@ class DumpAnalyzer:
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
-                >>> nodes = my_run.select_nodes("Conv2D-op156")
+                >>> nodes = my_run.select_nodes("Conv2D-op13")
         """
         validate_type(query_string, 'query_string', str, 'str')
         validate_type(use_regex, 'use_regex', bool, 'bool')
@@ -260,7 +260,7 @@ class DumpAnalyzer:
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
-                >>> tensors = my_run.select_tensors("Conv2D-op156")
+                >>> tensors = my_run.select_tensors("Conv2D-op13")
         """
         validate_type(query_string, 'query_string', str, 'str')
         validate_type(use_regex, 'use_regex', bool, 'bool')
@@ -296,7 +296,7 @@ class DumpAnalyzer:
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
                 >>> iterations = my_run.get_iterations()
                 >>> print(list(iterations))
-                [0, 1, 2]
+                [0]
         """
         total_dumped_steps = self._data_loader.load_dumped_step()
         ranks = self._get_iterable_ranks(ranks)
@@ -354,21 +354,31 @@ class DumpAnalyzer:
                 >>> from mindinsight.debugger import (TensorTooLargeCondition,
                 ...                                    Watchpoint)
                 >>>
-                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
-                >>> tensors = my_run.select_tensors(
-                ...                                     query_string="Conv2D-op156",
-                ...                                     use_regex=True,
-                ...                                     iterations=[0],
-                ...                                     ranks=[0],
-                ...                                     slots=[0]
-                ...                                     )
-                >>> watchpoint = Watchpoint(tensors=tensors,
-                ...                         condition=TensorTooLargeCondition(abs_mean_gt=0.0))
-                >>> hit = list(my_run.check_watchpoints(watchpoints=[watchpoint]))[0]
-                >>> print(str(hit))
-                Watchpoint TensorTooLarge triggered on slot 0 of node Default/network-WithLossCell/
-                _backbone-AlexNet/conv2-Conv2d/Conv2D-op156. The setting for watchpoint is abs_mean_gt = 0.0.
-                The actual value of the tensor is abs_mean_gt = 0.0665460056158321.
+                >>> def test_watchpoints():
+                >>>     my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>>     tensors = my_run.select_tensors(
+                ...                                         query_string="Conv2D-op13",
+                ...                                         use_regex=True,
+                ...                                         iterations=[0],
+                ...                                         ranks=[0],
+                ...                                         slots=[0]
+                ...                                         )
+                >>>     watchpoint = Watchpoint(tensors=tensors,
+                ...                             condition=TensorTooLargeCondition(abs_mean_gt=0.0))
+                >>>     hit = list(my_run.check_watchpoints(watchpoints=[watchpoint]))[0]
+                >>>     print(str(hit))
+                >>>
+                >>> if __name__ == "__main__":
+                >>>     test_watchpoints()
+                Watchpoint TensorTooLarge triggered on tensor:
+                rank: 0
+                graph_name: kernel_graph_0
+                node_name: Default/network-WithLossCell/ _backbone-AlexNet/conv2-Conv2d/Conv2D-op13
+                slot: 0
+                iteration: 0
+                Threshold: {'abs_mean_gt': 0.0}
+                Hit detail: the setting for watchpoint is abs_mean_gt = 0.0.
+                The actual value of the tensor is abs_mean_gt = 0.06583755487478116.
         """
         wp_hit_list = []
         # key is watchpoint_id, value is a dict with iteration as the key and check_nodes as values
@@ -440,7 +450,7 @@ class DumpAnalyzer:
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
-                >>> tensor_list = list(my_run.select_tensors(query_string="Conv2D-op156"))
+                >>> tensor_list = list(my_run.select_tensors(query_string="Conv2D-op13"))
                 >>> affected_nodes = my_run.list_affected_nodes(tensor_list[0])
         """
         self._validate_node(tensor.node)
@@ -460,7 +470,7 @@ class DumpAnalyzer:
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
-                >>> node_list = list(my_run.select_nodes(query_string="Conv2D-op156"))
+                >>> node_list = list(my_run.select_nodes(query_string="Conv2D-op13"))
                 >>> input_nodes = my_run.get_input_nodes(node_list[0])
         """
         self._validate_node(node)
@@ -480,7 +490,7 @@ class DumpAnalyzer:
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
-                >>> node_list = list(my_run.select_nodes(query_string="Conv2D-op156"))
+                >>> node_list = list(my_run.select_nodes(query_string="Conv2D-op13"))
                 >>> out_nodes = my_run.get_output_nodes(node_list[0])
         """
         self._validate_node(node)

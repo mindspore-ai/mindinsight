@@ -69,7 +69,7 @@ class Node(ABC):
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
                 >>> node = list(my_run.select_nodes("conv"))[0]
                 >>> print(node.name)
-                conv5.bias
+                conv1.weight
         """
         return self._node_feature.name
 
@@ -92,7 +92,7 @@ class Node(ABC):
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
-                >>> node = list(my_run.select_nodes("Conv2D-op156"))[0]
+                >>> node = list(my_run.select_nodes("Conv2D-op13"))[0]
                 >>> print(node.stack)
                 [{'file_path': '/path', 'line_no': 266, 'code_line': 'output = self.conv2d(x, self.weight)'}]
         """
@@ -156,7 +156,7 @@ class Node(ABC):
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
-                >>> node = list(my_run.select_nodes("Conv2D-op156"))[0]
+                >>> node = list(my_run.select_nodes("Conv2D-op13"))[0]
                 >>> input_tensors = node.get_input_tensors(iterations=[0], slots=[0])
         """
 
@@ -179,7 +179,7 @@ class Node(ABC):
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
-                >>> node = list(my_run.select_nodes("Conv2D-op156"))[0]
+                >>> node = list(my_run.select_nodes("Conv2D-op13"))[0]
                 >>> output_tensors = node.get_output_tensors(iterations=[0], slots=[0])
         """
 
