@@ -697,7 +697,8 @@ export default {
         setTimeout(() => {
           const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
           if (dom && this.rightShow) {
-            dom.scrollIntoView();
+            const treeDom = document.querySelector('.tree-wrap');
+            treeDom.scrollTop = dom.offsetTop;
           }
         }, 800);
       });
@@ -792,7 +793,8 @@ export default {
           setTimeout(() => {
             const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
             if (dom && this.rightShow) {
-              dom.scrollIntoView();
+              const treeDom = document.querySelector('.tree-wrap');
+              treeDom.scrollTop = dom.offsetTop;
             }
           }, 800);
         });
@@ -1022,7 +1024,8 @@ export default {
           setTimeout(() => {
             const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
             if (dom && this.rightShow) {
-              dom.scrollIntoView();
+              const treeDom = document.querySelector('.tree-wrap');
+              treeDom.scrollTop = dom.offsetTop;
             }
           }, 800);
         });
@@ -1404,7 +1407,8 @@ export default {
           setTimeout(() => {
             const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
             if (dom && this.rightShow) {
-              dom.scrollIntoView();
+              const treeDom = document.querySelector('.tree-wrap');
+              treeDom.scrollTop = dom.offsetTop;
             }
           }, 800);
         });
