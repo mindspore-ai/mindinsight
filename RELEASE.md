@@ -1,3 +1,46 @@
+# MindInsight 1.6.0
+
+## MindInsight 1.6.0 Release Notes
+
+### Major Features and Improvements
+
+#### Profiling
+
+* [STABLE] Support starting Profiler in the process of training.(Ascend)
+* [STABLE] Support strategy perception includes Computational Graph Exploration module, Parallel Strategy Analysis module, etc.(Ascend)
+* [STABLE] Support cluster performance helper to give some prompts to users.(Ascend)
+
+#### MindConverter
+
+* [STABLE] Support migrating definition scripts and trained weights by TorchScript.(Ascend/GPU)
+
+#### Debugger
+
+* [STABLE] Support Python API for offline debugger analysis.(Ascend/GPU)
+
+#### Landscape
+
+* [BETA] Support analyzing model training optimization process by computing and visualizing Loss landscape.(Ascend/GPU)
+
+### API Change
+
+#### Backwards Compatible Change
+
+##### Python API
+
+* Add  `mindconverter.pytorch2mindspore()` interface for converting models from PyTorch into MindSpore.
+* Add `mindinsight.debugger` Python API for offline debugger analysis.
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Kai Wen, Yue Wang, Lihua Ye, Ximiao Yu, Yunshu Zhang, Ning Ma, Yihui Zhang, Hong Sheng, Ran Mo, Zhaohong Guo, Tianshu Liang, Shuqiang Jiang, Yanjun Peng, Haitao Yang, Jiabin Liu, Han Gao, Xiaohui Li, Ngaifai Ng, Hui Pan, Weifeng Huang, Yifan Xia, Xuefeng Feng, Yanxi Wei, Yufeng Lv, Maohua He, Chuting Liu, Jiaxing Zhu, Yuanwei Song.
+
+Special thanks to Zhiyong Wang, Zhongwei Wang, Rusheng Pan, Yating Wei, Luoxuan Weng, Rongchen Zhu, Jingli Xu, Qinxian Liu, Haozhe Feng, Tong Xu, etc., from State Key Lab of CAD&CG, Zhejiang University led by Prof. Wei Chen, for their contributions of innovative frontend and interaction technology to support strategy perception including Computational Graph Exploration module, Parallel Strategy Analysis module, etc.
+
+Contributions of any kind are welcome!
+
 # MindInsight 1.5.0
 
 ## MindInsight 1.5.0 Release Notes
