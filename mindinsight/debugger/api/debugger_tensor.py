@@ -134,6 +134,7 @@ class DebuggerTensor(ABC):
                 >>>     my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
                 >>>     tensors = list(my_run.select_tensors("conv"))
                 >>>     value = tensors[0].value()
+                >>>     return value
                 >>>
                 >>> if __name__ == "__main__":
                 >>>     test_debugger_tensor()
