@@ -723,7 +723,8 @@ export default {
     initDeviceCpu(deviceInfo) {
       const series = [];
       const legend = [];
-      Object.keys(this.cpuInfo.cpuInfoStr).forEach((val) => {
+      if (this.cpuInfo.stepArray.length) {
+        Object.keys(this.cpuInfo.cpuInfoStr).forEach((val) => {
         const info = deviceInfo[val];
         if (info && info.metrics) {
           const item = {
@@ -735,7 +736,8 @@ export default {
           series.push(item);
           legend.push(item.name);
         }
-      });
+        });
+      }
       // Data process
       const deviceCpuChart = this.deviceCpuChart;
       deviceCpuChart.cpuAvgUser = deviceInfo.user_utilization.avg_value;
@@ -748,7 +750,9 @@ export default {
       const option = deviceCpuChart.option;
       option.series = series;
       option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;
-      option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map((_v, i) => i + 1);
+      if (this.cpuInfo.stepArray.length) {
+        option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map((_v, i) => i + 1);
+      }
       option.legend.data = legend;
       option.tooltip.formatter = (params) => {
         return this.formatCpuChartTip(params, this.cpuInfo.stepArray);
@@ -840,7 +844,8 @@ export default {
         const currentOpInfo = operatorInfo.metrics;
         const numWorkers = operatorInfo.num_workers;
         if (currentOpInfo) {
-          Object.keys(this.cpuInfo.cpuInfoStr).forEach((val) => {
+          if (this.cpuInfo.stepArray.length) {
+            Object.keys(this.cpuInfo.cpuInfoStr).forEach((val) => {
             const info = currentOpInfo[val];
             if (info && info.metrics) {
               const item = {
@@ -852,7 +857,8 @@ export default {
               series.push(item);
               legend.push(item.name);
             }
-          });
+            });
+          }
           // Data process
           operatorCpuChart.cpuAvgOpUser = currentOpInfo.user_utilization.avg_value;
           operatorCpuChart.cpuAvgOpSystem = currentOpInfo.sys_utilization.avg_value;
@@ -861,7 +867,9 @@ export default {
           const option = operatorCpuChart.option;
           option.series = series;
           option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;
-          option.xAxis.data = currentOpInfo[Object.keys(currentOpInfo)[0]].metrics.map((_v, i) => i + 1);
+          if (this.cpuInfo.stepArray.length) {
+            option.xAxis.data = currentOpInfo[Object.keys(currentOpInfo)[0]].metrics.map((_v, i) => i + 1);
+          }
           option.legend.data = legend;
           option.tooltip.formatter = (params) => {
             return this.formatCpuChartTip(params, this.cpuInfo.stepArray);
