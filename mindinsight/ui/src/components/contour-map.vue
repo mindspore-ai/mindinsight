@@ -18,7 +18,8 @@ limitations under the License.
   <div class="mi-contour-map">
     <div class="map-content"
          ref="contour"></div>
-    <div class="map-animation" v-if="showAnimation">
+    <div class="map-animation"
+         v-if="showAnimation">
       <span class="animation-button"
             @click="playPathAnimation">
         <span class="el-icon-video-play"></span>
@@ -71,10 +72,7 @@ function usePathLines(data, lines, width, color, transition = false) {
           return {
             type: 'polyline',
             shape: {
-              points: [
-                api.coord([line[0], line[1]]),
-                api.coord([line[2], line[3]]),
-              ],
+              points: [api.coord([line[0], line[1]]), api.coord([line[2], line[3]])],
             },
             transition: transition ? ['shape'] : [],
             style: {
@@ -140,27 +138,24 @@ function usePathPoints(markPoints, points, size, unit) {
  * @return {Object} path series
  */
 function usePathSeries(path, data, width, color, unit) {
-  const {intervals, x, y, z} = path;
+  const { intervals, x, y, z } = path;
   const lines = [];
   const lastIndex = intervals.length - 1;
   const markPoints = [];
   const points = [];
   intervals.forEach((order, index) => {
     if (index === 0) {
-      markPoints.push({value: start, xAxis: x[index], yAxis: y[index]});
+      markPoints.push({ value: start, xAxis: x[index], yAxis: y[index] });
     }
     if (index === lastIndex) {
-      markPoints.push({value: end, xAxis: x[index], yAxis: y[index]});
+      markPoints.push({ value: end, xAxis: x[index], yAxis: y[index] });
     }
     points.push([x[index], y[index], z[index], order]);
     if (index < lastIndex) {
       lines.push([x[index], y[index], x[index + 1], y[index + 1]]);
     }
   });
-  return [
-    usePathPoints(markPoints, points, width * 3, unit),
-    usePathLines(data, lines, width, color),
-  ];
+  return [usePathPoints(markPoints, points, width * 3, unit), usePathLines(data, lines, width, color)];
 }
 
 /**
@@ -195,13 +190,15 @@ function usePointSeries(pointMatrix, chartInstance) {
   const points = [];
   const lastIndex = pointMatrix.length - 1;
   pointMatrix.forEach((row, r) => {
-    points.push(...(row.map((item, c) => {
-      return {
-        name: `point,${r},${c}`,
-        value: [item.x, item.y, item.z],
-        position: calTooltipPosition(r, c, lastIndex),
-      };
-    })));
+    points.push(
+      ...row.map((item, c) => {
+        return {
+          name: `point,${r},${c}`,
+          value: [item.x, item.y, item.z],
+          position: calTooltipPosition(r, c, lastIndex),
+        };
+      })
+    );
   });
   return {
     name: POINTS,
@@ -210,7 +207,7 @@ function usePointSeries(pointMatrix, chartInstance) {
     z: chartZIndexMap[POINTS],
     symbolSize: (_value, _params) => {
       if (!chartInstance) return 50;
-      const {top, left, bottom, right} = chartInstance._model.option.grid[0];
+      const { top, left, bottom, right } = chartInstance._model.option.grid[0];
       const width = (chartInstance.getWidth() - +left - +right) / lastIndex;
       const height = (chartInstance.getHeight() - +top - +bottom) / lastIndex;
       return [width, height];
@@ -306,13 +303,13 @@ function usePointTooltip(pointMatrix) {
  * @param {string} color
  * @return {Object}
  */
-function useContourLine(points, color) {
+function useContourLine(points, color, iscircle) {
   // Contour
   return {
-    type: 'polyline',
+    type: iscircle ? 'polygon' : 'polyline',
     shape: {
       points: points,
-      smooth: 0.2,
+      smooth: 0.1,
     },
     style: {
       fill: 'none',
@@ -427,7 +424,7 @@ function generateSection(start, end) {
  * @return {Object}
  */
 function trackNextLine(line, border, borderPointMap, reverse = false) {
-  const {z, borders, config} = line;
+  const { z, borders, config } = line;
   let points = JSON.parse(JSON.stringify(line.points));
   let [startBorder, endBorder] = borders;
   // Start coord
@@ -542,10 +539,7 @@ function extendCornerPoints(cornerPoints) {
  * @return {Array}
  */
 function calcInversivePoint(origin, target) {
-  return [
-    origin[0] - (target[0] - origin[0]),
-    origin[1] - (target[1] - origin[1]),
-  ];
+  return [origin[0] - (target[0] - origin[0]), origin[1] - (target[1] - origin[1])];
 }
 
 // type PointInPosition = [string, string];
@@ -607,9 +601,7 @@ function addCornerPoints(startBorder, endBorder, border, clockwise) {
 function trackNextPoint(effectiveCoord, border, clockwise, borderPointMap) {
   const order = borderPointMap[getOrder(border)];
   const index = order.indexOf(effectiveCoord);
-  const nextIndex = ['top', 'left'].includes(border)
-    ? index + (clockwise ? 1 : -1)
-    : index + (clockwise ? -1 : 1);
+  const nextIndex = ['top', 'left'].includes(border) ? index + (clockwise ? 1 : -1) : index + (clockwise ? -1 : 1);
   if (0 <= nextIndex && nextIndex < order.length) {
     // In range
     return [border, order[nextIndex]];
@@ -700,7 +692,7 @@ function generateBorderPointMap(borderObject, borderLines) {
     [sections[3]]: new Set(),
   };
   borderLines.forEach((line) => {
-    const {borders, points} = line;
+    const { borders, points } = line;
     const [startBorder, endBorder] = borders;
     // Start
     const startEffectiveCoord = getEffectiveCoord(startBorder, points[0]);
@@ -769,24 +761,28 @@ function useContourGroup(contours, contourMap, minPoint, maxPoint, contourColorM
   const children = [];
   contourMap.forEach((lines) => {
     lines.forEach((shape) => {
-      shape.points = shape.points.map((point) => {
-        return Array.isArray(point) ? point : [point.x, point.y];
+      const pointsObj = {}; //Used to deduplicate points in a shape
+      shape.points = shape.points.forEach((point) => {
+        pointsObj[Object.values(point)] = Object.values(point);
       });
+      shape.points = Object.values(pointsObj);
     });
   });
   if (isArea) {
     const [left, bottom] = minPoint;
     const [right, top] = maxPoint;
-    const border = {left, bottom, right, top};
+    const border = { left, bottom, right, top };
     const borderLines = [];
     contourMap.forEach((lines, z) => {
       const index = contours.indexOf(z);
       const color = contourColorMap.get(z);
       lines.forEach((shape) => {
-        const {points, config} = shape;
-        if (config.circle) {
+        const { points, config } = shape;
+        const iscircle = config.circle;
+        if (iscircle) {
           if (config.updateContour) {
             children.push({
+              iscircle,
               z,
               index: index + 1,
               points,
@@ -794,6 +790,7 @@ function useContourGroup(contours, contourMap, minPoint, maxPoint, contourColorM
             });
           } else {
             children.push({
+              iscircle,
               z,
               index,
               points,
@@ -813,8 +810,10 @@ function useContourGroup(contours, contourMap, minPoint, maxPoint, contourColorM
       const index = contours.indexOf(z);
       const color = contourColorMap.get(z);
       lines.forEach((shape) => {
-        const {points} = shape;
+        const { points, config } = shape;
+        const iscircle = config.circle;
         children.push({
+          iscircle,
           z,
           index,
           points,
@@ -828,17 +827,14 @@ function useContourGroup(contours, contourMap, minPoint, maxPoint, contourColorM
     clip: true,
     zlevel: -1,
     name: 'contour',
-    data: [
-      minPoint,
-      maxPoint,
-    ],
+    data: [minPoint, maxPoint],
     renderItem: (_params, api) => {
       const newChildren = children.map((shape) => {
-        let {index, points, color} = shape;
+        let { index, points, color, iscircle } = shape;
         points = points.map((point) => {
           return api.coord(point);
         });
-        return isArea ? useSimplePolygon(index, points, color) : useContourLine(points, color);
+        return isArea ? useSimplePolygon(index, points, color) : useContourLine(points, color, iscircle);
       });
       return {
         type: 'group',
@@ -857,9 +853,7 @@ function useContourGroup(contours, contourMap, minPoint, maxPoint, contourColorM
  */
 function ceilDecimalPlaces(number, decimalPlaces) {
   const factor = Math.pow(10, decimalPlaces);
-  return number < 0
-    ? parseInt(number * factor) / factor
-    : (parseInt(number * factor) + 1) / factor;
+  return number < 0 ? parseInt(number * factor) / factor : (parseInt(number * factor) + 1) / factor;
 }
 
 /**
@@ -870,9 +864,7 @@ function ceilDecimalPlaces(number, decimalPlaces) {
  */
 function floorDecimalPlaces(number, decimalPlaces) {
   const factor = Math.pow(10, decimalPlaces);
-  return number < 0
-    ? (parseInt(number * factor) - 1) / factor
-    : parseInt(number * factor) / factor;
+  return number < 0 ? (parseInt(number * factor) - 1) / factor : parseInt(number * factor) / factor;
 }
 
 /**
@@ -932,7 +924,7 @@ function calContours(zList, contoursNumber) {
  * @return {Object}
  */
 function createPointMatrix(points) {
-  const {x, y, z} = points;
+  const { x, y, z } = points;
   const leftBottom = [x[0], y[0]];
   const rightTop = [x[x.length - 1], y[y.length - 1]];
   const zList = [];
@@ -958,6 +950,7 @@ function createPointMatrix(points) {
   };
 }
 
+const anotherLineShapes = [];
 let globalContour;
 let globalPointMatrix;
 
@@ -973,6 +966,7 @@ function calContoursPoints(contours, pointMatrix) {
   const contourPointMap = new Map();
   contours.forEach((value) => {
     globalContour = value;
+    anotherLineShapes.splice(0, anotherLineShapes.length);
     const shapes = [];
     contourPointMap.set(value, shapes);
     const cellMatrix = [];
@@ -1035,20 +1029,16 @@ function getDirectionByIndex(index) {
  * @return {string}
  */
 function generateCellIndex(value, r, c) {
-  const [
-    tl,
-    tr,
-    br,
-    bl,
-  ] = [
+  const [tl, tr, br, bl] = [
     globalPointMatrix[r][c],
     globalPointMatrix[r][c + 1],
     globalPointMatrix[r + 1][c + 1],
     globalPointMatrix[r + 1][c],
   ];
-  let index =
-    `${calcValueIndex(tl.z, value)}${calcValueIndex(tr.z, value)}${
-      calcValueIndex(br.z, value)}${calcValueIndex(bl.z, value)}`;
+  let index = `${calcValueIndex(tl.z, value)}${calcValueIndex(tr.z, value)}${calcValueIndex(
+    br.z,
+    value
+  )}${calcValueIndex(bl.z, value)}`;
   if (['0101', '1010'].includes(index)) {
     const avg = (tl.z + tr.z + br.z + bl.z) / 4;
     index += calcValueIndex(avg, value);
@@ -1094,6 +1084,13 @@ function generateShapesByCellMatrix(cellMatrix, shapes) {
       }
     }
   }
+  if (anotherLineShapes.length != 0) {
+    anotherLineShapes.forEach((shape) => {
+      if (shape && shape.config.complete) {
+        shapes.push(shape);
+      }
+    });
+  }
   while (brokenLines.length) {
     const line = brokenLines.shift();
     const newLine = completeLine(line, brokenLines);
@@ -1115,7 +1112,7 @@ function completeLine(line, brokenLines) {
     if (newLine) {
       brokenLines.splice(i, 1);
       const shape = new Shape(newLine);
-      const {borders, config} = shape;
+      const { borders, config } = shape;
       if (borders.length === 2) {
         config.clockwise = [calcClockwise(shape, true), calcClockwise(shape, false)];
         config.complete = true;
@@ -1191,12 +1188,7 @@ function verifyConnection(shape1, shape2) {
  * @return {Object}
  */
 function calcPointCoord(r, c, position) {
-  const [
-    topLeft,
-    topRight,
-    bottomRight,
-    bottomLeft,
-  ] = [
+  const [topLeft, topRight, bottomRight, bottomLeft] = [
     globalPointMatrix[r][c],
     globalPointMatrix[r][c + 1],
     globalPointMatrix[r + 1][c + 1],
@@ -1262,9 +1254,9 @@ function getEndByDirection(start, direction) {
  * @param {Shape} shape
  */
 function finishCircleTrack(r, c, start, cell, shape) {
-  const {direction} = cell;
+  const { direction } = cell;
   const end = getEndByDirection(start, direction);
-  const {points, config} = shape;
+  const { points, config } = shape;
   config.updateContour = calcUpdateContour(shape);
   config.circle = true;
   points.push(calcPointCoord(r, c, end));
@@ -1324,7 +1316,7 @@ function calcPathBorder(r, c, position) {
  * @return {boolean}
  */
 function calcClockwise(shape, isStart) {
-  const {indexes, borders} = shape;
+  const { indexes, borders } = shape;
   const border = isStart ? borders[0] : borders[1];
   const index = isStart ? indexes[0] : indexes[indexes.length - 1];
   switch (border) {
@@ -1348,7 +1340,7 @@ function calcClockwise(shape, isStart) {
  * @param {Shape} shape
  */
 function continueTrack(r, c, start, cellMatrix, shape) {
-  const {indexes, points, borders, config} = shape;
+  const { indexes, points, borders, config } = shape;
   if (!existSet.has(r) || !existSet.has(c)) {
     // End on border
     if (borders.length === 2) {
@@ -1411,11 +1403,11 @@ class Shape {
     circle: null,
     updateContour: null,
     clockwise: null,
-  }
+  };
   /**
    * @param {Object} object
    */
-  constructor({z, indexes, points, borders}) {
+  constructor({ z, indexes, points, borders }) {
     this.z = z;
     this.indexes = indexes ?? [];
     this.points = points ?? [];
@@ -1435,9 +1427,9 @@ function startTrack(r, c, direction, cellMatrix) {
   if (!existSet.has(r) || !existSet.has(c)) {
     return;
   }
-  const shape = new Shape({z: globalContour});
+  const shape = new Shape({ z: globalContour });
   const [start, end] = direction.split('->');
-  const {indexes, points, borders} = shape;
+  const { indexes, points, borders } = shape;
   // Index
   indexes.push(cellMatrix[r][c].index);
   // Points
@@ -1466,8 +1458,8 @@ function generateShapeByCellIndex(r, c, cellMatrix) {
     return;
   }
   if (Array.isArray(direction)) {
+    anotherLineShapes.push(startTrack(r, c, direction[1], cellMatrix));
     direction = direction[0];
-    cellMatrix[r][c].direction = direction[1];
   } else {
     optimizationSet.add(flag);
   }
@@ -1482,9 +1474,8 @@ function generateShapeByCellIndex(r, c, cellMatrix) {
  * @return {Object} position {x, y}
  */
 function calHorizontalContourPoint(point1, point2, z) {
-  const [minZ, maxZ, xOfMinZ, xOfMaxZ] = point1.z > point2.z ?
-    [point2.z, point1.z, point2.x, point1.x] :
-    [point1.z, point2.z, point1.x, point2.x];
+  const [minZ, maxZ, xOfMinZ, xOfMaxZ] =
+    point1.z > point2.z ? [point2.z, point1.z, point2.x, point1.x] : [point1.z, point2.z, point1.x, point2.x];
   const minPart = z - minZ;
   const maxPart = maxZ - z;
   const total = minPart + maxPart;
@@ -1503,9 +1494,8 @@ function calHorizontalContourPoint(point1, point2, z) {
  * @return {Object} position {x, y}
  */
 function calVerticalContourPoint(point1, point2, z) {
-  const [minZ, maxZ, yOfMinZ, yOfMaxZ] = point1.z > point2.z ?
-    [point2.z, point1.z, point2.y, point1.y] :
-    [point1.z, point2.z, point1.y, point2.y];
+  const [minZ, maxZ, yOfMinZ, yOfMaxZ] =
+    point1.z > point2.z ? [point2.z, point1.z, point2.y, point1.y] : [point1.z, point2.z, point1.y, point2.y];
   const minPart = z - minZ;
   const maxPart = maxZ - z;
   const total = minPart + maxPart;
@@ -1525,9 +1515,9 @@ function getDecimalPlaces(value) {
   return Number.isInteger(value) ? 0 : (value + '').split('.')[1].length;
 }
 
-import {getGradientColor} from '@/js/utils';
+import { getGradientColor } from '@/js/utils';
 
-import echarts, {echartsThemeName} from '@/js/echarts';
+import echarts, { echartsThemeName } from '@/js/echarts';
 
 import CommonProperty from '@/common/common-property';
 
@@ -1585,7 +1575,7 @@ export default {
       series: [],
       // init legend series
       playNextAnimation: null,
-      animationTimer: null,  // animation timer
+      animationTimer: null, // animation timer
     };
   },
   beforeCreate() {
@@ -1609,7 +1599,7 @@ export default {
         if (params.seriesName !== POINTS) {
           return;
         }
-        const {seriesIndex, dataIndex} = params;
+        const { seriesIndex, dataIndex } = params;
         const position = params.data.position;
         this.chartInstance.dispatchAction({
           type: 'showTip',
@@ -1638,18 +1628,18 @@ export default {
      */
     stopPathAnimation(isResetData) {
       if (this.playNextAnimation) {
-        if(this.chartInstance) {
-          this.chartInstance.off('finished')
+        if (this.chartInstance) {
+          this.chartInstance.off('finished');
         }
         this.playNextAnimation = null;
         if (this.animationTimer) {
           clearTimeout(this.animationTimer);
         }
         if (isResetData) {
-          const {path, rightTop, setting} = this;
-          const {pathWidth, pathColor} = setting;
+          const { path, rightTop, setting } = this;
+          const { pathWidth, pathColor } = setting;
           // clear path lines
-          const {intervals, x, y} = path;
+          const { intervals, x, y } = path;
           const clearLines = [];
           x.forEach((_, index) => {
             if (index < x.length - 1) {
@@ -1658,7 +1648,7 @@ export default {
           });
           this.chartInstance.setOption({
             series: [usePathLines(rightTop, clearLines, pathWidth, pathColor, true)],
-          })
+          });
         }
       }
     },
@@ -1666,10 +1656,10 @@ export default {
      * The logic of play path animation
      */
     playPathAnimation() {
-      const {path, rightTop, setting} = this;
-      const {pathWidth, pathColor} = setting;
+      const { path, rightTop, setting } = this;
+      const { pathWidth, pathColor } = setting;
       // Clear path lines
-      const {intervals, x, y} = path;
+      const { intervals, x, y } = path;
       const clearLines = [];
       x.forEach((_, index) => {
         if (index < x.length - 1) {
@@ -1698,9 +1688,7 @@ export default {
       if (!this.chartInstance) return;
       this.chartInstance.on('finished', this.playNextAnimation);
       this.chartInstance.setOption({
-        series: [
-          usePathLines(rightTop, clearLines, pathWidth, pathColor),
-        ],
+        series: [usePathLines(rightTop, clearLines, pathWidth, pathColor)],
       });
     },
     /**
@@ -1709,19 +1697,17 @@ export default {
      */
     handlePathStyleChange(newSetting) {
       this.stopPathAnimation(true);
-      const {setting, rightTop, path} = this;
+      const { setting, rightTop, path } = this;
       // Update setting
       setting.pathWidth = newSetting.pathWidth;
       setting.pathColor = newSetting.pathColor;
-      const {pathWidth, pathColor, unit} = setting;
+      const { pathWidth, pathColor, unit } = setting;
       // Update path chart
       if (!this.chartInstance) {
         if (!this.initContourMap()) return;
       }
       this.chartInstance.setOption({
-        series: [
-          ...usePathSeries(path, rightTop, pathWidth, pathColor, unit),
-        ],
+        series: [...usePathSeries(path, rightTop, pathWidth, pathColor, unit)],
       });
     },
     /**
@@ -1730,15 +1716,15 @@ export default {
      */
     handleContoursNumberChange(newSetting) {
       this.stopPathAnimation(true);
-      const {pointMatrix, setting, zList, leftBottom, rightTop, isArea, type} = this;
+      const { pointMatrix, setting, zList, leftBottom, rightTop, isArea, type } = this;
       // Update setting
       setting.contoursNumber = newSetting.contoursNumber;
-      const {contourColors, contoursNumber} = setting;
+      const { contourColors, contoursNumber } = setting;
       // Update contours
       const contours = calContours(zList, contoursNumber);
       this.contours = contours;
       // Update contours color
-      const {contourColorMap, legendColors} = updateContourColor(contourColors, contours, type === TOPOGRAPHIC);
+      const { contourColorMap, legendColors } = updateContourColor(contourColors, contours, type === TOPOGRAPHIC);
       this.legendColors = legendColors;
       // Update contours points
       const contourPointMap = calContoursPoints(contours, pointMatrix);
@@ -1748,10 +1734,9 @@ export default {
         if (!this.initContourMap()) return;
       }
       this.chartInstance.setOption({
-        series: [
-          useContourGroup(contours, contourPointMap, leftBottom, rightTop, contourColorMap, isArea),
-        ],
+        series: [useContourGroup(contours, contourPointMap, leftBottom, rightTop, contourColorMap, isArea)],
       });
+      this.option = this.chartInstance.getOption();
     },
     /**
      * The logic of contour color change
@@ -1759,22 +1744,21 @@ export default {
      */
     handleContourColorsChange(newSetting) {
       this.stopPathAnimation(true);
-      const {contours, contourPointMap, leftBottom, rightTop, isArea, setting, type} = this;
+      const { contours, contourPointMap, leftBottom, rightTop, isArea, setting, type } = this;
       // Update setting
       setting.contourColors = newSetting.contourColors;
-      const {contourColors} = setting;
+      const { contourColors } = setting;
       // Update contours color
-      const {contourColorMap, legendColors} = updateContourColor(contourColors, contours, type === TOPOGRAPHIC);
+      const { contourColorMap, legendColors } = updateContourColor(contourColors, contours, type === TOPOGRAPHIC);
       this.legendColors = legendColors;
       // Update contour chart
       if (!this.chartInstance) {
         if (!this.initContourMap()) return;
       }
       this.chartInstance.setOption({
-        series: [
-          useContourGroup(contours, contourPointMap, leftBottom, rightTop, contourColorMap, isArea),
-        ],
+        series: [useContourGroup(contours, contourPointMap, leftBottom, rightTop, contourColorMap, isArea)],
       });
+      this.option = this.chartInstance.getOption();
     },
     /**
      * Happen when points data changed
@@ -1783,14 +1767,14 @@ export default {
      */
     handleDataChange(data, setting) {
       this.stopPathAnimation();
-      const {path, points} = data;
+      const { path, points } = data;
       const convergencePoint = data.convergence_point;
-      const {contourColors, contoursNumber, pathWidth, pathColor, unit} = setting;
-      const {isArea, chartInstance, showConvergencePoint, type} = this;
+      const { contourColors, contoursNumber, pathWidth, pathColor, unit } = setting;
+      const { isArea, chartInstance, showConvergencePoint, type } = this;
       this.path = path;
       this.setting = setting;
       // Update point Matrix
-      const {pointMatrix, zList, leftBottom, rightTop} = createPointMatrix(points);
+      const { pointMatrix, zList, leftBottom, rightTop } = createPointMatrix(points);
       this.pointMatrix = pointMatrix;
       this.zList = zList;
       this.leftBottom = leftBottom;
@@ -1799,7 +1783,7 @@ export default {
       const contours = calContours(zList, contoursNumber);
       this.contours = contours;
       // Update contours color
-      const {contourColorMap, legendColors} = updateContourColor(contourColors, contours, type === TOPOGRAPHIC);
+      const { contourColorMap, legendColors } = updateContourColor(contourColors, contours, type === TOPOGRAPHIC);
       this.legendColors = legendColors;
       // Update contours points
       const contourPointMap = calContoursPoints(contours, pointMatrix);
@@ -1811,28 +1795,24 @@ export default {
       } else {
         if (!this.initContourMap()) return;
       }
-      const legend = {data: []};
+      const legend = { data: [] };
       const series = [];
       if (path) {
         legend.data = path.intervals;
         series.push(...usePathSeries(path, rightTop, pathWidth, pathColor, unit));
       }
       // Make sure push order: other -> point series -> point tooltip series -> other
-      series.push(usePointSeries(
-          pointMatrix,
-          this.chartInstance,
-      ));
+      series.push(usePointSeries(pointMatrix, this.chartInstance));
       series.push(usePointTooltip(pointMatrix));
       if (showConvergencePoint && convergencePoint) {
         series.push(useConvergencePoint(convergencePoint, convergencePointColor[this.$store.state.themeIndex]));
       }
       series.push(useContourGroup(contours, contourPointMap, leftBottom, rightTop, contourColorMap, isArea));
-      this.series = series;
-      this.legend = legend;
       this.chartInstance.setOption({
         legend,
         series,
       });
+      this.option = this.chartInstance.getOption();
       this.chartInstance.on('mousemove', this.showTooltip);
       this.chartInstance.on('mouseout', this.hideTooltip);
     },
@@ -1846,16 +1826,18 @@ export default {
         this.chartInstance = echarts.init(this.$refs.contour, echartsThemeName);
       }
       const calcAxisMin = (value) => {
-        const min = value.min;
+        let min = value.min;
         if (typeof min !== 'number' || Number.isNaN(min)) return;
         const decimalPlaces = getDecimalPlaces(min);
-        return decimalPlaces ? min : floorDecimalPlaces(min, decimalPlaces - 1);
+        min = decimalPlaces == 0 ? min : floorDecimalPlaces(min, decimalPlaces - 1);
+        return Math.abs(min) > 1 ? min.toFixed(5) : min.toPrecision(2);
       };
       const calcAxisMax = (value) => {
-        const max = value.max;
+        let max = value.max;
         if (typeof max !== 'number' || Number.isNaN(max)) return;
         const decimalPlaces = getDecimalPlaces(max);
-        return decimalPlaces ? max : floorDecimalPlaces(max, decimalPlaces - 1);
+        max = decimalPlaces == 0 ? max : floorDecimalPlaces(max, decimalPlaces - 1);
+        return Math.abs(max) > 1 ? max.toFixed(5) : max.toPrecision(2);
       };
       this.chartInstance.setOption({
         legend: {
@@ -1879,14 +1861,10 @@ export default {
               title: this.$t('lossAnalysis.restore'),
               icon: CommonProperty.restoreIcon[this.$store.state.themeIndex],
               onclick: () => {
-                const legend = this.legend;
-                const series = this.series;
+                const option = this.option;
                 this.chartInstance.clear();
                 this.initContourMap();
-                this.chartInstance.setOption({
-                  legend,
-                  series,
-                });
+                this.chartInstance.setOption(option);
                 this.chartInstance.on('mousemove', this.showTooltip);
                 this.chartInstance.on('mouseout', this.hideTooltip);
               },
@@ -1922,16 +1900,10 @@ export default {
             show: false,
           },
           min: (value) => {
-            let minVal = calcAxisMin(value)
-            return minVal ? String(minVal).length > 5
-              ? minVal.toFixed(5)
-              : minVal : minVal;
+            return calcAxisMin(value);
           },
           max: (value) => {
-            let maxVal = calcAxisMax(value)
-            return maxVal ? String(maxVal).length > 5
-              ? maxVal.toFixed(5)
-              : maxVal : maxVal;
+            return calcAxisMax(value);
           },
         },
         yAxis: {
@@ -1946,16 +1918,10 @@ export default {
             show: false,
           },
           min: (value) => {
-            let minVal = calcAxisMin(value)
-            return minVal ? String(minVal).length > 5
-              ? minVal.toFixed(5)
-              : minVal : minVal;
+            return calcAxisMin(value);
           },
           max: (value) => {
-            let maxVal = calcAxisMax(value)
-            return maxVal ? String(maxVal).length > 5
-              ? maxVal.toFixed(5)
-              : maxVal : maxVal;
+            return calcAxisMax(value);
           },
         },
       });
@@ -2030,7 +1996,7 @@ export default {
 .mi-contour-map .map-legend .legend-item:last-of-type .contour-color {
   border-bottom: 1px solid gray;
 }
-.mi-contour-map .map-legend .legend-item .contour-color .color{
+.mi-contour-map .map-legend .legend-item .contour-color .color {
   height: 2px;
   width: 100%;
 }
@@ -2043,7 +2009,7 @@ export default {
 .mi-contour-map .map-legend .legend-item:last-of-type .topographic-color {
   border-bottom: 1px solid gray;
 }
-.mi-contour-map .map-legend .legend-item .topographic-color .color{
+.mi-contour-map .map-legend .legend-item .topographic-color .color {
   height: 100%;
   width: 100%;
 }
