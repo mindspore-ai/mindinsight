@@ -101,7 +101,9 @@ class TestTrainTaskManager:
         self._generated_path.append(self._root_dir)
 
         self._mock_data_manager = data_manager.DataManager(self._root_dir)
-        self._mock_data_manager.start_load_data().join()
+        thread, brief_thread = self._mock_data_manager.start_load_data()
+        thread.join()
+        brief_thread.join()
 
     @pytest.mark.usefixtures('load_data')
     def test_get_single_train_task_with_not_exists_train_id(self):

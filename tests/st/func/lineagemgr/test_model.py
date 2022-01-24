@@ -170,7 +170,9 @@ class TestModelApi(TestCase):
         os.makedirs(empty_dir)
         cls._empty_train_id = get_relative_path(empty_dir, LINEAGE_DATA_MANAGER.summary_base_dir)
 
-        LINEAGE_DATA_MANAGER.start_load_data().join()
+        thread, brief_thread = LINEAGE_DATA_MANAGER.start_load_data()
+        thread.join()
+        brief_thread.join()
 
     @pytest.mark.level0
     @pytest.mark.platform_arm_ascend_training
@@ -638,7 +640,8 @@ class TestModelApi(TestCase):
         """Test the function of get_flattened_lineage"""
         datamanager = data_manager.DataManager(SUMMARY_DIR)
         datamanager.register_brief_cache_item_updater(LineageCacheItemUpdater())
-        datamanager.start_load_data().join()
-
+        thread, brief_thread = datamanager.start_load_data()
+        thread.join()
+        brief_thread.join()
         data = get_flattened_lineage(datamanager)
         assert data.get('[U]info') == ['info1']

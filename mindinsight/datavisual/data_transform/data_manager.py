@@ -33,7 +33,7 @@ from mindinsight.conf import settings
 from mindinsight.datavisual.common import exceptions
 from mindinsight.datavisual.common.enums import CacheStatus
 from mindinsight.datavisual.common.log import logger
-from mindinsight.datavisual.common.enums import DataManagerStatus
+from mindinsight.datavisual.common.enums import DataManagerStatus, BriefCacheStatus
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.datavisual.data_transform.loader_generators.loader_generator import MAX_DATA_LOADER_SIZE
@@ -329,12 +329,6 @@ class _BaseCacheManager:
 
     def get_train_jobs(self):
         """Get cached train jobs."""
-        break_flag = 0
-        while not self._cache_items:
-            if break_flag > 4:
-                break
-            time.sleep(1)
-            break_flag += 1
         copied_train_jobs = dict(self._cache_items)
         return copied_train_jobs
 
@@ -383,6 +377,22 @@ class _BriefCacheManager(_BaseCacheManager):
     def __init__(self, summary_base_dir):
         super(_BriefCacheManager, self).__init__(summary_base_dir)
         self._summary_watcher = SummaryWatcher()
+        self._status = BriefCacheStatus.INIT.value
+
+    @property
+    def status(self):
+        """
+        Get the status of brief cache manager.
+
+        Returns:
+            BriefCacheStatus, the status of brief cache manager.
+        """
+        return self._status
+
+    @status.setter
+    def status(self, status):
+        """Set brief cache manager status."""
+        self._status = status
 
     def cache_train_job(self, train_id):
         """
@@ -398,9 +408,9 @@ class _BriefCacheManager(_BaseCacheManager):
 
         return False
 
-    def update_cache(self, executor):
+    def update_cache(self, executor=None):
         """Update cache."""
-        logger.info('Start to update BriefCacheManager.')
+        logger.debug('Start to update BriefCacheManager.')
         summaries_info = self._summary_watcher.list_summary_directories(self._summary_base_dir)
 
         basic_train_jobs = []
@@ -465,6 +475,7 @@ class _DetailCacheManager(_BaseCacheManager):
         self._loader_pool_mutex = threading.Lock()
         self._loader_generators = [DataLoaderGenerator(summary_base_dir)]
         self._loading_mutex = threading.Lock()
+        self.summaries_info = []
 
     def has_content(self):
         """Whether this cache manager has train jobs."""
@@ -605,7 +616,7 @@ class _DetailCacheManager(_BaseCacheManager):
         """This function generates the loader from given path."""
         loader_dict = {}
         for generator in self._loader_generators:
-            loader_dict.update(generator.generate_loaders(self._loader_pool))
+            loader_dict.update(generator.generate_loaders(self._loader_pool, self.summaries_info))
 
         sorted_loaders = sorted(loader_dict.items(), key=lambda loader: loader[1].latest_update_time)
         latest_loaders = sorted_loaders[-MAX_DATA_LOADER_SIZE:]
@@ -864,6 +875,7 @@ class DataManager:
         self._summary_base_dir = os.path.realpath(summary_base_dir)
         self._status = DataManagerStatus.INIT.value
         self._status_mutex = threading.Lock()
+        self._brief_cache_status_mutex = threading.Lock()
 
         self._detail_cache = _DetailCacheManager(self._summary_base_dir)
         self._brief_cache = _BriefCacheManager(self._summary_base_dir)
@@ -872,6 +884,8 @@ class DataManager:
         # Because self._load_data_in_thread() will create process pool when loading files, we can not
         # afford to run multiple self._load_data_in_thread() simultaneously (will create too many processes).
         self._load_data_lock = threading.Lock()
+        self._load_brief_data_lock = threading.Lock()
+        self._summary_watcher = SummaryWatcher()
 
     @property
     def summary_base_dir(self):
@@ -895,7 +909,13 @@ class DataManager:
                                   args=(reload_interval,),
                                   daemon=True)
         thread.start()
-        return thread
+
+        load_brief_data_thread = threading.Thread(target=self._load_brief_data_loop,
+                                                  name='start_load_brief_data_thread',
+                                                  args=(reload_interval,),
+                                                  daemon=True)
+        load_brief_data_thread.start()
+        return thread, load_brief_data_thread
 
     @staticmethod
     def check_reload_interval(reload_interval):
@@ -910,6 +930,23 @@ class DataManager:
 
         if reload_interval < 0:
             raise ParamValueError("The value of reload interval should be >= 0.")
+
+    def _load_brief_data_loop(self, reload_interval):
+        """Wrapper for load brief data in thread."""
+        if self._load_brief_data_lock.locked():
+            return
+        with self._load_brief_data_lock:
+            while True:
+                try:
+                    exception_wrapper(self._load_brief_data)()
+                except UnknownError as exc:
+                    # Not raising the exception here to ensure that data reloading does not crash.
+                    logger.warning(exc.message)
+                finally:
+                    self._brief_cache.status = BriefCacheStatus.LOADED.value
+                if not reload_interval:
+                    break
+                time.sleep(reload_interval)
 
     def _load_data_in_thread(self, reload_interval):
         """Wrapper for load data in thread."""
@@ -928,6 +965,20 @@ class DataManager:
                     break
                 time.sleep(reload_interval)
 
+    def _load_brief_data(self):
+        """This function will load data once and ignore it if the status is loading."""
+        with self._brief_cache_status_mutex:
+            if self._brief_cache.status == BriefCacheStatus.LOADING.value:
+                logger.debug("Current brief cache status is %s , will ignore to load data.", self._brief_cache.status)
+                return
+            self._brief_cache.status = BriefCacheStatus.LOADING.value
+
+        self._brief_cache.update_cache()
+
+        with self._brief_cache_status_mutex:
+            self._brief_cache.status = BriefCacheStatus.LOADED.value
+            logger.debug("Load brief data end.")
+
     def _load_data(self):
         """This function will load data once and ignore it if the status is loading."""
         with self._status_mutex:
@@ -938,21 +989,19 @@ class DataManager:
 
         with ComputingResourceManager.get_instance().get_executor(
                 max_processes_cnt=settings.MAX_PROCESSES_COUNT) as executor:
-            self._brief_cache.update_cache(executor)
-            brief_cache_update = time.time()
+            self._detail_cache.summaries_info = self._summary_watcher.list_summary_directories(self._summary_base_dir)
+            last_time = time.time()
             for _ in self._detail_cache.update_cache(executor):
-                update_interval = time.time() - brief_cache_update
+                update_interval = time.time() - last_time
                 logger.debug('Loading one round of detail cache taking %ss.', update_interval)
-                if update_interval > 3: # Use 3 seconds as threshold to avoid updating too often
-                    self._brief_cache.update_cache(executor)
-                    brief_cache_update += update_interval
+                last_time = time.time()
             with self._status_mutex:
                 if not self._brief_cache.has_content() and not self._detail_cache.has_content():
                     self.status = DataManagerStatus.INVALID.value
                 else:
                     self.status = DataManagerStatus.DONE.value
 
-                logger.info("Load brief data end, and loader pool size is %r.", self._detail_cache.loader_pool_size())
+                logger.info("Load detail data end, and loader pool size is %r.", self._detail_cache.loader_pool_size())
 
     def get_train_job_by_plugin(self, train_id, plugin_name):
         """
@@ -1056,6 +1105,7 @@ class DataManager:
         """Register folder analyzer."""
         self._brief_cache.register_folder_analyzer(analyzer)
         self._detail_cache.register_folder_analyzer(analyzer)
+        self._summary_watcher.register_folder_analyzer(analyzer)
 
     def get_brief_cache(self):
         """Get brief cache."""

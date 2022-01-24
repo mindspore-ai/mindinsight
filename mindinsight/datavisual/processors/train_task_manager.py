@@ -98,13 +98,14 @@ class TrainTaskManager(BaseProcessor):
         Returns:
             tuple, return quantity of total train jobs and list of train jobs specified by offset and limit.
         """
+        brief_cache = self._data_manager.get_brief_cache()
+        load_status = brief_cache.status
         if request_train_id is not None:
             train_job_item = self._get_train_job_item(request_train_id)
             if train_job_item is None:
-                return 0, []
-            return 1, [train_job_item]
+                return 0, [], load_status
+            return 1, [train_job_item], load_status
 
-        brief_cache = self._data_manager.get_brief_cache()
         brief_train_jobs = list(brief_cache.get_train_jobs().values())
         brief_train_jobs.sort(key=lambda x: x.basic_info.update_time, reverse=True)
         total = len(brief_train_jobs)
@@ -121,7 +122,7 @@ class TrainTaskManager(BaseProcessor):
                 continue
             train_jobs.append(train_job_item)
 
-        return total, train_jobs
+        return total, train_jobs, load_status
 
     def _get_train_job_item(self, train_id):
         """
