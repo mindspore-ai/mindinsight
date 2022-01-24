@@ -70,12 +70,13 @@ class DataLoaderGenerator(LoaderGenerator):
 
         return summary_path
 
-    def generate_loaders(self, loader_pool):
+    def generate_loaders(self, loader_pool, summaries_info):
         """
         Generate loader from summary path, if summary path is empty, will return empty list.
 
         Args:
             loader_pool (dict[str, LoaderStruct]): Current loader pool in data_manager.
+            summaries_info (list): Summaries info list.
 
         Returns:
             dict[str, LoaderStruct], a dict of `Loader`.
@@ -89,7 +90,6 @@ class DataLoaderGenerator(LoaderGenerator):
 
         dir_map_mtime_dict = {}
         min_modify_time = None
-        summaries_info = self._summary_watcher.list_summary_directories(self._summary_path)
 
         for item in summaries_info:
             relative_path = item.get("relative_path")

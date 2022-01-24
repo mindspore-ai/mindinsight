@@ -49,7 +49,9 @@ class TestTargets:
         lineage_writer = LineageWriter(SUMMARY_BASE_DIR)
         lineage_writer.create_summaries(train_id_prefix=train_id_prefix, train_job_num=5, params=params)
 
-        MOCK_DATA_MANAGER.start_load_data().join()
+        thread, brief_thread = MOCK_DATA_MANAGER.start_load_data()
+        thread.join()
+        brief_thread.join()
 
     def teardown_class(self):
         """Delete the summary directory."""

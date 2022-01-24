@@ -74,7 +74,9 @@ class TestTensorProcessor:
         self._generated_path.append(summary_base_dir)
 
         self._mock_data_manager = data_manager.DataManager(summary_base_dir)
-        self._mock_data_manager.start_load_data().join()
+        thread, brief_thread = self._mock_data_manager.start_load_data()
+        thread.join()
+        brief_thread.join()
 
     @pytest.mark.usefixtures('load_tensor_record')
     def test_get_tensors_with_not_exist_id(self):

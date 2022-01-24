@@ -32,6 +32,13 @@ class DataManagerStatus(BaseEnum):
     INVALID = 'INVALID'
 
 
+class BriefCacheStatus(BaseEnum):
+    """Brief cache status."""
+    INIT = 'init'
+    LOADING = 'loading'
+    LOADED = 'loaded'
+
+
 class PluginNameEnum(BaseEnum):
     """Plugin Name Enum."""
     IMAGE = 'image'

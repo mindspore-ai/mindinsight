@@ -84,9 +84,11 @@ class TestDataManager:
 
         data_manager.logger = MockLogger
         mock_manager = data_manager.DataManager(summary_base_dir)
-        mock_manager.start_load_data().join()
+        thread, brief_thread = mock_manager.start_load_data()
+        thread.join()
+        brief_thread.join()
 
-        assert MockLogger.log_msg['info'] == "Load brief data end, and loader pool size is '3'."
+        assert MockLogger.log_msg['info'] == "Load detail data end, and loader pool size is '3'."
         shutil.rmtree(summary_base_dir)
 
     @pytest.mark.parametrize('params', [{
@@ -188,7 +190,9 @@ class TestDataManager:
         mock_data_manager = data_manager.DataManager(summary_base_dir)
         mock_data_manager._detail_cache._execute_loader = Mock()
 
-        mock_data_manager.start_load_data().join()
+        thread, brief_thread = mock_data_manager.start_load_data()
+        thread.join()
+        brief_thread.join()
         current_loader_ids = mock_data_manager._detail_cache._loader_pool.keys()
 
         assert sorted(current_loader_ids) == sorted(expected_loader_ids)
@@ -200,7 +204,9 @@ class TestDataManager:
         expected_loader_ids = expected_loader_ids[-MAX_DATA_LOADER_SIZE:]
 
         mock_generate_loaders.return_value = loader_dict
-        mock_data_manager.start_load_data().join()
+        thread, brief_thread = mock_data_manager.start_load_data()
+        thread.join()
+        brief_thread.join()
         current_loader_ids = mock_data_manager._detail_cache._loader_pool.keys()
 
         assert sorted(current_loader_ids) == sorted(expected_loader_ids)
