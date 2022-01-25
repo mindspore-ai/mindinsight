@@ -49,6 +49,7 @@ class ConditionBase(ABC):
             >>>     print(hit.get_hit_detail())
             >>>     watchpoint = Watchpoint(tensors=tensors,
             ...                             condition=TensorTooLargeCondition(abs_mean_gt=0.0, max_gt=1.0))
+            >>>     # the check_watchpoints function start a new process needs to be called through the main entry
             >>>     hit = list(my_run.check_watchpoints(watchpoints=[watchpoint]))[0]
             >>>     print(hit.get_hit_detail())
             >>>
@@ -121,6 +122,7 @@ class WatchpointHit(ABC):
         ...                                         )
         >>>     watchpoint = Watchpoint(tensors=tensor_list,
         ...                             condition=TensorTooLargeCondition(abs_mean_gt=0.0))
+        >>>     # the check_watchpoints function start a new process needs to be called through the main entry
         >>>     hits = my_run.check_watchpoints(watchpoints=[watchpoint])
         >>>     hit = list(hits)[0]
         >>>     print(str(hit))
