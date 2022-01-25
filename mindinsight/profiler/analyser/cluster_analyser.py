@@ -326,10 +326,10 @@ class ClusterFlopsAnalyser(ClusterAnalyser):
         for rank_id in self._cluster_rank_ids:
             file_path = self._get_flops_file_for_each_device(self._target_dir_path, rank_id)
 
-            # Forward compatible. If flops file do not exist, return empty data.
             if not os.path.exists(file_path):
-                flops_info_list = []
-                break
+                msg = 'profiler does not find file: {}'.format(file_path)
+                log.warning(msg)
+                continue
 
             file_content = self._get_file_content(file_path)
             max_flops = max(max_flops, file_content.get('FLOPs'))
