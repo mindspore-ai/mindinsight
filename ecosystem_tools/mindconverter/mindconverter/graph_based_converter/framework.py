@@ -242,6 +242,7 @@ def pytorch2mindspore(model, dummy_inputs, output_dir=None):
 
     Examples:
         >>> import torch
+        >>> import numpy as np
         >>> from transformers import BertModel
         >>> from mindconverter import pytorch2mindspore
         >>> model = BertModel.from_pretrained("bert-base-uncased")
