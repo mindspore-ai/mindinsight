@@ -94,7 +94,10 @@ class Node(ABC):
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
                 >>> node = list(my_run.select_nodes("Conv2D-op13"))[0]
                 >>> print(node.stack)
-                [{'file_path': '/path', 'line_no': 266, 'code_line': 'output = self.conv2d(x, self.weight)'}]
+                [{'file_path': '/path', 'line_no': 266, 'code_line': 'output = self.conv2d(x, self.weight)',
+                  'has_substack': False},
+                 ...
+                 {'file_path': '/path', 'line_no': 55, 'code_line': 'x = self.conv2(x), 'has_substack': False}]
         """
         return self._node_feature.stack
 
