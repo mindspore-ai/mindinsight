@@ -329,6 +329,12 @@ class _BaseCacheManager:
 
     def get_train_jobs(self):
         """Get cached train jobs."""
+        break_flag = 0
+        while not self._cache_items:
+            if break_flag > 4:
+                break
+            time.sleep(1)
+            break_flag += 1
         copied_train_jobs = dict(self._cache_items)
         return copied_train_jobs
 
