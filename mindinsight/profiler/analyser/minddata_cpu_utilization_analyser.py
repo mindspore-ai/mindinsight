@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """The MindDataCpuUtilizationAnalyser analyser class."""
+import csv
 import json
 import os
 
@@ -151,40 +152,55 @@ class MinddataCpuUtilizationAnalyser(BaseAnalyser):
         # and the second sampling point is used as the starting sampling point to calculate the step.
         time_stamp = time_stamp[1:]
         queue_step_time_info = self._get_minddata_queue_step_time_info()
-        self._step_total_num = len(queue_step_time_info)
-        step0 = 0
-        for item in time_stamp:
-            # queue_step_time_info[][0]:step_num
-            # queue_step_time_info[][1]:sample time
-            # points less than step1 are classified as step0
-            if float(item) < float(queue_step_time_info[0][1]):
-                steps_info.append(step0)
-                continue
-            while right_index < len(queue_step_time_info):
-                if float(item) <= float(queue_step_time_info[right_index][1]):
-                    if float(item) < float(queue_step_time_info[right_index][1]):
-                        steps_info.append(queue_step_time_info[left_index][0])
-                    else:
-                        steps_info.append(queue_step_time_info[right_index][0])
-                    break
-                left_index = right_index
-                right_index += 1
+        if queue_step_time_info:
+            self._step_total_num = len(queue_step_time_info)
+            step0 = 0
+            for item in time_stamp:
+                # queue_step_time_info[][0]:step_num
+                # queue_step_time_info[][1]:sample time
+                # points less than step1 are classified as step0
+                if float(item) < float(queue_step_time_info[0][1]):
+                    steps_info.append(step0)
+                    continue
+                while right_index < len(queue_step_time_info):
+                    if float(item) <= float(queue_step_time_info[right_index][1]):
+                        if float(item) < float(queue_step_time_info[right_index][1]):
+                            steps_info.append(queue_step_time_info[left_index][0])
+                        else:
+                            steps_info.append(queue_step_time_info[right_index][0])
+                        break
+                    left_index = right_index
+                    right_index += 1
 
-            if right_index == len(queue_step_time_info):
-                steps_info.append(queue_step_time_info[right_index - 1][0])
+                if right_index == len(queue_step_time_info):
+                    steps_info.append(queue_step_time_info[right_index - 1][0])
 
+            return steps_info
+        self._get_step_total_num()
         return steps_info
+
+    def _get_step_total_num(self):
+        """Load data according to the parsed AICORE operator types file."""
+        target_file = f'step_trace_raw_{self._device_id}_detail_time.csv'
+        file_path = os.path.join(self._profiling_dir, target_file)
+        if not file_path:
+            log.error("Failed to find parsed trace time file.")
+            raise ProfilerFileNotFoundException('parsed step trace time file.')
+        file_path = validate_and_normalize_path(
+            file_path, raise_key="Invalid latest_trace_trace_time file path.")
+        with open(file_path, 'r') as handle:
+            csv_reader = csv.reader(handle)
+            data = list(csv_reader)
+        self._step_total_num = len(data) - 2
 
     def _get_minddata_queue_step_time_info(self):
         """Get the sampling time information at the steps of the host queue"""
         minddata_queue_step_time_info = []
         minddata_analyser = MinddataAnalyser(self._profiling_dir, self._device_id)
         file_path = minddata_analyser.get_device_queue_file_path()
-        file_path = validate_and_normalize_path(
-            file_path, raise_key="Invalid device_queue file path")
         if not os.path.exists(file_path):
             log.error('Did not find the device queue file: %s', file_path)
-            raise ProfilerFileNotFoundException(msg='Did not find the device queue file.')
+            return minddata_queue_step_time_info
 
         first_line = True
         expect_first_step_num = 1
