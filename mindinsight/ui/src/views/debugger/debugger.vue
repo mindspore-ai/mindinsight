@@ -1365,8 +1365,8 @@ export default {
       gridStyleKey: this.$route.query.sessionId ? 'offline-debugger' : 'debugger',
       isGraphRunsInit: false,
       timer: null,
-      themeIndex: this.$store.state.themeIndex,  // current theme index
-      nodeDataIsLarge: false,  // the dialog will display when node data is too large
+      themeIndex: this.$store.state.themeIndex, // current theme index
+      nodeDataIsLarge: false, // the dialog will display when node data is too large
     };
   },
   components: { debuggerTensor, tree, FlexibleGrid },
@@ -2086,7 +2086,8 @@ export default {
               setTimeout(() => {
                 const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
                 if (dom) {
-                  dom.scrollIntoView();
+                  const treeDom = document.querySelector('.tree-wrap');
+                  treeDom.scrollTop = dom.offsetTop;
                 }
               }, 800);
             });
@@ -2375,7 +2376,7 @@ export default {
       if (this.nodeDataIsLarge) {
         this.nodeDataIsLarge = false;
         this.deleteSession();
-        return
+        return;
       }
       this.$router.push({
         path: '/summary-manage',
