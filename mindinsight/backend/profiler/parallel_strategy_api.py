@@ -46,7 +46,7 @@ def init_module(app):
 def get_parallel_strategy():
     """Get parallel strategy by train id."""
     train_id = request.args.get('train_id')
-    profiler_dir = os.path.realpath(os.path.join(settings.SUMMARY_BASE_DIR, train_id))
+    profiler_dir = os.path.realpath(os.path.join(settings.SUMMARY_BASE_DIR, train_id, 'profiler'))
     try:
         profiler_dir = validate_and_normalize_path(profiler_dir, 'profiler')
     except ValidationError as exc:

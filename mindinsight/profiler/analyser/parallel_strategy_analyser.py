@@ -93,7 +93,7 @@ class ParallelStrategyAnalyser(BaseAnalyser):
     def _get_strategy_file_mtime(profiling_dir):
         """Get strategy file mtime from profiling dir."""
         path = Path(profiling_dir)
-        strategy_files = sorted(path.rglob(STRATEGY_FILE_PATTERN), key=lambda file: os.path.getmtime(file))
+        strategy_files = sorted(path.glob(STRATEGY_FILE_PATTERN), key=lambda file: os.path.getmtime(file))
         if strategy_files:
             file_path = os.path.join(profiling_dir, strategy_files[-1])
             return os.path.getmtime(file_path)
@@ -147,7 +147,7 @@ class ParallelStrategyAnalyser(BaseAnalyser):
         logger.info("Start to load data, status: %s.", self._status)
         self._status = Status.LOADING.value
         path = Path(self._profiling_dir)
-        files = sorted(path.rglob(STRATEGY_FILE_PATTERN),
+        files = sorted(path.glob(STRATEGY_FILE_PATTERN),
                        key=lambda filepath: int(filepath.name.split('.')[0].split('_')[-1]))
         if not files:
             logger.error("Can not find any data in path %s", path.name)
