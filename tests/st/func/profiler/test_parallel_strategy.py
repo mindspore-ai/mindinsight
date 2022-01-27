@@ -67,7 +67,7 @@ class TestParallelStrategy:
     @pytest.mark.platform_x86_ascend_training
     def test_get_parallel_strategy(self, client):
         """Test getting parallel strategy success."""
-        params = dict(train_id='./profiler')
+        params = dict(train_id='./')
         url = get_url(URL, params)
         response = client.get(url)
         assert response.status_code == 200
