@@ -357,22 +357,23 @@ class DumpAnalyzer:
                 ...                                    Watchpoint)
                 >>>
                 >>> def test_watchpoints():
-                >>>     my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
-                >>>     tensors = my_run.select_tensors(
+                ...     my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                ...     tensors = my_run.select_tensors(
                 ...                                         query_string="Conv2D-op13",
                 ...                                         use_regex=True,
                 ...                                         iterations=[0],
                 ...                                         ranks=[0],
                 ...                                         slots=[0]
                 ...                                         )
-                >>>     watchpoint = Watchpoint(tensors=tensors,
+                ...     watchpoint = Watchpoint(tensors=tensors,
                 ...                             condition=TensorTooLargeCondition(abs_mean_gt=0.0))
-                >>>     # the check_watchpoints function start a new process needs to be called through the main entry
-                >>>     hit = list(my_run.check_watchpoints(watchpoints=[watchpoint]))[0]
-                >>>     print(str(hit))
-                >>>
+                ...     # the check_watchpoints function start a new process needs to be called through the main entry
+                ...     hit = list(my_run.check_watchpoints(watchpoints=[watchpoint]))[0]
+                ...     print(str(hit))
+                ...
                 >>> if __name__ == "__main__":
-                >>>     test_watchpoints()
+                ...     test_watchpoints()
+                ...
                 Watchpoint TensorTooLarge triggered on tensor:
                 rank: 0
                 graph_name: kernel_graph_0
@@ -381,7 +382,7 @@ class DumpAnalyzer:
                 iteration: 0
                 Threshold: {'abs_mean_gt': 0.0}
                 Hit detail: the setting for watchpoint is abs_mean_gt = 0.0.
-                The actual value of the tensor is abs_mean_gt = 0.06583755487478116.
+                The actual value of the tensor is abs_mean_gt = 0.06592023578438996.
         """
         wp_hit_list = []
         # key is watchpoint_id, value is a dict with iteration as the key and check_nodes as values
