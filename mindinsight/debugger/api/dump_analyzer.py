@@ -335,6 +335,7 @@ class DumpAnalyzer:
         Note:
             1. For speed, all watchpoints for the iteration should be given at
             the same time to avoid reading tensors len(watchpoints) times.
+
             2. The check_watchpoints function start a new process needs to be
             called through the main entry.
 
