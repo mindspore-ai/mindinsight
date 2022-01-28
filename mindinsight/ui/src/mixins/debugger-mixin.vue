@@ -1234,7 +1234,8 @@ export default {
           setTimeout(() => {
             const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
             if (dom) {
-              dom.scrollIntoView();
+              const treeDom = document.querySelector('.tree-wrap');
+              treeDom.scrollTop = dom.offsetTop;
             }
           }, 800);
         });
@@ -1716,7 +1717,7 @@ export default {
               this.$nextTick(() => {
                 const newWatchPointDom = document.querySelector('#watch-point-list>li:last-child');
                 if (newWatchPointDom) {
-                  newWatchPointDom.scrollIntoView();
+                  newWatchPointDom.parentNode.scrollTop = newWatchPointDom.offsetTop;
                 }
               });
             }
@@ -1778,7 +1779,8 @@ export default {
         setTimeout(() => {
           const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
           if (dom) {
-            dom.scrollIntoView();
+            const treeDom = document.querySelector('.tree-wrap');
+            treeDom.scrollTop = dom.offsetTop;
           }
         }, 800);
       });
@@ -1858,7 +1860,8 @@ export default {
           setTimeout(() => {
             const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
             if (dom) {
-              dom.scrollIntoView();
+              const treeDom = document.querySelector('.tree-wrap');
+              treeDom.scrollTop = dom.offsetTop;
             }
           }, 200);
         });
@@ -1939,7 +1942,8 @@ export default {
           setTimeout(() => {
             const dom = document.querySelector('.hit-item.selected');
             if (dom) {
-              dom.scrollIntoView();
+              const treeDom = document.querySelector('.tree-wrap');
+              treeDom.scrollTop = dom.offsetTop;
             }
           }, 200);
         });
@@ -2113,7 +2117,8 @@ export default {
           setTimeout(() => {
             const dom = document.querySelector('.el-tree-node.is-current.is-focusable');
             if (dom) {
-              dom.scrollIntoView();
+              const treeDom = document.querySelector('.tree-wrap');
+              treeDom.scrollTop = dom.offsetTop;
             }
           }, 800);
         });
