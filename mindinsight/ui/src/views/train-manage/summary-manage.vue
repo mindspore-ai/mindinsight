@@ -29,6 +29,10 @@ limitations under the License.
       <div class="cl-title">
         <div class="cl-title-left">
           <span class="summary-title">{{$t('summaryManage.summaryList')}}</span>
+          <div :title="$t('trainingDashboard.loadingTip')"
+               v-if="load_status != 'loaded' && summaryList.length == 0"
+               class="loading-icon"
+               :class="'el-icon-loading'"></div>
           <span>{{$t("symbols.leftbracket")}}</span>
           <span>{{$t('summaryManage.currentFolder')}}</span>
           <span :title="currentFolder">{{currentFolder}}</span>
@@ -211,8 +215,10 @@ limitations under the License.
 
 <script>
 import RequestService from '../../services/request-service';
+import autoUpdate from '../../mixins/auto-update.vue';
 
 export default {
+  mixins: [autoUpdate],
   data() {
     return {
       loading: true,
@@ -284,6 +290,7 @@ export default {
         spinner: 'el-icon-loading',
         background: 'rgba(0, 0, 0, 0.3)',
       },
+      load_status: 'loading',
     };
   },
   computed: {},
@@ -305,6 +312,9 @@ export default {
   },
   mounted() {
     document.title = `${this.$t('summaryManage.summaryList')}-MindInsight`;
+    if (this.isTimeReload) {
+      this.autoUpdateSamples();
+    }
     this.$nextTick(() => {
       this.init();
     });
@@ -341,6 +351,11 @@ export default {
       RequestService.querySummaryList(params, false)
         .then(
           (res) => {
+            if (this.isReloading) {
+              this.$store.commit('setIsReload', false);
+              this.isReloading = false;
+            }
+            this.load_status = res.data.load_status;
             this.loading = false;
             if (res && res.data && res.data.train_jobs) {
               const summaryList = JSON.parse(JSON.stringify(res.data.train_jobs));
@@ -376,6 +391,9 @@ export default {
         .catch((e) => {
           this.loading = false;
         });
+    },
+    updateAllData(ignoreError) {
+      this.init();
     },
     currentPagesizeChange(pageSize) {
       this.pagination.pageSize = pageSize;

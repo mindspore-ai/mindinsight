@@ -42,7 +42,8 @@ limitations under the License.
          || this.$route.path.indexOf('/histogram') > 0
          || this.$route.path.indexOf('/tensor') > 0
          || this.$route.path.indexOf('/training-dashboard') > 0
-         || !this.$route.path.indexOf('/compare-plate')">
+         || !this.$route.path.indexOf('/compare-plate')
+         || this.$route.path == '/summary-manage'">
       <div class="reload-training">
         <!-- automatic refresh switch -->
         <el-switch v-model="isTimeReload"
@@ -199,12 +200,7 @@ export default {
 
     saveTimeValue() {
       if (this.newReloadValue >= 0) {
-        this.newReloadValue =
-          this.newReloadValue < 3
-            ? 3
-            : this.newReloadValue > 300
-            ? 300
-            : this.newReloadValue;
+        this.newReloadValue = this.newReloadValue < 3 ? 3 : this.newReloadValue > 300 ? 300 : this.newReloadValue;
         const timeValue = this.newReloadValue;
         this.timeReloadValue = timeValue;
         localStorage.timeReloadValue = timeValue;
@@ -223,9 +219,9 @@ export default {
         return;
       }
       this.newReloadValue = this.newReloadValue
-          .toString()
-          .replace(/[^\.\d]/g, '')
-          .replace(/\./g, '');
+        .toString()
+        .replace(/[^\.\d]/g, '')
+        .replace(/\./g, '');
       this.newReloadValue = Number(this.newReloadValue);
     },
     // get active menu item
