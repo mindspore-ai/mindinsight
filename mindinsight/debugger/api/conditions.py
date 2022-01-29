@@ -46,20 +46,22 @@ class ConditionBase(ABC):
             ...     watchpoint = Watchpoint(tensors=tensors,
             ...                             condition=TensorTooLargeCondition(abs_mean_gt=0.0, max_gt=0.0))
             ...     hit = list(my_run.check_watchpoints(watchpoints=[watchpoint]))[0]
-            ...     print(hit.get_hit_detail())
+            ...     # print(hit.get_hit_detail())
+            ...     # the print result is as follows
+            ...     # The setting for watchpoint is abs_mean_gt = 0.0, max_gt = 0.0.
+            ...     # The actual value of the tensor is abs_mean_gt = 0.06592023578438996, max_gt = 0.449951171875.
             ...     watchpoint = Watchpoint(tensors=tensors,
             ...                             condition=TensorTooLargeCondition(abs_mean_gt=0.0, max_gt=1.0))
             ...     # the check_watchpoints function start a new process needs to be called through the main entry
             ...     hit = list(my_run.check_watchpoints(watchpoints=[watchpoint]))[0]
-            ...     print(hit.get_hit_detail())
+            ...     # print(hit.get_hit_detail())
+            ...     # the print result is as follows
+            ...     # The setting for watchpoint is abs_mean_gt = 0.0.
+            ...     # The actual value of the tensor is abs_mean_gt = 0.06592023578438996.
             ...
             >>> if __name__ == "__main__":
             ...     test_condition_base()
             ...
-            The setting for watchpoint is abs_mean_gt = 0.0, max_gt = 0.0.
-            The actual value of the tensor is abs_mean_gt = 0.06592023578438996, max_gt = 0.449951171875.
-            The setting for watchpoint is abs_mean_gt = 0.0.
-            The actual value of the tensor is abs_mean_gt = 0.06592023578438996.
     """
 
     @property
@@ -126,31 +128,35 @@ class WatchpointHit(ABC):
         ...     # the check_watchpoints function start a new process needs to be called through the main entry
         ...     hits = my_run.check_watchpoints(watchpoints=[watchpoint])
         ...     hit = list(hits)[0]
-        ...     print(str(hit))
-        ...     print(hit.error_code)
-        ...     print(hit.tensor)
-        ...     print(hit.get_hit_detail())
+        ...     # print(str(hit))
+        ...     # the print result is as follows
+        ...     # Watchpoint TensorTooLarge triggered on tensor:
+        ...     # rank: 0
+        ...     # graph_name: kernel_graph_0
+        ...     # node_name: Default/network-WithLossCell/_backbone-AlexNet/conv1-Conv2d/Cast-op7
+        ...     # slot: 0
+        ...     # iteration: 0
+        ...     # Threshold: {'abs_mean_gt': 0.0}
+        ...     # Hit detail: The setting for watchpoint is abs_mean_gt = 0.0.
+        ...     # The actual value of the tensor is abs_mean_gt = 0.007956420533235841.
+        ...     # print(hit.error_code)
+        ...     # the print result is as follows
+        ...     # 0
+        ...     # print(hit.tensor)
+        ...     # the print result is as follows
+        ...     # rank: 0
+        ...     # graph_name: kernel_graph_0
+        ...     # node_name: Default/network-WithLossCell/_backbone-AlexNet/conv1-Conv2d/Cast-op7
+        ...     # slot: 0
+        ...     # iteration: 0
+        ...     # print(hit.get_hit_detail())
+        ...     # the print result is as follows
+        ...     # The setting for watchpoint is abs_mean_gt = 0.0.
+        ...     # The actual value of the tensor is abs_mean_gt = 0.007956420533235841.
         ...
         >>> if __name__ == "__main__":
         ...     test_watch_point_hit()
         ...
-        Watchpoint TensorTooLarge triggered on tensor:
-        rank: 0
-        graph_name: kernel_graph_0
-        node_name: Default/network-WithLossCell/_backbone-AlexNet/conv1-Conv2d/Cast-op7
-        slot: 0
-        iteration: 0
-        Threshold: {'abs_mean_gt': 0.0}
-        Hit detail: The setting for watchpoint is abs_mean_gt = 0.0.
-        The actual value of the tensor is abs_mean_gt = 0.007956420533235841.
-        0
-        rank: 0
-        graph_name: kernel_graph_0
-        node_name: Default/network-WithLossCell/_backbone-AlexNet/conv1-Conv2d/Cast-op7
-        slot: 0
-        iteration: 0
-        The setting for watchpoint is abs_mean_gt = 0.0.
-        The actual value of the tensor is abs_mean_gt = 0.007956420533235841.
     """
 
     @property
@@ -993,7 +999,7 @@ class Watchpoint:
         ...                         condition=TensorTooLargeCondition(abs_mean_gt=0.0))
         >>> tensor = list(watchpoint.tensors)[0]
         >>> print(tensor.node.name)
-        Default/network-WithLossCell/_backbone-AlexNet/conv2-Conv2d/Conv2D-op7
+        Default/network-WithLossCell/_backbone-AlexNet/conv1-Conv2d/Cast-op7
         >>> print(watchpoint.condition.name)
         TensorTooLarge
     """

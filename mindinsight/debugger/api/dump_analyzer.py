@@ -140,7 +140,7 @@ class DumpAnalyzer:
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
-                >>> my_run.export_graphs()
+                >>> res = my_run.export_graphs()
         """
         return self._parser.export_xlsx(output_dir)
 
@@ -370,20 +370,21 @@ class DumpAnalyzer:
                 ...                             condition=TensorTooLargeCondition(abs_mean_gt=0.0))
                 ...     # the check_watchpoints function start a new process needs to be called through the main entry
                 ...     hit = list(my_run.check_watchpoints(watchpoints=[watchpoint]))[0]
-                ...     print(str(hit))
+                ...     # print(str(hit))
+                ...     # the print result is as follows
+                ...     # Watchpoint TensorTooLarge triggered on tensor:
+                ...     # rank: 0
+                ...     # graph_name: kernel_graph_0
+                ...     # node_name: Default/network-WithLossCell/_backbone-AlexNet/conv2-Conv2d/Conv2D-op13
+                ...     # slot: 0
+                ...     # iteration: 0
+                ...     # Threshold: {'abs_mean_gt': 0.0}
+                ...     # Hit detail: the setting for watchpoint is abs_mean_gt = 0.0.
+                ...     # The actual value of the tensor is abs_mean_gt = 0.06592023578438996.
                 ...
                 >>> if __name__ == "__main__":
                 ...     test_watchpoints()
                 ...
-                Watchpoint TensorTooLarge triggered on tensor:
-                rank: 0
-                graph_name: kernel_graph_0
-                node_name: Default/network-WithLossCell/ _backbone-AlexNet/conv2-Conv2d/Conv2D-op13
-                slot: 0
-                iteration: 0
-                Threshold: {'abs_mean_gt': 0.0}
-                Hit detail: the setting for watchpoint is abs_mean_gt = 0.0.
-                The actual value of the tensor is abs_mean_gt = 0.06592023578438996.
         """
         wp_hit_list = []
         # key is watchpoint_id, value is a dict with iteration as the key and check_nodes as values
