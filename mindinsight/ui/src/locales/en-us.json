@@ -29,7 +29,8 @@
     "details": "Details",
     "delete": "Delete",
     "dark": "Dark Theme",
-    "light": "Light Theme"
+    "light": "Light Theme",
+    "noOperatorData": "No data for non-heterogeneous networks"
   },
   "unit": {
     "KiB": "KiB",
