@@ -207,7 +207,7 @@ limitations under the License.
         <img :src="require('@/assets/images/nodata.png')"
              alt="" />
       </div>
-      <p>{{ initOver?$t("public.noData"):$t('public.dataLoading') }}</p>
+      <p>{{ initOver?$t("public.noOperatorData"):$t('public.dataLoading') }}</p>
     </div>
     <el-dialog :title="rowName"
                :visible.sync="detailsDialogVisible"

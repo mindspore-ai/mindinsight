@@ -29,7 +29,8 @@
     "details": "详情",
     "delete": "删除",
     "dark": "深色主题",
-    "light": "浅色主题"
+    "light": "浅色主题",
+    "noOperatorData": "非异构网络暂无数据"
   },
   "unit": {
     "KiB": "KiB",
