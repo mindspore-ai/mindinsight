@@ -97,14 +97,19 @@ class TestModelLineage(TestCase):
         train_callback.initial_learning_rate = 0.12
         train_callback.end(RunContext(self.run_context))
 
-        LINEAGE_DATA_MANAGER.start_load_data().join()
+        thread, brief_thread = LINEAGE_DATA_MANAGER.start_load_data()
+        thread.join()
+        brief_thread.join()
+
         res = filter_summary_lineage(data_manager=LINEAGE_DATA_MANAGER, search_condition=self._search_condition)
         assert res.get('object')[0].get('model_lineage', {}).get('epoch') == 10
         run_context = self.run_context
         run_context['epoch_num'] = 14
         train_callback.end(RunContext(run_context))
 
-        LINEAGE_DATA_MANAGER.start_load_data().join()
+        thread, brief_thread = LINEAGE_DATA_MANAGER.start_load_data()
+        thread.join()
+        brief_thread.join()
         res = filter_summary_lineage(data_manager=LINEAGE_DATA_MANAGER, search_condition=self._search_condition)
         assert res.get('object')[0].get('model_lineage', {}).get('epoch') == 14
 
@@ -188,7 +193,9 @@ class TestModelLineage(TestCase):
         train_callback.begin(RunContext(run_context_customized))
         train_callback.end(RunContext(run_context_customized))
 
-        LINEAGE_DATA_MANAGER.start_load_data().join()
+        thread, brief_thread = LINEAGE_DATA_MANAGER.start_load_data()
+        thread.join()
+        brief_thread.join()
         res = filter_summary_lineage(data_manager=LINEAGE_DATA_MANAGER, search_condition=self._search_condition)
         assert res.get('object')[0].get('model_lineage', {}).get('loss_function') \
                == 'SoftmaxCrossEntropyWithLogits'

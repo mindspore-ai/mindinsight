@@ -21,12 +21,13 @@ MAX_DATA_LOADER_SIZE = 15
 class LoaderGenerator:
     """Base loader generator for loader generators."""
     @abstractmethod
-    def generate_loaders(self, loader_pool):
+    def generate_loaders(self, loader_pool, summaries_info):
         """
         Abstract method for generating loaders.
 
         Args:
             loader_pool (dict[str, LoaderStruct]): Current loader pool in data_manager.
+            summaries_info (list): Summaries info list.
 
         Returns:
             dict[str, LoaderStruct], a dict of `Loader`.
