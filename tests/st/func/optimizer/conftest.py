@@ -30,7 +30,9 @@ from mindinsight.datavisual.utils import tools
 SUMMARY_BASE_DIR = tempfile.NamedTemporaryFile(prefix='test_optimizer_summary_dir_base_').name
 MOCK_DATA_MANAGER = DataManager(SUMMARY_BASE_DIR)
 MOCK_DATA_MANAGER.register_brief_cache_item_updater(LineageCacheItemUpdater())
-MOCK_DATA_MANAGER.start_load_data().join()
+THREAD, BRRIEF_THREAD = MOCK_DATA_MANAGER.start_load_data()
+THREAD.join()
+BRRIEF_THREAD.join()
 
 
 @pytest.fixture(scope="session")

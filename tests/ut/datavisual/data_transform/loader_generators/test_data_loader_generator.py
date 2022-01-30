@@ -69,7 +69,7 @@ class TestDataLoaderGenerator:
         os.mkdir(path)
         generator = data_loader_generator.DataLoaderGenerator(path)
         os.removedirs(path)
-        loader_dict = generator.generate_loaders(loader_pool=dict())
+        loader_dict = generator.generate_loaders(loader_pool=dict(), summaries_info=list())
         assert MockLogger.log_msg['warning'] == "Summary path does not exist. It will not start " \
                                                 "loading events data. Current path is %r." % path
         assert loader_dict == {}
@@ -88,7 +88,7 @@ class TestDataLoaderGenerator:
         # mock DataLoader
         mock_data_loader.return_value = True
 
-        loader_dict = generator.generate_loaders(loader_pool=dict())
+        loader_dict = generator.generate_loaders(loader_pool=dict(), summaries_info=summaries)
         expected_ids = [
             summary.get('relative_path') for summary in summaries[-data_loader_generator.MAX_DATA_LOADER_SIZE:]
         ]
