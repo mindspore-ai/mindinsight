@@ -93,11 +93,11 @@ class Node(ABC):
                 >>> from mindinsight.debugger import DumpAnalyzer
                 >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
                 >>> node = list(my_run.select_nodes("Conv2D-op13"))[0]
-                >>> print(node.stack)
-                [{'file_path': '/path', 'line_no': 266, 'code_line': 'output = self.conv2d(x, self.weight)',
-                  'has_substack': False},
-                 ...
-                 {'file_path': '/path', 'line_no': 55, 'code_line': 'x = self.conv2(x), 'has_substack': False}]
+                >>> # print(node.stack)
+                >>> # the print result is as follows
+                >>> # [{'file_path': '/path', 'line_no': 266, 'code_line': 'output = self.conv2d(x, self.weight)',
+                >>> # 'has_substack': False},
+                >>> # {'file_path': '/path', 'line_no': 55, 'code_line': 'x = self.conv2(x), 'has_substack': False}]
         """
         return self._node_feature.stack
 
@@ -218,7 +218,7 @@ class NodeImpl(Node):
             >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
             >>> node = list(my_run.select_nodes("conv"))[0]
             >>> print(node.name)
-            conv5.bias
+            conv1.weight
         """
         if hasattr(self._base_node, 'type') and (self._base_node.type == "Load" or "Summary" in self._base_node.type):
             name = self._base_node.name.split('/')[-1]
