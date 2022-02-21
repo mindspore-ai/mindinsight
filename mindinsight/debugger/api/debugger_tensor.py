@@ -65,7 +65,6 @@ class DebuggerTensor(ABC):
                 rank: 0
                 graph_name: kernel_graph_0
                 node_name: conv1.weight
-
         """
         return self._node
 
@@ -149,7 +148,7 @@ class DebuggerTensor(ABC):
                   f"graph_name: {self.node.graph_name}\n" \
                   f"node_name: {self.node.name}\n" \
                   f"slot: {self.slot}\n" \
-                  f"iteration: {self.iteration}\n"
+                  f"iteration: {self.iteration}"
         return feature
 
 
