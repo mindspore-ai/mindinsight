@@ -189,7 +189,7 @@ class Node(ABC):
     def __str__(self):
         feature = f"rank: {self.rank}\n" \
                   f"graph_name: {self.graph_name}\n" \
-                  f"node_name: {self.name}\n"
+                  f"node_name: {self.name}"
         return feature
 
 
