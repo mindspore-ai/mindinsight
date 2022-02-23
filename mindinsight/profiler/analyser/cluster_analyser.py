@@ -110,8 +110,8 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
         if self._parallel_mode == 'model-parallel':
             col_names = ['iteration_interval', 'communication_alone', 'computation']
         elif self._parallel_mode == 'pipeline-parallel':
-            col_names = ['iteration_interval', 'receive_alone', 'stage', 'communication_alone',
-                         'computation', 'collective_communication_alone']
+            col_names = ['iteration_interval', 'computation', 'communication_alone', 'stage', 'receive_alone',
+                         'collective_communication_alone']
 
         return col_names
 
