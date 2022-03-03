@@ -94,10 +94,10 @@ class GraphRunsOperator:
         graph_history = self._graph_history_stream.get(rank_id)
         root_graphs = self._multi_card_graph_stream.get_graph_handler_by_rank_id(rank_id).root_graphs
         graph_run_map = defaultdict(dict)
-        for root_graph_id, graph_run_ids in graph_history.history.items():
-            root_graph = root_graphs.get(root_graph_id)
-            if root_graph is None:
-                log.error("Didn't find relative graph info of graph %s. "
+        for root_graph_id, root_graph in root_graphs.items():
+            graph_run_ids = graph_history.history.get(root_graph_id)
+            if graph_run_ids is None:
+                log.error("Didn't find relative graph history of root graph %s. "
                           "Please check the dump structure.", root_graph_id)
                 raise DebuggerHistoryNotFoundError(root_graph_id)
             for graph_run_id in graph_run_ids:
