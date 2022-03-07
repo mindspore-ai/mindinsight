@@ -536,7 +536,7 @@
     "strategyPerception": "Strategy Perception",
     "strategyReference": "Please refer to the detailed tutorial",
     "strategyTutorials": "Strategy Perception Tutorial",
-    "strategyTutorialUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/performance_profiling_ascend_of_cluster.html#strategy-perception",
+    "strategyTutorialUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/performance_profiling_of_cluster.html#strategy-perception",
     "rankSelector": "Stage Selector",
     "parallelStrategy": "Parallel Strategy",
     "hasStrategy": "Operator with Strategy",
@@ -674,7 +674,7 @@
     "cluster_link_title": "Inter-Device Link Bandwidth Profiling",
     "parallel_strategy_title": "Communication Operator Sharding Reasonability Analysis",
     "clusterPerformanceTest": "How do I use Profiler for cluster performance debugging?",
-    "clusterGuideUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/performance_profiling_ascend_of_cluster.html",
+    "clusterGuideUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/performance_profiling_of_cluster.html",
     "clusterGPUGuideUrl": "https://www.mindspore.cn/mindinsight/docs/en/master/performance_profiling_gpu.html"
   },
   "components": {

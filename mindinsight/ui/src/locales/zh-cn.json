@@ -536,7 +536,7 @@
     "strategyPerception": "策略感知",
     "strategyReference": "详细教程请参考",
     "strategyTutorials": "策略感知教程",
-    "strategyTutorialUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_ascend_of_cluster.html#id11",
+    "strategyTutorialUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_of_cluster.html#id11",
     "rankSelector": "Stage 选择",
     "parallelStrategy": "并行方式",
     "hasStrategy": "含切分策略算子",
@@ -674,7 +674,7 @@
     "cluster_link_title": "卡之间链路带宽性能分析",
     "parallel_strategy_title": "通信算子切分合理性分析",
     "clusterPerformanceTest": "如何使用Profiler进行集群性能调试",
-    "clusterGuideUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_ascend_of_cluster.html",
+    "clusterGuideUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_of_cluster.html",
     "clusterGPUGuideUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_gpu.html"
   },
   "components": {
