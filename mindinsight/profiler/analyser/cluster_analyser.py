@@ -84,7 +84,7 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
     def __init__(self, cluster_profiler_dir, device_id):
         super().__init__(cluster_profiler_dir, device_id)
         self._none_sort_col_names = []
-        self._parallel_mode, self._stage_num, self._rank_size = \
+        self._device_type, self._parallel_mode, self._stage_num, self._rank_size = \
             self._get_parallel_context()
         self._col_names = self._get_col_names()
         self._total_step_num = self._get_total_step_num()
@@ -94,15 +94,17 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
         parallel_mode = "data-parallel"
         stage_num = 1
         rank_size = 1
+        device_type = None
         for filename in os.listdir(self._target_dir_path):
-            if filename.startswith('ascend_cluster_analyse'):
+            if filename.startswith('ascend_cluster_analyse') or filename.startswith('gpu_cluster_analyse'):
                 # the format of filename is
                 # 'ascend_cluster_analyse_{parallel-mode}_{stage_num}_{rank_size}_{rank_id}.csv'
+                device_type = filename.split('_')[0]
                 parallel_mode = filename.split('_')[3]
                 stage_num = int(filename.split('_')[4])
                 rank_size = int(filename.split('_')[5])
 
-        return parallel_mode, stage_num, rank_size
+        return device_type, parallel_mode, stage_num, rank_size
 
     def _get_col_names(self):
         """Get the column names depends on parallel mode."""
@@ -189,9 +191,13 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
 
     def get_step_bottleneck_info(self, rank_id, step_num):
         """Get cluster analyse info."""
-        file_name = f'ascend_cluster_analyse_{self._parallel_mode}_{self._stage_num}_{self._rank_size}_{rank_id}.csv'
-        step_bottleneck_file_path = \
-            os.path.join(self._target_dir_path, file_name)
+        if self._device_type == 'ascend':
+            file_name = \
+                f'ascend_cluster_analyse_{self._parallel_mode}_{self._stage_num}_{self._rank_size}_{rank_id}.csv'
+        else:
+            file_name = \
+                f'gpu_cluster_analyse_{self._parallel_mode}_{self._stage_num}_{self._rank_size}_{rank_id}.csv'
+        step_bottleneck_file_path = os.path.join(self._target_dir_path, file_name)
         step_bottleneck_file_path = validate_and_normalize_path(
             step_bottleneck_file_path, raise_key="Invalid step trace file path.")
         if not os.path.exists(step_bottleneck_file_path):
