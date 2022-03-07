@@ -78,9 +78,18 @@ class TrainTaskManager(BaseProcessor):
             for plugin_name in PluginNameEnum.list_members():
                 default_result.update({plugin_name: list()})
             return dict(plugins=default_result)
-
+        top_tags = {
+            "graph": "ms_output_optimize.pb",
+            "optimized_graph": "ms_output_optimize.pb (optimized)"
+        }
         for plugin_name, value in plugins.items():
-            plugins[plugin_name] = sorted(value)
+            tags = sorted(value)
+            for plugin, tag in top_tags.items():
+                if plugin == plugin_name and tag in tags:
+                    tags.remove(tag)
+                    tags.insert(0, tag)
+                    break
+            plugins[plugin_name] = tags
 
         return dict(
             plugins=plugins
