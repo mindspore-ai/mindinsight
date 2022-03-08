@@ -26,6 +26,7 @@ from mindinsight.datavisual.data_transform import reservoir
 _Tensor = collections.namedtuple('_Tensor', ['wall_time', 'step', 'value', 'filename'])
 TensorEvent = collections.namedtuple(
     'TensorEvent', ['wall_time', 'step', 'tag', 'plugin_name', 'value', 'filename'])
+_KEEP_TAGS = {"ms_output_optimize.pb", "ms_output_optimize.pb (optimized)"}
 
 # config for `EventsData`
 _DEFAULT_STEP_SIZES_PER_TAG = settings.DEFAULT_STEP_SIZES_PER_TAG
@@ -35,6 +36,7 @@ CONFIG = {
     'max_tag_sizes_per_plugin':
         {
             PluginNameEnum.GRAPH.value: settings.MAX_GRAPH_TAG_SIZE,
+            PluginNameEnum.OPTIMIZED_GRAPH.value: settings.MAX_GRAPH_TAG_SIZE,
             PluginNameEnum.TENSOR.value: settings.MAX_TENSOR_TAG_SIZE
         },
     'max_step_sizes_per_tag':
@@ -42,6 +44,7 @@ CONFIG = {
             PluginNameEnum.SCALAR.value: settings.MAX_SCALAR_STEP_SIZE_PER_TAG,
             PluginNameEnum.IMAGE.value: settings.MAX_IMAGE_STEP_SIZE_PER_TAG,
             PluginNameEnum.GRAPH.value: settings.MAX_GRAPH_STEP_SIZE_PER_TAG,
+            PluginNameEnum.OPTIMIZED_GRAPH.value: settings.MAX_GRAPH_STEP_SIZE_PER_TAG,
             PluginNameEnum.HISTOGRAM.value: settings.MAX_HISTOGRAM_STEP_SIZE_PER_TAG,
             PluginNameEnum.TENSOR.value: settings.MAX_TENSOR_STEP_SIZE_PER_TAG
         }
@@ -224,14 +227,22 @@ class EventsData:
         """
         tag_specifications = self._config['max_tag_sizes_per_plugin'].get(plugin_name)
         if tag_specifications is not None and len(self._tags_by_plugin[plugin_name]) >= tag_specifications:
-            deleted_tag = self._tags_by_plugin[plugin_name][0]
+            deleted_tag = get_first_deleted_tag(self._tags_by_plugin[plugin_name])
             return deleted_tag
 
         if len(self._tags) >= self._config['max_total_tag_sizes']:
-            deleted_tag = self._tags[0]
+            deleted_tag = get_first_deleted_tag(self._tags)
             return deleted_tag
 
         return None
+
+
+def get_first_deleted_tag(tags):
+    """Get first tags that can be deleted."""
+    for tag in tags:
+        if tag not in _KEEP_TAGS:
+            return tag
+    return None
 
 
 def is_new_file(last_file_name, file_name):
