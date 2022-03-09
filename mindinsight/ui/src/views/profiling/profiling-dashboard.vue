@@ -42,6 +42,7 @@ limitations under the License.
   </div>
 </template>
 <script>
+import RequestService from '@/services/request-service';
 export default {
   data() {
     return {
@@ -56,10 +57,11 @@ export default {
         this.$t('profiling.cluster'),
       ],
       left: 0,
+      isPynative: false,
     };
   },
   created() {
-    this.updateTab();
+    this.initProfilerInfo();
   },
   updated() {
     this.updateTab();
@@ -71,6 +73,43 @@ export default {
     this.left = length * (this.$store.state.language === 'en-us' ? 10 : 20) + 40;
   },
   methods: {
+    /**
+     * Get profiler info and update tabs
+     * @return {Promise}
+     */
+    initProfilerInfo() {
+      return new Promise((resolve) => {
+        const params = {
+          profile: this.trainInfo.dir,
+          train_id: this.trainInfo.id,
+        };
+        RequestService.getProfilerDeviceData(params)
+          .then(
+            (res) => {
+              if (Object.keys(res.data).length > 0) {
+                const mode = res.data.profiler_mode
+                this.rankIDList = res.data.device_list.sort((a, b) => +a - +b);
+                this.rankID = this.rankIDList[0];
+                this.isPynative = mode === 'pynative'? true: false;
+                this.$route.query.rankID = this.rankID;
+                this.$route.query.mode = mode;
+                resolve(true);
+              } else {
+                this.rankIDList = [];
+                this.rankID = '';
+                resolve(false);
+              };
+              if (this.isPynative) this.tabs.pop();
+              this.updateTab;
+            },
+          )
+          .catch(() => {
+            this.rankIDList = [];
+            this.rankID = '';
+            resolve(false);
+          });
+      });
+    },
     /**
      * Update page state
      */

@@ -91,8 +91,8 @@ export default {
         RequestService.getProfilerDeviceData(params)
           .then(
             (res) => {
-              if (res?.data?.length > 0) {
-                this.rankIDList = res.data.sort((a, b) => +a - +b);
+              if (Object.keys(res.data).length > 0) {
+                this.rankIDList = res.data.device_list.sort((a, b) => +a - +b);
                 this.rankID = isInteger(this.defaultRankID) ? this.defaultRankID + '' : this.rankIDList[0];
                 resolve(true);
               } else {

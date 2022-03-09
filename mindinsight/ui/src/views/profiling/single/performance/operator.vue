@@ -19,7 +19,7 @@ limitations under the License.
     <div class="cl-profiler">
       <el-tabs v-model="apiType"
                @tab-click="tabChange">
-        <el-tab-pane label="AI CORE"
+        <el-tab-pane :label="labelName"
                      name="core">
           <operator-unit chartId="core-echarts"
                          :currentCard="rankID"
@@ -29,12 +29,13 @@ limitations under the License.
                          :accuracy="6"
                          :headerFilder="headerFilder"
                          :unit="$t('profiling.unit')"
-                         :hasFlopsInfo="true"
+                         :hasFlopsInfo="!isPynative"
                          ref="core" />
         </el-tab-pane>
         <el-tab-pane label="AI CPU"
                      class="cpu-tab"
-                     name="cpu">
+                     name="cpu"
+                     v-if="!isPynative">
           <operator-unit chartId="cpu-echarts"
                          :currentCard="rankID"
                          :opType="cpuOpType"
@@ -78,6 +79,8 @@ export default {
         path: this.$route.query.path,
         dir: this.$route.query.dir,
       }, // Complete train info
+      isPynative: false,
+      labelName: "AI CORE",
       apiType: 'core',
       coreOpType: {
         all: 'aicore_type',
@@ -254,6 +257,18 @@ export default {
     const id = this.trainInfo.id;
     document.title = `${id ? id + '-' : ''}${this.$t('profiling.operatorDetail')}-MindInsight`;
   },
+  created() {
+    const mode = this.$route.query.mode;
+    this.isPynative = mode === 'pynative'? true: false;
+    if (this.isPynative) {
+      // update show data when mode is pynative
+      this.labelName = 'ASCEND',
+      this.coreOpType = {
+        all: 'pynative_type',
+        detail: 'pynative_detail',
+      }
+    }
+  }
 };
 </script>
 <style>

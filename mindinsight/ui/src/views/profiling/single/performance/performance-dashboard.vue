@@ -16,7 +16,8 @@ limitations under the License.
 <template>
   <div class="single-performance-dashboard">
     <!-- Step trace area -->
-    <div class="dashboard-item">
+    <div class="dashboard-item"
+         v-if="!isPynative">
       <div class="item-head">
         <div class="title">{{ $t('profiling.stepTrace') }}</div>
         <!-- Step trace description -->
@@ -111,7 +112,8 @@ limitations under the License.
       </div>
     </div>
     <!-- Operator information display area -->
-    <div class="dashboard-item">
+    <div class="dashboard-item"
+         v-if="!isPynative">
       <div class="item-head">
         <div class="title">{{ $t('profiling.rankOfOperator') }}</div>
         <div class="view-detail">
@@ -156,6 +158,29 @@ limitations under the License.
           </div>
         </div>
       </div>
+    </div>
+    <!-- Pynative operator information display area -->
+    <div class="dashboard-item-pynative"
+         v-if="isPynative">
+      <div class="item-head">
+        <div class="title">{{ $t('profiling.rankOfOperator') }}</div>
+        <div class="view-detail">
+          <button @click="viewDetail('operator')"
+                  :disabled="pieChart.noData && pieChart.data.length === 0"
+                  :class="{disabled:pieChart.noData && pieChart.data.length === 0}">{{ $t('profiling.viewDetail') }}
+            <i class="el-icon-d-arrow-right"></i></button>
+        </div>
+      </div>
+      <operator-unit chartId="pynative-echarts"
+                         :currentCard="rankID"
+                         :opType="pynativeOpType"
+                         :opSortCondition="pynativeOpSortCondition"
+                         :search="pynativeSearch"
+                         :accuracy="6"
+                         :unit="$t('profiling.unit')"
+                         :hasFlopsInfo="!isPynative"
+                         :notTable="true"
+                         ref="pynative" />
     </div>
     <!-- Data Process -->
     <div class="dashboard-item">
@@ -413,11 +438,13 @@ limitations under the License.
   </div>
 </template>
 <script>
+import operatorUnit from '@/components/operator-unit.vue';
 import echarts, {echartsThemeName} from '@/js/echarts';
 import RequestService from '@/services/request-service';
 import CommonProperty from '@/common/common-property';
 import {isInteger} from '@/js/utils';
 export default {
+  components: { operatorUnit },
   props: {
     rankID: String,
   },
@@ -478,7 +505,7 @@ export default {
         // Pie graph information of operators
         chartDom: null,
         data: [],
-        noData: true,
+        noData: false,
         topN: [],
         colorList: CommonProperty.pieColorArr[this.$store.state.themeIndex],
         initOver: false, // Is initialization complete
@@ -519,6 +546,39 @@ export default {
       },
       themeIndex: this.$store.state.themeIndex,
       isHeterogeneous: false,
+      pynativeOpType: {
+        all: 'pynative_type',
+        detail: 'pynative_detail',
+      },
+      pynativeOpSortCondition: {
+        all: {
+          name: 'execution_time',
+          type: 'descending',
+        },
+        detail: {
+          name: 'avg_execution_time',
+          type: 'descending',
+        },
+      },
+      pynativeSearch: {
+        all: {
+          label:
+            this.$t('operator.searchByType') +
+            this.$t('symbols.leftbracket') +
+            this.$t('public.caseMode') +
+            this.$t('symbols.rightbracket'),
+          type: 'op_type',
+        },
+        detail: {
+          label:
+            this.$t('operator.searchByName') +
+            this.$t('symbols.leftbracket') +
+            this.$t('public.caseMode') +
+            this.$t('symbols.rightbracket'),
+          type: 'op_name',
+        },
+      },
+      isPynative: this.$route.query.mode === 'pynative'? true: false,
     };
   },
   mounted() {
@@ -527,6 +587,7 @@ export default {
     setTimeout(() => {
       this.$bus.$on('collapse', this.resizeTrace);
     }, 500);
+    if (this.isPynative) this.cardChange();
   },
   watch: {
     rankID: {
@@ -560,7 +621,16 @@ export default {
       this.queryTimelineInfo();
       this.queryTrainingTrace();
       this.getProccessSummary();
-      this.initPieChart();
+      if (!this.isPynative) this.initPieChart();
+    },
+    /**
+     * Get the data of pynative operator
+     */
+    cardChange() {
+      const ref = this.$refs['pynative'];
+      ref.clearCoreData();
+      ref.coreStatisticType = 0;
+      ref.getCoreTypeList();
     },
     /**
      * Get the data of process summary
@@ -1295,6 +1365,16 @@ export default {
   width: 100%;
   overflow: auto;
   height: 100%;
+}
+/* pynative Item  */
+.single-performance-dashboard .dashboard-item-pynative {
+  border: 1px solid var(--border-color);
+  border-radius: 1px;
+  width: 100%;
+  overflow: auto;
+  height: calc(100% - 56px);
+  grid-column-start: 1;
+  grid-column-end: 3;
 }
 /* Dashboard Item Head */
 .single-performance-dashboard .item-head {
