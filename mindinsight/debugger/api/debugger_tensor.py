@@ -71,7 +71,7 @@ class DebuggerTensor(ABC):
     @property
     def slot(self):
         """
-        Get slot.
+        The output of the node may have several tensors. The slot refer to the index of the tensor
 
         Returns:
             int, the slot of the tensor on the node.
@@ -105,7 +105,7 @@ class DebuggerTensor(ABC):
     @property
     def rank(self):
         """
-        Get the rank of the tensor.
+        The rank is the logical id of the device on which the tensor is generated.
 
         Returns:
             int, the rank for this tensor.
