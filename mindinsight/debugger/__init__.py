@@ -13,11 +13,18 @@
 # limitations under the License.
 # ============================================================================
 """
-Debugger Introduction.
+MindSpore Debugger is a debugging tool for training in Graph Mode. It can be applied to visualize
+and analyze the intermediate computation results of the computational graph.
+In Graph Mode training, the computation results of intermediate nodes in the computational graph can not be acquired
+conveniently, which makes it difficult for users to do the debugging.
 
-This module provides Python APIs to retrieve the debugger info. The APIs can
-help users to understand the training process and find the bugs in training
-script.
+By applying MindSpore Debugger, users can:Visualize the computational graph on the UI and analyze the output
+of the graph node.Set watchpoints to monitor training exceptions (for example, tensor overflow) and trace error causes.
+Visualize and analyze the change of parameters, such as weights.Visualize the nodes and code mapping relationship.
+
+Debugger API is a python API interface provided for offline debugger. You need to save dump data before using it.
+For the method of saving dump data, `refer to Using Dump in the Graph Mode
+<https://www.mindspore.cn/docs/programming_guide/en/master/dump_in_graph_mode.html>_` .
 """
 
 from mindinsight.debugger.api.conditions import \

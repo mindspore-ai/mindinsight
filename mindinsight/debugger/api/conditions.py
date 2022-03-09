@@ -25,7 +25,7 @@ from mindinsight.debugger.conditionmgr.condition import ParamNameEnum
 
 class ConditionBase(ABC):
     """
-    Base class for conditions.
+    Base class for watch conditions.
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
@@ -67,20 +67,20 @@ class ConditionBase(ABC):
     @property
     def name(self):
         """
-        Get the name for the condition.
+        Get the id for watch condition.
 
         Returns:
-            str, the name of the condition.
+            str, the name of the watch condition.
         """
         raise NotImplementedError
 
     @property
     def condition_id(self):
         """
-        Get the name for the condition Id.
+        Get the name for the watch condition Id.
 
         Returns:
-            int, the id of the condition.
+            int, the id of the watch condition.
         """
         raise NotImplementedError
 
@@ -90,7 +90,7 @@ class ConditionBase(ABC):
         Get the parameters list.
 
         Returns:
-            dict, the parameter dict of the condition.
+            dict, the parameter dict of the watch condition.
         """
         return {}
 
@@ -982,7 +982,7 @@ class Watchpoint:
 
     Args:
         tensors (Iterable[DebuggerTensor]): The tensors to check.
-        condition (ConditionBase): The condition to apply to tensors.
+        condition (ConditionBase): The watch condition to apply to tensors.
 
     Examples:
         >>> from mindinsight.debugger import DumpAnalyzer
@@ -1023,10 +1023,10 @@ class Watchpoint:
     @property
     def condition(self):
         """
-        Get the condition to apply to tensors.
+        Get the watch condition to apply to tensors.
 
         Returns:
-            ConditionBase, the condition to apply to tensors.
+            ConditionBase, the watch condition to apply to tensors.
         """
         return self._condition
 

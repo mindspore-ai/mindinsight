@@ -156,7 +156,7 @@ class DumpAnalyzer:
 
         Select the matched nodes in the computational graph according to the
         query_string. The nodes can be matched by "node_name" or "code_stack",
-        see the args document for detail.
+        see the parameters for detail.
 
         Args:
             query_string (str): Query string. For a node to be selected, the
@@ -233,7 +233,7 @@ class DumpAnalyzer:
 
         Select the matched tensors in the directory according to the
         query_string. The tensors can be matched by "node_name" or
-        "code_stack", see the args document for detail.
+        "code_stack", see the parameters for detail.
 
         Args:
             query_string (str): Query string. For a tensor to be selected, the
@@ -289,7 +289,7 @@ class DumpAnalyzer:
                 If None, return iterations of all ranks. Default: None.
 
         Returns:
-            Iterable[int], sorted dumped iteration list.
+            Iterable[int], available iterations which have dumped data, sorted in increasing order.
 
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
@@ -336,14 +336,14 @@ class DumpAnalyzer:
             1. For speed, all watchpoints for the iteration should be given at
             the same time to avoid reading tensors len(watchpoints) times.
 
-            2. The check_watchpoints function start a new process needs to be
-            called through the main entry.
+            2. The check_watchpoints function start a new process, needs to be
+            called in "if __name__ == '__main__'".
 
         Args:
             watchpoints (Iterable[Watchpoint]): The list of watchpoints.
             error_on_no_value (bool): Whether report error code in watchpoint
                 hit when the specified tensor have no value stored in
-                summary_dir. Default: False.
+                dump_dir. Default: False.
 
         Returns:
             Iterable[WatchpointHit], the watchpoint hist list is carefully
@@ -451,7 +451,7 @@ class DumpAnalyzer:
                 returned.
 
         Returns:
-            Iterable[Node], the affected nodes of the given tensor.
+            Iterable[Node], the affected nodes of the specified tensor.
 
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
@@ -471,7 +471,7 @@ class DumpAnalyzer:
             node (Node): The node of which input nodes will be returned.
 
         Returns:
-            Iterable[Node], the input nodes of the given node.
+            Iterable[Node], the input nodes of the specified node.
 
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
@@ -488,10 +488,10 @@ class DumpAnalyzer:
         Get the nodes that use the output tensors of the given node.
 
         Args:
-            node (Node): The node of which output nodes will be returned.
+            node (Node): The specified node.
 
         Returns:
-            Iterable[Node], the output nodes of this node.
+            Iterable[Node], output nodes of the specified node.
 
         Examples:
                 >>> from mindinsight.debugger import DumpAnalyzer
