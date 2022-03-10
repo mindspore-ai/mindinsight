@@ -119,8 +119,12 @@ def get_profile_device_list():
 
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
-    device_list, _ = analyse_device_list_from_profiler_dir(profiler_dir_abs)
-    return jsonify(device_list)
+    device_list, _, profiler_mode = analyse_device_list_from_profiler_dir(profiler_dir_abs)
+    profiler_info = {
+        'device_list': device_list,
+        'profiler_mode': profiler_mode
+    }
+    return jsonify(profiler_info)
 
 
 @BLUEPRINT.route("/profile/training-trace/graph", methods=["GET"])

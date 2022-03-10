@@ -37,8 +37,11 @@ limitations under the License.
          :class="{fullScreen:coreFullScreen}"
          v-if="coreCharts.data.length">
       <div>
-        <div class="chart-title">{{$t('profiling.chartTitle')}}({{unit}})</div>
-        <el-radio-group class="chart-radio-group"
+        <div class="chart-title"
+             v-if="!notTable">
+             {{$t('profiling.chartTitle')}}({{unit}})
+        </div>
+          <el-radio-group class="chart-radio-group"
                         v-model="coreCharts.type"
                         @change="coreChartChange"
                         fill="#00A5A7"
@@ -60,7 +63,7 @@ limitations under the License.
     </div>
     <div class="cl-profiler-bottom"
          :class="{fullScreen:coreFullScreen,flops:hasFlopsInfo}"
-         v-if="coreCharts.data.length">
+         v-if="coreCharts.data.length && !notTable">
       <img src="../assets/images/full-screen.png"
            :title="$t('graph.fullScreen')"
            class="fullScreen"
@@ -380,6 +383,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    notTable: {
+      type: Boolean,
+      default: false,
+    }
   },
   data() {
     return {
@@ -1297,7 +1304,7 @@ export default {
 </script>
 <style>
 .cl-profiler-wrap {
-  height: 100%;
+  height: calc(100% - 56px);
 }
 .flops-info {
   line-height: 30px;
@@ -1337,9 +1344,6 @@ export default {
   float: right;
   width: 130px;
   margin-right: 10px;
-}
-.cl-profiler-top {
-  height: 47%;
 }
 .cl-profiler-top .chart-title {
   float: left;

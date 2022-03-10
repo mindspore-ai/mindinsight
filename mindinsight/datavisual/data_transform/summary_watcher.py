@@ -390,7 +390,7 @@ class SummaryWatcher:
         profiler_type = ""
         try:
             from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir
-            device_list, profiler_type = analyse_device_list_from_profiler_dir(directory)
+            device_list, profiler_type, _ = analyse_device_list_from_profiler_dir(directory)
         except ImportError:
             device_list = []
 
