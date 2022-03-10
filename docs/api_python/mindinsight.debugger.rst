@@ -5,7 +5,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
 使用MindSpore调试器，用户可以：在MindInsight调试器界面结合计算图，查看图节点的输出结果；设置监测点，监测训练异常情况（比如检查张量溢出），在异常发生时追踪错误原因；查看权重等参数的变化情况；查看图节点和源代码的对应关系。
 
-调试器API是为离线调试提供的Python API接口，使用之前需要先保存Dump数据。保存Dump数据的方法参考`使用Dump功能在Graph模式调试 <https://www.mindspore.cn/docs/programming_guide/zh-CN/master/dump_in_graph_mode.html>`_ 。
+调试器API是为离线调试提供的Python API接口，使用之前需要先保存Dump数据。保存Dump数据的方法参考 `使用Dump功能在Graph模式调试 <https://www.mindspore.cn/docs/programming_guide/zh-CN/master/dump_in_graph_mode.html>`_ 。
 
 .. py:class:: mindinsight.debugger.DumpAnalyzer(dump_dir, mem_limit=None)
 
@@ -17,7 +17,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
     **参数：**
 
     - **dump_dir** (str) - 存储Dump数据文件的目录。
-    - **mem_limit** (int, optional) - 检查监测点的内存限制(以MB为单位)。默认值：无，表示没有限制。可选值：从2048MB到2147483647MB。
+    - **mem_limit** (int, optional) - 检查监测点的内存限制(以MB为单位)。默认值：None，表示没有限制。可选值：从2048MB到2147483647MB。
 
     .. py:method:: check_watchpoints(watchpoints, error_on_value=False)
 
@@ -29,7 +29,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         **参数：**
 
-        - **watchpoints** (Iterable[Watchpoint]) - 监测点迭代列表。
+        - **watchpoints** (Iterable[Watchpoint]) - 监测点列表。
         - **error_on_no_value** (bool) - 当指定的张量没有存储在dump_dir路径中时，是否抛出监测点命中错误码。默认值:False。
 
         **返回：**
@@ -137,7 +137,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         - **query_string** (str) - 查询字符串。对于要选择的张量，匹配目标字段必须包含或能匹配到查询字符串。
         - **use_regex** (bool) - 指明查询对象是否为正则表达式。默认值：False。
         - **select_by** (str, optional) - 选择张量时要搜索的字段。可用值为“node_name”、“code_stack”。“node_name”表示在图中搜索张量的节点名称。“code_stack”表示输出该张量的节点的堆栈信息。默认值：“node_name”。
-        - **iterations** (Union[int, list[int], None], optional) - 要选择的迭代对象。默认值：None，这意味着将选择所有转储的迭代对象。
+        - **iterations** (Union[int, list[int], None], optional) - 要选择的迭代对象。默认值：None，表示选择保存的所有迭代。
         - **ranks** (Union[int, list[int], None], optional) - 要选择的逻辑卡号或逻辑卡号列表。默认值：None，这意味着将选择所有逻辑卡。
         - **slots** (list[int], optional) -  所选张量的编号。默认值：None，这意味着将选择所有编号。
         - **case_sensitive** (bool, optional) - 选择张量时是否区分大小写。默认值：True。
@@ -156,11 +156,12 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
     **参数：**
 
     - **node_feature** (namedtuple) - 节点特征。
-    - **name** (str) - 节点名称。
-    - **rank** (int) - 逻辑卡号。
-    - **stack** (iterable[dict]) - 每一项的格式为：{'file_path': str, 'line_no': int, 'code_line': str}。
-    - **graph_name** (str) - 图名称。
-    - **root_graph_id** (int) - 根图id。
+
+      - **name** (str) - 节点名称。
+      - **rank** (int) - 逻辑卡号。
+      - **stack** (iterable[dict]) - 每一项的格式为：{'file_path': str, 'line_no': int, 'code_line': str}。
+      - **graph_name** (str) - 图名称。
+      - **root_graph_id** (int) - 根图id。
 
     .. py:method:: get_input_tensors(iterations=None, slots=None)
 
@@ -297,7 +298,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
 .. py:class:: mindinsight.debugger.Watchpoint(tensors, condition)
 
-    监测点用在指定张量的场景中。
+    用来检查指定张量是否满足指定检查条件的监测点。
 
     .. warning::
         此类中的所有API均为实验版本，将来可能更改或者删除。
@@ -339,7 +340,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
     .. py:method:: error_code
         :property:
 
-        获取错误码，当检查到监测点发生错误时。返回对应的错误码，0表示没有错误发生
+        获取错误码，当检查到监测点发生错误时。返回对应的错误码，0表示没有错误发生。
 
         **返回：**
 
@@ -360,7 +361,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         **返回：**
 
-        Union[ConditionBase, None]，命中信息的条件，如果error_code不为零，则返回None，请参考str(ConditionBase)的信息。
+        Union[ConditionBase, None]，命中信息的条件，如果error_code不为零，则返回None。
 
     .. py:method:: get_threshold()
 
@@ -368,7 +369,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         **返回：**
 
-        ConditionBase，包括用户阈值的检查条件，请参考str(ConditionBase)的信息。
+        ConditionBase，包括用户阈值的检查条件。
 
     .. py:method:: tensor
         :property:
@@ -383,7 +384,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
     张量过大的监测点。至少应该指定其中一个参数。
 
-    当满足所有指定的检查条件时，将在检查后命中该监测点。
+    当指定多个参数时，只要有一个参数满足检查条件，就会在检查后命中该监测点。
 
     .. warning::
         此类中的所有API均为实验版本，将来可能更改或者删除。
@@ -408,7 +409,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
     张量太小的监测点。至少应该指定其中一个参数。
 
-    当满足所有指定的检查条件时，将在检查后命中该观察点。
+    当指定多个参数时，只要有一个参数满足检查条件，就会在检查后命中该监测点。
 
     .. warning::
         此类中的所有API均为实验版本，将来可能更改或者删除。
@@ -433,7 +434,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
     张量范围监测点。
 
-    设置阈值以检查张量值范围。有四个选项：range_percentage_lt、range_percentage_gt、max_min_lt和max_min_gt。至少应指定四个选项之一。如果阈值设置为前两个选项之一，则必须设置 range_start_inclusive和range_end_inclusive。当满足所有指定的检查条件时，将在检查后命中该监测点。
+    设置阈值以检查张量值范围。有四个选项：range_percentage_lt、range_percentage_gt、max_min_lt和max_min_gt。至少应指定四个选项之一。如果阈值设置为前两个选项之一，则必须设置 range_start_inclusive和range_end_inclusive。当指定多个参数时，只要有一个参数满足检查条件，就会在检查后命中该监测点。
 
     .. warning::
         此类中的所有API均为实验版本，将来可能更改或者删除。
@@ -513,8 +514,6 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 .. py:class:: mindinsight.debugger.TensorAllZeroCondition(zero_percentage_ge)
 
     张量全零的监测点。
-
-    当满足所有指定的检查条件时，将在检查后命中该监测点。
 
     .. warning::
         此类中的所有API均为实验版本，将来可能更改或者删除。
@@ -609,7 +608,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         此类中的所有API均为实验版本，将来可能更改或者删除。
 
     .. note::
-        如果为一个条件实例指定了多个检查参数，则会针对张量为监测点触发的参数触发WatchpointHit。
+        如果为一个条件实例指定了多个检查参数，只要有一个参数满足检查条件，就会在检查后命中该监测点。
 
     .. py:method:: condition_id
         :property:

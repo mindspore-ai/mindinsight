@@ -194,7 +194,7 @@ class WatchpointHit(ABC):
         Get the condition set by user.
 
         Returns:
-            ConditionBase, the condition with user threshold, see info with str(ConditionBase).
+            ConditionBase, the condition with user threshold.
         """
         raise NotImplementedError
 
@@ -205,7 +205,7 @@ class WatchpointHit(ABC):
 
         Returns:
             Union[ConditionBase, None], the condition with hit detail, If error_code is not zero,
-            None will be returned, see info with str(ConditionBase).
+            None will be returned.
         """
         raise NotImplementedError
 
@@ -357,8 +357,8 @@ class TensorTooLargeCondition(ConditionBase):
     """
     Tensor too large watchpoint. At least one parameter should be specified.
 
-    When all specified checking conditions were satisfied, this watchpoint would
-    be hit after a check.
+    If multiple checking parameters is specified, a WatchpointHit happens for the parameters
+    that the tensor triggered for the watchpoint.
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
@@ -446,8 +446,8 @@ class TensorTooSmallCondition(ConditionBase):
     """
     Tensor too small watchpoint. At least one parameter should be specified.
 
-    When all specified checking conditions were satisfied, this watchpoint would
-    be hit after a check.
+    If multiple checking parameters is specified, a WatchpointHit happens for the parameters
+    that the tensor triggered for the watchpoint.
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
@@ -540,8 +540,8 @@ class TensorRangeCondition(ConditionBase):
     At least one of the four options should be specified.
     If the threshold is set to one of the first two options,
     then both range_start_inclusive and range_end_inclusive must be set.
-    When all specified checking conditions were satisfied, this watchpoint would
-    be hit after a check.
+    If multiple checking parameters is specified, a WatchpointHit happens for the parameters
+    that the tensor triggered for the watchpoint.
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
@@ -742,9 +742,6 @@ class OperatorOverflowCondition(ConditionBase):
 class TensorAllZeroCondition(ConditionBase):
     """
     Tensor all zero watchpoint
-
-    When all specified checking conditions were satisfied, this watchpoint would
-    be hit after a check.
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
