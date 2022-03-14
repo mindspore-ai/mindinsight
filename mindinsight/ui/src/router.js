@@ -193,7 +193,6 @@ export default new Router({
     {
       path: '/profiling',
       component: () => import('./views/profiling/profiling-dashboard.vue'),
-      redirect: '/profiling/single',
       children: [
         {
           path: 'single',

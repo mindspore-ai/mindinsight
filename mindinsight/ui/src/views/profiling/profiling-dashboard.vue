@@ -93,6 +93,7 @@ export default {
                 this.isPynative = mode === 'pynative'? true: false;
                 this.$route.query.rankID = this.rankID;
                 this.$route.query.mode = mode;
+                this.onTabClick();
                 resolve(true);
               } else {
                 this.rankIDList = [];
@@ -100,7 +101,6 @@ export default {
                 resolve(false);
               };
               if (this.isPynative) this.tabs.pop();
-              this.updateTab;
             },
           )
           .catch(() => {

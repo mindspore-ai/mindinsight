@@ -344,6 +344,9 @@
       ],
       "gpuUrl": [
         "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_gpu.html"
+      ],
+      "pynativeUrl": [
+        "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_ascend_pynative.html"
       ]
     },
     "step_trace-proposer_type_label": {
