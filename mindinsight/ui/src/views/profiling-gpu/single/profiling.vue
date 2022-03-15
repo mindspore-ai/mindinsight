@@ -166,8 +166,8 @@ export default {
       RequestService.getProfilerDeviceData(params)
         .then(
           (res) => {
-            if (res && res.data && res.data.length) {
-              const deviceList = res.data;
+            if (Object.keys(res.data).length > 0) {
+              const deviceList = res.data.device_list;
               deviceList.forEach((item) => {
                 this.CardNumArr.push({
                   value: item,
