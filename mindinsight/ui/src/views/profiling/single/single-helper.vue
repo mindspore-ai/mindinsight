@@ -63,6 +63,7 @@ export default {
         'minddata_device_queue_rate',
       ],
       moreParameter: ['minddata_device_queue', 'minddata_get_next_queue', 'device_queue_warning'],
+      helperUrl: '',
     };
   },
   mounted() {
@@ -70,6 +71,10 @@ export default {
       this.rankIDChanged();
       if (res) this.getDataOfProfileHelper();
     });
+  },
+  created() {
+    const isPynative = this.$route.query.mode === 'pynative';
+    this.helperUrl = isPynative? 'pynativeUrl': 'url';
   },
   methods: {
     /**
@@ -201,7 +206,7 @@ export default {
                     `<div class="content-style">
                            <div class="content-icon el-icon-caret-right"></div>
                            <div class="helper-content-style">
-                             <a target="_blank" href="${this.$t(`profiling`)[item].url[0]}">
+                             <a target="_blank" href="${this.$t(`profiling`)[item][this.helperUrl][0]}">
                                ${this.$t(`profiling`)[item].desc}
                              </a>
                            </div>
@@ -213,7 +218,7 @@ export default {
                   for (let i = 0; i < anchorList.length; i++) {
                     const desc = anchorContent.relpace(
                       anchorList[i],
-                      `<a target="_blank" href="${this.$t(`profiling`)[item].url[i]}">
+                      `<a target="_blank" href="${this.$t(`profiling`)[item][this.helperUrl][i]}">
                       ${anchorList[i]}</a>`
                     );
                     anchorContent = desc;
