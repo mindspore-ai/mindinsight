@@ -168,7 +168,8 @@
     "summaryDirPath": "训练日志路径：",
     "loadingTip": "加载中",
     "waitLoading": "待加载",
-    "switchTitle": "计算图和数据图模块不支持自动刷新"
+    "switchTitle": "计算图和数据图模块不支持自动刷新",
+    "integrityInfo": "summary数据可能存在损坏,请确认你要访问的数据可以正常显示。"
   },
   "scalar": {
     "titleText": "标量",
