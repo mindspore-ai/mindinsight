@@ -110,7 +110,7 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
         """Get the column names depends on parallel mode."""
         col_names = ['iteration_interval', 'fp_and_bp', 'tail']
         if self._parallel_mode == 'model-parallel':
-            col_names = ['iteration_interval', 'communication_alone', 'computation']
+            col_names = ['iteration_interval', 'computation', 'communication_alone']
         elif self._parallel_mode == 'pipeline-parallel':
             col_names = ['iteration_interval', 'computation', 'communication_alone', 'stage', 'receive_alone',
                          'collective_communication_alone']
