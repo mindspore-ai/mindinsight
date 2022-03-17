@@ -25,7 +25,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         .. note::
             1. 为了提升速度，应该同时给出迭代下的所有监测点，避免多次读取张量。
-            2. check_watchpoints函数在调用的时候会启动新的进程，需要通过”if __main__ == '__main__'“进行调用。
+            2. check_watchpoints函数在调用的时候会启动新的进程，需要通过”if __name__ == '__main__'“进行调用。
 
         **参数：**
 
@@ -118,8 +118,8 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         - **query_string** (str) - 查询字符串。对于要选择的节点，匹配目标字段必须包含或能匹配到查询的字符串。
         - **use_regex** (bool) - 是否对目标字段按照查询字符串进行正则匹配。默认值：False。
-        - **select_by** (str, optional) - 选择节点所依赖的字段。可用值为“node_name”、“code_stack”。“node_name”表示根据节点的名称进行筛选。“code_stack”表示对系欸但的堆栈信息进行筛选。默认值：“node_name”。
-        - **ranks** (Union[int, list[int], None], optional) -  要选择的逻辑卡号或者逻辑卡号列表。选定的节点必须存在于指定的逻辑卡上。默认值：None，这意味着将考虑所有逻辑卡。
+        - **select_by** (str, optional) - 选择节点时要搜索的字段。可用值为“node_name”、“code_stack”。“node_name”表示根据节点的名称进行筛选。“code_stack”表示对系统的堆栈信息进行筛选。默认值：“node_name”。
+        - **ranks** (Union[int, list[int], None], optional) -  要选择的逻辑卡号或者逻辑卡号列表。选定的节点必须存在于指定的逻辑卡上。默认值：None，表示将考虑所有逻辑卡。
         - **case_sensitive** (bool, optional) - 对目标字段进行匹配时是否区分大小写。默认值：True。
 
         **返回：**
@@ -138,8 +138,8 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         - **use_regex** (bool) - 指明查询对象是否为正则表达式。默认值：False。
         - **select_by** (str, optional) - 选择张量时要搜索的字段。可用值为“node_name”、“code_stack”。“node_name”表示在图中搜索张量的节点名称。“code_stack”表示输出该张量的节点的堆栈信息。默认值：“node_name”。
         - **iterations** (Union[int, list[int], None], optional) - 要选择的迭代对象。默认值：None，表示选择保存的所有迭代。
-        - **ranks** (Union[int, list[int], None], optional) - 要选择的逻辑卡号或逻辑卡号列表。默认值：None，这意味着将选择所有逻辑卡。
-        - **slots** (list[int], optional) -  所选张量的编号。默认值：None，这意味着将选择所有编号。
+        - **ranks** (Union[int, list[int], None], optional) - 要选择的逻辑卡号或逻辑卡号列表。默认值：None，表示将选择所有逻辑卡。
+        - **slots** (list[int], optional) -  所选张量的编号。默认值：None，表示将选择所有编号。
         - **case_sensitive** (bool, optional) - 选择张量时是否区分大小写。默认值：True。
 
         **返回：**
@@ -169,7 +169,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         **参数：**
 
-        - **iterations** (Iterable[int]) -  指定的迭代序号列表。默认值：None，这意味着将考虑所有可用的迭代。
+        - **iterations** (Iterable[int]) -  指定的迭代序号列表。默认值：None，表示将考虑所有可用的迭代。
         - **slots** (Iterable[int]) - 指定输入张量的编号列表。默认值：None，表示会返回所有的输入张量。
 
         **返回：**
@@ -182,7 +182,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         **参数：**
 
-        - **iterations** (Iterable[int]) - 指定的迭代序号列表。默认值：None，这意味着将考虑所有可用的迭代。
+        - **iterations** (Iterable[int]) - 指定的迭代序号列表。默认值：None，表示将考虑所有可用的迭代。
         - **slots** (Iterable[int]) - 指定输出张量的编号列表。默认值：None，表示会返回所有的输出张量。
 
         **返回：**
@@ -357,11 +357,11 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
     .. py:method:: get_hit_detail()
 
-        获取监测点中阈值的实际值。如果error_code不为零，则返回None。
+        获取监测点中阈值的实际值。如果error_code不为0，则返回None。
 
         **返回：**
 
-        Union[ConditionBase, None]，命中信息的条件，如果error_code不为零，则返回None。
+        Union[ConditionBase, None]，命中信息的条件，如果error_code不为0，则返回None。
 
     .. py:method:: get_threshold()
 
@@ -382,7 +382,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
 .. py:class:: mindinsight.debugger.TensorTooLargeCondition(abs_mean_gt=None, max_gt=None, min_gt=None, mean_gt=None)
 
-    张量过大的监测点。至少应该指定其中一个参数。
+    检查张量过大的监测点。至少应该指定其中一个参数。
 
     当指定多个参数时，只要有一个参数满足检查条件，就会在检查后命中该监测点。
 
@@ -407,7 +407,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
 .. py:class:: mindinsight.debugger.TensorTooSmallCondition(abs_mean_lt=None, max_lt=None, min_lt=None, mean_lt=None)
 
-    张量太小的监测点。至少应该指定其中一个参数。
+    检查张量过小的监测点。至少应该指定其中一个参数。
 
     当指定多个参数时，只要有一个参数满足检查条件，就会在检查后命中该监测点。
 
@@ -432,7 +432,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
 .. py:class:: mindinsight.debugger.TensorRangeCondition(range_start_inclusive=None, range_end_inclusive=None, range_percentage_lt=None, range_percentage_gt=None, max_min_lt=None, max_min_gt=None)
 
-    张量范围监测点。
+    检查张量值范围。
 
     设置阈值以检查张量值范围。有四个选项：range_percentage_lt、range_percentage_gt、max_min_lt和max_min_gt。至少应指定四个选项之一。如果阈值设置为前两个选项之一，则必须设置 range_start_inclusive和range_end_inclusive。当指定多个参数时，只要有一个参数满足检查条件，就会在检查后命中该监测点。
 

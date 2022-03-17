@@ -346,10 +346,7 @@ class DumpAnalyzer:
                 dump_dir. Default: False.
 
         Returns:
-            Iterable[WatchpointHit], the watchpoint hist list is carefully
-            sorted so that the user can see the most import hit on the top of
-            the list. When there are many many watchpoint hits, we will
-            display the list in a designed clear way.
+            Iterable[WatchpointHit], the watchpoint hit list, sorted by tensor drop time.
 
 
         Examples:
