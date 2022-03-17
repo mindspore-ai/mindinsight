@@ -88,11 +88,11 @@ class TestParallelProposer:
         expect_result = [
             {
                 "rank_id": 0,
-                "step_interval": 1.57225
+                "step_interval": 1.5722
             },
             {
                 "rank_id": 1,
-                "step_interval": 1.55882
+                "step_interval": 1.5588
             },
             {
                 "rank_id": 2,
@@ -100,7 +100,7 @@ class TestParallelProposer:
             },
             {
                 "rank_id": 3,
-                "step_interval": 2.39538
+                "step_interval": 2.3954
             }
         ]
         result = self._parallel_analyser.get_step_interval()

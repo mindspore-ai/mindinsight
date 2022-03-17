@@ -59,7 +59,7 @@ class TestClusterAnalyser:
         }
         expect_result = {
             "total_step_num": '1',
-            "info": [{"step_trace_info": [0.0, 23.66808, 0.04097],
+            "info": [{"step_trace_info": [0.0, 23.6681, 0.041],
                       "rank_id": 1,
                       "profiler_dir": "profiler"
                       }],
