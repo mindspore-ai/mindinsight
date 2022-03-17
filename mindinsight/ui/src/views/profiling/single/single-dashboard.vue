@@ -19,8 +19,7 @@ limitations under the License.
            'dashboard-left': true,
            'is-hidden': !showHelper
          }">
-      <helper :defaultRankID="defaultRankID"
-              @change="rankIDChanged"
+      <helper @change="rankIDChanged"
               v-show="showHelper"></helper>
       <div :class="[
              'helper-control',
@@ -77,8 +76,7 @@ export default {
           label: this.$t('profiling.resourceUtilization'),
         },
       ],
-      rankID: null,
-      defaultRankID: this.$route.query.rankID,
+      rankID: this.$route.query.rankID,
     };
   },
   created() {
