@@ -168,7 +168,8 @@
     "summaryDirPath": "Summary path:",
     "loadingTip": "Loading...",
     "waitLoading": "waiting to be loaded",
-    "switchTitle": "The Computational Graph and Data Graph modules do not support auto refresh."
+    "switchTitle": "The Computational Graph and Data Graph modules do not support auto refresh.",
+    "integrityInfo": "The summary data may be damaged. Ensure that the data you want to access is displayed properly."
   },
   "scalar": {
     "titleText": "Scalar",

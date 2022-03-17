@@ -2110,12 +2110,21 @@ export default {
         if (response && response.data && response.data.train_jobs && response.data.train_jobs.length) {
           const curTrain = response.data.train_jobs[0];
           const showIcon = curTrain.graph_files || curTrain.summary_files;
-          if (showIcon && curTrain.cache_status === this.cacheKey.notInCache) {
-            this.trainJobCached = 1;
-          } else if (showIcon && curTrain.cache_status === this.cacheKey.caching) {
-            this.trainJobCached = 2;
-          } else {
-            this.trainJobCached = 0;
+          if (curTrain.is_intergrity) {
+            if (showIcon && curTrain.cache_status === this.cacheKey.notInCache) {
+              this.trainJobCached = 1;
+            } else if (showIcon && curTrain.cache_status === this.cacheKey.caching) {
+              this.trainJobCached = 2;
+            } else {
+              this.trainJobCached = 0;
+            }
+          } else{
+            this.$message({
+          showClose: true,
+          message: this.$t('trainingDashboard.integrityInfo'),
+          type: 'warning',
+          duration: 5000,
+        });
           }
         } else {
           this.trainJobCached = 0;
