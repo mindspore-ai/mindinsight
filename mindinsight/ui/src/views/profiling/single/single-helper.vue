@@ -40,9 +40,6 @@ limitations under the License.
 import RequestService from '@/services/request-service';
 import { isInteger } from '@/js/utils';
 export default {
-  props: {
-    defaultRankID: [Number, String],
-  },
   data() {
     return {
       trainInfo: {
@@ -50,8 +47,8 @@ export default {
         path: this.$route.query.path,
         dir: this.$route.query.dir,
       },
-      rankID: null,
-      rankIDList: [],
+      rankID: this.$route.query.rankID,
+      rankIDList: JSON.parse(this.$route.query.rankIDList),
       tipsArrayList: [
         'step_trace-iter_interval',
         'minddata_pipeline-general',
@@ -67,10 +64,7 @@ export default {
     };
   },
   mounted() {
-    this.initRankIDList().then((res) => {
-      this.rankIDChanged();
-      if (res) this.getDataOfProfileHelper();
-    });
+    this.getDataOfProfileHelper();
   },
   created() {
     const isPynative = this.$route.query.mode === 'pynative';
@@ -82,42 +76,6 @@ export default {
      */
     rankIDChanged() {
       this.$emit('change', this.rankID);
-    },
-    /**
-     * Init rankID list
-     * @return {Promise}
-     */
-    initRankIDList() {
-      return new Promise((resolve) => {
-        const params = {
-          profile: this.trainInfo.dir,
-          train_id: this.trainInfo.id,
-        };
-        RequestService.getProfilerDeviceData(params)
-          .then(
-            (res) => {
-              if (Object.keys(res.data).length > 0) {
-                this.rankIDList = res.data.device_list.sort((a, b) => +a - +b);
-                this.rankID = isInteger(this.defaultRankID) ? this.defaultRankID + '' : this.rankIDList[0];
-                resolve(true);
-              } else {
-                this.rankIDList = [];
-                this.rankID = '';
-                resolve(false);
-              }
-            },
-            () => {
-              this.rankIDList = [];
-              this.rankID = '';
-              resolve(false);
-            }
-          )
-          .catch(() => {
-            this.rankIDList = [];
-            this.rankID = '';
-            resolve(false);
-          });
-      });
     },
     /**
      * Get profile helper data

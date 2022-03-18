@@ -93,6 +93,7 @@ export default {
                 this.isPynative = mode === 'pynative'? true: false;
                 this.$route.query.rankID = this.rankID;
                 this.$route.query.mode = mode;
+                this.$route.query.rankIDList = JSON.stringify(this.rankIDList);
                 this.onTabClick();
                 resolve(true);
               } else {
