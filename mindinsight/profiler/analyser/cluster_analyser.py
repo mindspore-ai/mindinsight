@@ -169,9 +169,9 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
         # step_trace_info[7]: fp_and_bp time
         # step_trace_info[8]: tail time
         # divided by 1e5, the unit becomes a millisecond
-        iteration_interval = float(step_trace_info[6])/1e5
-        fp_and_bp = float(step_trace_info[7])/1e5
-        tail = float(step_trace_info[8])/1e5
+        iteration_interval = round(float(step_trace_info[6])/1e5, 4)
+        fp_and_bp = round(float(step_trace_info[7])/1e5, 4)
+        tail = round(float(step_trace_info[8])/1e5, 4)
         step_trace_info = [iteration_interval, fp_and_bp, tail]
         return step_trace_info
 
