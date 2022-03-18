@@ -33,6 +33,15 @@ class DataLoader:
     def __init__(self, summary_dir):
         self._summary_dir = summary_dir
         self._loader = None
+        self._is_integrity = True
+
+    @property
+    def is_integrity(self):
+        return self._is_integrity
+
+    @is_integrity.setter
+    def is_integrity(self, integrity):
+        self._is_integrity = integrity
 
     def load(self, executor=None):
         """Load the data when loader is exist.
@@ -55,7 +64,7 @@ class DataLoader:
             if self._loader is None:
                 logger.warning("No valid files can be loaded, summary_dir: %s.", self._summary_dir)
                 raise exceptions.SummaryLogPathInvalid()
-
+        self.is_integrity = self._loader.is_integrity
         return self._loader.load(executor)
 
     def get_events_data(self):

@@ -65,6 +65,15 @@ class MSDataLoader:
         self._parser_list = []
         self._parser_list.append(_SummaryParser(summary_dir))
         self._parser_list.append(_PbParser(summary_dir))
+        self._is_integrity = True
+
+    @property
+    def is_integrity(self):
+        return self._is_integrity
+
+    @is_integrity.setter
+    def is_integrity(self, integrity):
+        self._is_integrity = integrity
 
     def get_events_data(self):
         """Return events data read from log file."""
@@ -129,8 +138,11 @@ class MSDataLoader:
         self._check_files_deleted(filenames, old_filenames)
 
         finished = True
+        is_integrity = True
         for parser in self._parser_list:
             finished = parser.parse_files(executor, filenames, events_data=self._events_data) and finished
+            is_integrity = parser.is_integrity and is_integrity
+        self.is_integrity = is_integrity
         return finished
 
     def filter_valid_files(self):
@@ -159,6 +171,15 @@ class _Parser:
     def __init__(self, summary_dir):
         self._summary_dir = summary_dir
         self._latest_filename = ''
+        self._is_integrity = True
+
+    @property
+    def is_integrity(self):
+        return self._is_integrity
+
+    @is_integrity.setter
+    def is_integrity(self, integrity):
+        self._is_integrity = integrity
 
     def parse_files(self, executor, filenames, events_data):
         """
@@ -390,6 +411,7 @@ class _SummaryParser(_Parser):
                 logger.error("Check crc failed and ignore this file, please check the integrity of the file, "
                              "file_path: %s, offset: %s, file size: %s. Detail: %s.",
                              file_handler.file_path, file_handler.offset, file_size, str(exc))
+                self.is_integrity = False
                 return True
             except (OSError, DecodeError, exceptions.MindInsightException) as ex:
                 logger.error("Parse log file fail, and ignore this file, detail: %r, "
@@ -425,10 +447,12 @@ class _SummaryParser(_Parser):
         # read the event body if integrity of header is verified
         header = struct.unpack('Q', header_str)
         event_len = int(header[0])
+        if event_len <= 0:
+            raise exceptions.CRCLengthFailedError("The event length from header is no more than zero.")
 
         event_str = file_handler.read(event_len)
         if not event_str:
-            event_str = ''
+            event_str = b''
         event_crc_str = file_handler.read(CRC_STR_SIZE)
         if not event_crc_str:
             event_crc_str = ''

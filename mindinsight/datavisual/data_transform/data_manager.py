@@ -136,6 +136,15 @@ class CachedTrainJob:
 
         self._cache_status = CacheStatus.NOT_IN_CACHE
         self._key_locks = {}
+        self._is_integrity = True
+
+    @property
+    def is_integrity(self):
+        return self._is_integrity
+
+    @is_integrity.setter
+    def is_integrity(self, integrity):
+        self._is_integrity = integrity
 
     @property
     def cache_status(self):
@@ -238,8 +247,18 @@ class TrainJob:
         self._detail = detail_train_job
         if self._detail is None:
             self._cache_status = CacheStatus.NOT_IN_CACHE
+            self._is_integrity = True
         else:
             self._cache_status = self._detail.cache_status
+            self._is_integrity = self._detail.is_integrity
+
+    @property
+    def is_integrity(self):
+        return self._is_integrity
+
+    @is_integrity.setter
+    def is_integrity(self, integrity):
+        self._is_integrity = integrity
 
     def has_detail(self):
         """Whether this train job has detailed info in cache."""
@@ -779,7 +798,7 @@ class _DetailCacheManager(_BaseCacheManager):
         train_job_obj.set(DATAVISUAL_CACHE_KEY, train_job)
 
         train_job_obj.cache_status = loader.cache_status
-
+        train_job_obj.is_integrity = loader.data_loader.is_integrity
         return train_job_obj
 
     def _get_loader(self, train_id):
