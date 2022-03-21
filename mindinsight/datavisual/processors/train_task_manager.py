@@ -161,7 +161,8 @@ class TrainTaskManager(BaseProcessor):
             summary_files=basic_info.summary_files,
             graph_files=basic_info.graph_files,
             lineage_files=basic_info.lineage_files,
-            dump_dir=basic_info.dump_dir
+            dump_dir=basic_info.dump_dir,
+            is_integrity=train_job.is_integrity
         )
 
         if train_job.cache_status != CacheStatus.NOT_IN_CACHE:
