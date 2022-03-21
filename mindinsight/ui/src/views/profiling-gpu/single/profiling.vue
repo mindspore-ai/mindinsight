@@ -535,9 +535,10 @@ export default {
 }
 .prof-wrap .prof-content .close {
   width: 2%;
-  right: 0;
-  top: -10px;
+  right: 13px;
+  top: 110px;
   cursor: pointer;
+  position: absolute;
 }
 .prof-wrap .prof-content .prof-content-right.collapse {
   width: 100%;
