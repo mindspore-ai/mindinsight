@@ -61,14 +61,15 @@ export default {
       ],
       moreParameter: ['minddata_device_queue', 'minddata_get_next_queue', 'device_queue_warning'],
       helperUrl: '',
+      isPynative: false,
     };
   },
   mounted() {
-    this.getDataOfProfileHelper();
+    this.isPynative? this.getPynativeDataOfProfileHelper():this.getDataOfProfileHelper();
   },
   created() {
-    const isPynative = this.$route.query.mode === 'pynative';
-    this.helperUrl = isPynative? 'pynativeUrl': 'url';
+    this.isPynative = this.$route.query.mode === 'pynative';
+    this.helperUrl = this.isPynative? 'pynativeUrl': 'url';
   },
   methods: {
     /**
@@ -76,6 +77,32 @@ export default {
      */
     rankIDChanged() {
       this.$emit('change', this.rankID);
+    },
+    /**
+     * Get pynative mode profile helper data
+     */
+    getPynativeDataOfProfileHelper() {
+      const helper = document.getElementById('helper-tips');
+      const innerHTMLs = [];
+      innerHTMLs.push(
+                  `<div class="suggested-items-style">
+                         <div class="helper-icon"></div>
+                         <div class="helper-container-title">
+                           ${this.$t(`profiling`)['common-proposer_type_label'].desc}
+                         </div>
+                       </div>`
+                );
+      innerHTMLs.push(
+                    `<div class="content-style">
+                           <div class="content-icon el-icon-caret-right"></div>
+                           <div class="helper-content-style">
+                             <a target="_blank" href="${this.$t(`profiling`)['common-profiler_tutorial'][this.helperUrl][0]}">
+                               ${this.$t(`profiling`)['common-profiler_tutorial'].desc}
+                             </a>
+                           </div>
+                         </div>`
+                  );
+      if (helper) helper.innerHTML = innerHTMLs.join('');
     },
     /**
      * Get profile helper data

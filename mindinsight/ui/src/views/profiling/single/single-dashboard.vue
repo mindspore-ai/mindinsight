@@ -81,7 +81,9 @@ export default {
   },
   created() {
     this.updatePage();
+    const isPynative = this.$route.query.mode === 'pynative';
     const id = this.$route.query.id;
+    if (isPynative)this.tabs.pop();
     document.title = (id ? id + '-' : '') + `${this.$t('profiling.profilingDashboard')}-MindInsight`;
   },
   watch: {
