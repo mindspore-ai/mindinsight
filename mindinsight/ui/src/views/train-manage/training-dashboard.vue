@@ -2110,7 +2110,7 @@ export default {
         if (response && response.data && response.data.train_jobs && response.data.train_jobs.length) {
           const curTrain = response.data.train_jobs[0];
           const showIcon = curTrain.graph_files || curTrain.summary_files;
-          if (curTrain.is_intergrity) {
+          if (curTrain.is_integrity) {
             if (showIcon && curTrain.cache_status === this.cacheKey.notInCache) {
               this.trainJobCached = 1;
             } else if (showIcon && curTrain.cache_status === this.cacheKey.caching) {
