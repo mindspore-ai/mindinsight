@@ -464,11 +464,10 @@ export default {
      */
 
     viewProfilingDetail(row) {
-      const routeUrl = this.$router.resolve({
+      this.$router.push({
         path: '/profiling-gpu/single',
         query: Object.assign(this.trainInfo, { rankID: row.rank_id }),
       });
-      window.open(routeUrl.href, '_blank');
     },
 
     /**
