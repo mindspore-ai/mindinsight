@@ -121,6 +121,7 @@ export default {
         id: this.$route.query.id,
         path: this.$route.query.path,
         dir: this.$route.query.dir,
+        rankIDList: this.$route.query.rankIDList,
       },
       chartObj: null, // chart obj
       chartData: [], // chart data
