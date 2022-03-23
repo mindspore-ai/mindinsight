@@ -21,7 +21,7 @@ limitations under the License.
         <div class="helper"
              v-show="!collapse">
           <div class="cur-card">
-            <label>{{$t('profiling.curCard')}}</label>
+            <label>{{$t('profiling.rankID')}}</label>
             <el-select v-model="curDashboardInfo.curCardNum"
                        class="card-select"
                        :placeholder="$t('public.select')"
