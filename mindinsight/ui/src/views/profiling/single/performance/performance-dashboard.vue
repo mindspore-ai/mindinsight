@@ -338,7 +338,7 @@ limitations under the License.
                       effect="light">
             <div slot="content"
                  class="tooltip-container">
-              <div class="pro-dash-tooltip">
+              <div class="pro-dash-tooltip" v-if="!isPynative">
                 <div class="font-size-style">{{$t("profiling.features")}}</div>
                 <div class="font-style">{{$t("profiling.timelineTips.title1")}}</div>
                 <div>{{$t("profiling.timelineTips.content11")}}</div>
@@ -380,6 +380,37 @@ limitations under the License.
                 <div class="indent">{{$t("profiling.timelineTips.content410")}}</div>
                 <div class="indent">{{$t("profiling.timelineTips.content411")}}</div>
                 <div class="indent">{{$t("profiling.timelineTips.content412")}}</div>
+              </div>
+              <div class="pro-dash-tooltip" v-if="isPynative">
+                <div class="font-size-style">{{$t("profiling.features")}}</div>
+                <div class="font-style">{{$t("profiling.timelineTips.title1")}}</div>
+                <div>{{$t("profiling.pynativeTimelineTips.content11")}}</div>
+                <div>{{$t("profiling.pynativeTimelineTips.content12")}}</div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineTips.title2")}}</div>
+                <div>
+                  {{$t("profiling.timelineTips.content21.part1")}}
+                  <b>{{$t("profiling.timelineTips.content21.part2")}}</b>
+                  {{$t("profiling.timelineTips.content21.part3")}}
+                </div>
+                <div>{{$t("profiling.timelineTips.content22")}}</div>
+                <div>
+                  {{$t("profiling.timelineTips.content23.part1")}}
+                  <b>{{$t("profiling.timelineTips.content23.part2")}}</b>
+                  {{$t("profiling.timelineTips.content23.part3")}}
+                  <b>{{$t("profiling.timelineTips.content23.part4")}}</b>
+                  {{$t("profiling.timelineTips.content23.part5")}}
+                  <b>{{$t("profiling.timelineTips.content23.part6")}}</b>
+                  {{$t("profiling.timelineTips.content23.part7")}}
+                </div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineTips.title3")}}</div>
+                <div>{{$t("profiling.pynativeTimelineTips.content31")}}</div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineTips.title4")}}</div>
+                <div class="indent">{{$t("profiling.pynativeTimelineTips.content41")}}</div>
+                <div class="indent">{{$t("profiling.pynativeTimelineTips.content42")}}</div>
+                <div class="indent">{{$t("profiling.pynativeTimelineTips.content43")}}</div>
               </div>
             </div>
             <i class="el-icon-info"></i>
