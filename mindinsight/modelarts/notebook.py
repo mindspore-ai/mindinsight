@@ -110,8 +110,10 @@ def _register_magics(ipython):
 
 def _start_magic(line):
     """Implementation of the `%mindinsight` line magic."""
+    if os.environ.get('BASE_URL', None) is None:
+        return print("MindInsight is not supported in the current environment!")
+        
     return start(line)
-
 
 def start(args_string):
     """
