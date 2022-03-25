@@ -32,8 +32,11 @@ class ConditionBase(ABC):
         change or deletion.
 
     Note:
-        - If multiple checking parameters is specified for one condition instance,
-          a WatchpointHit happens for the parameters that the tensor triggered for the watchpoint.
+        - If multiple checking parameters are specified for one condition instance,
+          a `WatchpointHit` happens for the parameters that the tensor triggered for the watchpoint.
+
+    Supported Platforms:
+        ``Ascend`` ``GPU``
 
     Examples:
             >>> from mindinsight.debugger import DumpAnalyzer
@@ -109,6 +112,9 @@ class WatchpointHit(ABC):
     Note:
         - This class is not meant to be instantiated by user.
         - The instances of this class is immutable.
+
+    Supported Platforms:
+        ``Ascend`` ``GPU``
 
     Examples:
         >>> from mindinsight.debugger import DumpAnalyzer
@@ -200,7 +206,10 @@ class WatchpointHit(ABC):
 
     def get_hit_detail(self):
         """
-        Get the actual values for the thresholds in the watchpoint.
+        Get the corresponding watch condition，including the actual values.
+        For example, if the corresponding watch condition is `TensorTooLargeCondition(max_gt=None)` ,
+        watching whether the max value of the tensor greater than 0, the `get_hit_detail` return
+        a `TensorTooLargeCondition` object including the max value of the tensor.
         If error_code is not zero, None will be returned.
 
         Returns:
@@ -355,9 +364,9 @@ class HitDetail(ConditionBase):
 
 class TensorTooLargeCondition(ConditionBase):
     """
-    Tensor too large watchpoint. At least one parameter should be specified.
+    Watch contion for tensor value too large. At least one parameter should be specified.
 
-    If multiple checking parameters is specified, a WatchpointHit happens for the parameters
+    If multiple checking parameters are specified, a `WatchpointHit` happens for the parameters
     that the tensor triggered for the watchpoint.
 
     .. warning::
@@ -444,9 +453,9 @@ class TensorTooLargeCondition(ConditionBase):
 
 class TensorTooSmallCondition(ConditionBase):
     """
-    Tensor too small watchpoint. At least one parameter should be specified.
+    Watch contion for tensor value too small. At least one parameter should be specified.
 
-    If multiple checking parameters is specified, a WatchpointHit happens for the parameters
+    If multiple checking parameters are specified, a `WatchpointHit` happens for the parameters
     that the tensor triggered for the watchpoint.
 
     .. warning::
@@ -533,14 +542,14 @@ class TensorTooSmallCondition(ConditionBase):
 
 class TensorRangeCondition(ConditionBase):
     """
-    Tensor range watchpoint.
+    Watch condition for tensor value range.
 
     Set a threshold to check the tensor value range. There are four options:
-    range_percentage_lt, range_percentage_gt,  max_min_lt and max_min_gt.
+    `range_percentage_lt` , `range_percentage_gt` , `max_min_lt` and `max_min_gt` .
     At least one of the four options should be specified.
     If the threshold is set to one of the first two options,
-    then both range_start_inclusive and range_end_inclusive must be set.
-    If multiple checking parameters is specified, a WatchpointHit happens for the parameters
+    both `range_start_inclusive` and `range_end_inclusive` must be set.
+    If multiple checking parameters are specified, a `WatchpointHit` happens for the parameters
     that the tensor triggered for the watchpoint.
 
     .. warning::
@@ -548,18 +557,18 @@ class TensorRangeCondition(ConditionBase):
         change or deletion.
 
     Args:
-        range_percentage_lt (float, optional): The threshold for the
-            percentage of the tensor in the range. The checking condition will be satisfied
-            when the percentage of the tensor in the specified range is less than this value.
-        range_percentage_gt (float, optional): The threshold for the
-            percentage of the tensor in the range. The checking condition will be satisfied
-            when the percentage of the tensor in the specified range is greater than this value.
-        max_min_lt (float, optional): Threshold for the difference of
-            max and min of a tensor less than this value.
-        max_min_gt (float, optional): Threshold for the difference of
-            max and min of a tensor greater than this value.
-        range_start_inclusive (float, optional): The start of the range.
-        range_end_inclusive (float, optional): The end of the range.
+        range_start_inclusive (float, optional): The start of the specified range.
+        range_end_inclusive (float, optional): The end of the specified range.
+        range_percentage_lt (float, optional): The threshold for the percentage of the tensor
+            in the range `[range_start_inclusive, range_end_inclusive]` . The checking condition
+            will be satisfied when the percentage of the tensor in the specified range is less than this value.
+        range_percentage_gt (float, optional): The threshold for the percentage of the tensor
+            in the range `[range_start_inclusive, range_end_inclusive]` . The checking condition
+            will be satisfied when the percentage of the tensor in the specified range is greater than this value.
+        max_min_lt (float, optional): Lowwer threshold for the difference
+            between the maximum and minimum values of a tensor.
+        max_min_gt (float, optional): Upper threshold for the difference
+            between the maximum and minimum values of a tensor.
 
     Examples:
         >>> from mindinsight.debugger import TensorRangeCondition
@@ -662,9 +671,9 @@ class TensorRangeCondition(ConditionBase):
 
 class TensorOverflowCondition(ConditionBase):
     """
-    Tensor overflow watchpoint.
+    Watch condition for tensor overflow.
 
-    Tensor overflow whatchpoint checks for inf and nan tensors.
+    Tensor overflow whatchpoint checks for `inf` and `nan` tensors.
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
@@ -701,7 +710,7 @@ class TensorOverflowCondition(ConditionBase):
 
 class OperatorOverflowCondition(ConditionBase):
     """
-    Operator overflow watchpoint.
+    Operator overflow watch condition.
 
     Operator overflow whatchpoint checks whether overflow occurs during operator computation.
     Only Ascend AI processor is supported.
@@ -741,7 +750,7 @@ class OperatorOverflowCondition(ConditionBase):
 
 class TensorAllZeroCondition(ConditionBase):
     """
-    Tensor all zero watchpoint
+    Watch condition for tensor value is all zero .
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
@@ -788,12 +797,11 @@ class TensorAllZeroCondition(ConditionBase):
 
 class TensorUnchangedCondition(ConditionBase):
     """
-    Tensor unchanged condition watchpoint.
+    Watch condition for tensor value unchanged.
 
-    When all specified checking conditions were satisfied, this watchpoint would
-    be hit after a check.
-    Checks allclose function on previous and current tensor.
-    (abs_mean(current_tensor - previous_tensor) <= (atol + rtol * abs_mean(previous_tensor)))
+    Check allclose function on previous and current tensor. Only when every element in tensor
+    satisfies the equation :math:`|element_in_current_tensor - element_in_previous_tensor|
+    /les atol + rtol\times |previous_tensor|` , this watchpoint will be hit.
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
@@ -849,11 +857,11 @@ class TensorUnchangedCondition(ConditionBase):
 
 class TensorChangeBelowThresholdCondition(ConditionBase):
     """
-    Tensor change below threshold watchpoint.
+    Watch condition for tensor changing below threshold.
 
-    When all specified checking conditions were satisfied, this watchpoint would
-    be hit after a check.
-    (abs_mean(current_tensor - previous_tensor) < epsilon + mean_update_ratio_lt * abs_mean(previous_tensor))
+    When the tensor changing satisfies equation :math: `abs_mean(current_tensor -
+    previous_tensor) \frac abs_mean(previous_tensor) + epsilon < mean_update_ratio_lt` ,
+    the watchpoint would be hit.
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
@@ -910,11 +918,11 @@ class TensorChangeBelowThresholdCondition(ConditionBase):
 
 class TensorChangeAboveThresholdCondition(ConditionBase):
     """
-    Tensor change above threshold watchpoint.
+    Watch condition for tensor changing above threshold.
 
-    When all specified checking conditions were satisfied, this watchpoint would
-    be hit after a check.
-    (abs_mean(current_tensor - previous_tensor) > epsilon + mean_update_ratio_gt * abs_mean(previous_tensor))
+    When the tensor changing satisfies equation :math: `abs_mean(current_tensor -
+    previous_tensor) \frac abs_mean(previous_tensor) + epsilon > mean_update_ratio_lt` ,
+    the watchpoint would be hit.
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
@@ -980,6 +988,9 @@ class Watchpoint:
     Args:
         tensors (Iterable[DebuggerTensor]): The tensors to check.
         condition (ConditionBase): The watch condition to apply to tensors.
+
+    Supported Platforms:
+        ``Ascend`` ``GPU``
 
     Examples:
         >>> from mindinsight.debugger import DumpAnalyzer
