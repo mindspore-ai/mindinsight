@@ -535,6 +535,7 @@ export default {
 }
 .prof-wrap .prof-content .close {
   width: 2%;
+  height: 30px;
   right: 13px;
   top: 110px;
   cursor: pointer;

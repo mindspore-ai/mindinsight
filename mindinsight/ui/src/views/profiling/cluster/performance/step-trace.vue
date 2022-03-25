@@ -41,14 +41,16 @@ limitations under the License.
                   @clear="viewStepFilter"
                   v-model.number="step.showStep"></el-input>
         <el-button @click="viewStepFilter">{{$t("public.sure")}}</el-button>
-        <label>{{stageTip}}</label>
-        <el-select v-model="stageId"
-                   @change="queryStepTraceInfo(true)">
-          <el-option v-for="item in stageArr"
-                     :key="item"
-                     :label="item"
-                     :value="item"></el-option>
-        </el-select>
+        <span v-if="stageShow">
+          <label>{{stageTip}}</label>
+          <el-select v-model="stageId"
+                     @change="queryStepTraceInfo(true)">
+            <el-option v-for="item in stageArr"
+                       :key="item"
+                       :label="item"
+                       :value="item"></el-option>
+          </el-select>
+        </span>
       </div>
       <div class="cl-cluster-chart"
            ref="clusterChart">
@@ -193,6 +195,7 @@ export default {
       stageArr: [],
       stageTip: this.$t('profiling.stageTip'),
       tips: [], // Proper noun explanation tips
+      stageShow: false,
     };
   },
   mounted() {
@@ -266,6 +269,7 @@ export default {
             if (!this.stageId) this.stageId = this.stageArr[0];
             const tempChartData = [];
             const parallelMode = res.data['parallel-mode'];
+            this.stageShow = parallelMode == 'pipeline-parallel' ? true : false;
             const parallelModes = {
               'data-parallel': {
                 model: 'step_trace_info',
