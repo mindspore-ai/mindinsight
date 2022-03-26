@@ -507,6 +507,14 @@
       "content411": "Pure Communication Op：纯通信时间（通信算子的执行时间去除与计算算子时间重叠部分后的时间线）。",
       "content412": "Free Time：空闲时间（既没有通信算子也没有计算算子在执行的时间线）。"
     },
+    "pynativeTimelineTips": {
+      "content11": "- 算子分配到哪个设备 (Ascend/Host CPU) 执行；",
+      "content12": "- 算子在Device上的执行序列和执行时长。",
+      "content31": "可以具体定位到某个算子，查看分析它的执行时间。",
+      "content41": "Step：训练迭代数。",
+      "content42": "Ascend：在Ascend上执行的算子。",
+      "content43": "Host CPU：在Host CPU上执行的算子。"
+    },
     "countUnit": "次",
     "unit": "ms/次",
     "gpuunit": "us/次",

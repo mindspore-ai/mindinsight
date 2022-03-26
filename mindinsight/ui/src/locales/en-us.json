@@ -507,6 +507,14 @@
       "content411": "Pure Communication Op: pure communication time (the timeline of the communication operator after removing the overlap with the computation operator time).",
       "content412": "Free Time: there is no communication operator and calculation operator in the execution timeline."
     },
+    "pynativeTimelineTips": {
+      "content11": "- Device(Ascend or Host CPU) to which an operator is allocated for execution.",
+      "content12": "- Execution sequence and duration of an operator on a device.",
+      "content31": "You can locate an operator and view and analyze its execution time.",
+      "content41": "Step: training steps.",
+      "content42": "Ascend：operators executed on the Ascend.",
+      "content43": "Host CPU：operators executed on the Host CPU."
+    },
     "countUnit": "times",
     "unit": "ms/time",
     "gpuunit": "us/time",
