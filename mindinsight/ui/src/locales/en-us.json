@@ -30,7 +30,8 @@
     "delete": "Delete",
     "dark": "Dark Theme",
     "light": "Light Theme",
-    "noOperatorData": "No data for non-heterogeneous networks"
+    "noOperatorData": "No data for non-heterogeneous networks",
+    "noAICPUOperatorData": "There is no AICPU operator on this network. No data available."
   },
   "unit": {
     "KiB": "KiB",
@@ -471,7 +472,7 @@
     "downloadTimeline": "Download",
     "timelineTips": {
       "title1": "The timeline function helps you analyze the training process and displays the following information:",
-      "content11": "- Device(AI CPU or AI core) to which an operator is allocated for execution.",
+      "content11": "- Device(AICPU or AICORE) to which an operator is allocated for execution.",
       "content12": "- Flow tiling policy of MindSpore on the network.",
       "content13": "- Execution sequence and duration of an operator on a device.",
       "content14": "- Scope Name of Operator. For example, the full name of one operator is `Default/network/lenet5/Conv2D-op11`, the first scope of this operator is `Default`, the second scope is `network`. ",
@@ -495,13 +496,13 @@
       "content31": "You can analyze whether the flow tiling policy is proper and whether the step interval and tail time are too long based on the timeline information.",
       "content32": "You can also locate an operator and view and analyze its execution time.",
       "title4": "The detailed explanation of timeline:",
-      "content41": "Process Device ID: the timeline of operators executed on AI Core.",
+      "content41": "Process Device ID: the timeline of operators executed on AICORE.",
       "content42": "Step: training steps.",
       "content43": "Scope Name: the scope of the operator shows the hierarchical structure of the operator in the computation graph.",
       "content44": "Stream #ID: operators executed on the stream.",
-      "content45": "Process AI CPU Op: the timeline of operators executed on AI CPU.",
+      "content45": "Process AICPU Op: the timeline of operators executed on AICPU.",
       "content46": "Process Communication Op: contains the timeline for the execution of communication operators.",
-      "content47": "Process Host CPU Op: contains the timeline of operators executed on the Host CPU.",
+      "content47": "Process HOSTCPU Op: contains the timeline of operators executed on the HOSTCPU.",
       "content48": "Process Op Overlap Analyse: the timeline of all computation operators and communication operators merged,  it can be used to analyse the proportion of communication time.",
       "content49": "Merged Computation Op: it is the timeline after all computation operators are merged.",
       "content410": "Merged Communication Op: it is the timeline after all communication operators are merged.",
@@ -509,12 +510,12 @@
       "content412": "Free Time: there is no communication operator and calculation operator in the execution timeline."
     },
     "pynativeTimelineTips": {
-      "content11": "- Device(Ascend or Host CPU) to which an operator is allocated for execution.",
+      "content11": "- Device(Ascend or HOSTCPU) to which an operator is allocated for execution.",
       "content12": "- Execution sequence and duration of an operator on a device.",
       "content31": "You can locate an operator and view and analyze its execution time.",
       "content41": "Step: training steps.",
       "content42": "Ascend：operators executed on the Ascend.",
-      "content43": "Host CPU：operators executed on the Host CPU."
+      "content43": "HOSTCPU：operators executed on the HOSTCPU."
     },
     "countUnit": "times",
     "unit": "ms/time",
