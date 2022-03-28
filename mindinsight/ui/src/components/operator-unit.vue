@@ -65,7 +65,7 @@ limitations under the License.
          :class="{fullScreen:coreFullScreen,flops:hasFlopsInfo}"
          v-if="coreCharts.data.length && !notTable">
       <img src="../assets/images/full-screen.png"
-           :title="$t('graph.fullScreen')"
+           :title=screenTitle
            class="fullScreen"
            @click="fullScreenControl">
       <div>
@@ -438,6 +438,7 @@ export default {
       flopsInit: false,
       activeFlopsNode: null,
       activeFlopsLink: null,
+      screenTitle: this.$t('graph.fullScreen'),
     };
   },
   destroyed() {
@@ -656,6 +657,7 @@ export default {
     },
     fullScreenControl() {
       this.coreFullScreen = !this.coreFullScreen;
+      this.screenTitle = this.coreFullScreen ? this.$t('graph.partScreen') : this.$t('graph.fullScreen');
       if (this.coreCharts.chartDom && !this.coreFullScreen) {
         this.$nextTick(() => {
           this.coreCharts.chartDom.resize();
