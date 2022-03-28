@@ -277,6 +277,7 @@
     "searchLoading": "Locating nodes... Please wait. The locating speed depends on the number of nodes. A large number of nodes will slow down the speed.",
     "queryLoading": "Loading... Please wait.",
     "fullScreen": "Full Screen",
+    "partScreen": "Part Screen",
     "tooManyNodes": "Too many nodes to open.",
     "openFail": "Failed to expand the node. Possible causes are as follows: 1. The machine performance is too poor to draw subnodes of the node. 2. The number of direct subnodes under the node exceeds 1500. 3. The connections between direct subnodes are too complex. ",
     "inputNodeName": "Enter node name",

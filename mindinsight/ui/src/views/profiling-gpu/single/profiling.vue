@@ -111,10 +111,18 @@ export default {
       },
     };
   },
-  watch: {},
+  watch: {
+    '$route.path': {
+      handler() {
+        this.updatePath();
+      },
+    },
+  },
   mounted() {
-    if (this.$route.path === 'resource-utilization') {
+    if (this.$route.path === '/profiling-gpu/single/resource-utilization') {
       this.tabData.activeName = this.tabData.tabPanes[1].name;
+    }else if (this.$route.path == '/profiling-gpu/single/profiling-dashboard') {
+      this.tabData.activeName = this.tabData.tabPanes[0].name;
     }
     this.$nextTick(() => {
       this.init();
@@ -129,7 +137,6 @@ export default {
         this.curDashboardInfo.query.id = this.$route.query.id;
         this.curDashboardInfo.query.dir = this.$route.query.dir;
         this.curDashboardInfo.query.path = this.$route.query.path;
-        this.tabData.activeName = this.$route.query.activePane || this.tabData.tabPanes[0].name;
         this.summaryPath = this.$route.query.path;
         if (!isNaN(this.$route.query.deviceid)) {
           this.curDashboardInfo.curCardNum = this.$route.query.deviceid;
@@ -360,6 +367,15 @@ export default {
             },
           });
         }
+      }
+    },
+    /**
+     * update the path when route change
+    */
+    updatePath() {
+      const path = this.$route.path;
+      if (path == '/profiling-gpu/single/profiling-dashboard') {
+        this.tabData.activeName = '0';
       }
     },
   },

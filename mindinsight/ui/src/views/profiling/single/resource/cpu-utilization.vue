@@ -496,10 +496,20 @@ export default {
           .fit(true)
           .dot(dot)
           .render(() => {
+            this.initGraphDsiplay();
             resolve(true);
           });
       });
     },
+    /**
+     * init the node of operator graph
+    */
+    initGraphDsiplay() {
+      const queueList = Array.from(document.querySelectorAll('#operator-graph .node'));
+      const node = queueList[0];
+      node.setAttribute('class', 'node selected');
+    },
+
     /**
      * Add operator graph Event
      * @param {Array} nodes
