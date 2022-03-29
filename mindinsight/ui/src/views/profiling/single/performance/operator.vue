@@ -32,7 +32,7 @@ limitations under the License.
                          :hasFlopsInfo="!isPynative"
                          ref="core" />
         </el-tab-pane>
-        <el-tab-pane label="AI CPU"
+        <el-tab-pane label="AICPU"
                      class="cpu-tab"
                      name="cpu"
                      v-if="!isPynative">
@@ -46,7 +46,7 @@ limitations under the License.
                          :unit="$t('profiling.unit')"
                          ref="cpu" />
         </el-tab-pane>
-        <el-tab-pane label="HOST CPU"
+        <el-tab-pane label="HOSTCPU"
                      class="cpu-tab"
                      name="host">
           <operator-unit chartId="host-echarts"
@@ -80,7 +80,7 @@ export default {
         dir: this.$route.query.dir,
       }, // Complete train info
       isPynative: false,
-      labelName: "AI CORE",
+      labelName: "AICORE",
       apiType: 'core',
       coreOpType: {
         all: 'aicore_type',

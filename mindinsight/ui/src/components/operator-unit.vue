@@ -210,7 +210,8 @@ limitations under the License.
         <img :src="require('@/assets/images/nodata.png')"
              alt="" />
       </div>
-      <p>{{ initOver?$t("public.noOperatorData"):$t('public.dataLoading') }}</p>
+      <p v-if="isAICPU">{{ initOver?$t("public.noAICPUOperatorData"):$t('public.dataLoading') }}</p>
+      <p v-if="!isAICPU">{{ initOver?$t("public.noOperatorData"):$t('public.dataLoading') }}</p>
     </div>
     <el-dialog :title="rowName"
                :visible.sync="detailsDialogVisible"
@@ -439,6 +440,7 @@ export default {
       activeFlopsNode: null,
       activeFlopsLink: null,
       screenTitle: this.$t('graph.fullScreen'),
+      isAICPU: this.chartId === 'cpu-echarts'
     };
   },
   destroyed() {

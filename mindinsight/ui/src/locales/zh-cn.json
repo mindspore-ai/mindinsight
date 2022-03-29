@@ -30,7 +30,8 @@
     "delete": "删除",
     "dark": "深色主题",
     "light": "浅色主题",
-    "noOperatorData": "非异构网络暂无数据"
+    "noOperatorData": "非异构网络暂无数据",
+    "noAICPUOperatorData": "该网络无AICPU算子，暂无数据。"
   },
   "unit": {
     "KiB": "KiB",
@@ -471,7 +472,7 @@
     "downloadTimeline": "下载",
     "timelineTips": {
       "title1": "时间线功能可以帮您对训练过程进行分析，它可以展示：",
-      "content11": "- 算子分配到哪个设备 (AI CPU/AI Core) 执行；",
+      "content11": "- 算子分配到哪个设备 (AICPU/AICORE) 执行；",
       "content12": "- MindSpore对该网络的流切分策略；",
       "content13": "- 算子在Device上的执行序列和执行时长；",
       "content14": "- 算子ScopeName信息，例如算子Conv2D-op11的全名为：Default/network/lenet5/Conv2D-op11，该算子的第一层ScopeName为Default、第二层为network。",
@@ -495,26 +496,26 @@
       "content31": "您可以通过时间线信息分析流切分方法是否合理、迭代间隙和拖尾时间是否过长等；",
       "content32": "也可以具体定位到某个算子，查看分析它的执行时间。",
       "title4": "各种类型时间线的解释：",
-      "content41": "Process AI Core Op：在AI Core上执行的算子的时间线。",
+      "content41": "Process AICORE Op：在AICORE上执行的算子的时间线。",
       "content42": "Step：训练迭代数。",
       "content43": "Scope Name：展示计算图中算子的层级结构。",
       "content44": "Stream #ID：在该stream上执行的算子。",
-      "content45": "Process AI CPU Op：在AI CPU上运行的算子的时间线。",
+      "content45": "Process AICPU Op：在AICPU上运行的算子的时间线。",
       "content46": "Process Communication Op：包含通信算子执行的时间线。",
-      "content47": "Process Host CPU Op：包含在Host CPU上执行的算子的时间线。",
+      "content47": "Process HOSTCPU Op：包含在HOSTCPU上执行的算子的时间线。",
       "content48": "Process Op Overlap Analyse：所有计算算子与通信算子合并后的时间线，可用于分析通信时间占比。",
-      "content49": "Merged Computation Op：为所有计算（AI Core、AI CPU、Host CPU）算子合并后的时间线。",
+      "content49": "Merged Computation Op：为所有计算（AICORE、AICPU、HOSTCPU）算子合并后的时间线。",
       "content410": "Merged Communication Op：为所有通信算子合并后的时间线。",
       "content411": "Pure Communication Op：纯通信时间（通信算子的执行时间去除与计算算子时间重叠部分后的时间线）。",
       "content412": "Free Time：空闲时间（既没有通信算子也没有计算算子在执行的时间线）。"
     },
     "pynativeTimelineTips": {
-      "content11": "- 算子分配到哪个设备 (Ascend/Host CPU) 执行；",
+      "content11": "- 算子分配到哪个设备 (Ascend/HOSTCPU) 执行；",
       "content12": "- 算子在Device上的执行序列和执行时长。",
       "content31": "可以具体定位到某个算子，查看分析它的执行时间。",
       "content41": "Step：训练迭代数。",
       "content42": "Ascend：在Ascend上执行的算子。",
-      "content43": "Host CPU：在Host CPU上执行的算子。"
+      "content43": "HOSTCPU：在HOSTCPU上执行的算子。"
     },
     "countUnit": "次",
     "unit": "ms/次",

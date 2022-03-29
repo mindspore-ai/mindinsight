@@ -49,7 +49,7 @@ limitations under the License.
                          :unit="$t('profiling.gpuunit')"
                          ref="cuda" />
         </el-tab-pane>
-        <el-tab-pane label="HOST CPU"
+        <el-tab-pane label="HOSTCPU"
                      name="host">
           <operator-unit chartId="host-echarts"
                          :currentCard="currentCard"

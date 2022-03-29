@@ -19,7 +19,7 @@ limitations under the License.
     <div class="cl-profiler">
       <el-tabs v-model="apiType"
                @tab-click="tabChange">
-        <el-tab-pane label="HOST CPU"
+        <el-tab-pane label="HOSTCPU"
                      name="host">
           <operator-unit chartId="host-echarts"
                          :currentCard="currentCard"
