@@ -240,6 +240,9 @@ def pytorch2mindspore(model, dummy_inputs, output_dir=None):
          GeneratorError: Error in generating code.
          SubGraphSearchingError: Error in finding frequent sub-graph.
 
+    Supported Platforms:
+        ``Ascend`` ``GPU``
+
     Examples:
         >>> import torch
         >>> import numpy as np
