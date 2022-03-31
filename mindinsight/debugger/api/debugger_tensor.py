@@ -41,7 +41,7 @@ class DebuggerTensor(ABC):
     Note:
         - Users should not instantiate this class manually.
         - The instances of this class is immutable.
-        - A DebuggerTensor is always the output tensor of a node.
+        - A `DebuggerTensor` is always the output tensor of a node.
     """
 
     def __init__(self, node, slot, iteration):

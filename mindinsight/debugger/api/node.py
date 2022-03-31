@@ -35,11 +35,11 @@ class Node(ABC):
         change or deletion.
 
     Args:
-        node_feature (namedtuple): The node feature.
+        node_feature (namedtuple): The node feature, including the following information:
 
             - name (str): The node name.
             - rank (int): The rank id.
-            - stack (iterable[dict]): The format of each item is like:
+            - stack (iterable[dict]): The stack information. The format of each item is like:
 
               .. code-block::
 
@@ -51,6 +51,10 @@ class Node(ABC):
 
             - graph_name (str): The graph name.
             - root_graph_id (int): The root graph id.
+
+    Note:
+        - Users should not instantiate this class manually.
+        - The instances of this class is immutable.
     """
 
     def __init__(self, node_feature):
@@ -76,7 +80,7 @@ class Node(ABC):
     @property
     def stack(self):
         """
-        Get stack info.
+        Get stack info of the node.
 
         Returns:
             iterable[dict], each item format like:
@@ -146,12 +150,10 @@ class Node(ABC):
         Get the input tensors of the node.
 
         Args:
-            iterations (Iterable[int]): The iterations to which the returned
-                tensor should belong. Default: None, which means all
-                available iterations will be considered.
-            slots (Iterable[int]): The slots in which the returned tensors
-                should be. Default: None, which means all available slots will
-                be considered.
+            iterations (Iterable[int], optional): The iterations to which the returned
+                tensor should belong. None means all available iterations will be considered. Default: None.
+            slots (Iterable[int], optional): The slots in which the returned tensors
+                should be. None means all available slots will be considered. Default: None.
 
         Returns:
             Iterable[DebuggerTensor], the input tensors of the node.
@@ -171,10 +173,10 @@ class Node(ABC):
         Get the output tensors of this node.
 
         Args:
-            iterations (Iterable[int]): The iterations to which the returned
-                tensor should belong.
-            slots (Iterable[int]): The slots in which the returned tensors
-                should be.
+            iterations (Iterable[int], optional): The iterations to which the returned
+                tensor should belong. None means all available iterations will be considered. Default: None.
+            slots (Iterable[int], optional): The slots in which the returned tensors
+                should be. None means all available slots will be considered. Default: None.
 
         Returns:
             Iterable[DebuggerTensor], the output tensors of the node.
@@ -279,12 +281,11 @@ class NodeImpl(Node):
         Get the input tensors of the node.
 
         Args:
-            iterations (Iterable[int]): The iterations to which the returned
-                tensor should belong. Default: None, which means all
-                available iterations will be considered.
-            slots (Iterable[int]): The slots in which the returned tensors
-                should be. Default: None, which means all available slots will
-                be considered.
+            iterations (Iterable[int], optional): The iterations to which the returned
+                tensor should belong. None means all available iterations will be considered.
+                Default: None.
+            slots (Iterable[int], optional): The slots in which the returned tensors
+                should be. None means all available slots will be considered. Default: None.
 
         Returns:
             Iterable[DebuggerTensor], the input tensors of the node.
