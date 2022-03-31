@@ -7,11 +7,13 @@ mindconverter
 
     该方法可以将已经加载预训练权重信息的PyTorch模型实例，转换为等价的MindSpore模型脚本以及可加载的权重文件。
 
+    支持平台：
+
     **参数：**
 
-    - **model** (torch.n.Module)：加载权重的PyTorch模型实例。
+    - **model** (torch.nn.Module)：加载权重的PyTorch模型实例。
     - **dummy_inputs** (tuple<torch.tensor>)：由PyTorch模型的输入张量组成的元组。该元组中的张量数量，以及每个张量的Shape信息和DType信息和PyTorch模型所需的输入保持一致。
-    - **output_dir** (str)：生成的文件和转换报告的保存路径。如果没有设置，则默认使用 `$PWD/output` 目录进行保存。默认值：None。
+    - **output_dir** (str)：生成的文件和转换报告的保存路径。如果没有设置，则默认使用 `./output` 目录进行保存。默认值：None。
 
     **异常：**
 
@@ -20,3 +22,6 @@ mindconverter
     - **FileSaveError：** 保存转换生成的文件时发生异常。
     - **GeneratorError：** 生成MindSpore网络脚本代码时发生异常。
     - **SubGraphSearchingError：** 搜索重复子图时发生异常。
+
+    **支持平台：**
+    ``Ascend`` ``GPU``
