@@ -7,8 +7,6 @@ mindconverter
 
     该方法可以将已经加载预训练权重信息的PyTorch模型实例，转换为等价的MindSpore模型脚本以及可加载的权重文件。
 
-    支持平台：
-
     **参数：**
 
     - **model** (torch.nn.Module)：加载权重的PyTorch模型实例。
@@ -22,6 +20,3 @@ mindconverter
     - **FileSaveError：** 保存转换生成的文件时发生异常。
     - **GeneratorError：** 生成MindSpore网络脚本代码时发生异常。
     - **SubGraphSearchingError：** 搜索重复子图时发生异常。
-
-    **支持平台：**
-    ``Ascend`` ``GPU``
