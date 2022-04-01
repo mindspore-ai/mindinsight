@@ -235,7 +235,7 @@ class DumpAnalyzer:
         Select tensors.
 
         Select the matched tensors in the directory according to the
-        query_string, see the parameters for detail.
+        sepicified filter condition, see the parameters for detail.
 
         Args:
             query_string (str): Query string. For a tensor to be selected, the

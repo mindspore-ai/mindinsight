@@ -796,12 +796,12 @@ class TensorAllZeroCondition(ConditionBase):
 
 
 class TensorUnchangedCondition(ConditionBase):
-    """
+    r"""
     Watch condition for tensor value unchanged.
 
     Check allclose function on previous and current tensor. Only when every element in tensor
-    satisfies the equation :math:`|element_in_current_tensor - element_in_previous_tensor|
-    /les atol + rtol\times |previous_tensor|` , this watchpoint will be hit.
+    satisfies the equation :math:`|element\_in\_current\_tensor - element\_in\_previous\_tensor|
+    \leq atol + rtol\times |previous\_tensor|` , this watchpoint will be hit.
 
     .. warning::
         All APIs in this class are experimental prototypes that are subject to
@@ -856,11 +856,11 @@ class TensorUnchangedCondition(ConditionBase):
 
 
 class TensorChangeBelowThresholdCondition(ConditionBase):
-    """
+    r"""
     Watch condition for tensor changing below threshold.
 
-    When the tensor changing satisfies equation :math: `abs_mean(current_tensor -
-    previous_tensor) \frac abs_mean(previous_tensor) + epsilon < mean_update_ratio_lt` ,
+    When the tensor changing satisfies equation :math:`\frac {abs\_mean(current\_tensor
+    - previous\_tensor)} {abs\_mean(previous\_tensor)} + epsilon < mean\_update\_ratio\_lt` ,
     the watchpoint would be hit.
 
     .. warning::
@@ -917,11 +917,11 @@ class TensorChangeBelowThresholdCondition(ConditionBase):
 
 
 class TensorChangeAboveThresholdCondition(ConditionBase):
-    """
+    r"""
     Watch condition for tensor changing above threshold.
 
-    When the tensor changing satisfies equation :math: `abs_mean(current_tensor -
-    previous_tensor) \frac abs_mean(previous_tensor) + epsilon > mean_update_ratio_lt` ,
+    When the tensor changing satisfies equation :math:`\frac {abs\_mean(current\_tensor -
+    previous\_tensor)} {abs\_mean(previous\_tensor)} + epsilon > mean\_update\_ratio\_lt` ,
     the watchpoint would be hit.
 
     .. warning::
