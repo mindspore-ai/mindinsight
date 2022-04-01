@@ -19,7 +19,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
     - **dump_dir** (str) - 存储Dump数据文件的目录。
     - **mem_limit** (int，可选) - 检查监测点的内存限制(以MB为单位)，可选值：从2048MB到2147483647MB，None表示不设限制，只受限于计算机内存。默认值：None。
 
-    .. py:method:: check_watchpoints(watchpoints, error_on_value=False)
+    .. py:method:: check_watchpoints(watchpoints, error_on_no_value=False)
 
         批量检查给定监测点。
 
@@ -130,7 +130,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         筛选张量。
 
-        根据query_string选择目录中匹配的张量，具体用法请参考参数说明。
+        根据给定的筛选条件选择目录中匹配的张量，具体用法请参考参数说明。
 
         **参数：**
 
@@ -539,8 +539,8 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
     检查张量值不变的监测条件。
 
-    检查先前和当前张量的allclose函数。只有当张量中的每个元素都满足公式 :math:`|element_in_current_tensor - element_in_previous_tensor|
-    /les atol + rtol\times |previous_tensor|` 时，监测点才会被命中。
+    检查先前和当前张量的allclose函数。只有当张量中的每个元素都满足公式 :math:`|element\_in\_current\_tensor - element\_in\_previous\_tensor|
+    \leq atol + rtol\times |previous\_tensor|` 时，监测点才会被命中。
 
     .. warning::
         此类中的所有API均为实验版本，将来可能更改或者删除。
@@ -563,7 +563,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
     检查张量值变化率低于给定阈值的监测条件。
 
-    当张量变化满足公式 :math: `abs_mean(current_tensor - previous_tensor) \frac abs_mean(previous_tensor) + epsilon < mean_update_ratio_lt` 时，监测点被命中。
+    当张量变化满足公式 :math:`\frac {abs\_mean(current\_tensor - previous\_tensor)} {abs\_mean(previous\_tensor)} + epsilon < mean\_update\_ratio\_lt` 时，监测点被命中。
 
     .. warning::
         此类中的所有API均为实验版本，将来可能更改或者删除。
@@ -586,7 +586,8 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
     检查张量值变化率超过给定阈值的监测条件。
 
-    当张量变化满足公式 :math: `abs_mean(current_tensor - previous_tensor) \frac abs_mean(previous_tensor) + epsilon > mean_update_ratio_lt` 时，监测点被命中。
+    当张量变化满足公式 :math:`\frac {abs\_mean(current\_tensor -
+    previous\_tensor)} {abs\_mean(previous\_tensor)} + epsilon > mean\_update\_ratio\_lt` 时，监测点被命中。
 
     .. warning::
         此类中的所有API均为实验版本，将来可能更改或者删除。
