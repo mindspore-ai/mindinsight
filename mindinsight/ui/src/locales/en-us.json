@@ -514,8 +514,8 @@
       "content12": "- Execution sequence and duration of an operator on a device.",
       "content31": "You can locate an operator and view and analyze its execution time.",
       "content41": "Step: training steps.",
-      "content42": "Ascend：operators executed on the Ascend.",
-      "content43": "HOSTCPU：operators executed on the HOSTCPU."
+      "content42": "Ascend Op：operators executed on the Ascend.",
+      "content43": "HOSTCPU Op：operators executed on the HOSTCPU."
     },
     "countUnit": "times",
     "unit": "ms/time",

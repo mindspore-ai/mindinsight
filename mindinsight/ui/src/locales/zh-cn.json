@@ -514,8 +514,8 @@
       "content12": "- 算子在Device上的执行序列和执行时长。",
       "content31": "可以具体定位到某个算子，查看分析它的执行时间。",
       "content41": "Step：训练迭代数。",
-      "content42": "Ascend：在Ascend上执行的算子。",
-      "content43": "HOSTCPU：在HOSTCPU上执行的算子。"
+      "content42": "Ascend Op：在Ascend上执行的算子。",
+      "content43": "HOSTCPU Op：在HOSTCPU上执行的算子。"
     },
     "countUnit": "次",
     "unit": "ms/次",
