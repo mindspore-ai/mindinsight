@@ -119,7 +119,7 @@ service start state: success
 使用MindInsight前，需要先将训练过程中的数据记录下来，启动MindInsight时，指定所保存的数据的位置，启动成功后，
 即可通过可视化页面查看数据。下面将简单介绍记录训练过程数据，以及启动、停止MindInsight服务。
 
-[SummaryCollector](https://www.mindspore.cn/docs/api/zh-CN/master/api_python/mindspore.train.html#mindspore.train.callback.SummaryCollector)是MindSpore提供的快速简易地收集一些常见信息的接口，收集的信息包括计算图、损失值、学习率、参数权重等。
+[SummaryCollector](https://www.mindspore.cn/docs/zh-CN/master/api_python/mindspore.train.html#mindspore.train.callback.SummaryCollector)是MindSpore提供的快速简易地收集一些常见信息的接口，收集的信息包括计算图、损失值、学习率、参数权重等。
 下面是使用 `SummaryCollector` 进行数据收集的示例，其中指定存放数据的目录为 `./summary_dir`。
 
 ```python
