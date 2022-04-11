@@ -6,21 +6,21 @@
 
 #### Profiling
 
-* [STABLE] Support starting Profiler in the process of training.(Ascend)
-* [STABLE] Support strategy perception includes Computational Graph Exploration module, Parallel Strategy Analysis module, etc.(Ascend)
-* [STABLE] Support cluster performance helper to give some prompts to users.(Ascend)
+- [STABLE] Support starting Profiler in the process of training.(Ascend)
+- [STABLE] Support strategy perception includes Computational Graph Exploration module, Parallel Strategy Analysis module, etc.(Ascend)
+- [STABLE] Support cluster performance helper to give some prompts to users.(Ascend)
 
 #### MindConverter
 
-* [STABLE] Support migrating definition scripts and trained weights by TorchScript.(Ascend/GPU)
+- [STABLE] Support migrating definition scripts and trained weights by TorchScript.(Ascend/GPU)
 
 #### Debugger
 
-* [STABLE] Support Python API for offline debugger analysis.(Ascend/GPU)
+- [STABLE] Support Python API for offline debugger analysis.(Ascend/GPU)
 
 #### Landscape
 
-* [BETA] Support analyzing model training optimization process by computing and visualizing Loss landscape.(Ascend/GPU)
+- [BETA] Support analyzing model training optimization process by computing and visualizing Loss landscape.(Ascend/GPU)
 
 ### API Change
 
@@ -28,8 +28,8 @@
 
 ##### Python API
 
-* Add  `mindconverter.pytorch2mindspore()` interface for converting models from PyTorch into MindSpore.
-* Add `mindinsight.debugger` Python API for offline debugger analysis.
+- Add  `mindconverter.pytorch2mindspore()` interface for converting models from PyTorch into MindSpore.
+- Add `mindinsight.debugger` Python API for offline debugger analysis.
 
 ### Contributors
 
@@ -81,12 +81,12 @@ New start command options:
 
 | Name                                    | Attribute | Description                                                                                                                                                                              | Type    | Default Value | Range                           |
 | --------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------- | ------------------------------- |
-| `-offline-debugger-mem-limit `        | Optional  | Specifies the maximum memory limit of a single offline debugger session. When the offline debugger cannot be executed due to insufficient memory, set it according to the device memory. | Integer | 16*1024       | 6*1024~The upper limit of int32 |
-| `--max-offline-debugger-session-num ` | Optional  | Specifies the maximum session number of the offline debugger. The session number refers to the amount of training jobs that can be debugged at the same time.                            | Integer | 2             | 1~2                             |
+| `-offline-debugger-mem-limit`        | Optional  | Specifies the maximum memory limit of a single offline debugger session. When the offline debugger cannot be executed due to insufficient memory, set it according to the device memory. | Integer | 16*1024       | 6*1024~The upper limit of int32 |
+| `--max-offline-debugger-session-num` | Optional  | Specifies the maximum session number of the offline debugger. The session number refers to the amount of training jobs that can be debugged at the same time.                            | Integer | 2             | 1~2                             |
 
 ### Bug fixes
 
-* Wrong sorting of cards displayed on the single page and cluster.[!11801](https://gitee.com/mindspore/mindspore/pulls/11801)
+- Wrong sorting of cards displayed on the single page and cluster.[!11801](https://gitee.com/mindspore/mindspore/pulls/11801)
 
 ### Contributors
 
@@ -95,6 +95,7 @@ Thanks goes to these wonderful people:
 Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Kai Wen, Yue Wang, Lihua Ye, Ximiao Yu, Yunshu Zhang, Ning Ma, Yihui Zhang, Hong Sheng, Ran Mo, Zhaohong Guo, Tianshu Liang, Shuqiang Jiang, Yanjun Peng, Haitao Yang, Jiabin Liu, Han Gao, Xiaohui Li, Ngaifai Ng, Hui Pan, Weifeng Huang, Yifan Xia, Xuefeng Feng, Yanxi Wei, Yufeng Lv, Maohua He, Chuting Liu.
 
 Contributions of any kind are welcome!
+
 # MindInsight 1.4.0
 
 ## MindInsight 1.4.0 Release Notes
@@ -464,7 +465,7 @@ Contributions of any kind are welcome!
 
 - Parameter distribution graph (Histogram).
 
-    Now you can use [`HistogramSummary`](https://www.mindspore.cn/docs/api/en/master/api_python/mindspore.ops.html#mindspore.ops.HistogramSummary) and MindInsight to record and visualize distribution info of tensors. See our [tutorial](https://www.mindspore.cn/mindinsight/docs/en/master/index.html).
+    Now you can use [`HistogramSummary`](https://www.mindspore.cn/docs/en/r1.7/api_python/mindspore.ops.html#mindspore.ops.HistogramSummary) and MindInsight to record and visualize distribution info of tensors. See our [tutorial](https://www.mindspore.cn/mindinsight/docs/en/master/index.html).
 
 - Lineage support Custom information
 - GPU support
