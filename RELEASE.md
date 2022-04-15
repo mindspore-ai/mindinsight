@@ -1,3 +1,46 @@
+# MindInsight 1.7.0
+
+## MindInsight 1.7.0 Release Notes
+
+[简体中文](./RELEASE_CN.md)
+
+### Major Features and Improvements
+
+#### Profiling
+
+- [STABLE] Support Cluster Step Trace profiling (GPU)
+- [BETA] Support profiling on Pynative model (Ascend)
+
+#### MindConverter
+
+#### Debugger
+
+- [STABLE] Debugger checking watchpoint performance improved
+- [STABLE] Add Debugger API docs in Chinese
+
+#### Summary
+
+- [STABLE] Provide Summary API docs in Chinese
+- [STABLE] Add Summary usage example
+
+#### Landscape
+
+### API Change
+
+#### Backwards Compatible Change
+
+##### Python API
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Kai Wen, Yue Wang, Lihua Ye, Ximiao Yu, Yunshu Zhang, Ning Ma, Yihui Zhang, Hong Sheng, Ran Mo, Zhaohong Guo, Tianshu Liang, Shuqiang Jiang, Yanjun Peng, Haitao Yang, Jiabin Liu, Han Gao, Xiaohui Li, Ngaifai Ng, Hui Pan, Weifeng Huang, Yifan Xia, Xuefeng Feng, Yanxi Wei, Yufeng Lv, Maohua He, Chuting Liu, Jiaxing Zhu, Yuanwei Song.
+
+Special thanks to Zhiyong Wang, Zhongwei Wang, Rusheng Pan, Yating Wei, Luoxuan Weng, Rongchen Zhu, Jingli Xu, Qinxian Liu, Haozhe Feng, Tong Xu, etc., from State Key Lab of CAD&CG, Zhejiang University led by Prof. Wei Chen, for their contributions of innovative frontend and interaction technology to support strategy perception including Computational Graph Exploration module, Parallel Strategy Analysis module, etc.
+
+Contributions of any kind are welcome!
+
 # MindInsight 1.6.0
 
 ## MindInsight 1.6.0 Release Notes
@@ -465,7 +508,7 @@ Contributions of any kind are welcome!
 
 - Parameter distribution graph (Histogram).
 
-    Now you can use [`HistogramSummary`](https://www.mindspore.cn/docs/en/r1.7/api_python/mindspore.ops.html#mindspore.ops.HistogramSummary) and MindInsight to record and visualize distribution info of tensors. See our [tutorial](https://www.mindspore.cn/mindinsight/docs/en/master/index.html).
+    Now you can use [`HistogramSummary`](https://www.mindspore.cn/docs/en/master/api_python/mindspore.ops.html#mindspore.ops.HistogramSummary) and MindInsight to record and visualize distribution info of tensors. See our [tutorial](https://www.mindspore.cn/mindinsight/docs/en/master/index.html).
 
 - Lineage support Custom information
 - GPU support
