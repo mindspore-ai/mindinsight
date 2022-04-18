@@ -9,15 +9,15 @@
 #### Profiling
 
 - [STABLE] Profiler supports analyzing iterative trajectories (GPU)
-- [BETA] Profiler supports pynative format (Ascend)
+- [BETA] Profiler supports PyNative format (Ascend)
 
 #### MindConverter
 
 #### Debugger
 
-- [STABLE] Summary API Provide instructions in Chinese
+- [STABLE] Summary API provides instructions in Chinese
 - [STABLE] Add Summary sample code
-- [STABLE] Dubugger monitoring point optimization, performance improvement
+- [STABLE] Debugger checking watchpoint optimization, performance improvement
 
 #### Landscape
 

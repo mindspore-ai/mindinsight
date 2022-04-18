@@ -1,8 +1,8 @@
-# MindInsight 1.7.0
+# MindInsight Release Notes
+
+[View English](./RELEASE.md)
 
 ## MindInsight 1.7.0 Release Notes
-
-[English](./RELEASE.md)
 
 ### 主要特性及改进
 
