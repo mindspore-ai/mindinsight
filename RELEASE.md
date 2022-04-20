@@ -1,27 +1,23 @@
-# MindInsight 1.7.0
-
-## MindInsight 1.7.0 Release Notes
+# MindInsight Release Notes
 
 [简体中文](./RELEASE_CN.md)
+
+## MindInsight 1.7.0 Release Notes
 
 ### Major Features and Improvements
 
 #### Profiling
 
-- [STABLE] Support Cluster Step Trace profiling (GPU)
-- [BETA] Support profiling on Pynative model (Ascend)
+- [STABLE] Profiler supports analyzing iterative trajectories (GPU)
+- [BETA] Profiler supports PyNative format (Ascend)
 
 #### MindConverter
 
 #### Debugger
 
-- [STABLE] Debugger checking watchpoint performance improved
-- [STABLE] Add Debugger API docs in Chinese
-
-#### Summary
-
-- [STABLE] Provide Summary API docs in Chinese
-- [STABLE] Add Summary usage example
+- [STABLE] Summary API provides instructions in Chinese
+- [STABLE] Add Summary sample code
+- [STABLE] Debugger checking watchpoint optimization, performance improvement
 
 #### Landscape
 
