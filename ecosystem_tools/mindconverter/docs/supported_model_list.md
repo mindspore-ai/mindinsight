@@ -9,11 +9,11 @@ released version):
 | :----: | :----: | :----: | :----: | :----: | :----: |
 | ResNet18 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |  | TESTED | / |
 | ResNet34 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |  | TESTED | / |
-| ResNet50 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | TESTED | TESTED |
+| ResNet50 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |  | TESTED | TESTED |
 | ResNet50V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | TESTED |
-| ResNet101 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | UNTESTED | TESTED |
+| ResNet101 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |  | UNTESTED | TESTED |
 | ResNet101V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | TESTED |
-| ResNet152 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet.py) |  | TESTED | TESTED |
+| ResNet152 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / |  | TESTED | TESTED |
 | ResNet152V2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/resnet_v2.py) |  | / | TESTED |
 | Wide ResNet50 2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / | | TESTED | / |
 | Wide ResNet101 2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/resnet.py) | / | | TESTED | / |
@@ -29,7 +29,7 @@ released version):
 | InceptionV3 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/inception.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_v3.py) |  | TESTED | TESTED |
 | InceptionResNetV2 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/inception_resnet_v2.py) |  | / | TESTED |
 | MobileNetV1 | / | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet.py) |  | / | TESTED |
-| MobileNetV2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mobilenet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/mobilenet_v2.py) |  | TESTED | TESTED |
+| MobileNetV2 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mobilenet.py) | / |  | TESTED | TESTED |
 | MNASNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/mnasnet.py) | / | | mnasnet0_5:TESTED mnasnet0_75:UNTESTED mnasnet1_0:TESTED mnasnet1_3:UNTESTED | / |
 | SqueezeNet | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/squeezenet.py) | / | | TESTED | / |
 | DenseNet121/169/201 | [Link](https://github.com/pytorch/vision/blob/v0.5.0/torchvision/models/densenet.py) | [Link](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/keras/applications/densenet.py) |  | TESTED | TESTED |
