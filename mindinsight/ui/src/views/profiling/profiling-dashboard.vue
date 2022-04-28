@@ -129,10 +129,12 @@ export default {
      */
     onTabClick() {
       const path = this.tab === this.tabs[0] ? 'single' : 'cluster';
-      this.$router.push({
-        path: '/profiling/' + path,
-        query: this.$route.query,
-      });
+      if(this.$route.path === '/profiling'){
+        this.$router.push({
+          path: '/profiling/' + path,
+          query: this.$route.query,
+        });
+      }
     },
   },
 };
