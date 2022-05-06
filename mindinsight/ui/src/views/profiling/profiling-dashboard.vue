@@ -100,7 +100,13 @@ export default {
                 this.$route.query.rankID = this.rankID;
                 this.$route.query.mode = mode;
                 this.$route.query.rankIDList = JSON.stringify(this.rankIDList);
-                this.onTabClick();
+                const path = this.tab === this.tabs[0] ? 'single' : 'cluster';
+                if(this.$route.path === '/profiling'){
+                  this.$router.push({
+                    path: '/profiling/' + path,
+                    query: this.$route.query,
+                  });
+                };
                 resolve(true);
               } else {
                 this.rankIDList = [];
@@ -129,12 +135,10 @@ export default {
      */
     onTabClick() {
       const path = this.tab === this.tabs[0] ? 'single' : 'cluster';
-      if(this.$route.path === '/profiling'){
         this.$router.push({
           path: '/profiling/' + path,
           query: this.$route.query,
         });
-      }
     },
   },
 };
