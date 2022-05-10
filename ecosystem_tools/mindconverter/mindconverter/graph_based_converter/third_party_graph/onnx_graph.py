@@ -111,6 +111,13 @@ class OnnxGraph(Graph):
         else:
             self._scope_names = generate_scope_name(self.dataloader)
 
+    def get_included_op_type(self):
+        """
+        Get all op type in model.
+        """
+        all_op_type = {scope_name.rsplit("/", 1)[-1] for scope_name in self._scope_names}
+        return all_op_type
+
     def build(self):
         """Build graph tree."""
         if self._scope_names is None:
