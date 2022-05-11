@@ -525,7 +525,7 @@ def generate_operator_scanning_report(graph_obj, table, framework, out_folder: s
     if not os.path.exists(out_folder):
         os.makedirs(out_folder, RWX_MODE_FOR_OWNER)
 
-    opertator_list = [framework + '::' + i.split('_')[0] for i in graph_obj.nodes_in_topological_order]
+    opertator_list = [framework + '::' + i for i in graph_obj.get_included_op_type()]
     opertator_count = Counter(opertator_list)
 
     out_path = os.path.join(out_folder, 'operator_scanning_report.csv')
