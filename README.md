@@ -119,7 +119,7 @@ service start state: success
 
 Before using MindInsight, the data in the training process should be recorded. When starting MindInsight, the directory of the saved data should be specified. After successful startup, the data can be viewed through the web page. Here is a brief introduction to recording training data, as well as starting and stopping MindInsight.
 
-[SummaryCollector](https://www.mindspore.cn/docs/en/master/api_python/mindspore.train.html#mindspore.train.callback.SummaryCollector) is the interface MindSpore provides for a quick and easy collection of common data about computational graphs, loss values, learning rates, parameter weights, and so on. Below is an example of using `SummaryCollector` for data collection, specifying the directory where the data is stored in `./summary_dir`.
+[SummaryCollector](https://www.mindspore.cn/docs/en/master/api_python/mindspore/mindspore.SummaryCollector.html#mindspore.SummaryCollector) is the interface MindSpore provides for a quick and easy collection of common data about computational graphs, loss values, learning rates, parameter weights, and so on. Below is an example of using `SummaryCollector` for data collection, specifying the directory where the data is stored in `./summary_dir`.
 
 ```python
 ...
