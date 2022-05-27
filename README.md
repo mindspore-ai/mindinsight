@@ -124,7 +124,7 @@ Before using MindInsight, the data in the training process should be recorded. W
 ```python
 ...
 
-from mindspore.train.callback import SummaryCollector
+from mindspore import SummaryCollector
 summary_collector = SummaryCollector(summary_dir='./summary_dir')
 model.train(epoch=1, ds_train, callbacks=[summary_collector])
 ```
