@@ -43,7 +43,7 @@ from mindinsight.utils.exceptions import ParamValueError
 from mindinsight.backend.application import CustomResponse
 from mindinsight.profiler.proposer.proposer_factory import ProposerFactory
 
-BLUEPRINT = Blueprint("profile", __name__, url_prefix=settings.URL_PATH_PREFIX+settings.API_PREFIX)
+BLUEPRINT = Blueprint("profile", __name__, url_prefix=settings.URL_PATH_PREFIX + settings.API_PREFIX)
 
 
 @BLUEPRINT.route("/profile/ops/search", methods=["POST"])
@@ -147,6 +147,9 @@ def get_training_trace_graph():
     device_id = request.args.get("device_id", default='0')
     to_int(device_id, 'device_id')
     graph_info = {}
+    dynamic_shape_file_name = f'dynamic_shape_info_{device_id}.json'
+    if dynamic_shape_file_name in os.listdir(profiler_dir_abs):
+        return jsonify(graph_info)
     try:
         analyser = AnalyserFactory.instance().get_analyser(
             'step_trace', profiler_dir_abs, device_id)
@@ -594,6 +597,35 @@ def get_memory_usage_graphics():
     graphics = analyser.get_memory_usage_graphics(device_type)
 
     return graphics
+
+
+@BLUEPRINT.route("/profile/dynamic-shape-detail", methods=["GET"])
+def get_dynamic_shape_info():
+    """
+    Get dynamic shape information of operators.
+
+    Returns:
+        Response, the operator shape and execution time information.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/dynamic-shape-detail
+    """
+    summary_dir = request.args.get("dir")
+    profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
+
+    device_id = request.args.get("device_id", default='0')
+    to_int(device_id, 'device_id')
+    device_type = request.args.get("device_type", default='ascend')
+    if device_type not in ['ascend']:
+        logger.info("Invalid device_type, Memory Usage only supports Ascend for now.")
+        raise ParamValueError("Invalid device_type.")
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'dynamic_shape', profiler_dir_abs, device_id)
+    shape_info = analyser.get_dynamic_shape_detail()
+
+    return shape_info
 
 
 @BLUEPRINT.route("/profile/memory-breakdowns", methods=["GET"])

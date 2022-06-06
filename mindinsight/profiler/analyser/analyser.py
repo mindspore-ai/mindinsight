@@ -650,3 +650,43 @@ class PynativeDetailAnalyser(BaseAnalyser):
         return [row[0], row[0].split('-')[0],
                 self._format_float_data(row[1]),
                 'Default', 'Default/' + row[0]]
+
+
+class DynamicShapeAnalyser(BaseAnalyser):
+    """Analyse dynamic shape info data from file."""
+    _dynamic_file_name = 'dynamic_shape_info_{}.json'
+
+    def get_dynamic_shape_detail(self):
+        """
+        Get dynamic shape information for UI display.
+
+        Returns:
+            json, the content of dynamic shape information.
+        """
+        detail_filename = self._dynamic_file_name.format(self._device_id)
+        file_path = os.path.join(self._profiling_dir, detail_filename)
+        file_path = validate_and_normalize_path(
+            file_path, raise_key='Invalid dynamic shape file path.'
+        )
+        dynamic_shape_info = {}
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, 'r') as fp:
+                    dynamic_shape_info = json.load(fp)
+            except (IOError, OSError, json.JSONDecodeError) as err:
+                logger.error('Error occurred when read dynamic shape file: %s', err)
+                raise ProfilerIOException()
+        else:
+            logger.warning('No dynamic shape file. Please check the output path.')
+        return dynamic_shape_info
+
+    def _load(self):
+        """Load data according to the parsed profiling files."""
+
+    def _filter(self, filter_condition):
+        """
+        Filter the profiling data according to the filter condition.
+
+        Args:
+            filter_condition (dict): The filter condition.
+        """
