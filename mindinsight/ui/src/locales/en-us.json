@@ -603,7 +603,15 @@
     "scopeNameNum": "ScopeName Layer Counts: ",
     "flopsScopeTipOne": "Node movement: Drag the scope node to move it to the specified position.",
     "flopsScopeTipTwo": "Reset: Restore the graphics to the Initial state.",
-    "flopsScopeTipThree": "Selected: Click to select a scope node, and its associated parent and child nodes will be highlighted for a long time, and click again to cancel the highlighting."
+    "flopsScopeTipThree": "Selected: Click to select a scope node, and its associated parent and child nodes will be highlighted for a long time, and click again to cancel the highlighting.",
+    "operatorShapeStep": "Operator time-consuming (by iteration)",
+    "opeatorFeatures": "The operator time-consuming (by iteration) shows the time-consuming of different types of operators under the specified step. You can select different types of operators to display through the filter box.",
+    "operatorSelectTitle": "Filter the specified operator type:",
+    "timeConsume": "time consuming",
+    "operatorShapeDetail": "Operator time-consuming details (by iteration)",
+    "operatorShapeTip": "The operator time-consuming details (by iteration) display the operator time-consuming and shape information of the specified type. By default, 3 records are displayed. The operator shape information can be displayed by clicking the corresponding point on the smooth curve graph.",
+    "operatorFilterTitle": "Filter the specified operator name:",
+    "operatorShapeTitle": "Operator time-consuming details"
   },
   "profilingGPU": {
     "minddata_get_next_queue": {

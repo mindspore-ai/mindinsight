@@ -639,5 +639,15 @@ export default {
       params: params,
     });
   },
-
+  // query operator dynamic shape detail
+  queryDynamicShape(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/dynamic-shape-detail',
+      params: params,
+      headers: {
+        ignoreError: true,
+      }
+    });
+  },
 };

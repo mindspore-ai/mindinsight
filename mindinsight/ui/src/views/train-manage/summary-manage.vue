@@ -430,6 +430,7 @@ export default {
       const profilerDir = row.profiler_dir;
       const trainId = row.train_id;
       const path = row.relative_path;
+      let graph_mode = "default";
       let router;
       switch (row.profiler_type) {
         case 'gpu':
@@ -440,6 +441,7 @@ export default {
           break;
         default:
           router = '/profiling';
+          graph_mode = row.hasOwnProperty("graph_mode") ? row.graph_mode : graph_mode;
           break;
       }
       this.$router.push({
@@ -448,6 +450,7 @@ export default {
           dir: profilerDir,
           id: trainId,
           path: path,
+          graphMode: graph_mode,
         },
       });
     },

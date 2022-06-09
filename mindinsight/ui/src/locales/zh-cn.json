@@ -603,7 +603,15 @@
     "scopeNameNum": "展示算子ScopeName层数: ",
     "flopsScopeTipOne": "节点移动：通过拖动scope节点，将其移动到指定位置。",
     "flopsScopeTipTwo": "重置：将图形恢复到初始状态。",
-    "flopsScopeTipThree": "选中：点击选中某一个scope节点，其关联的父子节点长期高亮，再次点击可取消高亮。"
+    "flopsScopeTipThree": "选中：点击选中某一个scope节点，其关联的父子节点长期高亮，再次点击可取消高亮。",
+    "operatorShapeStep": "算子耗时（按迭代）",
+    "opeatorFeatures": "算子耗时（按迭代）展示的是不同类型的算子在指定step下的耗时，可以通过筛选框选择不同类型的算子进行展示。",
+    "operatorSelectTitle": "筛选指定算子类型：",
+    "timeConsume": "耗时",
+    "operatorShapeDetail": "算子耗时详情（按迭代）",
+    "operatorShapeTip": "算子耗时详情（按迭代）是展示指定类型的算子耗时及shape信息，默认展示3条记录， 算子shape信息可以点击平滑曲线图上对应点来显示。",
+    "operatorFilterTitle": "筛选指定算子名称：",
+    "operatorShapeTitle": "算子耗时详情"
   },
   "profilingGPU": {
     "minddata_get_next_queue": {
