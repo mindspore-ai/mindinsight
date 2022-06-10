@@ -162,6 +162,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
       - **stack** (iterable[dict]) - 堆栈信息，每一项的格式为：
 
         .. code-block::
+
             {'file_path': str, 'line_no': int, 'code_line': str}
 
       - **graph_name** (str) - 图名称。
@@ -240,9 +241,10 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         **返回：**
 
-        iterable[dict]，每一项的格式为
+        iterable[dict]，每一项的格式为：
 
         .. code-block::
+
             {'file_path': str, 'line_no': int, 'code_line': str}
 
 .. py:class:: mindinsight.debugger.DebuggerTensor(node, slot, iteration)
