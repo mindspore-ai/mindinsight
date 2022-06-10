@@ -31,6 +31,7 @@ class MinddataCpuUtilizationAnalyser(BaseAnalyser):
 
     def __init__(self, profiling_dir, device_id):
         super(MinddataCpuUtilizationAnalyser, self).__init__(profiling_dir, device_id)
+        self._step_total_num = 0
         self._steps_info = self._get_minddata_cpu_utilization_steps_info()
         self._cpu_utilization_info = dict()
 
@@ -182,7 +183,15 @@ class MinddataCpuUtilizationAnalyser(BaseAnalyser):
     def _get_step_total_num(self):
         """Load data according to the parsed AICORE operator types file."""
         target_file = f'step_trace_raw_{self._device_id}_detail_time.csv'
+        dynamic_shape_file = f'dynamic_shape_info_{self._device_id}.json'
         file_path = os.path.join(self._profiling_dir, target_file)
+        dynamic_shape_file_path = os.path.join(self._profiling_dir, dynamic_shape_file)
+        if dynamic_shape_file in os.listdir(self._profiling_dir):
+            with open(dynamic_shape_file_path, 'r') as fp:
+                shape_info = json.load(fp).get('op_type')
+                for op_type in shape_info:
+                    self._step_total_num = len(shape_info.get(op_type))
+                    return
         if not file_path:
             log.error("Failed to find parsed trace time file.")
             raise ProfilerFileNotFoundException('parsed step trace time file.')
