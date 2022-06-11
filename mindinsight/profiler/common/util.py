@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -111,6 +111,17 @@ def query_latest_trace_time_file(profiler_dir, device_id=0):
     except ValueError:
         return None
     return os.path.join(profiler_dir, latest_file)
+
+
+def query_profiling_graph_mode(profiler_dir):
+    graph_mode = 'static'
+    dynamic_shape_file_prefix = "dynamic_shape_info"
+    all_file = os.listdir(profiler_dir)
+    for file in all_file:
+        if file.startswith(dynamic_shape_file_prefix):
+            graph_mode = 'dynamic'
+            return graph_mode
+    return graph_mode
 
 
 def query_step_trace_file(profiler_dir):
