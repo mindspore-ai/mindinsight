@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Huawei Technologies Co., Ltd
+# Copyright 2019-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
 # ============================================================================
 """Train task manager."""
 
+import os
 from mindinsight.utils.exceptions import ParamTypeError
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.common import exceptions
@@ -24,6 +25,8 @@ from mindinsight.datavisual.common.validation import Validation
 from mindinsight.datavisual.utils.utils import contains_null_byte
 from mindinsight.datavisual.processors.base_processor import BaseProcessor
 from mindinsight.datavisual.data_transform.data_manager import DATAVISUAL_PLUGIN_KEY, DATAVISUAL_CACHE_KEY
+from mindinsight.profiler.common.util import query_profiling_graph_mode
+from mindinsight.conf import settings
 
 
 class TrainTaskManager(BaseProcessor):
@@ -171,6 +174,10 @@ class TrainTaskManager(BaseProcessor):
             plugins = dict(plugins={plugin: [] for plugin in PluginNameEnum.list_members()})
 
         train_job_item.update(plugins)
+        if basic_info.profiler_type:
+            profiler_dir_abs = os.path.join(settings.SUMMARY_BASE_DIR, basic_info.train_id, basic_info.profiler_dir)
+            graph_mode = query_profiling_graph_mode(profiler_dir_abs)
+            train_job_item['graph_mode'] = graph_mode
         return train_job_item
 
     def cache_train_jobs(self, train_ids):
