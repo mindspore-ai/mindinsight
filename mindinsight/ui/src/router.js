@@ -214,6 +214,10 @@ export default new Router({
               component: () => import('./views/profiling/single/performance/step-trace.vue'),
             },
             {
+              path: 'operator-shape-step',
+              component: () => import('./views/profiling/single/performance/operator-shape-step.vue'),
+            },
+            {
               path: 'data-process',
               component: () => import('./views/profiling/single/performance/data-process.vue'),
             },

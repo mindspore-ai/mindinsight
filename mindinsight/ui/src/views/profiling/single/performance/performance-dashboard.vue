@@ -17,7 +17,7 @@ limitations under the License.
   <div class="single-performance-dashboard">
     <!-- Step trace area -->
     <div class="dashboard-item"
-         v-if="!isPynative">
+         v-if="!isPynative && !isDynamic">
       <div class="item-head">
         <div class="title">{{ $t('profiling.stepTrace') }}</div>
         <!-- Step trace description -->
@@ -109,6 +109,68 @@ limitations under the License.
             </defs>
           </svg>
         </div>
+      </div>
+    </div>
+    <!-- Operator dynamic shape info area -->
+    <div class="dashboard-item"
+         v-if="!isPynative && isDynamic">
+      <div class="item-head">
+        <div class="title">{{ $t('profiling.operatorShapeStep') }}</div>
+        <!-- Step trace description -->
+        <div class="tip-icon">
+          <el-tooltip placement="bottom"
+                      effect="light">
+            <div slot="content"
+                 class="tooltip-container">
+              <div class="pro-dash-tooltip">
+                <div class="font-size-style">{{$t("profiling.features")}}</div>
+                <div>{{$t('profiling.opeatorFeatures')}}</div>
+              </div>
+            </div>
+            <i class="el-icon-info"></i>
+          </el-tooltip>
+        </div>
+        <div class="view-detail">
+          <button @click="viewDetail('operator-shape-step')"
+                  :disabled="svg.noData && svg.data.length === 0"
+                  :class="{disabled:svg.noData && svg.data.length === 0}">{{ $t('profiling.viewDetail') }}
+            <i class="el-icon-d-arrow-right"></i></button>
+        </div>
+      </div>
+      <div class="operator-select">
+        <span class="operator-select-title">{{$t('profiling.operatorSelectTitle')}}</span>
+        <el-select class="operator-select-option" 
+                   v-model="defaultOperatorValue"
+                   @remove-tag="operatorRemove"
+                   :collapse-tags="true"
+                   multiple
+                   filterable 
+                   :placeholder="selectTip">
+          <el-option
+            v-for="(item, index) in defaultOperatorArr"
+            :key="index"
+            :label="item.name"
+            disabled
+            :value="item.name">
+            <el-checkbox :key="item.name" 
+                         v-model="item.check" 
+                         @change="operatorChange(item.name)">{{item.name}}</el-checkbox>
+          </el-option>
+        </el-select>
+      </div>
+      <div class="image-noData"
+           v-if="svg.noData">
+        <div>
+          <img :src="require('@/assets/images/nodata.png')"
+               alt="" />
+        </div>
+        <p v-show="!svg.initOver">{{$t("public.dataLoading")}}</p>
+        <p v-show="svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noData")}}</p>
+      </div>
+      <!-- Step trace SVG container -->
+      <div class="shape-step"
+           v-show="!svg.noData">
+        <div id="operatorShape" class="operator-shape-step"></div>
       </div>
     </div>
     <!-- Operator information display area -->
@@ -610,6 +672,39 @@ export default {
         },
       },
       isPynative: this.$route.query.mode === 'pynative'? true: false,
+      isDynamic: this.$route.query.graphMode === 'dynamic' ? true : false,
+      options: {
+        dataZoom: [{
+          type: 'slider',
+          show: true,
+          start: 0,
+          end: 100,
+        }],
+        tooltip: {
+          trigger: 'axis',
+          formatter: null,
+          confine: true,
+        },
+        legend: {
+          right: 70,
+          top: 8,
+          data: [],
+        },
+        color: ['#c23531', '#2f4554', '#61a0a8'],
+        xAxis: {
+          type: 'category',
+          name: 'step',
+          data: [],
+        },
+        yAxis: {
+          type: 'value',
+          name: this.$t('profiling.timeConsume') + '(s)',
+        },
+        series: []
+      },
+      selectTip: this.$t('public.select'),
+      defaultOperatorValue: [],
+      defaultOperatorArr: [],
     };
   },
   mounted() {
@@ -650,9 +745,169 @@ export default {
      */
     init() {
       this.queryTimelineInfo();
-      this.queryTrainingTrace();
+      if (this.isDynamic) {
+        this.$nextTick(() => {
+          this.initShapeStep();
+        })
+      } else {
+        this.queryTrainingTrace();
+      }
       this.getProccessSummary();
       if (!this.isPynative) this.initPieChart();
+    },
+    /**
+     * init the default shape data
+     * @param {Array} details the operator shape data
+     */
+    addDefaultShape(details) {
+      // get top of three operator shape data
+      let topThreeArr = details.slice(0, 3);
+      topThreeArr.forEach((item) => {
+        if (item.check) {
+          this.defaultOperatorValue.push(item.name);
+        }
+      })
+    },
+    /**
+     * operator select change
+     * @param {String} val operator name
+     */
+    operatorChange(val) {
+      if (this.defaultOperatorValue.indexOf(val) == -1) {
+        this.defaultOperatorValue.push(val);
+      } else {
+        this.defaultOperatorValue.forEach((ele) => {
+          if (ele == val) {
+            this.defaultOperatorValue.splice(this.defaultOperatorValue.indexOf(val), 1);
+          }
+        })
+      }
+      this.drawChart();
+    },
+    /**
+     * init the operator chart
+     */
+    drawChart() {
+      let series = [];
+      let legend = [];
+      this.defaultOperatorArr.forEach((obj) => {
+        const check = obj.check;
+        if (check) {
+          const item = {
+            type: 'line',
+            name: obj.name,
+            data: obj.data,
+            smooth: true,
+            showSymbol: false,
+          }
+          series.push(item);
+          legend.push(obj.name);
+        }
+      })
+      this.options.series = series;
+      this.options.legend.data = legend;
+      let chartObj = echarts.init(document.getElementById('operatorShape'), echartsThemeName);
+      this.$nextTick(() => {
+        chartObj.setOption(this.options, true);
+      })
+    },
+    /**
+     * selector remove the operator by name
+     * @param {String} opName operator name
+     */
+    operatorRemove(opName) {
+      if (opName == 'all') {
+        this.defaultOperatorArr.forEach((elm) => {
+          elm.check = false;
+        })
+      } else {
+        this.defaultOperatorArr.forEach((elm) => {
+          if (elm.name == opName) {
+            elm.check = !elm.check;
+            this.drawChart();
+          }
+        })
+      }
+    },
+    /**
+     * init operator shape info by request dynamic shape api
+     */
+    initShapeStep() {
+      const params = {
+        dir: this.trainInfo.path,
+        device_id: this.rankID,
+      }
+      let series = [];
+      let legend = [];
+      let details = [];
+      RequestService.queryDynamicShape(params).then(
+        (res) => {
+          if (res && res.data) {
+            this.svg.noData = false;
+            let data = res.data;
+            let op_type_arr = data.op_type;
+            Object.keys(op_type_arr).forEach((val, index) => {
+              const shapeInfo = op_type_arr[val];
+              let sig = false;
+              let content = null;
+              // init top of three operator info
+              if (index < 3) {
+                sig = true;
+                const item = {
+                  type: 'line',
+                  name: val,
+                  data: shapeInfo,
+                  smooth: true,
+                  showSymbol: false,
+                }
+                series.push(item);
+                legend.push(val);
+                content = {
+                  name: val,
+                  check: sig,
+                  data: shapeInfo,
+                  detail: data[val][0],
+                }
+              }
+              details.push(content);
+            })
+          }
+          this.options.xAxis.data = series[0].data.map((_v, i) => i + 1);
+          this.options.series = series;
+          this.options.legend.data = legend;
+          this.defaultOperatorArr = details;
+          let chartObj = echarts.init(document.getElementById('operatorShape'), echartsThemeName);
+          this.options.tooltip.formatter = (params) => {
+            return this.formatChartTip(params);
+          }
+          this.$nextTick(() => {
+            chartObj.setOption(this.options, true);
+          })
+          this.addDefaultShape(this.defaultOperatorArr);
+        }
+      ).catch(() => {
+        this.svg.noData = true;
+        this.svg.initOver = true;
+      })
+    },
+    /**
+     * format the chart
+     * @param {object} params html dom object
+     */
+    formatChartTip(params) {
+      const tipInnerHTML = [];
+      if (params && params.length) {
+        const colorArray = ['#c23531', '#2f4554', '#61a0a8'];
+        const index = params[0].dataIndex + 1;
+        tipInnerHTML.push(`step: ${index}`);
+        params.forEach((item, idx) => {
+          tipInnerHTML.push(
+            `<span class="define-chart-tip" style="background-color:${colorArray[idx]};"></span>` +
+            `${item.seriesName}: <span style="margin: 0 6px;">${item.data}</span>`
+          );
+        });
+      }
+      return tipInnerHTML.join('<br>');
     },
     /**
      * Get the data of pynative operator
@@ -1349,6 +1604,14 @@ export default {
 .tooltip-container .pro-dash-tooltip .indent {
   padding-left: 30px;
 }
+
+/* operator dynamic tip */
+.define-chart-tip {
+  display: inline-block;
+  margin-right: 5px;
+  width: 10px;
+  height: 10px;
+}
 /* Step Trace */
 .single-performance-dashboard .step-trace {
   width: 100%;
@@ -1396,6 +1659,37 @@ export default {
   width: 100%;
   overflow: auto;
   height: 100%;
+}
+
+/* operator dynamic shape */
+.single-performance-dashboard .dashboard-item .operator-select {
+  line-height: 25px;
+  height: 25px;
+  margin: 0 25%;
+}
+
+.single-performance-dashboard .dashboard-item .operator-select-title {
+  color: #00A5A7;
+}
+
+.single-performance-dashboard .dashboard-item .operator-select-option {
+  line-height: 30px;
+  height: 30px;
+  width: 50%;
+  padding-left: 10px;
+}
+
+.single-performance-dashboard .shape-step {
+  height: calc(100% - 140px);
+  width: 100%;
+}
+
+#operatorShape {
+  margin: 50px 0 0;
+  height: 35vh;
+  width: 50vw;
+  min-height: 200px;
+  min-width: 100px;
 }
 /* pynative Item  */
 .single-performance-dashboard .dashboard-item-pynative {
