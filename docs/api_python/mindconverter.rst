@@ -1,6 +1,9 @@
 mindconverter
 =============
 
+MindConverter是一种迁移工具，用于将模型脚本从PyTorch转换为Mindspore。
+根据转换报告，只需稍作更改，用户便可以快速地将PyTorch模型迁移到Mindspore。
+
 .. py:function:: mindconverter.pytorch2mindspore(model, dummy_inputs, output_dir=None)
 
     实现PyTorch模型到MindSpore模型的快速等价迁移。
