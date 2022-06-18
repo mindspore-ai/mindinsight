@@ -27,6 +27,11 @@ from tests.st.func.profiler.conftest import BASE_SUMMARY_DIR_RUN_2
 
 class TestAicpuAnalyser:
     """Test AICPU analyser module."""
+    def __init__(self):
+        """Member init."""
+        self._analyser_aicpu_type = None
+        self._analyser_aicpu_detail = None
+
     @classmethod
     def setup_class(cls):
         """Generate parsed files."""
@@ -51,9 +56,9 @@ class TestAicpuAnalyser:
         expect_result = {
             'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
             'object': [
-                ['InitData', 7.906, 1, 89.84],
-                ['GetNext', 0.5905, 2, 6.71],
-                ['EndOfSequence', 0.3035, 2, 3.45]
+                ['InitData', 7906.0, 1, 89.84],
+                ['GetNext', 590.5, 2, 6.71],
+                ['EndOfSequence', 303.5, 2, 3.45]
             ],
             'size': 3
         }

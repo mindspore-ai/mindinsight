@@ -1,4 +1,4 @@
-# Copyright 2021 Huawei Technologies Co., Ltd
+# Copyright 2021-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -87,8 +87,8 @@ class CpuOpTypeAnalyser(CpuAnalyser):
         """
         try:
             return [row[0], int(row[1]), int(row[2]),
-                    self._format_float_data(float(row[3])),
-                    self._format_float_data(float(row[4])),
+                    self._format_float_data(float(row[3]) * self._ms_to_us),
+                    self._format_float_data(float(row[4]) * self._ms_to_us),
                     self._format_float_data(float(row[5])*100)]
         except IndexError as err:
             log.exception(err)
@@ -112,7 +112,8 @@ class CpuOpInfoAnalyser(CpuAnalyser):
         """
         try:
             return [row[0], row[1], row[2], row[3], int(row[4]),
-                    self._format_float_data(float(row[5])), self._format_float_data(float(row[6])),
+                    self._format_float_data(float(row[5]) * self._ms_to_us),
+                    self._format_float_data(float(row[6]) * self._ms_to_us),
                     self._format_float_data(float(row[7])), row[8]]
         except IndexError as err:
             log.exception(err)

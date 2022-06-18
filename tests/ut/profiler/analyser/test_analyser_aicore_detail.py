@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ def get_detail_infos(indexes=None, sort_name=None, sort_type=True):
         for fm_info, detail_info, flops_line in zip(fm_csv_reader, detail_csv_reader, flops_reader):
             flops = flops_line.strip().split(',')
             cache.append(
-                [fm_info[4], fm_info[5], float(detail_info[1]), float(flops[1]),
+                [fm_info[4], fm_info[5], round(float(detail_info[1]) * 1e3, 3), float(flops[1]),
                  float(flops[2]), float(flops[3]), fm_info[6],
                  fm_info[3], json.loads(fm_info[7]) if fm_info[7] else None]
             )

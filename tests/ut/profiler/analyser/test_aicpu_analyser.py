@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,6 +26,11 @@ from tests.ut.profiler import BASE_SUMMARY_DIR
 
 class TestAicpuAnalyser:
     """Test AICPU analyser module."""
+    def __init__(self):
+        """Member init."""
+        self._analyser_aicpu_type = None
+        self._analyser_aicpu_detail = None
+
     @classmethod
     def setup_class(cls):
         """Generate parsed files."""
@@ -44,7 +49,7 @@ class TestAicpuAnalyser:
         expect_result = {
             'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
             'object': [
-                ['InitData', 7.906, 1, 89.84],
+                ['InitData', 7906.0, 1, 89.84],
             ],
             'size': 1
         }
