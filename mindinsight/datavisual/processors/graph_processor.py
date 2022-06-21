@@ -130,3 +130,76 @@ class GraphProcessor(BaseProcessor):
 
         nodes = self._graph.search_single_node(name)
         return nodes
+
+    def list_all_nodes_info(self, scope):
+        """
+        Get all the nodes info in graph.
+
+        Args:
+            scope (str): The name of a scope.
+
+        Returns:
+            TypedDict('Nodes', {'nodes': list[Node]}), format is {'nodes': [<Node object>]}.
+                example:
+                    {
+                      "nodes" : [
+                        {
+                          "attr" :
+                          {
+                            "index" : "i: 0\n"
+                          },
+                          "input" : {},
+                          "name" : "input_tensor",
+                          "output" :
+                          {
+                            "Default/TensorAdd-op17" :
+                            {
+                              "edge_type" : "data",
+                              "scope" : "name_scope",
+                              "shape" : [1, 16, 128, 128]
+                            }
+                          },
+                          "independent_layout" : False,
+                          "subnode_count" : 0,
+                          "type" : "Data"
+                        }
+                      ]
+                    }
+        """
+        all_nodes_detail = []
+        if scope and not self._graph.exist_node(scope):
+            raise NodeNotInGraphError(node_name=scope)
+
+        all_nodes_detail = self.get_all_node_detail(scope, all_nodes_detail)
+        return {"all_nodes_detail": all_nodes_detail}
+
+    def get_all_node_detail(self, scope, all_nodes_detail):
+        """
+        get all the nodes detail information recursively.
+
+        Args:
+            scope (str): The name of node.
+            all_nodes_detail (list): all node info
+
+        Returns:
+            list, format is:
+                item_object = [{'nodes': [<Node object>],
+                       'scope_name': '',
+                       'children': {<item_object>}}]
+        """
+        if scope and not self._graph.exist_node(scope):
+            raise NodeNotInGraphError(node_name=scope)
+
+        nodes = self._graph.list_node_by_scope(scope=scope)
+        if not isinstance(nodes, list):
+            raise NodeNotInGraphError(node_name=scope)
+        if not nodes:
+            return all_nodes_detail
+        for node in nodes:
+            name = node.get("name")
+            sub_scope = node.get("subnode_count")
+            if sub_scope == 0:
+                all_nodes_detail.append(node)
+                continue
+            self.get_all_node_detail(name, all_nodes_detail)
+        return all_nodes_detail

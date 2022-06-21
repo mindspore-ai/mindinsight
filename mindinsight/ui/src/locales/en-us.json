@@ -1193,6 +1193,13 @@
     "more": "View More",
     "trainingTip": "If some basic training information or evaluation indicators are missing, please check whether the traceability data is collected correctly."
   },
+  "operatorPrecision": {
+    "title": "Reduced Precision Operator Analysis",
+    "placeTitle": "Please enter the operator name to be searched",
+    "searchBtn": "search",
+    "download": "download",
+    "view": "check"
+  },
   "error": {
     "50540000": "System error.",
     "50540001": "Incorrect parameter type. Check whether the request parameter types meet the requirements.",

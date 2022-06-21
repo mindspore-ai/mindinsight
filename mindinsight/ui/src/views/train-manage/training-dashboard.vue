@@ -279,6 +279,59 @@ limitations under the License.
           <div class="diagram-cover-item"></div>
         </div>
       </div>
+      <div class="cl-dashboard-con-up"
+           :class="(!noOperatorData && !wrongPlugin) ? '' : 'no-data-hover'"
+           @click="jumpOperatorPrecision">
+        <div class="cl-dashboard-title">
+          {{$t("operatorPrecision.title")}}
+        </div>
+        <div class="cl-operator-table" v-show="!noOperatorData">
+          <el-table
+            :data="getTableData"
+            :header-cell-style="headerStyle"
+            :row-class-name="tableRowClassName"
+            style="width: 100%">
+            <el-table-column
+              type="index"
+              label="ID"
+              width="55">
+            </el-table-column>
+            <el-table-column
+              prop="op_name"
+              label="op_name"
+              min-width="10%">
+            </el-table-column>
+            <el-table-column
+              prop="type"
+              label="op_type"
+              min-width="10%">
+            </el-table-column>
+            <el-table-column
+              prop="precision_flag"
+              label="precision_flag"
+              min-width="12%">
+            </el-table-column>
+            <el-table-column
+              label="is_reduce_flag"
+              min-width="8%">
+              <template slot-scope="scope">
+                <div>{{scope.row.reduce_flag}}
+                  <i class="el-icon-bottom" v-show="scope.row.reduce_flag == 'reduce'"></i>
+                  <i class="el-icon-top" v-show="scope.row.reduce_flag == 'raise'"></i>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+        <div class="no-data-img" 
+             key="no-chart-data"
+             v-show="noOperatorData">
+          <img :src="require('@/assets/images/nodata.png')" alt=""/>
+          <p class="no-data-text">
+            {{$t("public.noData")}}
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -366,6 +419,10 @@ export default {
         },
       },
       themeIndex: this.$store.state.themeIndex, // Index of theme color
+      tableData: [],
+      trainJobId: this.$route.query.id,
+      noOperatorData: true,
+      operatorInfoFile: null,
     };
   },
   computed: {
@@ -381,6 +438,12 @@ export default {
     },
     timeReloadValue() {
       return this.$store.state.timeReloadValue;
+    },
+    /**
+     * get the first four pieces of tableData
+     */
+    getTableData() {
+      return this.tableData.slice(0, 4);
     },
   },
   components: {
@@ -436,6 +499,90 @@ export default {
     });
   },
   methods: {
+    /**
+     * get all nods data
+     */
+    queryAllGraphNodesData() {
+      const params = {
+        train_id: this.$route.query.id,
+        tag: this.operatorInfoFile,
+        mode: 'normal',
+      };
+      RequestService.queryAllGraphNodesData(params)
+        .then(
+          (response) => {
+            if (response && response.data) {
+              let data = response.data.all_nodes_detail;
+              let showData = [];
+              data.forEach((item) => {
+                const name = item.name;
+                const op_name = name.split("/").at(-1);
+                const type = item.type;
+                const input = JSON.stringify(item.input);
+                const output = JSON.stringify(item.output);
+                const precision_flag = item.attr.hasOwnProperty('precision_flag') ? 
+                                            item.attr.precision_flag : 'null';
+                let reduce_flag = "null";
+                if (precision_flag != 'null') {
+                  if (precision_flag.indexOf('reduce') != -1) {
+                    reduce_flag = 'reduce';
+                  } else {
+                    reduce_flag = 'raise';
+                  }
+                  showData.unshift({op_name: op_name, name: name, type: type, precision_flag: precision_flag, 
+                                    reduce_flag: reduce_flag, input: input, output: output});
+                } else {
+                  showData.push({op_name: op_name, name: name, type: type, precision_flag: precision_flag,
+                                 reduce_flag: reduce_flag, input: input, output: output});
+                }
+              })
+              this.tableData = showData;
+              if (this.tableData.length > 0) {
+                this.noOperatorData = false;
+              }
+            } else {
+              this.noOperatorData = false;
+            }
+          },
+          (error) => {
+            thi.loading.show = false;
+            this.noOperatorData = false;
+          }
+        ).catch((error) => {
+          this.noOperatorData = false;
+        })
+    },
+    /**
+     * change table row background color
+     */
+    tableRowClassName(rowIndex) {
+      if (rowIndex % 2 == 0) {
+        return 'waring-row';
+      } else {
+        return 'success-row';
+      }
+    },
+    /**
+     * change the table header background color
+     */
+    headerStyle() {
+      return {
+        background: "#8df1f2",
+        color: '#282B33',
+      }
+    },
+    /**
+     * Go to operator table
+     */
+    jumpOperatorPrecision() {
+      this.$router.push({
+        path: '/train-manage/OperatorPrecision',
+        query: {
+          train_id: this.trainingJobId,
+          summaryPath: this.summaryPath,
+        }
+      })
+    },
     /**
      * The size of the view window changes.
      */
@@ -570,7 +717,9 @@ export default {
           const graphIds = data.graph || [];
           const tensorTags = data.tensor || [];
           if (graphIds.length) {
+            this.operatorInfoFile = graphIds[0];
             this.fileTag = graphIds[0];
+            this.queryAllGraphNodesData();
           }
           const histogramTags = data.histogram || [];
           this.getHistogramTag(histogramTags);
@@ -2394,5 +2543,28 @@ export default {
 }
 .cl-dashboard-con-up .diagram-container {
   height: 100%;
+}
+
+.cl-dashboard-con-up .cl-operator-table {
+  margin-top: 7%;
+}
+
+.cl-dashboard-con-up .cl-operator-table .el-icon-top {
+  padding-left: 2px;
+  color: #409eff;
+}
+
+.cl-dashboard-con-up .cl-operator-table .el-icon-bottom {
+  padding-left: 2px;
+  color: #f00;
+
+}
+
+.cl-dashboard-con-up .el-tanle .waring-row {
+  background: #fdf5e6;
+}
+
+.cl-dashboard-con-up .el-tanle .success-row {
+  background: #f0f9eb;
 }
 </style>
