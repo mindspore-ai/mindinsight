@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ AICORE_DETAIL_COL = ["op_name", "op_type", "avg_execution_time", "FLOPs", "FLOPS
 PYNATIVE_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "percent"]
 PYNATIVE_DETAIL_COL = ["op_name", "op_type", "avg_execution_time", "subgraph", "full_op_name"]
 AICPU_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "percent"]
-AICPU_DETAIL_COL = ["serial_number", "op_type", "total_time", "dispatch_time", "run_start", "run_end"]
+AICPU_DETAIL_COL = ["op_name", "serial_number", "op_type", "total_time", "dispatch_time", "execution_frequency",
+                    "run_start", "run_end"]
 GPU_TYPE_COL = ["op_type", "type_occurrences", "total_time", "proportion", "avg_time"]
 GPU_ACTIVITY_COL = ["name", "type", "op_full_name", "stream_id",
                     "block_dim", "grid_dim", "occurrences", "total_duration",

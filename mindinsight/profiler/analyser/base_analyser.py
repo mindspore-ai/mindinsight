@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -54,6 +54,7 @@ class BaseAnalyser(ABC):
         self._size = 0
         self._none_filter_condition_key = []
         self._none_sort_col_names = []
+        self._ms_to_us = 1e3
 
         try:
             self._load()

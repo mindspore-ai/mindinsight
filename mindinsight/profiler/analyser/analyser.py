@@ -90,7 +90,7 @@ class AicoreTypeAnalyser(BaseAnalyser):
         Returns:
             list[Union[str, float]], the converted data.
         """
-        return [row[0], self._format_float_data(float(row[1])),
+        return [row[0], self._format_float_data(float(row[1]) * self._ms_to_us),
                 int(row[2]), self._format_float_data(float(row[3]))]
 
 
@@ -295,7 +295,7 @@ class AicoreDetailAnalyser(BaseAnalyser):
         framework_info = framework_infos.get(row[0])
         flops_info = flops_infos.get(row[0], ['-', '-', '-'])
         return [framework_info[1], framework_info[2],
-                self._format_float_data(row[1]),
+                self._format_float_data(float(row[1]) * self._ms_to_us),
                 self._format_float_data(flops_info[0]),
                 self._format_float_data(flops_info[1]),
                 self._format_float_data(flops_info[2]),
@@ -348,7 +348,7 @@ class AicpuTypeAnalyser(BaseAnalyser):
         for key, value in type_detail_cache.items():
             exec_frequency = len(value)
             total_time_index = 2
-            exec_avg_time = sum([float(i[total_time_index]) for i in value]) / exec_frequency
+            exec_avg_time = sum([float(i[total_time_index]) for i in value]) * self._ms_to_us / exec_frequency
             exec_avg_time = round(exec_avg_time, 6)
             total_avg_time += exec_avg_time
             type_temp_detail_cache[key] = [key, exec_avg_time, exec_frequency]
@@ -411,11 +411,12 @@ class AicpuDetailAnalyser(BaseAnalyser):
                 key = aicpu_info[0]
                 if key not in temp_dict:
                     temp_dict[key] = [0, 0, 0]
-                temp_dict[key][0] += aicpu_info[2]
-                temp_dict[key][1] += aicpu_info[3]
-                temp_dict[key][2] += 1
+                temp_dict.get(key)[0] += aicpu_info[2]
+                temp_dict.get(key)[1] += aicpu_info[3]
+                temp_dict.get(key)[2] += 1
         for k, v in temp_dict.items():
-            self._data.append([k, k.split('-')[0], v[0] / v[2], v[1] / v[2], v[2]])
+            self._data.append([k, k.split('-')[0], (v[0] / v[2]) * self._ms_to_us,
+                               (v[1] / v[2]) * self._ms_to_us, v[2]])
 
     def _filter(self, filter_condition):
         """
@@ -515,7 +516,7 @@ class PynativeTypeAnalyser(BaseAnalyser):
         Returns:
             list[Union[str, float]], the converted data.
         """
-        return [row[0], self._format_float_data(float(row[1])),
+        return [row[0], self._format_float_data(float(row[1])) * self._ms_to_us,
                 int(row[2]), self._format_float_data(float(row[3]))]
 
 
@@ -648,7 +649,7 @@ class PynativeDetailAnalyser(BaseAnalyser):
             list[Union[str, float]], the operator detail information in one row.
         """
         return [row[0], row[0].split('-')[0],
-                self._format_float_data(row[1]),
+                self._format_float_data(float(row[1])) * self._ms_to_us,
                 'Default', 'Default/' + row[0]]
 
 

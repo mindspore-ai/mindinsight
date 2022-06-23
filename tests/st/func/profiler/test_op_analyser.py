@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ OP_GATHER_V2_INFO = {
     ],
     'object': [
         [
-            'GatherV2-op55', 'GatherV2', 42.220, 333.0, 333.0, 33.0, 'Default',
+            'GatherV2-op55', 'GatherV2', 42220.212, 333.0, 333.0, 33.0, 'Default',
             'Default/network-TrainStepWrap/network-VirtualDatasetCellTriple/'
             '_backbone-NetWithLossClass/network-WideDeepModel/GatherV2-op55',
             {
@@ -54,7 +54,7 @@ OP_GATHER_V2_INFO = {
             }
         ],
         [
-            'GatherV2-op33', 'GatherV2', 0.935229, 333.0, 333.0, 33.0, 'Default',
+            'GatherV2-op33', 'GatherV2', 935.229, 333.0, 333.0, 33.0, 'Default',
             'Default/network-TrainStepWrap/network-VirtualDatasetCellTriple/'
             '_backbone-NetWithLossClass/network-WideDeepModel/GatherV2-op33',
             {
@@ -108,35 +108,35 @@ class TestOpAnalyser:
         expect_result = {
             'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
             'object': [
-                ['UnsortedSegmentSum', 44.608, 2, 35.28],
-                ['GatherV2', 43.155, 2, 34.13],
-                ['Slice', 20.376, 16, 16.12],
-                ['Concat', 5.808, 4, 4.59],
-                ['Split', 2.714, 2, 2.15],
-                ['MatMul', 1.937, 15, 1.53],
-                ['Mul', 1.903, 32, 1.51],
-                ['StridedSliceGrad', 1.507, 2, 1.19],
-                ['TransData', 1.115, 30, 0.88],
-                ['ReluGrad', 0.854069, 5, 0.68],
-                ['Cast', 0.484685, 15, 0.38],
-                ['ReLU', 0.483282, 5, 0.38],
-                ['RealDiv', 0.422807, 15, 0.33],
-                ['StridedSlice', 0.345569, 2, 0.27],
-                ['Adam', 0.285936, 11, 0.23],
-                ['BiasAdd', 0.189663, 5, 0.15],
-                ['BiasAddGrad', 0.071681, 5, 0.06],
-                ['Tile', 0.044158, 4, 0.03],
-                ['ReduceSum', 0.030765, 5, 0.02],
-                ['ApplyFtrl', 0.025454, 2, 0.02],
-                ['AtomicAddrClean', 0.019369, 8, 0.02],
-                ['AddN', 0.012836, 1, 0.01],
-                ['Square', 0.009799, 1, 0.01],
-                ['SigmoidCrossEntropyWithLogitsGrad', 0.009582, 2, 0.01],
-                ['TensorAdd', 0.009218, 3, 0.01],
-                ['SigmoidCrossEntropyWithLogits', 0.004809, 1, 0.0],
-                ['ReduceMean', 0.004535, 1, 0.0],
-                ['Assign', 0.002477, 2, 0.0],
-                ['AssignAdd', 0.001688, 1, 0.0]
+                ['UnsortedSegmentSum', 44607.826, 2, 35.28],
+                ['GatherV2', 43155.441, 2, 34.13],
+                ['Slice', 20376.315, 16, 16.12],
+                ['Concat', 5808.454, 4, 4.59],
+                ['Split', 2714.277, 2, 2.15],
+                ['MatMul', 1936.681, 15, 1.53],
+                ['Mul', 1902.949, 32, 1.51],
+                ['StridedSliceGrad', 1506.834, 2, 1.19],
+                ['TransData', 1115.158, 30, 0.88],
+                ['ReluGrad', 854.069, 5, 0.68],
+                ['Cast', 484.685, 15, 0.38],
+                ['ReLU', 483.282, 5, 0.38],
+                ['RealDiv', 422.807, 15, 0.33],
+                ['StridedSlice', 345.569, 2, 0.27],
+                ['Adam', 285.936, 11, 0.23],
+                ['BiasAdd', 189.663, 5, 0.15],
+                ['BiasAddGrad', 71.681, 5, 0.06],
+                ['Tile', 44.158, 4, 0.03],
+                ['ReduceSum', 30.765, 5, 0.02],
+                ['ApplyFtrl', 25.454, 2, 0.02],
+                ['AtomicAddrClean', 19.369, 8, 0.02],
+                ['AddN', 12.836, 1, 0.01],
+                ['Square', 9.799, 1, 0.01],
+                ['SigmoidCrossEntropyWithLogitsGrad', 9.582, 2, 0.01],
+                ['TensorAdd', 9.218, 3, 0.01],
+                ['SigmoidCrossEntropyWithLogits', 4.809, 1, 0.0],
+                ['ReduceMean', 4.535, 1, 0.0],
+                ['Assign', 2.477, 2, 0.0],
+                ['AssignAdd', 1.688, 1, 0.0]
             ],
             'size': 29
         }
@@ -160,8 +160,8 @@ class TestOpAnalyser:
         expect_result = {
             'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
             'object': [
-                ['MatMul', 1.937, 15, 1.53],
-                ['Mul', 1.903, 32, 1.51]
+                ['MatMul', 1936.681, 15, 1.53],
+                ['Mul', 1902.949, 32, 1.51]
             ],
             'size': 2
         }

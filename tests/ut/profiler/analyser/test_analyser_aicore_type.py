@@ -1,4 +1,4 @@
-# Copyright 2020 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ def get_type_infos(indexes=None, sort_name=None, sort_type=True):
         cache = []
         for type_info in csv_reader:
             cache.append(
-                [type_info[0], float(type_info[1]), int(type_info[2]),
+                [type_info[0], round(float(type_info[1]) * 1e3, 3), int(type_info[2]),
                  float(type_info[3])]
             )
 
