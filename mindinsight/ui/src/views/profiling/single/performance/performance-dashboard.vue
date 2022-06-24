@@ -868,6 +868,14 @@ export default {
                   data: shapeInfo,
                   detail: data[val][0],
                 }
+              } else {
+                sig = false;
+                content = {
+                  name: val,
+                  check: sig,
+                  data: shapeInfo,
+                  detail: data[val][0],
+                }
               }
               details.push(content);
             })

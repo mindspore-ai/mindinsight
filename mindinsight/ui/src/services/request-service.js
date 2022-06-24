@@ -650,4 +650,12 @@ export default {
       }
     });
   },
+  // query all graph nodes data
+  queryAllGraphNodesData(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/datavisual/graphs/nodes/all',
+      params: params,
+    });
+  },
 };

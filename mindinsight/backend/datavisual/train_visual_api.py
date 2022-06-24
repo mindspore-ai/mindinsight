@@ -138,6 +138,26 @@ def graph_node_names():
     return jsonify(resp)
 
 
+@BLUEPRINT.route("/datavisual/graphs/nodes/all", methods=["GET"])
+def graph_all_nodes():
+    """
+    Interface to get all nodes detail.
+
+    Returns:
+        Response, which contains a JSON object.
+    """
+    name = request.args.get("name", default=None)
+    tag = request.args.get("tag", default=None)
+    mode = request.args.get("mode", default="normal")
+    train_id = request.args.get('train_id')
+    if mode not in VALID_MODE:
+        raise ParamValueError("Invalid mode")
+
+    graph_process = GraphProcessor(train_id, DATA_MANAGER, tag, mode)
+    resp = graph_process.list_all_nodes_info(scope=name)
+    return jsonify(resp)
+
+
 @BLUEPRINT.route("/datavisual/graphs/single-node", methods=["GET"])
 def graph_search_single_node():
     """

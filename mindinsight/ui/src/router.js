@@ -63,6 +63,10 @@ export default new Router({
       component: () => import('./views/train-manage/graph.vue'),
     },
     {
+      path: '/train-manage/operatorPrecision',
+      component: () => import('./views/train-manage/operator-precision.vue'),
+    },
+    {
       path: '/train-manage/data-map',
       component: () => import('./views/train-manage/data-map.vue'),
     },
