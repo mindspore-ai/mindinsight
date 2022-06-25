@@ -80,10 +80,9 @@ class EmbeddingMapper(AtenToMindSporeMapper):
     def _get_args(**kwargs):
         """Get args from params_parser."""
         trainable_params = kwargs.get("trainable_params", dict())
-        args = kwargs.get("args", dict())
         vocab_size, embedding_size = trainable_params.get("embedding_table", dict())["data"].shape
         return {
             "vocab_size": vocab_size,
             "embedding_size": embedding_size,
-            "padding_idx": args["padding_idx"] if args["padding_idx"] != -1 else None
+            "padding_idx": None
         }
