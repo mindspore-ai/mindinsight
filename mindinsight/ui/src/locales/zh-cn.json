@@ -611,7 +611,8 @@
     "operatorShapeDetail": "算子耗时详情（按迭代）",
     "operatorShapeTip": "算子耗时详情（按迭代）是展示指定类型的算子耗时及shape信息，默认展示3条记录， 算子shape信息可以点击平滑曲线图上对应点来显示。",
     "operatorFilterTitle": "筛选指定算子名称：",
-    "operatorShapeTitle": "算子耗时详情"
+    "operatorShapeTitle": "算子耗时详情",
+    "notSupportTitle": "暂不支持动态shape网络"
   },
   "profilingGPU": {
     "minddata_get_next_queue": {

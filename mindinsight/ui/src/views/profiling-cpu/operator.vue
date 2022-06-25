@@ -29,7 +29,7 @@ limitations under the License.
                          :chart="hostChart"
                          :accuracy="3"
                          :headerFilder="hostHeaderFilder"
-                         :unit="$t('profiling.unit')"
+                         :unit="$t('profiling.gpuunit')"
                          ref="host" />
         </el-tab-pane>
       </el-tabs>
@@ -103,23 +103,23 @@ export default {
         occurrences: `occurrences (${this.$t('profiling.countUnit')})`,
         execution_frequency: `execution_frequency (${this.$t('profiling.countUnit')})`,
         percent: 'percent (%)',
-        avg_execution_time: `avg_execution_time (${this.$t('profiling.unit')})`,
-        total_compute_time: 'total_compute_time (ms)',
-        compute_time: `compute_time (${this.$t('profiling.unit')})`,
+        avg_execution_time: `avg_execution_time (${this.$t('profiling.gpuunit')})`,
+        total_compute_time: 'total_compute_time (us)',
+        compute_time: `compute_time (${this.$t('profiling.gpuunit')})`,
         total_proportion: 'total_proportion (%)',
       },
       hostHeaderFilder: {
         type_occurrences: `type_occurrences (${this.$t('profiling.countUnit')})`,
         execution_frequency: `execution_frequency (${this.$t('profiling.countUnit')})`,
         percent: 'percent (%)',
-        avg_execution_time: `avg_execution_time (${this.$t('profiling.unit')})`,
-        total_compute_time: 'total_compute_time (ms)',
-        compute_time: `compute_time (${this.$t('profiling.unit')})`,
+        avg_execution_time: `avg_execution_time (${this.$t('profiling.gpuunit')})`,
+        total_compute_time: 'total_compute_time (us)',
+        compute_time: `compute_time (${this.$t('profiling.gpuunit')})`,
         total_time_proportion: 'total_time_proportion (%)',
         op_occurrences: `op_occurrences (${this.$t('profiling.countUnit')})`,
-        op_total_time: 'op_total_time (ms)',
-        avg_time: `avg_time (${this.$t('profiling.unit')})`,
-        op_avg_time: `op_avg_time (${this.$t('profiling.unit')})`,
+        op_total_time: 'op_total_time (us)',
+        avg_time: `avg_time (${this.$t('profiling.gpuunit')})`,
+        op_avg_time: `op_avg_time (${this.$t('profiling.gpuunit')})`,
       },
       gpuOpSearch: {
         all: {

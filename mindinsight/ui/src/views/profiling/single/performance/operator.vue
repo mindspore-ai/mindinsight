@@ -28,7 +28,7 @@ limitations under the License.
                          :search="coreSearch"
                          :accuracy="6"
                          :headerFilder="headerFilder"
-                         :unit="$t('profiling.unit')"
+                         :unit="$t('profiling.gpuunit')"
                          :hasFlopsInfo="!isPynative"
                          ref="core" />
         </el-tab-pane>
@@ -43,7 +43,7 @@ limitations under the License.
                          :search="cpuSearch"
                          :accuracy="6"
                          :headerFilder="headerFilder"
-                         :unit="$t('profiling.unit')"
+                         :unit="$t('profiling.gpuunit')"
                          ref="cpu" />
         </el-tab-pane>
         <el-tab-pane label="HOSTCPU"
@@ -57,7 +57,7 @@ limitations under the License.
                          :accuracy="6"
                          :headerFilder="hostHeaderFilder"
                          :chart="hostChart"
-                         :unit="$t('profiling.unit')"
+                         :unit="$t('profiling.gpuunit')"
                          ref="host" />
         </el-tab-pane>
       </el-tabs>
@@ -125,18 +125,18 @@ export default {
         },
       },
       headerFilder: {
-        execution_time: `execution_time (${this.$t('profiling.unit')})`,
-        avg_execution_time: `avg_execution_time (${this.$t('profiling.unit')})`,
+        execution_time: `execution_time (${this.$t('profiling.gpuunit')})`,
+        avg_execution_time: `avg_execution_time (${this.$t('profiling.gpuunit')})`,
         execution_frequency: `execution_frequency (${this.$t('profiling.countUnit')})`,
         percent: 'percent (%)',
-        total_time: 'total_time (ms)',
-        dispatch_time: 'dispatch_time (ms)',
-        total_compute_time: 'total_compute_time (ms)',
-        compute_time: `compute_time (${this.$t('profiling.unit')})`,
+        total_time: 'total_time (us)',
+        dispatch_time: 'dispatch_time (us)',
+        total_compute_time: 'total_compute_time (us)',
+        compute_time: `compute_time (${this.$t('profiling.gpuunit')})`,
         total_time_proportion: 'total_time_proportion (%)',
-        op_total_time: 'op_total_time (ms)',
-        avg_time: 'avg_time (ms)',
-        op_avg_time: 'op_avg_time (ms)',
+        op_total_time: 'op_total_time (us)',
+        avg_time: 'avg_time (us)',
+        op_avg_time: 'op_avg_time (us)',
         FLOPs: 'FLOPs (M)',
         FLOPS: 'FLOPS (G/s)',
         FLOPS_Utilization: 'FLOPS_Utilization (%)',
@@ -145,14 +145,14 @@ export default {
         type_occurrences: `type_occurrences (${this.$t('profiling.countUnit')})`,
         execution_frequency: `execution_frequency (${this.$t('profiling.countUnit')})`,
         percent: 'percent (%)',
-        avg_execution_time: `avg_execution_time (${this.$t('profiling.unit')})`,
-        total_compute_time: 'total_compute_time (ms)',
-        compute_time: `compute_time (${this.$t('profiling.unit')})`,
+        avg_execution_time: `avg_execution_time (${this.$t('profiling.gpuunit')})`,
+        total_compute_time: 'total_compute_time (us)',
+        compute_time: `compute_time (${this.$t('profiling.gpuunit')})`,
         total_time_proportion: 'total_time_proportion (%)',
         op_occurrences: `op_occurrences (${this.$t('profiling.countUnit')})`,
-        op_total_time: 'op_total_time (ms)',
-        avg_time: `avg_time (${this.$t('profiling.unit')})`,
-        op_avg_time: `op_avg_time (${this.$t('profiling.unit')})`,
+        op_total_time: 'op_total_time (us)',
+        avg_time: `avg_time (${this.$t('profiling.gpuunit')})`,
+        op_avg_time: `op_avg_time (${this.$t('profiling.gpuunit')})`,
       },
       coreSearch: {
         all: {

@@ -85,17 +85,33 @@ limitations under the License.
         </div>
       </div>
       <div class="content-item">
-        <div class="noData-content"
+        <div v-if="!isDynamic">
+          <div class="noData-content"
              v-show="!graphicsInitOver || noGraphicsDataFlag">
-          <div>
-            <img :src="require('@/assets/images/nodata.png')" />
+            <div>
+              <img :src="require('@/assets/images/nodata.png')" />
+            </div>
+            <div v-if="isHeterogeneous"
+                class="noData-text">{{$t("profiling.isHeterogeneous")}}</div>
+            <div v-else-if="graphicsInitOver && noGraphicsDataFlag"
+                class="noData-text">{{$t("public.noData")}}</div>
+            <div v-else
+                class="noData-text">{{$t("public.dataLoading")}}</div>
           </div>
-          <div v-if="isHeterogeneous"
-               class="noData-text">{{$t("profiling.isHeterogeneous")}}</div>
-          <div v-else-if="graphicsInitOver && noGraphicsDataFlag"
-               class="noData-text">{{$t("public.noData")}}</div>
-          <div v-else
-               class="noData-text">{{$t("public.dataLoading")}}</div>
+        </div>
+        <div v-else>
+          <div class="noData-content"
+             v-show="!graphicsInitOver || noGraphicsDataFlag">
+            <div>
+              <img :src="require('@/assets/images/nodata.png')" />
+            </div>
+            <div v-if="isHeterogeneous"
+                class="noData-text">{{$t("profiling.isHeterogeneous")}}</div>
+            <div v-else-if="graphicsInitOver && noGraphicsDataFlag"
+                class="noData-text">{{$t("profiling.notSupportTitle")}}</div>
+            <div v-else
+                class="noData-text">{{$t("public.dataLoading")}}</div>
+          </div>
         </div>
         <div class="dashboard-chart-content"
              v-show="!noGraphicsDataFlag && graphicsInitOver"
@@ -212,6 +228,7 @@ export default {
       },
       themeIndex: this.$store.state.themeIndex, // Index of theme color
       isHeterogeneous: false,
+      isDynamic: this.$route.query.graphMode === 'dynamic' ? true : false,
     };
   },
   watch: {

@@ -213,7 +213,7 @@ limitations under the License.
                 <span class="time">
                   <span class="bar"
                         :style="{width: item.time / pieChart.topN[0].time * 100 + '%'}"></span>
-                  <span class="value">{{item.time + $t('profiling.unit')}}</span>
+                  <span class="value">{{item.time + $t('profiling.gpuunit')}}</span>
                 </span>
               </li>
             </ul>
