@@ -20,6 +20,7 @@ import os
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 from mindinsight.profiler.common.log import logger
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
+from mindinsight.profiler.common.exceptions.exceptions import ProfilerIOException
 
 
 class AicoreTypeAnalyser(BaseAnalyser):
@@ -349,9 +350,9 @@ class AicpuTypeAnalyser(BaseAnalyser):
             exec_frequency = len(value)
             total_time_index = 2
             exec_avg_time = sum([float(i[total_time_index]) for i in value]) * self._ms_to_us / exec_frequency
-            exec_avg_time = round(exec_avg_time, 6)
+            exec_avg_time = exec_avg_time
             total_avg_time += exec_avg_time
-            type_temp_detail_cache[key] = [key, exec_avg_time, exec_frequency]
+            type_temp_detail_cache[key] = [key, round(exec_avg_time, self._ms_round_digits), exec_frequency]
 
         for key, value in type_temp_detail_cache.items():
             execution_time_index = 1
@@ -415,8 +416,8 @@ class AicpuDetailAnalyser(BaseAnalyser):
                 temp_dict.get(key)[1] += aicpu_info[3]
                 temp_dict.get(key)[2] += 1
         for k, v in temp_dict.items():
-            self._data.append([k, k.split('-')[0], (v[0] / v[2]) * self._ms_to_us,
-                               (v[1] / v[2]) * self._ms_to_us, v[2]])
+            self._data.append([k, k.split('-')[0], round(v[0] / v[2] * self._ms_to_us, self._ms_round_digits),
+                               round((v[1] / v[2]) * self._ms_to_us, self._ms_round_digits), v[2]])
 
     def _filter(self, filter_condition):
         """
