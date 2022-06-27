@@ -55,6 +55,8 @@ class BaseAnalyser(ABC):
         self._none_filter_condition_key = []
         self._none_sort_col_names = []
         self._ms_to_us = 1e3
+        self._round_digits = 6
+        self._ms_round_digits = 3
 
         try:
             self._load()
@@ -255,8 +257,7 @@ class BaseAnalyser(ABC):
             'size': self._size
         }
 
-    @staticmethod
-    def _format_float_data(float_data):
+    def _format_float_data(self, float_data):
         """Format the float data."""
         if float_data == '-':
             return float_data
@@ -264,7 +265,7 @@ class BaseAnalyser(ABC):
             float_data = float(float_data)
 
         if float_data < 1:
-            float_data = round(float_data, 6)
+            float_data = round(float_data, self._round_digits)
         else:
-            float_data = round(float_data, 3)
+            float_data = round(float_data, self._ms_round_digits)
         return float_data
