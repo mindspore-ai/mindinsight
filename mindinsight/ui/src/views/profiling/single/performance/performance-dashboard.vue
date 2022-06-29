@@ -149,12 +149,16 @@ limitations under the License.
           <el-option
             v-for="(item, index) in defaultOperatorArr"
             :key="index"
-            :label="item.name"
+            :label="item.name.length > 16 ? item.name.substring(0, 16) + '...' : item.name"
             disabled
             :value="item.name">
             <el-checkbox :key="item.name" 
-                         v-model="item.check" 
-                         @change="operatorChange(item.name)">{{item.name}}</el-checkbox>
+                         v-model="item.check"
+                         :title="item.name"
+                         :disabled="checkSig"
+                         @change="operatorChange(item.name)">
+              {{item.name.length > 20 ? item.name.substring(0, 20) + "..." : item.name}}
+            </el-checkbox>
           </el-option>
         </el-select>
       </div>
@@ -213,7 +217,7 @@ limitations under the License.
                 <span class="time">
                   <span class="bar"
                         :style="{width: item.time / pieChart.topN[0].time * 100 + '%'}"></span>
-                  <span class="value">{{item.time + $t('profiling.gpuunit')}}</span>
+                  <span class="value">{{item.time.toString().substring(0, 8) + $t('profiling.gpuunit')}}</span>
                 </span>
               </li>
             </ul>
@@ -689,8 +693,10 @@ export default {
           right: 70,
           top: 8,
           data: [],
+          padding: [0, 0, 0, 120],
+          type: 'scroll',
         },
-        color: ['#c23531', '#2f4554', '#61a0a8'],
+        color: CommonProperty.dynamicLineColor,
         xAxis: {
           type: 'category',
           name: 'step',
@@ -705,7 +711,11 @@ export default {
       selectTip: this.$t('public.select'),
       defaultOperatorValue: [],
       defaultOperatorArr: [],
+      checkSig: false,
     };
+  },
+  created() {
+    Object.getPrototypeOf(this.$options.components).ElSelect.options.methods.handleFocus = (event) => {};
   },
   mounted() {
     window.addEventListener('resize', this.resizeTrace, false);
@@ -783,6 +793,9 @@ export default {
         })
       }
       this.drawChart();
+      if (this.defaultOperatorValue.length > 9) {
+        this.checkSig = true;
+      }
     },
     /**
      * init the operator chart
@@ -816,18 +829,15 @@ export default {
      * @param {String} opName operator name
      */
     operatorRemove(opName) {
-      if (opName == 'all') {
-        this.defaultOperatorArr.forEach((elm) => {
-          elm.check = false;
-        })
-      } else {
-        this.defaultOperatorArr.forEach((elm) => {
-          if (elm.name == opName) {
-            elm.check = !elm.check;
-            this.drawChart();
-          }
-        })
+      if (this.defaultOperatorValue.length <= 9) {
+        this.checkSig = false;
       }
+      this.defaultOperatorArr.forEach((elm) => {
+        if (elm.name == opName) {
+          elm.check = !elm.check;
+          this.drawChart();
+        }
+      })
     },
     /**
      * init operator shape info by request dynamic shape api
@@ -905,7 +915,7 @@ export default {
     formatChartTip(params) {
       const tipInnerHTML = [];
       if (params && params.length) {
-        const colorArray = ['#c23531', '#2f4554', '#61a0a8'];
+        const colorArray = CommonProperty.dynamicLineColor;
         const index = params[0].dataIndex + 1;
         tipInnerHTML.push(`step: ${index}`);
         params.forEach((item, idx) => {
@@ -1683,7 +1693,7 @@ export default {
 .single-performance-dashboard .dashboard-item .operator-select-option {
   line-height: 30px;
   height: 30px;
-  width: 50%;
+  width: 58%;
   padding-left: 10px;
 }
 
@@ -1693,7 +1703,7 @@ export default {
 }
 
 #operatorShape {
-  margin: 50px 0 0;
+  margin: 50px auto;
   height: 35vh;
   width: 50vw;
   min-height: 200px;

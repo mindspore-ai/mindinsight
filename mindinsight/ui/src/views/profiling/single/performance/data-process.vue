@@ -284,17 +284,17 @@ limitations under the License.
               <div class="right">
                 <div class="title">{{$t('profiling.operatorInfo',{msg1:current_op.name,msg2:parent_op.name})}}</div>
                 <div class="item-wrap">
-                  <div class="item"><span>{{current_op.name}} ID:</span>{{current_op.op_id}}</div>
-                  <div class="item"><span>{{current_op.name}} type:</span>{{current_op.op_type}}</div>
+                  <div class="item"><span>{{current_op.name}} ID:</span><span class="eitem-right">{{current_op.op_id}}</span></div>
+                  <div class="item"><span>{{current_op.name}} type:</span><span class="eitem-right">{{current_op.op_type}}</span></div>
                   <div class="item">
                     <span>{{current_op.name}} {{$t('profiling.workersNum')}}:</span>
-                    {{current_op.num_workers}}
+                    <span class="eitem-right">{{current_op.num_workers}}</span>
                   </div>
-                  <div class="item"><span>{{parent_op.name}} ID:</span>{{parent_op.op_id}}</div>
-                  <div class="item"><span>{{parent_op.name}} type:</span>{{parent_op.op_type}}</div>
+                  <div class="item"><span>{{parent_op.name}} ID:</span><span class="eitem-right">{{parent_op.op_id}}</span></div>
+                  <div class="item"><span>{{parent_op.name}} type:</span><span class="eitem-right">{{parent_op.op_type}}</span></div>
                   <div class="item">
                     <span>{{parent_op.name}} {{$t('profiling.workersNum')}}:</span>
-                    {{parent_op.num_workers}}
+                    <span class="eitem-right">{{parent_op.num_workers}}</span>
                   </div>
                 </div>
               </div>
@@ -1555,6 +1555,9 @@ export default {
 }
 .data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap .right .item-wrap .item {
   margin-top: 10px;
+}
+.data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap .right .item-wrap .item .item-right {
+  color: #000;
 }
 .data-process-wrap .pipeline-wrap .pipeline-bottom .queue-deep-wrap .right .item-wrap .item > span {
   color: var(--data-process-chart-data-color);

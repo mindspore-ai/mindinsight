@@ -993,10 +993,10 @@ export default {
             let legendStr = '';
             for (let i = 0; i < chart.data.length; i++) {
               if (chart.data[i].name === params) {
-                const percent = chart.data[i].percent.toString() + '%';
+                const percent = chart.data[i].percent.toString().substring(0, 4) + '%';
                 const name =
                   chart.data[i].name.length > 10 ? `${chart.data[i].name.slice(0, 10)}...` : chart.data[i].name;
-                legendStr = `{a|${i + 1}}{b|${name}  ${chart.data[i].value.toFixed(this.accuracy)}}\n{c|${percent}}`;
+                legendStr = `{a|${i + 1}}{b|${name}  ${chart.data[i].value.toFixed(2)}}\n{c|${percent}}`;
               }
             }
             return legendStr;
@@ -1048,7 +1048,7 @@ export default {
           trigger: 'item',
           formatter: (params) => {
             const name = params.data.name.replace(/</g, '< ');
-            const strTemp = `${name} ${params.percent.toFixed(2) + '%'}`;
+            const strTemp = `${name} ${params.percent.toFixed(2).substring(0, 4) + '%'}`;
 
             const breakCount = Math.ceil(strTemp.length / maxTooltipLen);
             let str = '';
@@ -1092,7 +1092,7 @@ export default {
         option.tooltip = {
           trigger: 'axis',
           formatter: (params) => {
-            return `${params[0].axisValue}<br>${params[0].marker}${params[0].value} (${this.unit})`;
+            return `${params[0].axisValue}<br>${params[0].marker}${params[0].value.toFixed(2)} (${this.unit})`;
           },
           confine: true,
         };
