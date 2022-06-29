@@ -45,7 +45,8 @@ limitations under the License.
            }">
         <router-view :key="rankID"
                      :rankID="rankID"
-                     @viewDetail="viewDetail"></router-view>
+                     @viewDetail="viewDetail"
+                     :showHelp="showHelper"></router-view>
       </div>
     </div>
     <div class="dashboard-close-detail"

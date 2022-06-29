@@ -41,12 +41,16 @@ limitations under the License.
           <el-option
             v-for="(item, index) in topOperatorArr"
             :key="index"
-            :label="item.name"
+            :label="item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name"
             disabled
             :value="item.name">
             <el-checkbox :key="item.name" 
-                         v-model="item.check" 
-                         @change="operatorChange(item.name)">{{item.name}}</el-checkbox>
+                         v-model="item.check"
+                         :title="item.name"
+                         :disabled="checkSig"
+                         @change="operatorChange(item.name)">
+              {{item.name.length > 20 ? item.name.substring(0, 20) + "..." : item.name}}
+            </el-checkbox>
           </el-option>
         </el-select>
       </div>
@@ -65,13 +69,14 @@ limitations under the License.
     </div>
     <div v-if="showDialogModel" class="operator-shape-dialog">
       <el-dialog
-          :title="operatorShapeTilte"
+          :title="operatorShapeTitle"
           :visible.sync="showDialogModel"
           width="50%"
           :close-on-click-modal="false"
           class="details-data-list">
         <el-table :data="modelShapeData"
                   row-key="id"
+                  height="300"
                   lazy
                   tooltip-effect="light">
           <el-table-column property="name"
@@ -97,9 +102,16 @@ limitations under the License.
 <script>
 import echarts, {echartsThemeName} from '@/js/echarts';
 import RequestService from '@/services/request-service';
+import CommonProperty from '@/common/common-property';
 export default {
   props: {
     rankID: String,
+    showHelp: Boolean,
+  },
+  watch() {
+    if (!this.showHelp) {
+      this.chartObj.resize();
+    }
   },
   data() {
     return {
@@ -124,8 +136,10 @@ export default {
           right: 70,
           top: 8,
           data: [],
+          padding: [0, 0, 0, 120],
+          type: 'scroll',
         },
-        color: ['#c23531', '#2f4554', '#61a0a8'],
+        color: CommonProperty.dynamicLineColor,
         xAxis: {
           type: 'category',
           name: 'step',
@@ -146,12 +160,21 @@ export default {
       },
       selectTip: this.$t('public.select'),
       operatorShapeTitle: this.$t('profiling.operatorShapeTitle'),
+      chartObj: null,
+      checkSig: false,
     }
   },
+  created() {
+    Object.getPrototypeOf(this.$options.components).ElSelect.options.methods.handleFocus = (event) => {};
+  },
   mounted() {
-      this.$nextTick(() => {
-        this.getOperatorShape();
-      })
+    this.$nextTick(() => {
+      this.getOperatorShape();
+      window.addEventListener('resize', this.resizeCallback, false);
+      setTimeout(() => {
+        this.$bus.$on('collapse', this.resizeEchart);
+      }, 300)
+    })
   },
   methods: {
     /**
@@ -216,13 +239,13 @@ export default {
           this.operatorOptions.series = series;
           this.operatorOptions.legend.data = legend;
           this.topOperatorArr = details;
-          let chartObj = echarts.init(document.getElementById('operatorShapeDetailChart'), echartsThemeName);
+          this.chartObj = echarts.init(document.getElementById('operatorShapeDetailChart'), echartsThemeName);
           this.operatorOptions.tooltip.formatter = (params) => {
             return this.formatChartTip(params);
           }
           this.$nextTick(() => {
-            chartObj.setOption(this.operatorOptions, true);
-            chartObj.on('click', this.showOperatorDetail);
+            this.chartObj.setOption(this.operatorOptions, true);
+            this.chartObj.on('click', this.showOperatorDetail);
             this.addDefaultShape(this.topOperatorArr);
           })
         }
@@ -237,7 +260,7 @@ export default {
     formatChartTip(params) {
       const tipInnerHTML = [];
       if (params && params.length) {
-        const colorArray = ['#c23531', '#2f4554', '#61a0a8'];
+        const colorArray = CommonProperty.dynamicLineColor;
         const index = params[0].dataIndex + 1;
         tipInnerHTML.push(`step: ${index}`);
         params.forEach((item, idx) => {
@@ -254,17 +277,14 @@ export default {
      * @param {String} opName operator name
      */
     operatorRemove(opName) {
-      if (opName == 'all') {
-        this.topOperatorArr.forEach((elm) => {
-          elm.check = false;
-        })
-      } else {
-        this.topOperatorArr.forEach((elm) => {
-          if (elm.name == opName) {
-            elm.check = !elm.check;
-            this.drawChart();
-          }
-        })
+      this.topOperatorArr.forEach((elm) => {
+        if (elm.name == opName) {
+          elm.check = !elm.check;
+          this.drawChart();
+        }
+      })
+      if (this.topOperatorValue.length <= 9) {
+        this.checkSig = false;
       }
     },
     /**
@@ -295,6 +315,10 @@ export default {
         })
       }
       this.drawChart();
+      if (this.topOperatorValue.length > 9) {
+        this.checkSig = true;
+      }
+      this.resizeEchart();
     },
     /**
      * init the operator chart
@@ -318,9 +342,9 @@ export default {
       })
       this.operatorOptions.series = series;
       this.operatorOptions.legend.data = legend;
-      let chartObj = echarts.init(document.getElementById('operatorShapeDetailChart'), echartsThemeName);
+      this.chartObj = echarts.init(document.getElementById('operatorShapeDetailChart'), echartsThemeName);
       this.$nextTick(() => {
-        chartObj.setOption(this.operatorOptions, true);
+        this.chartObj.setOption(this.operatorOptions, true);
       })
     },
     /**
@@ -340,7 +364,38 @@ export default {
         }
       });
     },
-  }
+    /**
+     * Window resize
+     */
+    resizeCallback() {
+      if (this.chartObj) {
+        this.chartObj.resize();
+      }
+    },
+    /**
+     * echart resize
+     */
+    resizeEchart() {
+      if (this.chartObj) {
+        setTimeout(() => {
+          this.chartObj.resize();
+        }, 100);
+      }
+    },
+  },
+  /**
+   * Object destroyed
+   */
+  destroyed() {
+    // Remove the listener of window size change
+    window.removeEventListener('resize', this.resizeCallback);
+    this.$bus.$off('collapse');
+    if (this.chartObj) {
+      this.chartObj.off('mouseover');
+      this.chartObj.off('mouseout');
+    }
+  },
+
 }
 </script>
 <style>
@@ -367,7 +422,7 @@ export default {
 
 .operator-shape-step .operator-shape-select .operator-detail-select {
   border-radius: 10%;
-  width: 20%;
+  width: 22%;
   line-height: 30px;
   height: 30px;
   margin: 0 auto;
@@ -416,7 +471,8 @@ export default {
 
 #operatorShapeDetailChart {
   height: 80%;
-  width: 100%
+  width: 100%;
+  margin: 0 auto;
 }
 
 .operator-shape-step .operator-shape-title {
@@ -438,7 +494,7 @@ display: inline-block;
   position: relative;
   top: 14%;
   height: 42%;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .operator-shape-step .image-noData {

@@ -1264,4 +1264,16 @@ export default {
       'rgb(103,0,31)',
     ],
   ],
+  dynamicLineColor: [
+    '#c23531',
+    '#2f4554',
+    '#61a0a8',
+    '#6C92FA',
+    '#6CBFFF',
+    '#4EDED2',
+    '#7ADFA0',
+    '#F45C5E',
+    '#F3689A',
+    '#A97AF8',
+  ],
 };
