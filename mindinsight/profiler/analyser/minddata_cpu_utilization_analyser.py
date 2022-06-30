@@ -154,7 +154,7 @@ class MinddataCpuUtilizationAnalyser(BaseAnalyser):
         time_stamp = time_stamp[1:]
         queue_step_time_info = self._get_minddata_queue_step_time_info()
         if queue_step_time_info:
-            self._get_step_total_num()
+            self._step_total_num = len(queue_step_time_info)
             step0 = 0
             for item in time_stamp:
                 # queue_step_time_info[][0]:step_num
