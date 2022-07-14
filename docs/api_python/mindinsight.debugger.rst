@@ -5,7 +5,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
 使用MindSpore调试器，用户可以：在MindInsight调试器界面结合计算图，查看图节点的输出结果；设置监测点，监测训练异常情况（比如检查张量溢出），在异常发生时追踪错误原因；查看权重等参数的变化情况；查看图节点和源代码的对应关系。
 
-调试器API是为离线调试提供的Python API接口，使用之前需要先保存Dump数据。保存Dump数据的方法参考 `使用Dump功能在Graph模式调试 <https://www.mindspore.cn/tutorials/experts/zh-CN/master/debug/dump.html>`_ 。
+调试器API是为离线调试提供的Python API接口，使用之前需要先保存Dump数据。保存Dump数据的方法参考 `使用Dump功能在Graph模式调试 <https://www.mindspore.cn/tutorials/experts/zh-CN/r1.8/debug/dump.html>`_ 。
 
 .. py:class:: mindinsight.debugger.DumpAnalyzer(dump_dir, mem_limit=None)
 

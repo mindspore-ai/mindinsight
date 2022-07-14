@@ -75,7 +75,7 @@ bash run_distribute_train.sh rank_table.json ~/MNIST_data
 bash run_standalone_train.sh ~/MNIST_data
 ```
 
-> About rank_table.json, you can refer to the [distributed training tutorial](https://www.mindspore.cn/tutorial/training/zh-CN/master/advanced_use/distributed_training_ascend.html).
+> About rank_table.json, you can refer to the [distributed training tutorial](https://www.mindspore.cn/tutorial/training/zh-CN/r1.8/advanced_use/distributed_training_ascend.html).
 
 ##### Result
 

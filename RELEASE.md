@@ -494,7 +494,7 @@ Contributions of any kind are welcome!
 
 - Parameter distribution graph (Histogram).
 
-    Now you can use [`HistogramSummary`](https://www.mindspore.cn/docs/en/master/api_python/mindspore.ops.html#mindspore.ops.HistogramSummary) and MindInsight to record and visualize distribution info of tensors. See our [tutorial](https://www.mindspore.cn/mindinsight/docs/en/master/index.html).
+    Now you can use [`HistogramSummary`](https://www.mindspore.cn/docs/en/r1.8/api_python/mindspore.ops.html#mindspore.ops.HistogramSummary) and MindInsight to record and visualize distribution info of tensors. See our [tutorial](https://www.mindspore.cn/mindinsight/docs/en/r1.8/index.html).
 
 - Lineage support Custom information
 - GPU support
