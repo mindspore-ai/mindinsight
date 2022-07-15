@@ -352,7 +352,7 @@ def get_profile_summary_proposal():
                                                  "step_id": 0}}
     options = {'step_trace': {"iter_interval": step_trace_condition}}
 
-    proposal_type_list = ['step_trace', 'minddata', 'minddata_pipeline', 'common']
+    proposal_type_list = ['step_trace', 'minddata', 'minddata_pipeline', 'common', 'msadvisor']
     proposal_obj = ComposeProposal(profiler_dir_abs, device_id, proposal_type_list)
     proposal_info = proposal_obj.get_proposal(options)
     # Use json.dumps for orderly return
