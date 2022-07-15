@@ -31,8 +31,8 @@ MindInsight provides MindSpore with easy-to-use debugging and tuning capabilitie
 
 ![MindInsight Architecture](docs/arch.png)
 
-Click to view the [MindInsight design document](https://www.mindspore.cn/mindinsight/docs/en/master/training_visual_design.html), learn more about the design.
-Click to view the [Tutorial documentation](https://www.mindspore.cn/mindinsight/docs/en/master/index.html) learn more about the MindInsight tutorial.
+Click to view the [MindInsight design document](https://www.mindspore.cn/mindinsight/docs/en/r1.8/training_visual_design.html), learn more about the design.
+Click to view the [Tutorial documentation](https://www.mindspore.cn/mindinsight/docs/en/r1.8/index.html) learn more about the MindInsight tutorial.
 
 ## Installation
 
@@ -44,7 +44,7 @@ Click to view the [Tutorial documentation](https://www.mindspore.cn/mindinsight/
 - If you use source code to compile and install, the following dependencies also need to be installed:
     - Confirm that [node.js](https://nodejs.org/en/download/) 10.19.0 or later is installed.
     - Confirm that [wheel](https://pypi.org/project/wheel/) 0.32.0 or later is installed.
-- All other dependencies are included in [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt).
+- All other dependencies are included in [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/r1.8/requirements.txt).
 
 ### Installation Methods
 
@@ -64,7 +64,7 @@ Install with customized version:
 pip install https://ms-release.obs.cn-north-4.myhuaweicloud.com/{version}/MindInsight/any/mindinsight-{version}-py3-none-any.whl --trusted-host ms-release.obs.cn-north-4.myhuaweicloud.com -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
 
-> - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt)). In other cases, you need to manually install dependency items.
+> - When the network is connected, dependency items are automatically downloaded during .whl package installation. (For details about other dependency items, see [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/r1.8/requirements.txt)). In other cases, you need to manually install dependency items.
 > - `{version}` denotes the version of MindInsight. For example, when you are downloading MindSpore 1.3.0, `{version}` should be 1.3.0.
 > - MindInsight supports only Linux distro with x86 architecture 64-bit or ARM architecture 64-bit.
 
@@ -119,7 +119,7 @@ service start state: success
 
 Before using MindInsight, the data in the training process should be recorded. When starting MindInsight, the directory of the saved data should be specified. After successful startup, the data can be viewed through the web page. Here is a brief introduction to recording training data, as well as starting and stopping MindInsight.
 
-[SummaryCollector](https://www.mindspore.cn/docs/en/master/api_python/mindspore/mindspore.SummaryCollector.html#mindspore.SummaryCollector) is the interface MindSpore provides for a quick and easy collection of common data about computational graphs, loss values, learning rates, parameter weights, and so on. Below is an example of using `SummaryCollector` for data collection, specifying the directory where the data is stored in `./summary_dir`.
+[SummaryCollector](https://www.mindspore.cn/docs/en/r1.8/api_python/mindspore/mindspore.SummaryCollector.html#mindspore.SummaryCollector) is the interface MindSpore provides for a quick and easy collection of common data about computational graphs, loss values, learning rates, parameter weights, and so on. Below is an example of using `SummaryCollector` for data collection, specifying the directory where the data is stored in `./summary_dir`.
 
 ```python
 ...
@@ -129,7 +129,7 @@ summary_collector = SummaryCollector(summary_dir='./summary_dir')
 model.train(epoch=1, ds_train, callbacks=[summary_collector])
 ```
 
-For more ways to record visual data, see the [MindInsight Tutorial](https://www.mindspore.cn/mindinsight/docs/en/master/index.html).
+For more ways to record visual data, see the [MindInsight Tutorial](https://www.mindspore.cn/mindinsight/docs/en/r1.8/index.html).
 
 After you've collected the data, when you launch MindInsight, specify the directory in which the data has been stored.
 
@@ -171,7 +171,7 @@ Check out how MindSpore Open Governance [works](https://gitee.com/mindspore/comm
 
 ## Vulkan Vision
 
-Vulkan Vision(V-Vision) provides an unprecedented level of detail into the execution of Vulkan applications through dynamic instrumentation. V-Vision supports analyzing AI workloads implemented using the a compute pipeline as well as traditional raster and ray-tracing Vulkan applications. To use V-Vision please refer to the [build instructions](https://gitee.com/mindspore/mindinsight/blob/master/ecosystem_tools/VulkanVision/README.md). For more information, please refer to [the paper](https://webdocs.cs.ualberta.ca/~amaral/papers/PankratzCGO21) published at CGO 2021.
+Vulkan Vision(V-Vision) provides an unprecedented level of detail into the execution of Vulkan applications through dynamic instrumentation. V-Vision supports analyzing AI workloads implemented using the a compute pipeline as well as traditional raster and ray-tracing Vulkan applications. To use V-Vision please refer to the [build instructions](https://gitee.com/mindspore/mindinsight/blob/r1.8/ecosystem_tools/VulkanVision/README.md). For more information, please refer to [the paper](https://webdocs.cs.ualberta.ca/~amaral/papers/PankratzCGO21) published at CGO 2021.
 
 ## Contributing
 

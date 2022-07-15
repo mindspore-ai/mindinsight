@@ -1,0 +1,2 @@
+https://mindspore.cn/mindinsight/*/r1.8/*
+https://www.mindspore.cn/*/r1.8/*
