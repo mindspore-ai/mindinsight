@@ -2,6 +2,36 @@
 
 [查看中文](./RELEASE_CN.md)
 
+## MindInsight 1.8.0 Release Notes
+
+### Major Features and Improvements
+
+#### Profiling
+
+* [STABLE] Support dynamic shape of profiler (Ascend)
+* [STABLE] The profiler sample code is adjusted according to the import specification
+
+#### Debugger
+
+* [STABLE] Dump, fixed randomness document optimization
+
+### API Change
+
+#### Backwards Compatible Change
+
+##### Python API
+*[stable] profiler new operator performance query interface
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Kai Wen, Yue Wang, Lihua Ye, Ximiao Yu, Yunshu Zhang, Ning Ma, Yihui Zhang, Hong Sheng, Ran Mo, Zhaohong Guo, Tianshu Liang, Shuqiang Jiang, Yanjun Peng, Haitao Yang, Jiabin Liu, Han Gao, Xiaohui Li, Ngaifai Ng, Hui Pan, Weifeng Huang, Yifan Xia, Xuefeng Feng, Yanxi Wei, Yufeng Lv, Maohua He, Chuting Liu, Jiaxing Zhu, Yuanwei Song.
+
+Special thanks to Zhiyong Wang, Zhongwei Wang, Rusheng Pan, Yating Wei, Luoxuan Weng, Rongchen Zhu, Jingli Xu, Qinxian Liu, Haozhe Feng, Tong Xu, etc., from State Key Lab of CAD&CG, Zhejiang University led by Prof. Wei Chen, for their contributions of innovative frontend and interaction technology to support strategy perception including Computational Graph Exploration module, Parallel Strategy Analysis module, etc.
+
+Contributions of any kind are welcome!
+
 ## MindInsight 1.7.0 Release Notes
 
 ### Major Features and Improvements
