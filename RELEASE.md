@@ -8,19 +8,20 @@
 
 #### Profiling
 
-* [STABLE] Support dynamic shape of profiler (Ascend)
-* [STABLE] The profiler sample code is adjusted according to the import specification
+- [STABLE] Profiler supports dynamic shape operator (Ascend)
+- [STABLE] The profiler sample code is adjusted according to the import specification
 
 #### Debugger
 
-* [STABLE] Dump, fixed randomness document optimization
+- [STABLE] Dump, fixed randomness document optimization
 
 ### API Change
 
 #### Backwards Compatible Change
 
 ##### Python API
-*[stable] profiler new operator performance query interface
+
+- [stable] Profiler adds new operator performance query interface
 
 ### Contributors
 
