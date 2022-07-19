@@ -13,9 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Mapper module."""
-import math
-
-import numpy as np
 
 from mindconverter.graph_based_converter.mapper.base import ONNXToMindSporeMapper
 from mindconverter.graph_based_converter.constant import ExchangeMessageKeywords, TemplateKeywords
@@ -31,22 +28,29 @@ class PoolMapper(ONNXToMindSporeMapper):
         else:
             op_name = 'nn.MaxPool{}d'
         dim = len(kwargs['params']['strides'])
-        if dim == 3:
+        op_name = op_name.format(dim)
+        if op_name == 'nn.MaxPool3d':
             return "P.MaxPool3D"
-        return op_name.format(dim)
+        if op_name == 'nn.AvgPool3d':
+            return "P.AvgPool3D"
+        return op_name
 
     @staticmethod
     def _convert_params(**kwargs):
         params = kwargs['params']
         transformed_params = dict()
         transformed_params["kernel_size"] = tuple(params['kernel_shape'])
-
+        pad_mode = params.get('auto_pad')
+        if not pad_mode:
+            pad_mode = 'pad'
+        elif pad_mode != 'VALID':
+            pad_mode = 'same'
+        transformed_params["pad_mode"] = pad_mode
         dim = len(kwargs['params']['strides'])
         if dim == 3:
             transformed_params["strides"] = tuple(params['strides'])
         else:
             transformed_params["stride"] = tuple(params['strides'])
-
         return transformed_params
 
     @staticmethod
@@ -54,103 +58,68 @@ class PoolMapper(ONNXToMindSporeMapper):
         return dict()
 
     @staticmethod
-    def _get_ms_opt_shape(**kwargs):
-        """Get output shape in MindSpore."""
-        params = kwargs['raw_params']
-        input_shape = params['input_shape']
-        kernel_shape = params['kernel_shape']
-        strides = params['strides']
-        dilations = params.get('dilations', (1, 1))
-        ms_opt_shape = np.true_divide(np.subtract(np.array(input_shape[-len(kernel_shape):], dtype=np.float32),
-                                                  ((np.array(kernel_shape, dtype=np.float32) - 1) *
-                                                   np.array(dilations, dtype=np.float32) + 1)) + 1,
-                                      np.array(strides, dtype=np.float32)).tolist()
-        ms_opt_shape_ceil = tuple(math.ceil(ms_opt_shape_axis) for ms_opt_shape_axis in ms_opt_shape)
-        return ms_opt_shape_ceil
-
-    @staticmethod
     def _generate_snippet_template(**kwargs):
         op = kwargs.get("operation")
         args = kwargs.get("converted_params", dict())
-        if "onnx" in op or op == "P.MaxPool3D":
-            return ONNXToMindSporeMapper._generate_snippet_template(**kwargs)
-
-        ms_opt_shape = PoolMapper._get_ms_opt_shape(**kwargs)
-        tensor_opt_shape = kwargs['raw_params']['output_shape']
-        tensor_ipt_shape = kwargs['raw_params']['input_shape']
-        kernel_shape = kwargs['raw_params']['kernel_shape']
-        dilations = kwargs['raw_params'].get('dilations', (1, 1))
-        strides = kwargs['raw_params']['strides']
-        ceil_mode = kwargs['raw_params'].get('ceil_mode', 0)
-
         if not op:
             raise ValueError("Can not get MindSpore operation name.")
 
-        variable_slot = "var_0"
-        init_template = f"self.{{{variable_slot}}} = {op}({', '.join(['%s={%s}' % (p, p) for p in args])})"
-        construct_template = f"opt_{{{variable_slot}}} = self.{{{variable_slot}}}(opt_{{{variable_slot}}})"
+        if "onnx" in op or op == "P.MaxPool3D":
+            return ONNXToMindSporeMapper._generate_snippet_template(**kwargs)
 
-        init_template_pad, construct_template_pad, paddings = \
-            PoolMapper._generate_pad_init_and_construct(tensor_opt_shape, tensor_ipt_shape,
-                                                        ms_opt_shape, variable_slot,
-                                                        kernel_shape, dilations, strides, ceil_mode)
+        if op == "nn.MaxPool2d":
+            op = "P.MaxPool3D"
+            kernel_size = [1] + kwargs['raw_params']['kernel_shape']
+            strides = [1] + kwargs['raw_params']['strides']
+            ceil_mode = kwargs['raw_params'].get('ceil_mode', False)
+            pad_list = [0, 0] + kwargs['raw_params'].get('pads', [])
+            args["strides"] = tuple(strides)
+            args["ceil_mode"] = bool(ceil_mode)
+            args["pad_list"] = tuple(pad_list)
+            args["kernel_size"] = tuple(kernel_size)
+            args.pop('stride')
+            args_list = []
+            for p, v in args.items():
+                if isinstance(v, str):
+                    args_list.append('%s="{%s}"' % (p, p))
+                else:
+                    args_list.append('%s={%s}' % (p, p))
 
-        template = {
-            variable_slot: {
-                TemplateKeywords.INIT.value: [init_template_pad, init_template],
-                TemplateKeywords.CONSTRUCT.value: [construct_template_pad, construct_template]
+            variable_slot = "var_0"
+            init_template_expand_dims = f"self.pad_{{{variable_slot}}} = P.ExpandDims()"
+            init_template = f"self.inter_{{{variable_slot}}} = {op}({', '.join(args_list)})"
+            init_template_squeeze = f"self.{{{variable_slot}}} = P.Squeeze(axis=1)"
+
+            construct_template_expand_dims = f"opt_{{{variable_slot}}} = " \
+                                             f"self.pad_{{{variable_slot}}}" \
+                                             f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}}, 1)"
+            construct_template = f"opt_inter_{{{variable_slot}}} = " \
+                                 f"self.inter_{{{variable_slot}}}(opt_{{{variable_slot}}})"
+            construct_template_squeeze = f"opt_{{{variable_slot}}} = " \
+                                         f"self.{{{variable_slot}}}(opt_inter_{{{variable_slot}}})"
+
+            template = {
+                variable_slot: {
+                    TemplateKeywords.INIT.value: [init_template_expand_dims, init_template, init_template_squeeze],
+                    TemplateKeywords.CONSTRUCT.value: [construct_template_expand_dims, construct_template,
+                                                       construct_template_squeeze]
+                }
             }
-        }
 
-        args['paddings'] = paddings
-
-        exchange_msg = {
-            variable_slot: {
-                ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,
-                ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value: None,
-                ExchangeMessageKeywords.VariableScope.value.OUTPUT_TYPE.value:
-                    ExchangeMessageKeywords.VariableScope.value.TSR_TYPE.value,
-                ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
-                ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
-                ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: dict(),
-                ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: dict()
+            exchange_msg = {
+                variable_slot: {
+                    ExchangeMessageKeywords.VariableScope.value.OPERATION.value: op,
+                    ExchangeMessageKeywords.VariableScope.value.VARIABLE_NAME.value: None,
+                    ExchangeMessageKeywords.VariableScope.value.OUTPUT_TYPE.value:
+                        ExchangeMessageKeywords.VariableScope.value.TSR_TYPE.value,
+                    ExchangeMessageKeywords.VariableScope.value.INPUTS.value: [],
+                    ExchangeMessageKeywords.VariableScope.value.ARGS.value: args,
+                    ExchangeMessageKeywords.VariableScope.value.WEIGHTS.value: dict(),
+                    ExchangeMessageKeywords.VariableScope.value.TRAINABLE_PARAMS.value: dict()
+                }
             }
-        }
-        outputs_list = [f"opt_{{{variable_slot}}}"]
-        outputs_mapping = ((0, 0),)
-        return template, exchange_msg, outputs_list, outputs_mapping
+            outputs_list = [f"opt_{{{variable_slot}}}"]
+            outputs_mapping = ((0, 0),)
+            return template, exchange_msg, outputs_list, outputs_mapping
 
-    @staticmethod
-    def _generate_pad_init_and_construct(tensor_opt_shape, tensor_ipt_shape,
-                                         ms_opt_shape, variable_slot, kernel_shape, dilations, strides, ceil_mode):
-        """Generate pad code in init and construct."""
-        onnx_opt_shape = tensor_opt_shape[-len(ms_opt_shape):]
-        onnx_ipt_shape = tensor_ipt_shape[-len(ms_opt_shape):]
-
-        if np.any(np.array(ms_opt_shape) > np.array(onnx_opt_shape)):
-            raise ValueError(f"ms_opt_shape[{ms_opt_shape}] should be no larger than onnx_opt_shape[{onnx_opt_shape}].")
-
-        if np.all(np.array(ms_opt_shape) == np.array(onnx_opt_shape)):
-            shape_diff = np.zeros(len(ms_opt_shape)).astype(np.int).tolist()
-        else:
-            shape_diff = np.subtract((np.array(onnx_opt_shape) - 1) * np.array(strides),
-                                     np.subtract(np.array(onnx_ipt_shape),
-                                                 (np.array(kernel_shape) - 1) * np.array(dilations) + 1)).tolist()
-
-        zero_pad_single = (0, 0)
-        paddings = [zero_pad_single]
-        num_zero_pads = len(tensor_opt_shape) - len(ms_opt_shape)
-        for _ in range(num_zero_pads - 1):
-            paddings.append(zero_pad_single)
-
-        for axis_diff in shape_diff:
-            if ceil_mode:
-                paddings.append((int(axis_diff // 2), int(axis_diff // 2 + axis_diff % 2)))
-            else:
-                paddings.append((int(axis_diff // 2 + axis_diff % 2), int(axis_diff // 2)))
-
-        init_template_pad = f"self.pad_{{{variable_slot}}} = nn.Pad(paddings={{paddings}})"
-        construct_template_pad = f"opt_{{{variable_slot}}} = self.pad_{{{variable_slot}}}" \
-                                 f"({{{ExchangeMessageKeywords.VariableScope.value.INPUTS.value}}})"
-
-        return init_template_pad, construct_template_pad, tuple(paddings)
+        return None
