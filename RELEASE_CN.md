@@ -8,21 +8,22 @@
 
 #### Profiling
 
-* [STABLE] Profiler支持动态shape算子（Ascend）
-* [STABLE] Profiler样例代码按import规范调整
+- [STABLE] Profiler支持动态shape算子（Ascend）
+- [STABLE] Profiler样例代码按import规范调整
 
 #### Debugger
 
-* [STABLE] dump、 固定随机性 文档优化
+- [STABLE] dump、固定随机性文档优化
 
 #### 兼容性变更
 
 ##### 新增API
-* [STABLE] profiler新增算子性能查询接口
+
+- [STABLE] profiler新增算子性能查询接口
 
 ### 贡献者
 
-感谢以下人员做出的贡献:
+感谢以下人员做出的贡献：
 
 Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Miao, Gongchang Ou, Kai Wen, Yue Wang, Lihua Ye, Ximiao Yu, Yunshu Zhang, Ning Ma, Yihui Zhang, Hong Sheng, Ran Mo, Zhaohong Guo, Tianshu Liang, Shuqiang Jiang, Yanjun Peng, Haitao Yang, Jiabin Liu, Han Gao, Xiaohui Li, Ngaifai Ng, Hui Pan, Weifeng Huang, Yifan Xia, Xuefeng Feng, Yanxi Wei, Yufeng Lv, Maohua He, Chuting Liu, Jiaxing Zhu, Yuanwei Song.
 
