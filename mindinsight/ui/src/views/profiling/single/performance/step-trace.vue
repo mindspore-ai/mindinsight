@@ -937,7 +937,7 @@ export default {
   right: 36px;
 }
 .step-trace .step-message {
-  height: 32px;
+  height: calc(10% + 10px);
   line-height: 16px;
   margin-top: 8px;
   overflow-y: auto;
@@ -955,7 +955,7 @@ export default {
 }
 .step-trace .pf-content-middle {
   display: grid;
-  grid-template-rows: repeat(2, calc(50% - 10px));
+  grid-template-rows: 40% calc(50% - 10px);
   gap: 20px;
   padding-top: 10px;
   height: calc(100% - 72px);
