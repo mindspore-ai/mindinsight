@@ -95,7 +95,7 @@ class ComposeProposal:
         if 'step_trace-iter_interval' not in proposal_result.keys() \
                 or 'minddata_pipeline-general' not in proposal_result.keys():
             for key in proposal_result.keys():
-                if key not in ['common-proposer_type_label', 'common-profiler_tutorial']:
+                if key not in ['common-proposer_type_label', 'common-profiler_tutorial', 'msadvisor-proposer']:
                     hidden_key.append(key)
         else:
             # Hide optimization suggestions for data processing if there is a problem with data transmission.
