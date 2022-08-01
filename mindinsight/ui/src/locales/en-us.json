@@ -612,7 +612,15 @@
     "operatorShapeTip": "The operator time-consuming details (by iteration) display the operator time-consuming and shape information of the specified type. By default, 3 records are displayed. The operator shape information can be displayed by clicking the corresponding point on the smooth curve graph.",
     "operatorFilterTitle": "Filter the specified operator name:",
     "operatorShapeTitle": "Operator time-consuming details",
-    "notSupportTitle": "Dynamic shape networks are not currently supported"
+    "notSupportTitle": "Dynamic shape networks are not currently supported",
+    "expertNoOpAdvice": "Expert system: AI CPU operators are well optimized",
+    "expertOpAdvice": "Expert system: AI CPU operators need to be optimized",
+    "adviceDetails": [
+      "1.Modify the model code to avoid AI CPU operator operations.",
+      "2.Fuse AI CPU opetators to reduce frequent switchover between AI CPU and AI Core operations.",
+      "3.Change the model structure, for example, from INT64 to FP16.",
+      "4.Optimize the performance of time-consuming AI CPU operators."
+    ]
   },
   "profilingGPU": {
     "minddata_get_next_queue": {

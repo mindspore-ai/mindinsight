@@ -612,7 +612,15 @@
     "operatorShapeTip": "算子耗时详情（按迭代）是展示指定类型的算子耗时及shape信息，默认展示3条记录， 算子shape信息可以点击平滑曲线图上对应点来显示。",
     "operatorFilterTitle": "筛选指定算子名称：",
     "operatorShapeTitle": "算子耗时详情",
-    "notSupportTitle": "暂不支持动态shape网络"
+    "notSupportTitle": "暂不支持动态shape网络",
+    "expertNoOpAdvice": "专家系统：AI CPU算子不需要优化",
+    "expertOpAdvice": "专家系统：AI CPU算子需要优化",
+    "adviceDetails": [
+      "1.修改模型代码，避免AI CPU算子操作。",
+      "2.融合AI CPU算子，减少AI CPU和AI Core算子频繁切换。",
+      "3.更改模型结构，例如，从INT64更改为FP16。",
+      "4.优化耗时的AI CPU算子的性能。"
+    ]
   },
   "profilingGPU": {
     "minddata_get_next_queue": {

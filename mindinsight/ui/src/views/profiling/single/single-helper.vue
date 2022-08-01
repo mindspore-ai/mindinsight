@@ -33,6 +33,26 @@ limitations under the License.
     </div>
     <div class="suggested-title">{{$t("profiling.suggestions")}}</div>
     <div id="helper-tips"></div>
+    <div class="advice-title">
+      <div id="ms-advice-title" class="content-style" @click="adviceToShow">
+        <div v-if="adviceOptimize">
+          <div class="content-icon el-icon-caret-right">
+            <span class="expert-advice">
+              <span><a class="expert-advice-link">{{$t('profiling.expertOpAdvice')}}</a></span>
+            </span>
+          </div>
+        </div>
+        <div v-else>
+          <div class="content-icon el-icon-caret-right" v-show="adviceNotOptimize">
+            <span class="expert-advice">
+              {{$t('profiling.expertNoOpAdvice')}}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div id="ms-advice-content" v-show="adviceChange()">
+      </div>
+    </div>
   </div>
 </template>
 
@@ -62,6 +82,9 @@ export default {
       moreParameter: ['minddata_device_queue', 'minddata_get_next_queue', 'device_queue_warning'],
       helperUrl: '',
       isPynative: false,
+      adviceShow: 'none',
+      adviceOptimize: false,
+      adviceNotOptimize: false,
     };
   },
   mounted() {
@@ -121,7 +144,7 @@ export default {
               if (!this.tipsArrayList.includes(item) && !this.moreParameter.includes(item) && res.data[item]) {
                 this.$t(`profiling`)[item] = res.data[item];
               }
-              if (item.endsWith('type_label')) {
+              if (item.endsWith('type_label') && item != 'msadvisor-proposer_type_label') {
                 innerHTMLs.push(
                   `<div class="suggested-items-style">
                          <div class="helper-icon"></div>
@@ -185,6 +208,12 @@ export default {
                          <div class="helper-content-style">${content}</div>
                        </div>`
                 );
+              } else if (item === 'msadvisor-proposer_type_label' || item === 'msadvisor-proposer') {
+                if (item === 'msadvisor-proposer') {
+                  const contents = this.getAdvisorProposer(res.data[item], 'AICPUModel');
+                  const msAdvice = document.getElementById('ms-advice-content');
+                  if (msAdvice) msAdvice.innerHTML = contents.join('');
+                }
               } else if (this.$t(`profiling`)[item].anchor) {
                 if (this.$t(`profiling`)[item].anchor.length === 1) {
                   innerHTMLs.push(
@@ -229,6 +258,48 @@ export default {
         })
         .catch(() => {});
     },
+    /**
+     * the msAdvisor advice to show
+     */
+    adviceToShow() {
+      this.adviceShow = this.adviceShow === 'block' ? 'none' : 'block';
+    },
+    /**
+     * change the show signal
+     */
+    adviceChange() {
+      if (this.adviceShow === 'block') {
+        return true;
+      } else {
+        return false;
+      }
+    },
+    /**
+     * get the advisor info
+     * @param {Object} data, response data of proposer api
+     * @param {String} item, proposer type
+     */
+    getAdvisorProposer(data, item) {
+      let contents = [];
+      if (!data[item].hasOwnProperty('extend')) {
+        this.adviceNotOptimize = true;
+      } else {
+        this.adviceOptimize = true;
+        data[item].extend.forEach((item) => {
+          if (item.hasOwnProperty('extendtitle')) {
+            if (item.extendtitle === 'Recommendations of aicpu operations optimization:') {
+              let detail = `<span class="expert-advice"><span class="advice-detail">`;
+              item.value[0].forEach((val, index) => {
+                detail += `<p>${this.$t('profiling.adviceDetails')[index]}</p>`
+              })
+              detail += `</span></span>`;
+              contents.push(detail);
+            }
+          }
+        })
+      }
+      return contents;
+    }
   },
 };
 </script>
@@ -310,5 +381,18 @@ export default {
 }
 .helper .content-style {
   display: flex;
+}
+
+.helper .content-style .expert-advice {
+  color: #000;
+}
+
+.helper .expert-advice .advice-detail {
+  display: block;
+  margin-left: 1.2em;
+}
+
+.helper .advice-title .expert-advice-link {
+  padding-left: 4px;
 }
 </style>
