@@ -537,19 +537,14 @@ export default {
 
 .cl-operator .operator-container {
   margin-top: 30px;
-  width: 300px;
+  width: 100%;
   margin-right: 20px;
 }
 
 .cl-operator .operator-name-input {
   margin-top: 30px;
   padding: 6px 32px 10px 2.5%;
-}
-
-.cl-operator .custom-btn-export {
-  display: inline-block;
   width: 300px;
-  margin-right: 20px;
 }
 
 .cl-operator .search {
@@ -558,7 +553,8 @@ export default {
 
 .cl-operator .cl-operator-file {
   float: right;
-  margin-left: 1vw;
+  margin-top: 40px;
+  margin-right: 2.6vw;
 }
 
 .cl-operator .cl-operator-file .el-icon-info {
@@ -604,7 +600,7 @@ export default {
   white-space: nowrap;
 }
 
-.cl-operator .el-icon-buttom {
+.cl-operator .el-icon-bottom {
   padding-left: 2px;
   color: #f00;
 }
