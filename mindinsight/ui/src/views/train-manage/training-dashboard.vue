@@ -316,8 +316,8 @@ limitations under the License.
               min-width="8%">
               <template slot-scope="scope">
                 <div>{{scope.row.reduce_flag}}
-                  <i class="el-icon-bottom" v-show="scope.row.reduce_flag == 'reduce'"></i>
-                  <i class="el-icon-top" v-show="scope.row.reduce_flag == 'raise'"></i>
+                  <i class="el-icon-bottom" v-show="scope.row.reduce_flag == 'Yes'"></i>
+                  <i class="el-icon-top" v-show="scope.row.reduce_flag == 'No'"></i>
                 </div>
               </template>
             </el-table-column>
@@ -521,13 +521,13 @@ export default {
                 const input = JSON.stringify(item.input);
                 const output = JSON.stringify(item.output);
                 const precision_flag = item.attr.hasOwnProperty('precision_flag') ? 
-                                            item.attr.precision_flag : 'null';
-                let reduce_flag = "null";
-                if (precision_flag != 'null') {
+                                            item.attr.precision_flag : '';
+                let reduce_flag = "";
+                if (precision_flag != '') {
                   if (precision_flag.indexOf('reduce') != -1) {
-                    reduce_flag = 'reduce';
+                    reduce_flag = 'Yes';
                   } else {
-                    reduce_flag = 'raise';
+                    reduce_flag = 'No';
                   }
                   showData.unshift({op_name: op_name, name: name, type: type, precision_flag: precision_flag, 
                                     reduce_flag: reduce_flag, input: input, output: output});
