@@ -63,7 +63,7 @@ limitations under the License.
       </div>
       <div class="table-container">
         <el-table
-            ref="table"
+            id="exportTable"
             :data="getTableData"
             border
             tooltip-effect="light"
@@ -112,8 +112,8 @@ limitations under the License.
               min-width="8%">
               <template slot-scope="scope">
                 <div>{{scope.row.reduce_flag}}
-                  <i class="el-icon-bottom" v-show="scope.row.reduce_flag == 'reduce'"></i>
-                  <i class="el-icon-top" v-show="scope.row.reduce_flag == 'raise'"></i>
+                  <i class="el-icon-bottom" v-show="scope.row.reduce_flag == 'Yes'"></i>
+                  <i class="el-icon-top" v-show="scope.row.reduce_flag == 'No'"></i>
                 </div>
               </template>
             </el-table-column>
@@ -223,6 +223,7 @@ limitations under the License.
 </template>
 
 <script>
+import XLSX from 'xlsx';
 import RequestService from '@/services/request-service';
 export default {
   data() {
@@ -274,6 +275,9 @@ export default {
      */
     filterOperator() {
       let arr = [];
+      if (this.operatorSelectName === null) {
+        return;
+      }
       this.tableTotalData.forEach((item) => {
         if (item.name.indexOf(this.operatorSelectName) != -1) {
           arr.push(item);
@@ -311,7 +315,7 @@ export default {
      */
     headerStyle() {
       return {
-        background: '#EBEEF5',
+        background: this.themeIndex === '0' ? '#EBEEF5' : '#141414',
         color: '#282B33',
         textAlign: 'center',
         fontSize: '18px',
@@ -388,13 +392,13 @@ export default {
                 const input = JSON.stringify(item.input);
                 const output = JSON.stringify(item.output);
                 const precision_flag = item.attr.hasOwnProperty('precision_flag') ? 
-                                            item.attr.precision_flag : 'null';
-                let reduce_flag = "null";
-                if (precision_flag != 'null') {
+                                            item.attr.precision_flag : '';
+                let reduce_flag = "";
+                if (precision_flag != '') {
                   if (precision_flag.indexOf('reduce') != -1) {
-                    reduce_flag = 'reduce';
+                    reduce_flag = 'Yes';
                   } else {
-                    reduce_flag = 'raise';
+                    reduce_flag = 'No';
                   }
                   showData.unshift({id:id, op_name: op_name, name: name, type: type, precision_flag: precision_flag, 
                                     reduce_flag: reduce_flag, input: input, output: output});
@@ -412,21 +416,39 @@ export default {
             thi.loading.show = false;
           }
         ).catch((error) => {
-          thi.loading.show = false;
+          this.loading.show = false;
         })
     },
     /**
-     * download operator info to json
+     * download operator info to excel
      */
     downloadOperator() {
-      const downloadLink = document.createElement('a');
-      downloadLink.download = this.getDocName();
-      downloadLink.style.display = 'none';
-      const blob = new Blob([JSON.stringify(this.tableData)]);
-      downloadLink.href = URL.createObjectURL(blob);
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
+      const fileName = this.getDocName();
+      const headers = [['ID', 'op_name', 'fullname_with_scope', 'op_type', 'precision_flag', 'is_reduce_flag', 'input', 'output']];
+      const headerWs = XLSX.utils.aoa_to_sheet(headers);
+      const ws = XLSX.utils.sheet_add_json(headerWs, this.tableData, {skipHeader: true, origin: 'A2'});
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'sheetName');
+      this.setExlStyle(wb['Sheets']['sheetName']);
+      XLSX.writeFile(wb, fileName);
+    },
+    /**
+     * set download excel file style
+     */
+    setExlStyle(data) {
+      data['!cols'] = [];
+      for (let key in data) {
+        if (data[key] instanceof Object) {
+          if (key.startsWith('A')) {
+            data['!cols'].push({wpx: 50});
+          } else if (key.startsWith('B') || key.startsWith('D') || key.startsWith('E') || key.startsWith('F')) {
+            data['!cols'].push({wpx: 100});
+          } else {
+            data['!cols'].push({wpx: 300});
+          }
+        }
+      }
+      return data;
     },
     /**
      * Generate a download file name
@@ -450,7 +472,7 @@ export default {
       const second = dealNumber(date.getSeconds());
       const millisecond = date.getMilliseconds();
       const timestamp = `${year}${mouth}${day}${hour}${minute}${second}${millisecond}`;
-      return `operator_precision_${timestamp}.json`;
+      return `operator_precision_${timestamp}.xlsx`;
     },
     /**
      * page change
@@ -561,6 +583,7 @@ export default {
   font-size: 24px;
   height: 40px;
   line-height: 40px;
+  padding-right: 5px;
   vertical-align: bottom;
 }
 
