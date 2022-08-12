@@ -17,257 +17,326 @@ limitations under the License.
   <!-- cl-cluster -->
   <div class="cl-comm">
     <div class="profiling-content-title">
-      {{ $t('profilingCluster.clusterCommView') }}
-      <el-tooltip placement="bottom"
-                  effect="light">
-        <div slot="content"
-             class="comm-tooltip-container">
+      {{ $t("profilingCluster.clusterCommView") }}
+      <el-tooltip placement="bottom" effect="light">
+        <div slot="content" class="comm-tooltip-container">
           <div class="comm-tooltip-cell">
-            <span>{{ $t('profilingCluster.commCost') + $t('symbols.colon') }}</span>
-            <br>
-            <span>{{ $t('profilingCluster.commCostExplanation') }}</span>
+            <span>{{
+              $t("profilingCluster.commCost") + $t("symbols.colon")
+            }}</span>
+            <br />
+            <span>{{ $t("profilingCluster.commCostExplanation") }}</span>
           </div>
           <div class="comm-tooltip-cell">
-            <span>{{ $t('profilingCluster.waitCost') + $t('symbols.colon') }}</span>
-            <br>
-            <span>{{ $t('profilingCluster.waitCostExplanation') }}</span>
+            <span>{{
+              $t("profilingCluster.waitCost") + $t("symbols.colon")
+            }}</span>
+            <br />
+            <span>{{ $t("profilingCluster.waitCostExplanation") }}</span>
           </div>
           <div class="comm-tooltip-cell">
-            <span>{{ $t('profilingCluster.linkInfo') + $t('symbols.colon') }}</span>
-            <br>
-            <span>{{ $t('profilingCluster.linkInfoExplanation') }}</span>
+            <span>{{
+              $t("profilingCluster.linkInfo") + $t("symbols.colon")
+            }}</span>
+            <br />
+            <span>{{ $t("profilingCluster.linkInfoExplanation") }}</span>
           </div>
           <div class="comm-tooltip-cell">
-            <span>{{ $t('profilingCluster.linkType') + $t('symbols.colon') }}</span>
-            <br>
-            <span>{{ $t('profilingCluster.linkTypeExplanation') }}</span>
+            <span>{{
+              $t("profilingCluster.linkType") + $t("symbols.colon")
+            }}</span>
+            <br />
+            <span>{{ $t("profilingCluster.linkTypeExplanation") }}</span>
           </div>
         </div>
         <i class="el-icon-info comm-tip"></i>
       </el-tooltip>
     </div>
 
-    <el-tabs v-model="tab"
-             @tab-click="handleTabClick">
-      <el-tab-pane :label="$t('profilingCluster.commPerformance')"
-                   :name="tabNames[0]"></el-tab-pane>
-      <el-tab-pane :label="$t('profilingCluster.linkInfo')"
-                   :name="tabNames[1]"></el-tab-pane>
+    <el-tabs v-model="tab" @tab-click="handleTabClick">
+      <el-tab-pane
+        :label="$t('profilingCluster.commPerformance')"
+        :name="tabNames[0]"
+      ></el-tab-pane>
+      <el-tab-pane
+        :label="$t('profilingCluster.linkInfo')"
+        :name="tabNames[1]"
+      ></el-tab-pane>
     </el-tabs>
 
-    <div v-show="pageState === normalState && tab === tabNames[0]"
-         class="comm-content default-tab">
+    <div
+      v-show="pageState === normalState && tab === tabNames[0]"
+      class="comm-content default-tab"
+    >
       <div class="content-filter">
         <label>{{ stepTip }}</label>
-        <el-input class="step-input"
-                  clearable
-                  @clear="stepFilter"
-                  v-model="step.value"></el-input>
-        <el-button @click="stepFilter">{{ $t('public.sure') }}</el-button>
+        <el-input
+          class="step-input"
+          clearable
+          @clear="stepFilter"
+          v-model="step.value"
+        ></el-input>
+        <el-button @click="stepFilter">{{ $t("public.sure") }}</el-button>
       </div>
-      <div class="content-chart"
-           ref="commChart"></div>
-      <div class="content-table">
-        <!-- Page Default Table -->
-        <el-table :data="tableData"
-                  height="100%"
-                  ref="table"
-                  stripe
-                  @sort-change="tableSortChange">
-          <!-- Column 1 / rank_id -->
-          <el-table-column width="120"
-                           :prop="tableProps[0].prop"
-                           :label="tableProps[0].label">
-          </el-table-column>
-          <!-- Column 2 / communication_cost -->
-          <el-table-column :prop="tableProps[1].prop"
-                           :label="tableProps[1].label"
-                           sortable="custom">
-          </el-table-column>
-          <!-- Column 3 / wait_cost -->
-          <el-table-column :prop="tableProps[2].prop"
-                           :label="tableProps[2].label"
-                           sortable="custom">
-          </el-table-column>
-          <!-- Column 4 / view op details -->
-          <el-table-column fixed="right"
-                           width="180"
-                           :label="tableProps[3].label">
-            <template slot-scope="scope">
-              <span class="table-button"
-                    @click="showOpInfo(scope.row)">
-                {{ $t('public.details') }}
-              </span>
-            </template>
-          </el-table-column>
-          <!-- Column 5 / view link details -->
-          <el-table-column fixed="right"
-                           width="180"
-                           :label="tableProps[4].label">
-            <template slot-scope="scope">
-              <span class="table-button"
-                    @click="showLinkInfo(scope.row)">
-                {{ $t('public.details') }}
-              </span>
-            </template>
-          </el-table-column>
-        </el-table>
+      <div class="content-chart" ref="commChart"></div>
+      <div class="comm-container">
+        <div class="comm-graph">
+          <CommunicationViewGraph :stepNumber="step.last" />
+          <!-- <CommunicationViewGraph /> -->
+        </div>
+
+        <div class="content-table">
+          <!-- Page Default Table -->
+          <el-table
+            :data="tableData"
+            height="100%"
+            ref="table"
+            stripe
+            @sort-change="tableSortChange"
+          >
+            <!-- Column 1 / rank_id -->
+            <el-table-column
+              width="120"
+              :prop="tableProps[0].prop"
+              :label="tableProps[0].label"
+            >
+            </el-table-column>
+            <!-- Column 2 / communication_cost -->
+            <el-table-column
+              :prop="tableProps[1].prop"
+              :label="tableProps[1].label"
+              sortable="custom"
+            >
+            </el-table-column>
+            <!-- Column 3 / wait_cost -->
+            <el-table-column
+              :prop="tableProps[2].prop"
+              :label="tableProps[2].label"
+              sortable="custom"
+            >
+            </el-table-column>
+            <!-- Column 4 / view op details -->
+            <el-table-column
+              fixed="right"
+              width="180"
+              :label="tableProps[3].label"
+            >
+              <template slot-scope="scope">
+                <span class="table-button" @click="showOpInfo(scope.row)">
+                  {{ $t("public.details") }}
+                </span>
+              </template>
+            </el-table-column>
+            <!-- Column 5 / view link details -->
+            <el-table-column
+              fixed="right"
+              width="180"
+              :label="tableProps[4].label"
+            >
+              <template slot-scope="scope">
+                <span class="table-button" @click="showLinkInfo(scope.row)">
+                  {{ $t("public.details") }}
+                </span>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
       </div>
+
       <div class="content-pagination">
-        <el-pagination @current-change="currentPageChange"
-                       @size-change="pageSizeChange"
-                       :page-sizes="pageCondition.sizes"
-                       :page-size="pageCondition.limit"
-                       :current-page="pageCondition.page"
-                       layout="total,sizes,prev,pager,next,jumper"
-                       :total="pageCondition.total">
+        <el-pagination
+          @current-change="currentPageChange"
+          @size-change="pageSizeChange"
+          :page-sizes="pageCondition.sizes"
+          :page-size="pageCondition.limit"
+          :current-page="pageCondition.page"
+          layout="total,sizes,prev,pager,next,jumper"
+          :total="pageCondition.total"
+        >
         </el-pagination>
       </div>
     </div>
 
-    <div v-show="pageState === normalState && tab === tabNames[1]"
-         class="comm-content link-tab">
+    <div
+      v-show="pageState === normalState && tab === tabNames[1]"
+      class="comm-content link-tab"
+    >
       <div class="content-filter">
-        <span>{{ $t('profilingCluster.startID') }}</span>
-        <el-input v-model="linkTable.filter.src_rank"
-                  clearable
-                  @clear="filterLinkTable"></el-input>
-        <span>{{ $t('profilingCluster.endID') }}</span>
-        <el-input v-model="linkTable.filter.dst_rank"
-                  clearable
-                  @clear="filterLinkTable"></el-input>
-        <span>{{ $t('profilingCluster.linkType') }}</span>
+        <span>{{ $t("profilingCluster.startID") }}</span>
+        <el-input
+          v-model="linkTable.filter.src_rank"
+          clearable
+          @clear="filterLinkTable"
+        ></el-input>
+        <span>{{ $t("profilingCluster.endID") }}</span>
+        <el-input
+          v-model="linkTable.filter.dst_rank"
+          clearable
+          @clear="filterLinkTable"
+        ></el-input>
+        <span>{{ $t("profilingCluster.linkType") }}</span>
         <el-select v-model="linkTable.filter.link_type">
-          <el-option v-for="type in linkTable.linkTypes"
-                     :key="type"
-                     :label="type"
-                     :value="type">
+          <el-option
+            v-for="type in linkTable.linkTypes"
+            :key="type"
+            :label="type"
+            :value="type"
+          >
           </el-option>
         </el-select>
-        <el-button @click="filterLinkTable">{{ $t('public.sure') }} </el-button>
+        <el-button @click="filterLinkTable">{{ $t("public.sure") }} </el-button>
       </div>
       <!-- Link Table -->
       <div class="content-link-table">
-        <el-table :data="linkTable.tableData"
-                  height="100%"
-                  ref="table"
-                  stripe
-                  @sort-change="linkTableSortChange">
+        <el-table
+          :data="linkTable.tableData"
+          height="100%"
+          ref="table"
+          stripe
+          @sort-change="linkTableSortChange"
+        >
           <!-- Column 1 / src_dst -->
-          <el-table-column :prop="linkTableProps[0].prop"
-                           :label="linkTableProps[0].label">
+          <el-table-column
+            :prop="linkTableProps[0].prop"
+            :label="linkTableProps[0].label"
+          >
           </el-table-column>
           <!-- Column 2 / communication_cost -->
-          <el-table-column sortable="custom"
-                           :prop="linkTableProps[1].prop"
-                           :label="linkTableProps[1].label">
+          <el-table-column
+            sortable="custom"
+            :prop="linkTableProps[1].prop"
+            :label="linkTableProps[1].label"
+          >
           </el-table-column>
           <!-- Column 3 / communication_size -->
-          <el-table-column sortable="custom"
-                           :prop="linkTableProps[2].prop"
-                           :label="linkTableProps[2].label">
+          <el-table-column
+            sortable="custom"
+            :prop="linkTableProps[2].prop"
+            :label="linkTableProps[2].label"
+          >
           </el-table-column>
           <!-- Column 4 / band_width -->
-          <el-table-column sortable="custom"
-                           :prop="linkTableProps[3].prop"
-                           :label="linkTableProps[3].label">
+          <el-table-column
+            sortable="custom"
+            :prop="linkTableProps[3].prop"
+            :label="linkTableProps[3].label"
+          >
           </el-table-column>
           <!-- Column 5 / link_type -->
-          <el-table-column :prop="linkTableProps[4].prop"
-                           :label="linkTableProps[4].label">
+          <el-table-column
+            :prop="linkTableProps[4].prop"
+            :label="linkTableProps[4].label"
+          >
           </el-table-column>
         </el-table>
       </div>
       <div class="content-pagination">
-        <el-pagination @current-change="linkTablePageChange"
-                       @size-change="linkTableSizeChange"
-                       :page-sizes="linkTable.pageCondition.sizes"
-                       :page-size="linkTable.pageCondition.limit"
-                       :current-page.sync="linkTable.pageCondition.page"
-                       layout="total,sizes,prev,pager,next,jumper"
-                       :total="linkTable.pageCondition.total">
+        <el-pagination
+          @current-change="linkTablePageChange"
+          @size-change="linkTableSizeChange"
+          :page-sizes="linkTable.pageCondition.sizes"
+          :page-size="linkTable.pageCondition.limit"
+          :current-page.sync="linkTable.pageCondition.page"
+          layout="total,sizes,prev,pager,next,jumper"
+          :total="linkTable.pageCondition.total"
+        >
         </el-pagination>
       </div>
     </div>
 
-    <div v-show="pageState !== normalState"
-         class="comm-content">
+    <div v-show="pageState !== normalState" class="comm-content">
       <empty :state="pageState"></empty>
     </div>
 
-    <el-dialog :title="linkInfo.title"
-               :visible.sync="linkInfo.visible"
-               width="960px">
+    <el-dialog
+      :title="linkInfo.title"
+      :visible.sync="linkInfo.visible"
+      width="960px"
+    >
       <div class="comm-dialog">
         <div class="dialog-filter">
-          <span>{{ $t('profilingCluster.linkType') }}</span>
-          <el-select v-model="linkInfo.filterType"
-                     @change="filterLinkInfo">
-            <el-option v-for="type in linkInfo.linkTypes"
-                       :key="type"
-                       :label="type"
-                       :value="type">
+          <span>{{ $t("profilingCluster.linkType") }}</span>
+          <el-select v-model="linkInfo.filterType" @change="filterLinkInfo">
+            <el-option
+              v-for="type in linkInfo.linkTypes"
+              :key="type"
+              :label="type"
+              :value="type"
+            >
             </el-option>
           </el-select>
         </div>
-        <div class="dialog-content"
-             :style="{height: linkInfo.tableHeight}">
+        <div class="dialog-content" :style="{ height: linkInfo.tableHeight }">
           <!-- Link Diglog -->
-          <el-table :data="linkInfo.tableData"
-                    height="100%">
+          <el-table :data="linkInfo.tableData" height="100%">
             <!-- Column 1 / src_dst -->
-            <el-table-column width="160"
-                             :prop="linkTableProps[0].prop"
-                             :label="linkTableProps[0].label">
+            <el-table-column
+              width="160"
+              :prop="linkTableProps[0].prop"
+              :label="linkTableProps[0].label"
+            >
             </el-table-column>
             <!-- Column 2 / communication_cost -->
-            <el-table-column sortable
-                             :prop="linkTableProps[1].prop"
-                             :label="linkTableProps[1].label">
+            <el-table-column
+              sortable
+              :prop="linkTableProps[1].prop"
+              :label="linkTableProps[1].label"
+            >
             </el-table-column>
             <!-- Column 3 / communication_size -->
-            <el-table-column sortable
-                             :prop="linkTableProps[2].prop"
-                             :label="linkTableProps[2].label">
+            <el-table-column
+              sortable
+              :prop="linkTableProps[2].prop"
+              :label="linkTableProps[2].label"
+            >
             </el-table-column>
             <!-- Column 4 / band_width -->
-            <el-table-column sortable
-                             :prop="linkTableProps[3].prop"
-                             :label="linkTableProps[3].label">
+            <el-table-column
+              sortable
+              :prop="linkTableProps[3].prop"
+              :label="linkTableProps[3].label"
+            >
             </el-table-column>
             <!-- Column 5 / link_type -->
-            <el-table-column width="100"
-                             :prop="linkTableProps[4].prop"
-                             :label="linkTableProps[4].label">
+            <el-table-column
+              width="100"
+              :prop="linkTableProps[4].prop"
+              :label="linkTableProps[4].label"
+            >
             </el-table-column>
           </el-table>
         </div>
       </div>
     </el-dialog>
 
-    <el-dialog :title="opInfo.title"
-               :visible.sync="opInfo.visible"
-               width="960px">
-      <cluster-comm-op-details v-if="opInfo.visible"
-                               :rankID="opInfo.rankID"
-                               :dataset="opInfo.dataset">
+    <el-dialog
+      :title="opInfo.title"
+      :visible.sync="opInfo.visible"
+      width="960px"
+    >
+      <cluster-comm-op-details
+        v-if="opInfo.visible"
+        :rankID="opInfo.rankID"
+        :dataset="opInfo.dataset"
+      >
       </cluster-comm-op-details>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import echarts, {echartsThemeName} from '@/js/echarts';
-import RequestService from '@/services/request-service';
-import empty, {NO_DATA, LOADING_DATA} from '@/components/empty';
-import clusterCommOpDetails from '@/components/cluster-comm-op-details';
-import {keepDecimalPlaces} from '@/js/utils';
+import echarts, { echartsThemeName } from "@/js/echarts";
+import RequestService from "@/services/request-service";
+import empty, { NO_DATA, LOADING_DATA } from "@/components/empty";
+import clusterCommOpDetails from "@/components/cluster-comm-op-details";
+import { keepDecimalPlaces } from "@/js/utils";
+import CommunicationViewGraph from "./communication-view/communication-view-graph.vue";
 
-const TIME_UNIT = '(ms)';
+const TIME_UNIT = "(ms)";
 
-const SIZE_UNIT = '(KB)';
+const SIZE_UNIT = "(KB)";
 
-const BAND_UNIT = '(KB/s)';
+const BAND_UNIT = "(KB/s)";
 
 const DEFAULT_DECIMAL_PLACES = 4;
 
@@ -275,12 +344,13 @@ export default {
   components: {
     empty,
     clusterCommOpDetails,
+    CommunicationViewGraph,
   },
   data() {
     return {
       pageState: LOADING_DATA,
-      normalState: 'normal', // Normal page state
-      tabNames: ['chart', 'table'],
+      normalState: "normal", // Normal page state
+      tabNames: ["chart", "table"],
       tab: null, // Selected tab name
       trainInfo: {
         id: this.$route.query.id,
@@ -293,22 +363,22 @@ export default {
       tableData: [], // Data of page default table
       tableProps: [
         {
-          label: this.$t('profilingCluster.rankID'),
-          prop: 'rank_id',
+          label: this.$t("profilingCluster.rankID"),
+          prop: "rank_id",
         },
         {
-          label: this.$t('profilingCluster.commCost') + TIME_UNIT,
-          prop: 'communication_cost',
+          label: this.$t("profilingCluster.commCost") + TIME_UNIT,
+          prop: "communication_cost",
         },
         {
-          label: this.$t('profilingCluster.waitCost') + TIME_UNIT,
-          prop: 'wait_cost',
+          label: this.$t("profilingCluster.waitCost") + TIME_UNIT,
+          prop: "wait_cost",
         },
         {
-          label: this.$t('profiling.operatorDetail'),
+          label: this.$t("profiling.operatorDetail"),
         },
         {
-          label: this.$t('profilingCluster.linkInfo'),
+          label: this.$t("profilingCluster.linkInfo"),
         },
       ], // Page default table header label and column prop name
       pageCondition: {
@@ -321,49 +391,49 @@ export default {
       step: {
         min: 1,
         max: null,
-        value: '',
+        value: "",
         last: null,
       }, // Step info of filter default page chart
-      stepTip: this.$t('profiling.stepInputTip'), // Tip of step filter
+      stepTip: this.$t("profiling.stepInputTip"), // Tip of step filter
       linkInfo: {
-        title: this.$t('profilingCluster.linkInfo'),
+        title: this.$t("profilingCluster.linkInfo"),
         visible: false,
-        filterType: this.$t('public.all'),
-        linkTypes: [this.$t('public.all')],
+        filterType: this.$t("public.all"),
+        linkTypes: [this.$t("public.all")],
         tableData: [],
         totalData: [],
-        tableHeight: '0px',
+        tableHeight: "0px",
       }, // Link info dialog data
       linkTableProps: [
         {
-          label: this.$t('profilingCluster.linkRange'),
-          prop: 'src_dst',
+          label: this.$t("profilingCluster.linkRange"),
+          prop: "src_dst",
         },
         {
-          label: this.$t('profilingCluster.commCost') + TIME_UNIT,
-          prop: 'communication_cost',
+          label: this.$t("profilingCluster.commCost") + TIME_UNIT,
+          prop: "communication_cost",
         },
         {
-          label: this.$t('profilingCluster.commSize') + SIZE_UNIT,
-          prop: 'communication_size',
+          label: this.$t("profilingCluster.commSize") + SIZE_UNIT,
+          prop: "communication_size",
         },
         {
-          label: this.$t('profilingCluster.bandWidth') + BAND_UNIT,
-          prop: 'band_width',
+          label: this.$t("profilingCluster.bandWidth") + BAND_UNIT,
+          prop: "band_width",
         },
         {
-          label: this.$t('profilingCluster.linkType'),
-          prop: 'link_type',
+          label: this.$t("profilingCluster.linkType"),
+          prop: "link_type",
         },
       ], // Link info table header label and column prop name
       linkTable: {
         tableData: [],
         sortCondition: {},
         filter: {
-          step_id: '',
-          src_rank: '',
-          dst_rank: '',
-          link_type: this.$t('public.all'),
+          step_id: "",
+          src_rank: "",
+          dst_rank: "",
+          link_type: this.$t("public.all"),
         }, // Filter of link table
         params: null,
         linkTypes: [],
@@ -375,7 +445,7 @@ export default {
         }, // Page setting of link table
       },
       opInfo: {
-        title: this.$t('profiling.operatorDetail'),
+        title: this.$t("profiling.operatorDetail"),
         visible: false,
         dataID: null,
         dataset: [],
@@ -388,22 +458,26 @@ export default {
   },
   mounted() {
     if (!this.trainInfo.id) {
-      this.$message.error(this.$t('trainingDashboard.invalidId'));
-      document.title = `${this.$t('profilingCluster.commChartTitle')}-MindInsight`;
+      this.$message.error(this.$t("trainingDashboard.invalidId"));
+      document.title = `${this.$t(
+        "profilingCluster.commChartTitle"
+      )}-MindInsight`;
       this.pageState = NO_DATA;
       return;
     }
-    document.title = `${this.trainInfo.path}-${this.$t('profilingCluster.commChartTitle')}-MindInsight`;
+    document.title = `${this.trainInfo.path}-${this.$t(
+      "profilingCluster.commChartTitle"
+    )}-MindInsight`;
     // Add chart resize Listener
-    window.addEventListener('resize', this.resizeCallback);
-    this.$bus.$on('collapse', this.resizeCallback);
+    window.addEventListener("resize", this.resizeCallback);
+    this.$bus.$on("collapse", this.resizeCallback);
     this.initPage();
     this.initLinkTable();
   },
   beforeDestroy() {
     // remove the size of a window and change the listener
-    window.removeEventListener('resize', this.resizeCallback);
-    this.$bus.$off('collapse', this.resizeCallback);
+    window.removeEventListener("resize", this.resizeCallback);
+    this.$bus.$off("collapse", this.resizeCallback);
     // remove chart calculation delay
     if (this.chartResizeTimer) {
       clearTimeout(this.chartResizeTimer);
@@ -456,7 +530,8 @@ export default {
       const params = this.linkTable.params;
       this.linkTable.pageCondition.page = 1;
       params.body.group_condition.offset = 0;
-      params.body.group_condition.limit = this.linkTable.pageCondition.limit = val;
+      params.body.group_condition.limit = this.linkTable.pageCondition.limit =
+        val;
       this.useLinkTable(params);
     },
     /**
@@ -497,7 +572,10 @@ export default {
       }
       const filterCondition = JSON.parse(JSON.stringify(this.linkTable.filter));
       Object.keys(filterCondition).forEach((key) => {
-        if (key === 'link_type' && filterCondition[key] === this.$t('public.all')) {
+        if (
+          key === "link_type" &&
+          filterCondition[key] === this.$t("public.all")
+        ) {
           Reflect.deleteProperty(filterCondition, key);
           return;
         }
@@ -521,7 +599,7 @@ export default {
         if (res?.data?.cluster_link_info.length > 0) {
           this.linkTable.pageCondition.total = res.data.size;
           const tableData = [];
-          const types = [this.$t('public.all')];
+          const types = [this.$t("public.all")];
           res.data.cluster_link_info.forEach((info) => {
             // Init link types when first query
             if (!this.linkTable.linkTypes.length && !types.includes(info[1])) {
@@ -530,8 +608,14 @@ export default {
             tableData.push({
               src_dst: info[0],
               link_type: info[1],
-              communication_cost: keepDecimalPlaces(info[2], DEFAULT_DECIMAL_PLACES),
-              communication_size: keepDecimalPlaces(info[3], DEFAULT_DECIMAL_PLACES),
+              communication_cost: keepDecimalPlaces(
+                info[2],
+                DEFAULT_DECIMAL_PLACES
+              ),
+              communication_size: keepDecimalPlaces(
+                info[3],
+                DEFAULT_DECIMAL_PLACES
+              ),
               band_width: keepDecimalPlaces(info[4], DEFAULT_DECIMAL_PLACES),
             });
           });
@@ -565,18 +649,18 @@ export default {
     queryCommInfo(params) {
       return new Promise((resolve) => {
         RequestService.getCommInfo(params)
-            .then((res) => {
-              if (res?.data?.communication.length > 0) {
-                resolve(res.data);
-              } else {
-                this.pageState = NO_DATA;
-                resolve(false);
-              }
-            })
-            .catch(() => {
+          .then((res) => {
+            if (res?.data?.communication.length > 0) {
+              resolve(res.data);
+            } else {
               this.pageState = NO_DATA;
               resolve(false);
-            });
+            }
+          })
+          .catch(() => {
+            this.pageState = NO_DATA;
+            resolve(false);
+          });
       });
     },
     /**
@@ -585,7 +669,7 @@ export default {
      */
     usePage(data) {
       this.step.max = data.total_step_num;
-      this.stepTip = this.$t('profiling.stepInputTip', {max: this.step.max});
+      this.stepTip = this.$t("profiling.stepInputTip", { max: this.step.max });
       this.pageCondition.total = data.size;
       this.useChart(data.communication);
       this.useTable(data.communication);
@@ -612,7 +696,7 @@ export default {
           limit: this.pageCondition.limit,
         };
       }
-      if (this.step.value !== '') {
+      if (this.step.value !== "") {
         params.body.filter_condition = {
           step_id: this.step.value,
         };
@@ -635,7 +719,10 @@ export default {
       const options = this.getEChartsOptions(chartData);
       this.$nextTick(() => {
         if (!this.chartInstance) {
-          this.chartInstance = echarts.init(this.$refs.commChart, echartsThemeName);
+          this.chartInstance = echarts.init(
+            this.$refs.commChart,
+            echartsThemeName
+          );
         }
         this.chartInstance.setOption(options, true);
       });
@@ -645,13 +732,19 @@ export default {
      *  @param {Array} data response data
      */
     useTable(data) {
-      const tempData = data.length > this.pageCondition.limit ? data.slice(0, this.pageCondition.limit) : data;
+      const tempData =
+        data.length > this.pageCondition.limit
+          ? data.slice(0, this.pageCondition.limit)
+          : data;
       const tableData = [];
       tempData.forEach((item) => {
         const info = item.communication_info;
         tableData.push({
           rank_id: item.rank_id,
-          communication_cost: keepDecimalPlaces(info[0], DEFAULT_DECIMAL_PLACES),
+          communication_cost: keepDecimalPlaces(
+            info[0],
+            DEFAULT_DECIMAL_PLACES
+          ),
           wait_cost: keepDecimalPlaces(info[1], DEFAULT_DECIMAL_PLACES),
           info: info[2],
           op_info: info[3],
@@ -688,15 +781,21 @@ export default {
      */
     showLinkInfo(row) {
       const tableData = [];
-      const types = [this.$t('public.all')];
+      const types = [this.$t("public.all")];
       Object.keys(row.info).forEach((range) => {
         Object.keys(row.info[range]).forEach((type) => {
           if (!types.includes(type)) types.push(type);
           const value = row.info[range][type];
           tableData.push({
             src_dst: range,
-            communication_cost: keepDecimalPlaces(value[0], DEFAULT_DECIMAL_PLACES),
-            communication_size: keepDecimalPlaces(value[1], DEFAULT_DECIMAL_PLACES),
+            communication_cost: keepDecimalPlaces(
+              value[0],
+              DEFAULT_DECIMAL_PLACES
+            ),
+            communication_size: keepDecimalPlaces(
+              value[1],
+              DEFAULT_DECIMAL_PLACES
+            ),
             band_width: keepDecimalPlaces(value[2], DEFAULT_DECIMAL_PLACES),
             link_type: type,
           });
@@ -712,7 +811,7 @@ export default {
      * The logic of filter total link info
      */
     filterLinkInfo() {
-      if (this.linkInfo.filterType === this.$t('public.all')) {
+      if (this.linkInfo.filterType === this.$t("public.all")) {
         this.linkInfo.tableData = this.linkInfo.totalData;
       } else {
         this.linkInfo.tableData = this.linkInfo.totalData.filter((data) => {
@@ -770,19 +869,25 @@ export default {
         return;
       }
       const strValue = this.step.value;
-      if (strValue === '') {
+      if (strValue === "") {
         this.initPage();
         this.step.last = strValue;
         return;
       }
       const intValue = parseInt(strValue);
-      if (intValue.toString() === strValue && this.step.min <= intValue && intValue <= this.step.max) {
+      if (
+        intValue.toString() === strValue &&
+        this.step.min <= intValue &&
+        intValue <= this.step.max
+      ) {
         this.initPage();
         this.step.last = strValue;
         return;
       }
       this.step.value = this.step.last;
-      this.$message.error(this.$t('profiling.inputError').replace('{max}', this.step.max));
+      this.$message.error(
+        this.$t("profiling.inputError").replace("{max}", this.step.max)
+      );
     },
     /**
      * The logic of get data which used to set echarts
@@ -793,17 +898,17 @@ export default {
       const endValue = source.length > 25 ? 25 : source.length; // Default displayed bar number
       return {
         tooltip: {
-          trigger: 'axis',
+          trigger: "axis",
           axisPointer: {
-            type: 'shadow',
+            type: "shadow",
           },
         },
         legend: {
           right: 70,
           top: 8,
           data: [
-            this.$t('profilingCluster.commCost'),
-            this.$t('profilingCluster.waitCost'),
+            this.$t("profilingCluster.commCost"),
+            this.$t("profilingCluster.waitCost"),
           ],
         },
         grid: {
@@ -812,36 +917,38 @@ export default {
           right: 80,
         },
         dataset: {
-          source: [[
-            this.$t('profilingCluster.rankID'),
-            this.$t('profilingCluster.commCost'),
-            this.$t('profilingCluster.waitCost'),
-          ]].concat(source),
+          source: [
+            [
+              this.$t("profilingCluster.rankID"),
+              this.$t("profilingCluster.commCost"),
+              this.$t("profilingCluster.waitCost"),
+            ],
+          ].concat(source),
         },
         xAxis: {
-          name: this.$t('profilingCluster.rankID'),
+          name: this.$t("profilingCluster.rankID"),
           nameTextStyle: {
-            align: 'left',
+            align: "left",
             padding: [0, 5],
           },
-          type: 'category',
+          type: "category",
         },
         yAxis: {
-          name: this.$t('profilingCluster.timeTitle'),
+          name: this.$t("profilingCluster.timeTitle"),
           nameGap: 20,
           nameTextStyle: {
-            align: 'right',
+            align: "right",
             padding: [0, 5],
           },
           splitLine: {
             lineStyle: {
-              type: 'dashed',
+              type: "dashed",
             },
           },
         },
         series: [
-          {type: 'bar', barWidth: 8},
-          {type: 'bar', barWidth: 8},
+          { type: "bar", barWidth: 8 },
+          { type: "bar", barWidth: 8 },
         ],
         dataZoom: [
           {
@@ -851,7 +958,7 @@ export default {
           {
             startValue: 0,
             endValue: endValue,
-            type: 'inside',
+            type: "inside",
           },
         ],
       };
@@ -861,10 +968,13 @@ export default {
      */
     backToDashboard() {
       this.$router.push({
-        path: 'cluster-dashboard',
-        query: Object.assign({
-          activeName: this.activeName,
-        }, this.trainInfo),
+        path: "cluster-dashboard",
+        query: Object.assign(
+          {
+            activeName: this.activeName,
+          },
+          this.trainInfo
+        ),
       });
     },
   },
@@ -890,10 +1000,10 @@ export default {
   width: 100%;
   line-height: 24px;
 }
-.comm-tooltip-container .comm-tooltip-cell span{
+.comm-tooltip-container .comm-tooltip-cell span {
   word-break: normal;
 }
-.comm-tooltip-container .comm-tooltip-cell span:first-of-type{
+.comm-tooltip-container .comm-tooltip-cell span:first-of-type {
   font-weight: bold;
 }
 </style>
@@ -941,13 +1051,22 @@ export default {
   margin-bottom: 20px;
   flex-shrink: 0;
 }
-.comm-content .content-table {
+.comm-content .comm-container {
   height: calc(100% - 383px);
   margin-bottom: 10px;
+  display: flex;
 }
 .comm-content .content-link-table {
   height: calc(100% - 84px);
   margin-bottom: 10px;
+}
+.comm-container .content-table {
+  width: calc(100% - 500px);
+  height: 100%;
+}
+.comm-container .comm-graph {
+  width: 500px;
+  height: 100%;
 }
 .content-table .table-button {
   color: var(--theme-color);

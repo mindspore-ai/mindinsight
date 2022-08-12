@@ -258,6 +258,10 @@ export default new Router({
               path: 'strategy',
               component: () => import('./views/profiling/parallel-graph/graph-container.vue'),
             },
+            {
+              path: 'executive-overview',
+              component: () => import('./views/profiling/cluster/performance/executive-overview/overview-container.vue'),
+            },
             // Performance Details
             {
               path: 'step-trace',

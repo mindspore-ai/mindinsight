@@ -18,3 +18,4 @@ import os
 RAW_DATA_BASE = os.path.realpath(os.path.join(os.path.dirname(__file__), '../../../utils/resource'))
 RAW_DATA = os.path.realpath(os.path.join(RAW_DATA_BASE, 'JOB1'))
 PROFILER_DIR = os.path.realpath(os.path.join(RAW_DATA_BASE, 'profiler'))
+MAREY_DIR = os.path.realpath(os.path.join(RAW_DATA_BASE, 'marey_graph'))

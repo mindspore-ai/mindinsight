@@ -21,6 +21,7 @@ from mindinsight.profiler.common.exceptions.exceptions import ProfilerIOExceptio
 from mindinsight.profiler.common.log import logger
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
 from mindinsight.utils.exceptions import ParamValueError
+from mindinsight.profiler.analyser.timeline_processor import TimelineService
 
 
 class TimelineAnalyser(BaseAnalyser):
@@ -114,3 +115,15 @@ class TimelineAnalyser(BaseAnalyser):
         timeline_summary.setdefault("max_scope_name_num", 0)
 
         return timeline_summary
+
+    def get_marey_timeline(self, device_type, step):
+        timeline_service = TimelineService(self._profiling_dir, device_type)
+        operator_time_maps, min_time, max_time, stage_data = timeline_service.get_ops_by_step(step)
+        ret = {"maps": operator_time_maps, "minT": min_time, "maxT": max_time, "stage_data": stage_data}
+        return ret
+
+    def get_scope_map(self, device_type):
+        timeline_service = TimelineService(self._profiling_dir, device_type)
+        scope_map = timeline_service.process_scope(self._profiling_dir)
+        ret = {"scope_map": scope_map}
+        return ret

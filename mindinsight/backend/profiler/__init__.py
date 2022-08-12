@@ -17,6 +17,7 @@ module init file.
 """
 from mindinsight.backend.profiler.profile_api import init_module as init_profiler_module
 from mindinsight.backend.profiler.parallel_strategy_api import init_module as init_strategy_module
+from mindinsight.backend.profiler.marey_graph_api import init_module as init_marey_module
 
 
 def init_module(app):
@@ -30,3 +31,4 @@ def init_module(app):
     """
     init_profiler_module(app)
     init_strategy_module(app)
+    init_marey_module(app)

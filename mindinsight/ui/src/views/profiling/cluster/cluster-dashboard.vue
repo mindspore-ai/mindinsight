@@ -92,6 +92,10 @@ export default {
           name: 'strategy',
           label: this.$t('profiling.strategyPerception'),
         },
+        {
+          name: 'executive-overview',
+          label: this.$t('profiling.executiveOverview'),
+        },
       ],
       left: 0,
     };
@@ -114,7 +118,7 @@ export default {
       length += t.label.length;
     });
     // 6.5(px of en-us char), 14(px of zh-cn char), 81(padding) used to calculate the position of path label
-    this.left = length * (this.$store.state.language === 'en-us' ? 6.5 : 14) + 81;
+    this.left = length * (this.$store.state.language === 'en-us' ? 6.5 : 14) + 130;
   },
   methods: {
     /**
@@ -139,6 +143,10 @@ export default {
         case '/profiling/cluster/flops-heatmap':
         case '/profiling/cluster/memory-heatmap':
           this.tab = this.tabs[1].name;
+          break;
+        case '/profiling/cluster/executive-overview':
+          this.tab = this.tabs[3].name;
+          this.showDetail = false;
           break;
       }
     },

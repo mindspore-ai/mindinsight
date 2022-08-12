@@ -22,6 +22,7 @@ from mindinsight.profiler.common.exceptions.exceptions import ProfilerIOExceptio
     ProfilerFileNotFoundException
 from mindinsight.profiler.common.log import logger
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
+from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir
 from mindinsight.utils.exceptions import ParamValueError
 
 
@@ -105,6 +106,28 @@ class MemoryUsageAnalyser(BaseAnalyser):
 
         return {'breakdowns': memory_breakdowns}
 
+    def get_memory_data_for_marey(self, device_type):
+        """
+        Get memory data for marey's graph.
+
+        Args:
+            device_type (str): Device type, e.g., GPU, Ascend.
+
+        Returns:
+            json, the content of memory usage summary and details for marey's graph.
+        """
+        data = {}
+        device_list, _, _ = analyse_device_list_from_profiler_dir(self._profiling_dir)
+        for device in device_list:
+            self._device_id = device
+            summary = self._get_file_content(device_type, FileType.SUMMARY.value)
+            details = self._get_memory_file_without_breakdown(device_type)
+            device_entry = "device" + device
+            data[device_entry] = {}
+            data.get(device_entry)['summary'] = summary
+            data.get(device_entry)['details'] = details
+        return data
+
     def _get_file_content(self, device_type, file_type):
         """
         Get file content for different types of memory usage files.
@@ -124,6 +147,34 @@ class MemoryUsageAnalyser(BaseAnalyser):
         try:
             with open(file_path, 'r') as f_obj:
                 file_content = json.load(f_obj)
+        except (IOError, OSError, json.JSONDecodeError) as err:
+            logger.error('Error occurred when read memory file: %s', err)
+            raise ProfilerIOException()
+
+        return file_content
+
+    def _get_memory_file_without_breakdown(self, device_type):
+        """
+        Get file content for memory usage details files without breakdowns.
+
+        Args:
+            device_type (str): Device type, e.g., GPU, Ascend.
+
+        Returns:
+            dict, file content corresponding to file_type.
+        """
+        file_path = self._get_file_path(device_type, FileType.DETAILS.value)
+        if not os.path.exists(file_path):
+            logger.error('Invalid file path. Please check the output path: %s', file_path)
+            raise ProfilerFileNotFoundException(msg='Invalid memory file path.')
+
+        try:
+            with open(file_path, 'r') as f_obj:
+                f_obj_str = f_obj.read()
+                del_start = f_obj_str.find(", \"breakdowns\"")
+                new_str = f_obj_str[:del_start] + f_obj_str[-2:]
+                del f_obj_str
+                file_content = json.loads(new_str)
         except (IOError, OSError, json.JSONDecodeError) as err:
             logger.error('Error occurred when read memory file: %s', err)
             raise ProfilerIOException()
