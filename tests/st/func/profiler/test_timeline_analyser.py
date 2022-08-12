@@ -23,27 +23,36 @@ import os
 import pytest
 
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
-from tests.st.func.profiler import PROFILER_DIR
+from tests.st.func.profiler import PROFILER_DIR, MAREY_DIR
 from tests.utils.tools import compare_result_with_file
 
 
 class TestTimelineAnalyser:
     """Test timeline analyser module."""
 
+    def __init__(self):
+        self._analyser = None
+        self._marey_analyser = None
+
     @classmethod
     def setup_class(cls):
         """Generate parsed files."""
         cls.profiler = PROFILER_DIR
+        cls.marey_data_path = MAREY_DIR
         cls.device_id = 0
         cls.ascend_display_filename = 'ascend_timeline_display_{}.json'
         cls.gpu_display_filename = 'gpu_timeline_display_{}.json'
         cls.ascend_timeline_summary_filename = 'ascend_timeline_summary_{}.json'
         cls.gpu_timeline_summary_filename = 'gpu_timeline_summary_{}.json'
+        cls.ascend_marey_timeline_filename = 'ascend_marey_timeline_{}.json'
+        cls.ascend_scope_map_filename = 'scope_map_{}.json'
 
     def setup_method(self):
         """Create analyser."""
         self._analyser = AnalyserFactory.instance().get_analyser(
             'timeline', self.profiler, self.device_id)
+        self._marey_analyser = AnalyserFactory.instance().get_analyser(
+            'timeline', self.marey_data_path, self.device_id)
 
     @pytest.mark.level0
     @pytest.mark.env_single
@@ -89,6 +98,38 @@ class TestTimelineAnalyser:
         compare_result_with_file(result, gpu_file_path)
 
         result = self._analyser.get_timeline_summary("ascend")
+        compare_result_with_file(result, ascend_file_path)
+
+    @pytest.mark.level0
+    @pytest.mark.env_single
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    def test_get_marey_timeline(self):
+        """Test the function of get marey timeline data for UI display."""
+        ascend_file_path = os.path.join(
+            self.marey_data_path,
+            self.ascend_marey_timeline_filename.format(1)
+        )
+
+        result = self._marey_analyser.get_marey_timeline("ascend", 1)
+        compare_result_with_file(result, ascend_file_path)
+
+    @pytest.mark.level0
+    @pytest.mark.env_single
+    @pytest.mark.platform_x86_cpu
+    @pytest.mark.platform_arm_ascend_training
+    @pytest.mark.platform_x86_gpu_training
+    @pytest.mark.platform_x86_ascend_training
+    def test_get_scope_map(self):
+        """Test the function of get marey timeline data for UI display."""
+        ascend_file_path = os.path.join(
+            self.marey_data_path,
+            self.ascend_scope_map_filename.format(1)
+        )
+
+        result = self._marey_analyser.get_scope_map("ascend")
         compare_result_with_file(result, ascend_file_path)
 
     @pytest.mark.level0

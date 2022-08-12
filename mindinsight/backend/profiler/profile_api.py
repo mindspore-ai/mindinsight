@@ -921,6 +921,31 @@ def get_cluster_link_info():
     return jsonify(link_info)
 
 
+@BLUEPRINT.route("/profile/communication-data", methods=["POST"])
+def get_communication_data():
+    """
+    Get communication data for the communication overview graph.
+
+    Returns:
+        Response, the cluster link info.
+
+    Raises:
+        ParamValueError: If the search condition contains some errors.
+
+    Examples:
+        >>>POST http://xxx/v1/mindinsight/profile/communication-data
+    """
+    summary_dir = request.args.get('train_id')
+    profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
+    device_id = request.args.get("device_id", default='0')
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'cluster_hccl', profiler_dir_abs, device_id
+    )
+    return jsonify(analyser.get_communication_data())
+
+
 def init_module(app):
     """
     Init module entry.

@@ -44,6 +44,7 @@ export default new Vuex.Store({
     language: 'en-us',
     // Theme index
     themeIndex: '0',
+    nameScopeToParallelStrategy: null,
   },
   mutations: {
     // set cancelTokenArr
@@ -97,6 +98,9 @@ export default new Vuex.Store({
     setThemeIndex(state, val) {
       state.themeIndex = val;
       localStorage.setItem('miTheme', val);
+    },
+    setNameScopeToParallelStrategy(state, val) {
+      state.nameScopeToParallelStrategy = val;
     },
   },
   actions: {},

@@ -17,12 +17,14 @@ import json
 import os
 import csv
 import re
+import pandas as pd
 
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException, \
     ProfilerDirNotFoundException, ProfilerIOException
 from mindinsight.profiler.common.log import logger as log
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
+from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir
 
 
 class ClusterAnalyser(BaseAnalyser):
@@ -220,6 +222,24 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
 
         return step_bottleneck_info
 
+    def get_overview_time_info(self):
+        """Get overview time info."""
+        device_list, _, _ = analyse_device_list_from_profiler_dir(self._profiling_dir)
+        data = {}
+        for device in device_list:
+            file_name = 'step_trace_raw_{}_detail_time.csv'.format(device)
+            file_path = os.path.join(self._profiling_dir, file_name)
+            file_path = validate_and_normalize_path(
+                file_path, raise_key='Invalid memory usage file path.'
+            )
+            df = pd.read_csv(file_path)
+            df = pd.DataFrame(df, columns=['step_num', 'start_point', 'end_point', 'total',\
+            'fp_point', 'bp_point', 'iteration_interval', 'fp_and_bp', 'tail'])
+            cur_data = list(json.loads(df.to_json(orient="index")).values())
+            device_entry = "device" + device
+            data[device_entry] = cur_data
+        return data
+
     def _load(self):
         """Load data according to the parsed profiling files."""
 
@@ -378,6 +398,7 @@ class ClusterFlopsAnalyser(ClusterAnalyser):
 class ClusterHcclAnalyser(ClusterAnalyser):
     """The analyser for analyzing the cluster communication info."""
     _col_names = ['step_num', 'communication_cost', 'wait_cost']
+    _hccl_filename = 'hccl_raw_{}.csv'
 
     def __init__(self, cluster_profiler_dir, device_id):
         super().__init__(cluster_profiler_dir, device_id)
@@ -403,6 +424,26 @@ class ClusterHcclAnalyser(ClusterAnalyser):
             'cluster_link_info': self._result,
             'size': self._cluster_link_info_size
         }
+
+    def get_communication_data(self):
+        """Get communication data for node-link graph."""
+        device_list, _, _ = analyse_device_list_from_profiler_dir(self._profiling_dir)
+        data = {}
+        for device in device_list:
+            hccl_filename = self._hccl_filename.format(device)
+            file_path = os.path.join(self._profiling_dir, hccl_filename)
+            file_path = validate_and_normalize_path(
+                file_path, raise_key='Invalid memory usage file path.'
+            )
+            df = pd.read_csv(file_path)
+            cur_data = list(json.loads(df.to_json(orient="index")).values())
+            for dt in cur_data:
+                dt['link_info'] = json.loads(dt['link_info'])
+                dt['communication_operator_cost'] = json.loads(dt['communication_operator_cost'])
+            device_entry = "device" + device
+            data[device_entry] = {}
+            data[device_entry] = cur_data
+        return data
 
     def _get_total_step_num(self):
         """Get the num of train step."""

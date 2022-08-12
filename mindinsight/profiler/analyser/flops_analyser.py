@@ -15,11 +15,13 @@
 """The Flops Analyser."""
 import json
 import os
+import pandas as pd
 
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerIOException
 from mindinsight.profiler.common.log import logger
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
+from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir
 
 
 class FlopsAnalyser(BaseAnalyser):
@@ -28,6 +30,7 @@ class FlopsAnalyser(BaseAnalyser):
     """
     _flops_summary_filename = 'flops_summary_{}.json'
     _flops_scope_filename = 'flops_scope_{}.json'
+    _flops_operator_filename = 'flops_{}.txt'
 
     def _load(self):
         """Load data according to the parsed profiling files."""
@@ -93,3 +96,47 @@ class FlopsAnalyser(BaseAnalyser):
             logger.warning('No flops scope file. Please check the output path.')
 
         return flops_scope
+
+    def get_flops_data_for_marey(self):
+        """
+        Get flops information for marey's graph.
+
+        Returns:
+            json, the content of flops information for marey's graph.
+        """
+        device_list, _, _ = analyse_device_list_from_profiler_dir(self._profiling_dir)
+        data = {}
+        for device in device_list:
+            flops_summary_filename = self._flops_summary_filename.format(device)
+            flops_operator_filename = self._flops_operator_filename.format(device)
+            device_entry = "device" + device
+            data[device_entry] = {}
+            file_path = os.path.join(self._profiling_dir, flops_summary_filename)
+            file_path = validate_and_normalize_path(
+                file_path, raise_key='Invalid flops scope path.'
+            )
+            if os.path.exists(file_path):
+                try:
+                    with open(file_path, 'r') as f_obj:
+                        data.get(device_entry)['summary'] = json.load(f_obj)
+                except (IOError, OSError, json.JSONDecodeError) as err:
+                    logger.error('Error occurred when read flops scope file: %s', err)
+                    raise ProfilerIOException()
+            else:
+                logger.warning('No flops scope file. Please check the output path.')
+
+            file_path = os.path.join(self._profiling_dir, flops_operator_filename)
+            file_path = validate_and_normalize_path(
+                file_path, raise_key='Invalid flops scope path.'
+            )
+
+            if os.path.exists(file_path):
+                try:
+                    df = pd.read_csv(file_path)
+                    data.get(device_entry)['details'] = list(json.loads(df.to_json(orient="index")).values())
+                except (IOError, OSError, json.JSONDecodeError) as err:
+                    logger.error('Error occurred when read flops scope file: %s', err)
+                    raise ProfilerIOException()
+            else:
+                logger.warning('No flops scope file. Please check the output path.')
+        return data
