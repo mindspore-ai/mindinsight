@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import shutil
 import tempfile
 import time
 from pathlib import Path
+import numpy as np
 
 from mindinsight.domain.graph.proto import ms_graph_pb2
 from tests.st.func.debugger.conftest import DEBUGGER_EXPECTED_RESULTS, DEBUGGER_BASE_URL, GRAPH_PROTO_FILE
@@ -132,12 +133,12 @@ def build_dump_structue(base_dir, dump_name, step_num, graph_id):
                  dump_steps={graph_id: list(range(step_num))})
 
 
-def build_multi_net_dump_structure(dump_name=None):
+def build_multi_net_dump_structure(dump_name=None, create_tensor=False):
     """Build the multi-net dump file structure."""
     debugger_tmp_dir = tempfile.mkdtemp(suffix='debugger_tmp')
     dump_dir = os.path.join(debugger_tmp_dir, dump_name) if dump_name else debugger_tmp_dir
     gen = DumpStructureGenerator(dump_dir)
-    gen.generate(rank_num=2)
+    gen.generate(rank_num=2, create_tensor=create_tensor)
     return debugger_tmp_dir
 
 
@@ -159,21 +160,6 @@ class DumpStructureGenerator:
     def __init__(self, dump_dir, sync=True):
         self._dump_dir = Path(dump_dir)
         self._dump_mode = 'sync' if sync else 'async'
-
-    def clean(self):
-        """Clean cache."""
-        if self._dump_dir.is_dir():
-            shutil.rmtree(self._dump_dir)
-
-    def generate(self, root_graphs=None, rank_num=1, history=None, dump_steps=None):
-        """Generate dump structure."""
-        for rank_id in range(rank_num):
-            rank_dir = self._dump_dir / f'rank_{rank_id}'
-            rank_dir.mkdir(parents=True)
-            self.generate_dump_metadata(rank_dir, self._dump_mode)
-            self.generate_graphs(rank_dir, root_graphs)
-            self.generate_execution(rank_dir, history)
-            self.generate_dump_steps(rank_dir, dump_steps)
 
     @staticmethod
     def generate_dump_metadata(rank_dir, dump_mode):
@@ -222,7 +208,7 @@ class DumpStructureGenerator:
                     handle.write(str(count) + '\n')
 
     @staticmethod
-    def generate_dump_steps(rank_dir, dump_steps=None):
+    def generate_dump_steps(rank_dir, dump_steps=None, create_tensor=False):
         """Generate dump steps."""
         if dump_steps is None:
             dump_steps = {0: [0, 4], 3: [1, 6]}
@@ -234,3 +220,35 @@ class DumpStructureGenerator:
             for step in steps:
                 step_dir = graph_dir / str(step)
                 step_dir.mkdir()
+                # Create tensor file in the graph 0 directory.
+                if graph_id == 0 and create_tensor:
+                    time_stamp0 = int(time.time())
+                    conv_name = 'Conv2D.Conv2D-op1.0.0.' + str(time_stamp0) + '.output.0.DefaultFormat.npy'
+                    tensor0_dir = step_dir / conv_name
+                    conv_tensor = np.zeros((32, 6, 28, 28), dtype=np.float32)
+                    np.save(tensor0_dir, conv_tensor)
+                    time_stamp1 = int(time.time())
+                    cast_name = 'Cast.Cast-op189.0.0.' + str(time_stamp1) + '.output.0.DefaultFormat.npy'
+                    tensor1_dir = step_dir / cast_name
+                    cast_tensor = np.zeros((6, 1, 5, 5), dtype=np.float32)
+                    np.save(tensor1_dir, cast_tensor)
+                    time_stamp2 = int(time.time())
+                    cast2_name = 'Cast.Cast-op190.0.0.' + str(time_stamp2) + '.output.0.DefaultFormat.npy'
+                    tensor2_dir = step_dir / cast2_name
+                    cast2_tensor = np.zeros((32, 1, 32, 32), dtype=np.float32)
+                    np.save(tensor2_dir, cast2_tensor)
+
+    def generate(self, root_graphs=None, rank_num=1, history=None, dump_steps=None, create_tensor=False):
+        """Generate dump structure."""
+        for rank_id in range(rank_num):
+            rank_dir = self._dump_dir / f'rank_{rank_id}'
+            rank_dir.mkdir(parents=True)
+            self.generate_dump_metadata(rank_dir, self._dump_mode)
+            self.generate_graphs(rank_dir, root_graphs)
+            self.generate_execution(rank_dir, history)
+            self.generate_dump_steps(rank_dir, dump_steps, create_tensor)
+
+    def clean(self):
+        """Clean cache."""
+        if self._dump_dir.is_dir():
+            shutil.rmtree(self._dump_dir)
