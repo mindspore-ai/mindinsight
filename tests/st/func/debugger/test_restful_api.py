@@ -441,9 +441,7 @@ class TestGPUDebugger:
     @pytest.mark.platform_x86_ascend_training
     def test_next_node_on_gpu(self, app_client):
         """Test get next node on GPU."""
-        gpu_debugger_client = MockDebuggerClient(backend='GPU')
-        check_state(app_client, 'pending')
-        with gpu_debugger_client.get_thread_instance():
+        with self._debugger_client.get_thread_instance():
             check_state(app_client)
             # send run command to get watchpoint hit
             url = 'control'

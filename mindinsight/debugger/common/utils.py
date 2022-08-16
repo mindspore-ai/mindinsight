@@ -16,6 +16,7 @@
 import enum
 import gc
 import os
+import stat
 import re
 import struct
 import tempfile
@@ -117,8 +118,10 @@ class Streams(enum.Enum):
 
 
 class RunLevel(enum.Enum):
-    """Run Level enum, it depends on whether the program is executed node by node,
-    step by step, or in recheck phase"""
+    """
+    Run Level enum, it depends on whether the program is executed node by node,
+    step by step, or in recheck phase.
+    """
     NODE = "node"
     STEP = "step"
     RECHECK = "recheck"
@@ -139,7 +142,7 @@ def get_ack_reply(state=0):
         1: EventReply.Status.FAILED,
         2: EventReply.Status.PENDING
     }
-    reply.status = state_mapping[state]
+    reply.status = state_mapping.get(state, EventReply.Status.FAILED)
 
     return reply
 
@@ -306,8 +309,11 @@ def _generate_npy_header(tensor_proto):
 
 def _write_tensor(file_path, value):
     """Write into temp file."""
-    with open(file_path, 'ab') as fb:
-        fb.write(value)
+    flags = os.O_APPEND | os.O_CREAT
+    # File owner has read and write access.
+    modes = stat.S_IWUSR | stat.S_IRUSR
+    with os.fdopen(os.open(file_path, flags, modes), 'ab') as fout:
+        fout.write(value)
 
 
 def convert_tensor_stats(tensor_data):
@@ -382,7 +388,7 @@ def validate_type(param, param_name, expect_type, expect_type_name=None):
         expect_types = tuple(expect_types)
     if not isinstance(param, expect_types):
         expect_type_name = expect_type_name if expect_type_name else expect_type
-        raise DebuggerParamTypeError(f"The type of {param_name} should be {expect_type_name}.")
+        raise DebuggerParamTypeError(f"The type of {param_name} should be {expect_type_name}, but got {type(param)}.")
 
 
 def parse_param_to_iterable_obj(param, param_name, expected_range=None, error_report=True):
@@ -401,6 +407,8 @@ def parse_param_to_iterable_obj(param, param_name, expected_range=None, error_re
     """
     if param is None:
         return expected_range
+    if isinstance(param, set):
+        param = list(param)
     if not isinstance(param, list):
         param = [param]
     # validate ranks
