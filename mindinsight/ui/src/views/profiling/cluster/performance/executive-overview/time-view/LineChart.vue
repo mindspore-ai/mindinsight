@@ -15,68 +15,14 @@ limitations under the License.
 -->
 <template>
   <div class="line-chart-container">
-    <svg style="position: absolute; top: 4%" width="100%" height="15px">
-      <rect
-        x="10%"
-        y="1"
-        width="25px"
-        height="14px"
-        fill-opacity="0.5"
-        style="rx: 4px; fill: #a1a1a1"
-      ></rect>
-      <text x="14%" y="13" style="font-size: 13px; opacity: 0.7">
-        {{ $t("profilingCluster.totalTrainingTime") }}
-      </text>
-      <rect
-        x="33%"
-        y="1"
-        width="25px"
-        height="14px"
-        style="rx: 4px; fill: #c69b7b"
-      ></rect>
-      <text x="37%" y="13" style="font-size: 13px; opacity: 0.7">
-        {{ $t("profilingCluster.averageCommTime") }}
-      </text>
-      <rect
-        x="63%"
-        y="1"
-        width="25px"
-        height="14px"
-        style="rx: 4px; fill: #826f66"
-      ></rect>
-      <text x="67%" y="13" style="font-size: 13px; opacity: 0.7">
-        {{ $t("profilingCluster.averageWaitingTime") }}
-      </text>
-    </svg>
-    <div id="line-chart"></div>
+    <div id="line-chart" ref="chart"></div>
   </div>
 </template>
 
 <script>
-import * as echarts from "echarts/core";
 import * as _ from "lodash";
-import {
-  TitleComponent,
-  TooltipComponent,
-  GridComponent,
-  LegendComponent,
-} from "echarts/components";
-import { LineChart } from "echarts/charts";
-import { UniversalTransition } from "echarts/features";
-import { CanvasRenderer } from "echarts/renderers";
-import { DataZoomComponent } from "echarts/components";
+import echarts, { echartsThemeName } from "@/js/echarts";
 import $store from "../store";
-
-echarts.use([
-  TitleComponent,
-  TooltipComponent,
-  GridComponent,
-  LegendComponent,
-  LineChart,
-  CanvasRenderer,
-  UniversalTransition,
-  DataZoomComponent,
-]);
 
 export default {
   name: "LineChart",
@@ -88,26 +34,39 @@ export default {
       communicateNodes: Object,
       lineChart: null,
       option: null,
+      chart: {
+        dom: null,
+        instance: null,
+        seriesData: { overviewData: null, commData: null, waitingData: null },
+        xAxisData: null,
+        legend: ["communication cost", "waiting cost", "overview"],
+        grid: {
+          top: "20%",
+          left: "10%",
+          right: "10%",
+          bottom: "15%",
+        },
+      },
+      state: false,
     };
   },
   watch: {
     storeOverviewData: function (val) {
       this.overViewData = val;
       this.overViewDataProcessing();
-      this.renderUpdate();
+      this.initChart();
     },
     storeCommunicateNodes: function (val) {
       this.communicateNodes = val;
       this.communicateNodesProcessing();
-      this.renderUpdate();
+      this.initChart();
     },
   },
   mounted() {
-    this.renderInit();
+    this.state = false;
+    this.chart.dom = this.$refs.chart ? this.$refs.chart : null;
   },
-  beforeDestroy() {
-    this.lineChart.clear();
-  },
+  beforeDestroy() {},
   computed: {
     storeOverviewData() {
       return $store.state.overviewData;
@@ -117,29 +76,139 @@ export default {
     },
   },
   methods: {
-    renderInit() {
-      const chartDom = document.getElementById("line-chart");
-      const myChart = echarts.init(chartDom);
-      this.lineChart = myChart;
-      const option = {
+    initChart() {
+      if (!this.chart.dom) return;
+      if (this.state) return;
+      if (!this.chart.instance) {
+        this.chart.instance = echarts.init(this.chart.dom, echartsThemeName);
+      }
+      if (
+        this.chart.seriesData.overviewData &&
+        this.chart.seriesData.commData &&
+        this.chart.seriesData.waitingData
+      ) {
+        this.setChartOption();
+        this.setChartAction();
+        this.state = true;
+      }
+    },
+    setMarkArea(index) {
+      let options = this.chart.instance.getOption();
+      options.series[0].markArea.data = this.getMarkArea(index);
+      this.chart.instance.setOption(options);
+    },
+    getMarkArea(index) {
+      const areaWidth = 0.2;
+      let left = parseFloat(this.chart.grid.left);
+      let right = 100 - parseFloat(this.chart.grid.right);
+      let axisLength = this.chart.xAxisData.length;
+      let onePixel = (right - left) / axisLength;
+      let x = left + (index + 0.5) * onePixel;
+      return [
+        [
+          { x: String(x - areaWidth * onePixel) + "%" },
+          { x: String(x + areaWidth * onePixel) + "%" },
+        ],
+      ];
+    },
+    setChartAction() {
+      this.chart.instance.getZr().on("click", (params) => {
+        let pointInPixel = [params.offsetX, params.offsetY];
+        if (this.chart.instance.containPixel("grid", pointInPixel)) {
+          let pointInGrid = this.chart.instance.convertFromPixel(
+            {
+              seriesIndex: 0,
+            },
+            pointInPixel
+          );
+          let handleIndex = Number(pointInGrid[0]);
+          var op = this.chart.instance.getOption();
+          var clickStep = op.xAxis[0].data[handleIndex];
+          this.$emit("getStepNumber", parseInt(clickStep, 10));
+          this.setMarkArea(handleIndex);
+        }
+      });
+    },
+    setChartOption() {
+      var series = [];
+      var commSeries = {
+        name: this.chart.legend[0],
+        type: "line",
+        yAxisIndex: 0,
+        color: "#C69B7B",
+        data: this.chart.seriesData.commData.map((v) => {
+          return { value: v, name: this.chart.legend[0] };
+        }),
+        markArea: {
+          itemStyle: {
+            color: "rgba(255, 173, 177, 0.4)",
+          },
+          data: this.getMarkArea(0),
+        },
+      };
+      var waitSeries = {
+        name: this.chart.legend[1],
+        type: "line",
+        yAxisIndex: 0,
+        color: "#826F66",
+        data: this.chart.seriesData.waitingData.map((v) => {
+          return { value: v, name: this.chart.legend[1] };
+        }),
+      };
+      series.push(commSeries);
+      series.push(waitSeries);
+      var overviewSeires = this.chart.seriesData.overviewData.map((d) => {
+        return {
+          name: this.chart.legend[2],
+          type: "line",
+          yAxisIndex: 1,
+          color: "#a1a1a1",
+          data: d.data.map((v) => {
+            return { value: v, name: d.name };
+          }),
+        };
+      });
+      series.push(...overviewSeires);
+      this.chart.instance.setOption({
         tooltip: {
           trigger: "axis",
+          axisPointer: {
+            type: "shadow",
+          },
+          formatter: (params) => {
+            var str = "";
+            params.forEach((item) => {
+              str +=
+                item.marker + " " + item.data.name + ":" + item.value + "</br>";
+            });
+            return str;
+          },
         },
-        grid: {
-          top: "20%",
-          left: "5%",
-          right: "10%",
-          bottom: "20%",
-          containLabel: true,
+        legend: {
+          center: true,
+          data: this.chart.legend,
+          textStyle: {
+            fontSize: 14,
+          },
         },
+        grid: this.chart.grid,
         xAxis: {
-          name: "Step",
+          name: "step",
           type: "category",
           boundaryGap: true,
           nameLocation: "middle",
+          nameTextStyle: {
+            align: "left",
+            padding: [0, 5],
+          },
           axisTick: {
             show: true,
             alignWithLabel: true,
+          },
+          axisLine: {
+            lineStyle: {
+              width: 2,
+            },
           },
           nameGap: 18,
           nameTextStyle: {
@@ -148,15 +217,17 @@ export default {
             fontSize: 12,
             align: "center",
           },
-          data: [],
+          data: this.chart.xAxisData,
         },
         yAxis: [
           {
             type: "value",
-            name: "Total training time(ms)",
-            min: function (value) {
-              return value.min - 20;
+            name: "Communication cost(ms)",
+            splitLine: {
+              show: false,
             },
+            nameLocation: "middle",
+            nameGap: 70,
             axisLine: {
               symbol: ["none", "triangle"],
               show: true,
@@ -184,59 +255,43 @@ export default {
           },
           {
             type: "value",
-            name: "Communication cost(ms)",
-            // minInterval: 1000,
-            nameLocation: "middle",
-            nameGap: 60,
-            nameTextStyle: {
-              fontStyle: "normal",
-              fontWeight: "bold",
-              fontSize: 12,
-              align: "center",
-              verticalAlign: "bottom",
+            name: "Total training time(ms)",
+            splitLine: {
+              show: false,
             },
+            nameLocation: "middle",
+            nameGap: 50,
             axisLine: {
               symbol: ["none", "triangle"],
               show: true,
               symbolSize: 10,
               symbolOffset: 5,
             },
+            axisLabel: {
+              show: true,
+              // showMaxLabel: true,
+              showMinLabel: true,
+              formatter: function (value) {
+                return value.toExponential(2);
+              },
+            },
             splitLine: {
               show: false,
             },
-            axisLabel: {
-              show: true,
+            nameLocation: "middle",
+            nameGap: 65,
+            nameTextStyle: {
+              fontStyle: "normal",
+              fontWeight: "bold",
+              fontSize: 12,
             },
           },
         ],
-        dataZoom: [
-          {
-            type: "inside",
-            start: 0,
-            end: 100,
-          },
-          {
-            type: "slider",
-            start: 0,
-            end: 100,
-            height: 20,
-            moveHandleSize: 1,
-            top: "86%",
-          },
-        ],
-        series: [],
-      };
-      this.option = option;
-    },
-    renderUpdate() {
-      this.lineChart.setOption(this.option);
-      const handleClickFn = (params) => {
-        this.$emit("getStepNumber", parseInt(params.name, 10));
-      };
-      this.lineChart.on("click", _.debounce(handleClickFn, 150));
+        series: series,
+      });
     },
     communicateNodesProcessing() {
-      this.option.xAxis.data = Object.keys(this.communicateNodes);
+      this.chart.xAxisData = Object.keys(this.communicateNodes);
       const communicationList = [];
       const waitingList = [];
 
@@ -252,55 +307,19 @@ export default {
         );
         waitingList.push(totWaiting / this.communicateNodes[i].length);
       }
-      const series = [
-        {
-          name: "Average communication time of devices",
-          yAxisIndex: 1,
-          type: "line",
-          stack: "Total",
-          color: "#C69B7B",
-          lineStyle: {
-            width: 1.5,
-          },
-          showSymbol: false,
-          data: communicationList,
-        },
-        {
-          name: "Average waiting time of devices",
-          yAxisIndex: 1,
-          type: "line",
-          stack: "Total",
-          color: "#826F66",
-          lineStyle: {
-            width: 1.5,
-          },
-          showSymbol: false,
-          data: waitingList,
-        },
-      ];
-      this.option.series.push(...series);
+      this.chart.seriesData.commData = communicationList;
+      this.chart.seriesData.waitingData = waitingList;
     },
     overViewDataProcessing() {
-      const series = [];
+      var overviewList = [];
       Object.keys(this.overViewData).forEach((device) => {
-        const obj = {
-          name: device,
-          yAxisIndex: 0,
-          type: "line",
-          stack: "Total",
-          color: "#a1a1a1",
-          lineStyle: {
-            width: 1.5,
-          },
-          showSymbol: false,
-          data: this.overViewData[device].map((o) => {
-            return o.total;
-          }),
-        };
-        series.push(obj);
+        let overview = this.overViewData[device].map((o) => {
+          if (o.step_num != "-") return o.total;
+        });
+        overview = overview.filter((o) => o != undefined);
+        overviewList.push({ name: device, data: overview });
       });
-
-      this.option.series.push(...series);
+      this.chart.seriesData.overviewData = overviewList;
     },
   },
 };

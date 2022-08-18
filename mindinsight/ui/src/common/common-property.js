@@ -670,6 +670,98 @@ export default {
         key: '--grid-preview-bg-color',
         value: 'rgb(0, 0, 0, 0.1)',
       },
+      {
+        key: '--normal-operator-color',
+        value: '#cbcbcb',
+      },
+      {
+        key: '--parameter-operator-color',
+        value: '#211DF1',
+      },
+      {
+        key: '--slice-operator-color',
+        value: '#536eab',
+      },
+      {
+        key: '--redistribution-operator-color',
+        value: '#4ca59c',
+      },
+      {
+        key: '--allreduce-operator-color',
+        value: '#f49538',
+      },
+      {
+        key: '--send-operator-color',
+        value: '#bf73d6',
+      },
+      {
+        key: '--receive-operator-color',
+        value: '#4192d3',
+      },
+      {
+        key: '--performance-flops',
+        value: '#585393',
+      },
+      {
+        key: '--performance-memory',
+        value: '#7e93bf',
+      },
+      {
+        key: '--performance-fb',
+        value: '#74ba62',
+      },
+      {
+        key: '--performance-collective',
+        value: '#e6882e',
+      },
+      {
+        key: '--performance-send',
+        value: '#bf73d6',
+      },
+      {
+        key: '--performance-receive',
+        value: '#4192d3',
+      },
+      {
+        key: '--performance-opacity',
+        value: '50%',
+      },
+      {
+        key: '--performance-interval',
+        value: '#a9d1e5',
+      },
+      {
+        key: '--comminication-min',
+        value: '#fae7d7',
+      },
+      {
+        key: '--comminication-max',
+        value: '#e6882e',
+      },
+      {
+        key: '--comminication-type1',
+        value: '#cecfd1',
+      },
+      {
+        key: '--comminication-type2',
+        value: '#999999',
+      },
+      {
+        key: '--comminication-matrix-time',
+        value: '#f6b59a',
+      },
+      {
+        key: '--comminication-matrix-traffic',
+        value: '#a8d2e5',
+      },
+      {
+        key: '--comminication-matrix-bandwidth',
+        value: '#378dc0',
+      },
+      {
+        key: '--hightlight-color',
+        value: '#cb6056',
+      },
     ],
     '1': [
       {

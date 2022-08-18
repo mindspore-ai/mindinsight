@@ -660,6 +660,7 @@
     "parallelShardOperator": "Parallel Shard Operator",
     "redistributionOperator": "Redistribution Operator",
     "gradientAggOperator": "Gradient Aggregation Operator",
+    "memory": "Memory",
     "nodelinkGraph": "Node-link graph:",
     "totalcomm": "The total communication cost",
     "commProportion": "communication time/(communication time+waiting time)",
