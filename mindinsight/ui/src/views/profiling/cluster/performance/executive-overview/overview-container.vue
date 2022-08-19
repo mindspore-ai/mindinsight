@@ -68,23 +68,29 @@ export default {
     ConfigureView,
     TimelineView,
     LegendStrategy,
-    // LineView,
-    // LineChart,
     MareyView,
   },
   created() {
-    // TODO 和mindinsight统一
-    requestService
-      .getGraphs(this.$route.query.path)
-      .then((res) => {
-        if (res && res.data) {
-          $store.commit("setGraphData", res.data);
-        }
-      })
-      .catch(() => {
-        console.log("error", this.$route.query.path);
-      });
+    this.fetchData();
   },
+  methods: {
+    async fetchData() {
+      const fetchFunc = async () => {
+        const res = await (
+          await requestService.getGraphs(this.$route.query.path).catch((err) => {
+            throw err;
+          })
+        ).data;
+        if (res.status === 'loading' || res.status === 'pending') {
+          setTimeout(fetchFunc, 1500);
+          return;
+        } else {
+          $store.commit("setGraphData", res);
+        }
+      }
+      await fetchFunc();
+    }
+  }
 };
 </script>
 

@@ -67,6 +67,9 @@ export default {
           for (var device in data) {
             for (var i in data[device]) {
               var step_info = data[device][i];
+              if (step_info["step_num"] == '-') {
+                continue;
+              }
               var new_node = {
                 name: null,
                 communication_cost: null,
@@ -97,6 +100,5 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-top: 2px solid #ccc;
 }
 </style>

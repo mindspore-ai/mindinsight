@@ -460,6 +460,7 @@ import {
   buildPipelinedStageInfo,
   getTreeData,
   levelOrder,
+  resetTreeData,
   getStrategyInfo,
 } from "@/js/profile-graph/build-graph.js";
 import * as d3 from "d3";
@@ -511,7 +512,7 @@ export default {
 
   watch: {
     storeGraphData: function (val) {
-      this.graphData = { graphs: val };
+      this.graphData = val;
       this.initGraph();
       this.$nextTick(() => {
         this.initMiniMap();
@@ -662,7 +663,7 @@ export default {
         } = getPipelineBlockInfo());
 
         this.parallelStrategyRawData = getStrategyInfo(res.graphs);
-
+        resetTreeData();
         Object.keys(res.graphs).forEach((rankID) => {
           const thisGraph = res.graphs[rankID];
           buildGraph(thisGraph);

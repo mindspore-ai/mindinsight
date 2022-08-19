@@ -186,6 +186,9 @@ export default {
       for (var device in this.communicateGraphData) {
         for (var i in this.communicateGraphData[device]) {
           var step_info = this.communicateGraphData[device][i];
+          if (step_info["step_num"] == '-') {
+            continue;
+          }
           var new_node = Object.create(device_node);
           new_node.name = device;
           new_node.communication_cost = step_info["communication_cost"];

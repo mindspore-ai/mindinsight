@@ -13,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-  NODE_TYPE,
-  SCOPE_SEPARATOR,
-} from "@/js/const.js";
+import { NODE_TYPE, SCOPE_SEPARATOR } from "@/js/const.js";
 
 import { _checkShardMethod } from "../util";
 
@@ -705,9 +702,14 @@ function buildGraphOld(data) {
   _processSourceDataOld(data);
 }
 
+function resetTreeData() {
+  treeData = { id: null, key: null, children: [] };
+}
+
 export {
   buildGraph,
   buildGraphOld,
+  resetTreeData,
   getPipelineBlockInfo,
   buildPipelinedStageInfo,
   getTreeData,

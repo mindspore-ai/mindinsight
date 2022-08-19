@@ -575,7 +575,6 @@ export default {
             });
           });
 
-          console.log("processTimeline", device2stage, stage_data);
           this.getFLOPsData(maps, device2stage, stages);
           this.getMemoryData(maps, device2stage, stages);
           this.$nextTick(() => {
@@ -1117,7 +1116,6 @@ export default {
     },
     handleDoubleClick() {
       if (!this.timeStack.length) {
-        console.log("empty");
         return;
       }
 
@@ -1127,7 +1125,6 @@ export default {
 
     // show or hide device polygons when clicking stage menu
     clickStageMenu(stage) {
-      console.log("clickStageMenu", stage, this.isStageExpand);
       this.isStageExpand[stage] = !this.isStageExpand[stage];
       this.render();
     },
@@ -1190,7 +1187,6 @@ export default {
       const { offsetX } = e;
       const devicePolygon = this.devicePolygon;
       if (!this.device2PolygonIndex[device]) {
-        console.log(device);
         return;
       }
       const [L, R] = this.device2PolygonIndex[device];
@@ -1242,7 +1238,6 @@ export default {
         }
       });
       if (!nameScope) {
-        console.log("没有该命名空间");
         this.$message.error("找不到对应的命名空间");
         return;
       }
