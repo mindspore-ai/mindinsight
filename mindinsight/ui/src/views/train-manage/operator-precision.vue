@@ -77,12 +77,12 @@ limitations under the License.
             </el-table-column>
             <el-table-column
                 prop="op_name"
-                label="op_name"
+                :label="this.$t('operatorPrecision.opName')"
                 min-width="10%">
             </el-table-column>
             <el-table-column
                 prop="name"
-                label="fullname_with_scope"
+                :label="this.$t('operatorPrecision.fullName')"
                 min-width="20%">
               <template slot-scope="scope">
                   <el-popover width="90%" 
@@ -99,26 +99,23 @@ limitations under the License.
             </el-table-column>
             <el-table-column
                 prop="type"
-                label="op_type"
+                :label="this.$t('operatorPrecision.opType')"
                 min-width="10%">
             </el-table-column>
             <el-table-column
                 prop="precision_flag"
-                label="precision_flag"
+                :label="this.$t('operatorPrecision.precisionFlag')"
                 min-width="12%">
             </el-table-column>
             <el-table-column
-              label="is_reduce_flag"
+              :label="this.$t('operatorPrecision.isReduceOp')"
               min-width="8%">
               <template slot-scope="scope">
-                <div>{{scope.row.reduce_flag}}
-                  <i class="el-icon-bottom" v-show="scope.row.reduce_flag == 'Yes'"></i>
-                  <i class="el-icon-top" v-show="scope.row.reduce_flag == 'No'"></i>
-                </div>
+                <div>{{scope.row.reduce_flag}}</div>
               </template>
             </el-table-column>
             <el-table-column
-                label="Input" min-width="3%">
+                :label="this.$t('operatorPrecision.input')" min-width="3%">
               <template slot-scope="scope">
                 <el-button @click="viewOperatorInput(scope.row.input)" 
                            type="text" 
@@ -126,7 +123,7 @@ limitations under the License.
               </template>
             </el-table-column>
             <el-table-column
-                label="Output" min-width="3%">
+                :label="this.$t('operatorPrecision.output')" min-width="3%">
               <template slot-scope="scope">
                 <el-button @click="viewOperatorInput(scope.row.output)" 
                            type="text" 
@@ -163,7 +160,7 @@ limitations under the License.
                 tooltip="light">
                 <el-table-column
                     property="id"
-                    label="Id"
+                    label="ID"
                     type="index"
                     min-width="10%">
                 </el-table-column>
@@ -279,7 +276,7 @@ export default {
         return;
       }
       this.tableTotalData.forEach((item) => {
-        if (item.name.indexOf(this.operatorSelectName) != -1) {
+        if (item.name.toLowerCase().indexOf(this.operatorSelectName.toLowerCase()) != -1) {
           arr.push(item);
         }
       });
@@ -387,7 +384,7 @@ export default {
               data.forEach((item) => {
                 id++;
                 const name = item.name;
-                const op_name = name.split("/").at(-1);
+                const op_name = name.split("/").length > 1 ? name.split("/")[name.split("/").length - 1] : '';
                 const type = item.type;
                 const input = JSON.stringify(item.input);
                 const output = JSON.stringify(item.output);
@@ -396,9 +393,9 @@ export default {
                 let reduce_flag = "";
                 if (precision_flag != '') {
                   if (precision_flag.indexOf('reduce') != -1) {
-                    reduce_flag = 'Yes';
+                    reduce_flag = this.$t('operatorPrecision.yes');
                   } else {
-                    reduce_flag = 'No';
+                    reduce_flag = this.$t('operatorPrecision.no');
                   }
                   showData.unshift({id:id, op_name: op_name, name: name, type: type, precision_flag: precision_flag, 
                                     reduce_flag: reduce_flag, input: input, output: output});
@@ -413,7 +410,7 @@ export default {
             }
           },
           (error) => {
-            thi.loading.show = false;
+            this.loading.show = false;
           }
         ).catch((error) => {
           this.loading.show = false;
@@ -644,5 +641,17 @@ export default {
 .el-pagination.is-background .el-pager li:not(.disabled).active {
   color: #FFF;
   background-color: #409eff;
+}
+
+.el-pagination.is-background .btn-next, .el-pagination.is-background .btn-prev {
+  color: #000;
+}
+
+.el-pagination.is-background .el-pager li {
+  color: #000;
+}
+
+.el-pagination.is-background .el-icon-arrow-right:before, .el-icon-arrow-left:before {
+  color: #000;
 }
 </style>

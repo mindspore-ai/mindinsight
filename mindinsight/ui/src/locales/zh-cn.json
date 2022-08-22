@@ -1235,7 +1235,16 @@
     "placeTitle": "请输入需要搜索的算子名称",
     "searchBtn": "搜索",
     "download": "导出",
-    "view": "查看"
+    "view": "查看",
+    "opName": "算子名称",
+    "fullName": "算子完整节点名称",
+    "opType": "算子类型",
+    "precisionFlag": "升/降精度标识",
+    "isReduceOp": "是否为降精度算子",
+    "input": "输入",
+    "output": "输出",
+    "yes": "是",
+    "no": "否"
   },
   "error": {
     "50540000": "系统错误",
