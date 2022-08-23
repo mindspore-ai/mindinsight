@@ -65,6 +65,7 @@ limitations under the License.
         <el-table
             id="exportTable"
             :data="getTableData"
+            height="470"
             border
             tooltip-effect="light"
             :header-cell-style="headerStyle"
@@ -125,7 +126,7 @@ limitations under the License.
             <el-table-column
                 :label="this.$t('operatorPrecision.output')" min-width="3%">
               <template slot-scope="scope">
-                <el-button @click="viewOperatorInput(scope.row.output)" 
+                <el-button @click="viewOperatorOutput(scope.row.output)" 
                            type="text" 
                            size="small">{{view}}</el-button>
               </template>
@@ -196,7 +197,7 @@ limitations under the License.
                 tooltip="light">
                 <el-table-column
                     property="id"
-                    label="Id"
+                    label="ID"
                     type="index"
                     min-width="10%">
                 </el-table-column>
@@ -380,6 +381,8 @@ export default {
             if (response && response.data) {
               let data = response.data.all_nodes_detail;
               let showData = [];
+              let raiseData = [];
+              let reduceData = [];
               let id = 0;
               data.forEach((item) => {
                 id++;
@@ -394,17 +397,19 @@ export default {
                 if (precision_flag != '') {
                   if (precision_flag.indexOf('reduce') != -1) {
                     reduce_flag = this.$t('operatorPrecision.yes');
+                    reduceData.push({id:id, op_name: op_name, name: name, type: type, precision_flag: precision_flag, 
+                                     reduce_flag: reduce_flag, input: input, output: output});
                   } else {
                     reduce_flag = this.$t('operatorPrecision.no');
-                  }
-                  showData.unshift({id:id, op_name: op_name, name: name, type: type, precision_flag: precision_flag, 
+                    raiseData.push({id:id, op_name: op_name, name: name, type: type, precision_flag: precision_flag, 
                                     reduce_flag: reduce_flag, input: input, output: output});
+                  }
                 } else {
                   showData.push({id: id, op_name: op_name, name: name, type: type, precision_flag: precision_flag,
                                  reduce_flag: reduce_flag, input: input, output: output});
                 }
               })
-              this.tableData = showData;
+              this.tableData = reduceData.concat(raiseData).concat(showData);
               this.tableTotalData = this.tableData;
               this.pagination.total = showData.length || 0;
             }
@@ -417,16 +422,40 @@ export default {
         })
     },
     /**
+     * handle the table data input and output
+     */
+    trainsformTableData(tableData) {
+      const handData = [];
+      for (let val of tableData) {
+        if (val.input.length > 30000) {
+          val.input = val.input.substr(0, 1000) + "...";
+        }
+        if (val.output.length > 30000) {
+          val.output = val.output.substr(0, 1000) + "...";
+        }
+        handData.push(val);
+      }
+      return handData;
+    },
+    /**
      * download operator info to excel
      */
     downloadOperator() {
       const fileName = this.getDocName();
-      const headers = [['ID', 'op_name', 'fullname_with_scope', 'op_type', 'precision_flag', 'is_reduce_flag', 'input', 'output']];
+      const headers = [
+        ['ID', 
+        this.$t('operatorPrecision.opName'), 
+        this.$t('operatorPrecision.fullName'), 
+        this.$t('operatorPrecision.opType'), 
+        this.$t('operatorPrecision.precisionFlag'), 
+        this.$t('operatorPrecision.isReduceOp'), 
+        this.$t('operatorPrecision.input'), 
+        this.$t('operatorPrecision.output')]];
       const headerWs = XLSX.utils.aoa_to_sheet(headers);
-      const ws = XLSX.utils.sheet_add_json(headerWs, this.tableData, {skipHeader: true, origin: 'A2'});
+      const data = this.trainsformTableData(this.tableData);
+      const ws = XLSX.utils.sheet_add_json(headerWs, data, {skipHeader: true, origin: 'A2'});
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'sheetName');
-      this.setExlStyle(wb['Sheets']['sheetName']);
       XLSX.writeFile(wb, fileName);
     },
     /**
@@ -496,7 +525,7 @@ export default {
         end = this.pagination.total;
       }
       const slice_data = this.tableData.slice(start, end);
-      return slice_data.length > 10 ? slice_data.slice(0, 10) : slice_data;
+      return slice_data.length > this.pagination.pageSize ? slice_data.slice(0, this.pagination.pageSize) : slice_data;
     },
     getPbName: {
       get() {
@@ -504,6 +533,7 @@ export default {
       },
       set(val) {
         this.pbSelectName = val;
+        this.pagination.currentPage = 1;
         this.queryAllGraphNodesData();
       }
     }
@@ -546,8 +576,15 @@ export default {
 }
 
 .cl-operator .table-container {
+  height: 80%;
   width: 95%;
   margin: 0 auto;
+  overflow: hidden;
+}
+
+.cl-operator .table-container #exportTable {
+  height: 55%;
+  overflow-y: hidden;
 }
 
 .cl-operator .table-container .pagination-container {
