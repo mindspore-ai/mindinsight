@@ -1239,7 +1239,16 @@
     "placeTitle": "Please enter the operator name to be searched",
     "searchBtn": "search",
     "download": "download",
-    "view": "check"
+    "view": "check",
+    "opName": "op_name",
+    "fullName": "fillname_with_scope",
+    "opType": "op_type",
+    "precisionFlag": "up/down precision_flag",
+    "isReduceOp": "is_reduce_op",
+    "input": "Input",
+    "output": "Output",
+    "yes": "Yes",
+    "no": "No"
   },
   "error": {
     "50540000": "System error.",

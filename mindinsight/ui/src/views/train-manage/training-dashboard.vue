@@ -289,36 +289,34 @@ limitations under the License.
           <el-table
             :data="getTableData"
             :header-cell-style="headerStyle"
+            :cell-style="cellStyle"
             :row-class-name="tableRowClassName"
             style="width: 100%">
             <el-table-column
-              type="index"
+              prop="id"
               label="ID"
               width="55">
             </el-table-column>
             <el-table-column
               prop="op_name"
-              label="op_name"
+              :label="this.$t('operatorPrecision.opName')"
               min-width="10%">
             </el-table-column>
             <el-table-column
               prop="type"
-              label="op_type"
+              :label="this.$t('operatorPrecision.opType')"
               min-width="10%">
             </el-table-column>
             <el-table-column
               prop="precision_flag"
-              label="precision_flag"
+              :label="this.$t('operatorPrecision.precisionFlag')"
               min-width="12%">
             </el-table-column>
             <el-table-column
-              label="is_reduce_flag"
-              min-width="8%">
+              :label="this.$t('operatorPrecision.isReduceOp')"
+              min-width="15%">
               <template slot-scope="scope">
-                <div>{{scope.row.reduce_flag}}
-                  <i class="el-icon-bottom" v-show="scope.row.reduce_flag == 'Yes'"></i>
-                  <i class="el-icon-top" v-show="scope.row.reduce_flag == 'No'"></i>
-                </div>
+                <div>{{scope.row.reduce_flag}}</div>
               </template>
             </el-table-column>
           </el-table>
@@ -443,7 +441,10 @@ export default {
      * get the first four pieces of tableData
      */
     getTableData() {
-      return this.tableData.slice(0, 4);
+      let fourTbeData = this.tableData.slice(0, 4);
+      fourTbeData.push({id: '...', op_name: '...', name: '',
+                        type: '...', precision_flag: '', reduce_flag: ''})
+      return fourTbeData;
     },
   },
   components: {
@@ -514,25 +515,26 @@ export default {
             if (response && response.data) {
               let data = response.data.all_nodes_detail;
               let showData = [];
-              data.forEach((item) => {
+              data.forEach((item, index) => {
                 const name = item.name;
-                const op_name = name.split("/").at(-1);
+                const op_name = name.split("/").length > 1 ? name.split("/")[name.split("/").length - 1] : '';
                 const type = item.type;
                 const input = JSON.stringify(item.input);
                 const output = JSON.stringify(item.output);
                 const precision_flag = item.attr.hasOwnProperty('precision_flag') ? 
                                             item.attr.precision_flag : '';
                 let reduce_flag = "";
+                const id = index + 1;
                 if (precision_flag != '') {
                   if (precision_flag.indexOf('reduce') != -1) {
-                    reduce_flag = 'Yes';
+                    reduce_flag = this.$t('operatorPrecision.yes');
                   } else {
-                    reduce_flag = 'No';
+                    reduce_flag = this.$t('operatorPrecision.no');
                   }
-                  showData.unshift({op_name: op_name, name: name, type: type, precision_flag: precision_flag, 
+                  showData.unshift({id: id, op_name: op_name, name: name, type: type, precision_flag: precision_flag, 
                                     reduce_flag: reduce_flag, input: input, output: output});
                 } else {
-                  showData.push({op_name: op_name, name: name, type: type, precision_flag: precision_flag,
+                  showData.push({id: id, op_name: op_name, name: name, type: type, precision_flag: precision_flag,
                                  reduce_flag: reduce_flag, input: input, output: output});
                 }
               })
@@ -545,7 +547,7 @@ export default {
             }
           },
           (error) => {
-            thi.loading.show = false;
+            this.loading.show = false;
             this.noOperatorData = false;
           }
         ).catch((error) => {
@@ -563,11 +565,24 @@ export default {
       }
     },
     /**
+     * change the table cell font weight
+     */
+    cellStyle({row, rowIndex}) {
+      if (this.tableData.length < 5) {
+        if (rowIndex == this.tableData.length) {
+          return 'font-weight: bold';
+        }
+      }
+      if (rowIndex == 4) {
+        return 'font-weight: bold';
+      }
+    },
+    /**
      * change the table header background color
      */
     headerStyle() {
       return {
-        background: "#8df1f2",
+        background: this.themeIndex == '0' ? "#8df1f2" : '#000',
         color: '#282B33',
       }
     },
