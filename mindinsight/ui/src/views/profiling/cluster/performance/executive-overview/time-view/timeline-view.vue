@@ -50,7 +50,6 @@ export default {
     getOverviewTimeData() {
       RequestService.getOverviewTime(this.$route.query.path)
         .then(({ data }) => {
-          // this.overViewData = data;
           $store.commit("setOverviewData", data);
         })
         .catch((err) => {

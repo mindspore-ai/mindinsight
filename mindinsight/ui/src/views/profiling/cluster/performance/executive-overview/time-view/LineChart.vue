@@ -39,7 +39,11 @@ export default {
         instance: null,
         seriesData: { overviewData: null, commData: null, waitingData: null },
         xAxisData: null,
-        legend: ["communication cost", "waiting cost", "overview"],
+        legend: [
+          this.$t("profilingCluster.averageCommTime"),
+          this.$t("profilingCluster.averageWaitingTime"),
+          this.$t("profilingCluster.totalTrainingTime"),
+        ],
         grid: {
           top: "20%",
           left: "10%",
@@ -222,7 +226,7 @@ export default {
         yAxis: [
           {
             type: "value",
-            name: "Communication cost(ms)",
+            name: this.$t('profilingCluster.commWaitTime'),
             splitLine: {
               show: false,
             },
@@ -255,7 +259,7 @@ export default {
           },
           {
             type: "value",
-            name: "Total training time(ms)",
+            name: this.$t('profilingCluster.totalTrainingTimeMs'),
             splitLine: {
               show: false,
             },
