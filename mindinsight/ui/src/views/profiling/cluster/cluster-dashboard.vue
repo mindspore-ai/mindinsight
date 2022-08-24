@@ -117,8 +117,8 @@ export default {
     this.tabs.forEach((t) => {
       length += t.label.length;
     });
-    // 6.5(px of en-us char), 14(px of zh-cn char), 81(padding) used to calculate the position of path label
-    this.left = length * (this.$store.state.language === 'en-us' ? 6.5 : 14) + 130;
+    // 6(px of en-us char), 14(px of zh-cn char), 30(padding) used to calculate the position of path label
+    this.left = length * (this.$store.state.language === 'en-us' ? 6 : 14) + 30;
   },
   methods: {
     /**
@@ -264,6 +264,7 @@ export default {
   position: relative;
 }
 .custer-dashboard-tabs-link {
+  z-index: 99;
   position: absolute;
   top: 2px;
 }

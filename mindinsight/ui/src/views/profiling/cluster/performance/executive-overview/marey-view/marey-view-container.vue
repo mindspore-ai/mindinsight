@@ -187,7 +187,6 @@ limitations under the License.
                   class="stage-banner"
                   @mousemove="onMouseOverPolygon($event, device)"
                   @mouseout="onMouseOutInfo"
-                  @click="handleClick($event, device, item.stage)"
                 />
               </template>
             </g>
@@ -1224,29 +1223,6 @@ export default {
           show: false,
         };
       }
-    },
-
-    handleClick(e, device, stage) {
-      const res = this.hoveredNodeInfo.content;
-      let nameScope = "";
-      let max = 0;
-      res.forEach((name) => {
-        const scope = this.scopeMap[name];
-        if (scope && scope.split("/").length > max) {
-          max = scope.split("/").length;
-          nameScope = scope;
-        }
-      });
-      if (!nameScope) {
-        this.$message.error("找不到对应的命名空间");
-        return;
-      }
-
-      this.$store.commit("setNameScopeToParallelStrategy", {
-        nameScope,
-        opName: res,
-        stage: [stage],
-      });
     },
 
     handleSwitchChange(value) {

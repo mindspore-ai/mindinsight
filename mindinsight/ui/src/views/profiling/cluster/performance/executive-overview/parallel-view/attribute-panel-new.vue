@@ -183,7 +183,7 @@ export default {
 <template>
   <div class="attribute-panel-container" id="attribute-collapse">
     <LeeCollapse v-model="expname" @change="handleChange">
-      <LeeCollapseItem title="Special operator statiatics" name="1">
+      <LeeCollapseItem :title="this.$t('profiling.specialNodeCnt')" name="1">
         <div class="graph-strategy-info">
           <div class="second-title" style="font-size: 10px">
             {{ this.$t("profiling.hasStrategy") }}:
@@ -211,34 +211,29 @@ export default {
           </div>
         </div>
       </LeeCollapseItem>
-      <LeeCollapseItem title="Node attributes" name="2">
+      <LeeCollapseItem :title="this.$t('profiling.nodeAttribute')" name="2">
         <div class="attribute-tooltip" v-if="selectedNode !== null">
           <div
             class="second-title"
             v-html="`Node ID: ${selectedNode.id}`"
           ></div>
           <div class="attribute-tooltip-content">
-            <div class="col">
-              <div class="left second-title">type:</div>
-              <div class="right" v-html="selectedNode.type"></div>
+            <div class="second-title">
+              type:
+              <span style="font-weight: normal">{{ selectedNode.type }}</span>
             </div>
-            <div class="col">
-              <div class="left second-title">name:</div>
-              <div
-                class="right"
-                v-html="selectedNode.name.split('/').slice(-1)[0]"
-              ></div>
+            <div class="second-title">
+              name:
+              <span style="font-weight: normal">{{
+                selectedNode.name.split("/").slice(-1)[0]
+              }}</span>
             </div>
-            <div class="col">
-              <div class="left second-title">scope:</div>
-              <div class="right">
-                <div
-                  v-for="(scope, index) in selectedNode.scope.split('/')"
-                  :key="scope + index"
-                  v-html="`${scope}/`"
-                  style="word-break: break-all"
-                ></div>
-              </div>
+            <div
+              class="second-title"
+              style="word-break: break-all; display: contents"
+            >
+              scope:
+              <span style="font-weight: normal">{{ selectedNode.scope }}</span>
             </div>
             <div class="col">
               <div class="left second-title">inputs:</div>

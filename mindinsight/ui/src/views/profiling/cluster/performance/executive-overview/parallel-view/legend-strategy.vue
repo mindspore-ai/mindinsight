@@ -48,7 +48,7 @@ limitations under the License.
       <svg width="100%" height="100%">
         <g>
           <text x="15" y="17.5" class="text" alignment-baseline="middle">
-            {{ $t("profilingCluster.specialOperatorType") }}
+            {{ $t("profilingCluster.specialTypeOperator") }}
           </text>
           <circle
             r="6"
