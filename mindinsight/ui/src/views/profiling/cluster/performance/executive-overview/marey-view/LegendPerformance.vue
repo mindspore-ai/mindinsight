@@ -16,7 +16,7 @@ limitations under the License.
 <template>
   <div class="legend-container">
     <div class="legend-linear-gradient">
-      <svg width="100%" height="100%">
+      <svg width="100%" height="100%" fill="var(--font-color)">
         <defs>
           <linearGradient id="gradient">
             <stop
@@ -47,7 +47,7 @@ limitations under the License.
     </div>
     <div class="vertical-dashed-line operator-legend"></div>
     <div class="legend-linechart">
-      <svg width="100%" height="100%">
+      <svg width="100%" height="100%" fill="var(--font-color)">
         <g>
           <text x="12" y="17.5" font-size="14" alignment-baseline="middle">
             {{ $t("profilingCluster." + performance_legend[0]["name"]) }}
@@ -82,7 +82,7 @@ limitations under the License.
     </div>
     <div class="vertical-dashed-line operator-legend"></div>
     <div class="legend-operators">
-      <svg width="100%" height="100%">
+      <svg width="100%" height="100%" fill="var(--font-color)">
         <g>
           <polygon
             transform="translate(15,10)"
@@ -108,7 +108,7 @@ limitations under the License.
     </div>
     <div class="vertical-dashed-line operator-legend"></div>
     <div class="legend-communication">
-      <svg width="100%" height="100%">
+      <svg width="100%" height="100%" fill="var(--font-color)">
         <g>
           <text x="15" y="17.5" font-size="14" alignment-baseline="middle">
             {{ $t("profilingCluster.p2pcomm") }}
@@ -137,7 +137,7 @@ limitations under the License.
     </div>
     <div class="vertical-dashed-line operator-legend"></div>
     <div class="stage-legend">
-      <svg width="100%" height="100%">
+      <svg width="100%" height="100%" fill="var(--font-color)">
         <g>
           <text x="35" y="17.5" font-size="14" alignment-baseline="middle">
             {{ $t("profilingCluster.averageCondition") }}

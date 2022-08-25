@@ -659,7 +659,6 @@ function getStrategyInfo(data) {
  * Get special nodes cnt of the entire graph
  */
 function _processNodesGlobalCnt() {
-  specialNodesMap = {};
   const { nodeMap } = processedGraph;
   Object.keys(nodeMap).forEach((id) => {
     if (isNaN(id)) return;
@@ -683,6 +682,11 @@ function _processNodesGlobalCnt() {
 
 function getSpecialNodesMap() {
   return specialNodesMap;
+}
+
+function resetSpecialNodesMap() {
+  specialNodesMap = {};
+  return;
 }
 
 /**
@@ -716,4 +720,5 @@ export {
   levelOrder,
   getStrategyInfo,
   getSpecialNodesMap,
+  resetSpecialNodesMap,
 };

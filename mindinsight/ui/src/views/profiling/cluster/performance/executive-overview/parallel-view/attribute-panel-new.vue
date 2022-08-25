@@ -19,13 +19,14 @@ limitations under the License.
   top: 50px;
   right: 10px;
   width: 300px;
-  background: #fafafa;
+  background: var(--execution-panel-tabcontent);
 }
 #attribute-collapse .lee-collapse-item .itemtab {
-  background: #ececec;
+  background: var(--execution-panel-tabitem);
   padding: 0 10px;
   height: 30px;
   border-radius: 4px;
+  color: var(--font-color);
 }
 #attribute-collapse .lee-collapse-item .itemcontent {
   padding-bottom: 10px;
@@ -33,7 +34,7 @@ limitations under the License.
 #attribute-collapse .lee-collapse-item .itemcontentw {
   padding: 0 10px;
   border: none;
-  max-height: 190px;
+  max-height: calc(20vh - 100px);
   overflow-y: scroll;
 }
 #attribute-collapse .lee-collapse-item:first-child .itemcontentw {
@@ -42,9 +43,6 @@ limitations under the License.
 #attribute-collapse .lee-collapse {
   border-radius: 4px;
 }
-#attribute-collapse .lee-collapse-item {
-  border-bottom: 1px solid #fff;
-}
 .second-title {
   height: 24px;
   line-height: 24px;
@@ -52,6 +50,7 @@ limitations under the License.
   font-weight: 600;
   -ms-flex-negative: 0;
   flex-shrink: 0;
+  color: var(--font-color);
 }
 .third-title {
   height: 24px;
@@ -60,6 +59,7 @@ limitations under the License.
   font-weight: 500;
   -ms-flex-negative: 0;
   flex-shrink: 0;
+  color: var(--font-color);
 }
 .graph-strategy-info {
   padding-top: 5px;
@@ -72,7 +72,6 @@ limitations under the License.
   font-size: 0.9em;
   background: none;
   border-left: 3px solid #aaa;
-  /* color: #6a737d; */
   overflow: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -102,10 +101,7 @@ export default {
   },
   watch: {
     storeSelectedGraphNode: function (val) {
-      // console.log(this.nodeMaps);
-      // console.log(val[0], val[1]);
       this.selectedNode = val;
-      // this.selectedNode.input_shape = val[1];
       var strategyStr = this.selectedNode.parallel_shard;
       strategyStr = strategyStr.slice(1, strategyStr.length - 1);
       var pos = strategyStr.indexOf("[");
@@ -120,7 +116,6 @@ export default {
         p2.push(pos);
         pos = strategyStr.indexOf("]", pos + 1);
       }
-      // console.log(strategyStr.slice(p1[0], p2[0] + 1));
       this.selectedNode.input_strategy = [];
       for (var i = 0; i < p1.length; i++) {
         this.selectedNode.input_strategy.push(
@@ -128,11 +123,8 @@ export default {
         );
       }
 
-      // var leftCIndex=strategyStr.
-      // this.selectedNode.input_strategy = this.selectedNode.parallel_shard.split;
       this.nodeGroupIndex = Math.floor((this.selectedNode.y + 200) / 500);
       this.expname = ["1", "2"];
-      // console.log(this.selectedNode);
       this.selectedNode.input_shape = [];
       this.selectedNode.input_name = [];
       this.selectedNode.input.forEach((input) => {
@@ -153,11 +145,9 @@ export default {
           this.selectedNode.input_shape.push(undefined);
         }
       });
-      // console.log(getSpecialNodesMap())
     },
     storeNodeMaps: function (val) {
       this.nodeMaps = val;
-      // console.log(this.nodeMaps);
       this.specialNodesMap = getSpecialNodesMap();
     },
   },
@@ -171,7 +161,6 @@ export default {
   },
   methods: {
     handleChange(val) {
-      // console.log(val);
     },
     getSpecialNodesMap() {
       return getSpecialNodesMap();
@@ -268,7 +257,7 @@ export default {
             </div>
             <div class="col">
               <div class="left second-title">output:</div>
-              <div class="right">
+              <div class="right" style="color: var(--font-color);">
                 <div
                   v-for="output in selectedNode.output"
                   :key="output"

@@ -33,6 +33,11 @@ class TimelineAnalyser(BaseAnalyser):
     _ascend_timeline_summary_filename = 'ascend_timeline_summary_{}.json'
     _gpu_timeline_summary_filename = 'gpu_timeline_summary_{}.json'
 
+    def __init__(self, profiling_dir, device_id):
+        """Init the timeline service"""
+        super(TimelineAnalyser, self).__init__(profiling_dir, device_id)
+        self.timeline_service = TimelineService(self._profiling_dir)
+
     def _load(self):
         """Load data according to the parsed profiling files."""
 
@@ -116,14 +121,12 @@ class TimelineAnalyser(BaseAnalyser):
 
         return timeline_summary
 
-    def get_marey_timeline(self, device_type, step):
-        timeline_service = TimelineService(self._profiling_dir, device_type)
-        operator_time_maps, min_time, max_time, stage_data = timeline_service.get_ops_by_step(step)
+    def get_marey_timeline(self, step):
+        operator_time_maps, min_time, max_time, stage_data = self.timeline_service.get_ops_by_step(step)
         ret = {"maps": operator_time_maps, "minT": min_time, "maxT": max_time, "stage_data": stage_data}
         return ret
 
-    def get_scope_map(self, device_type):
-        timeline_service = TimelineService(self._profiling_dir, device_type)
-        scope_map = timeline_service.process_scope(self._profiling_dir)
+    def get_scope_map(self):
+        scope_map = self.timeline_service.process_scope(self._profiling_dir)
         ret = {"scope_map": scope_map}
         return ret

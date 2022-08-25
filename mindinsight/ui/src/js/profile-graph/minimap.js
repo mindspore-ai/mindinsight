@@ -67,7 +67,7 @@ Minimap.prototype.create = function () {
     .select(".background")
     .attr("height", this.height)
     .attr("width", this.width)
-    .style("fill", "#ffffff")
+    .style("fill", "var(--bg-color)")
     .style("stroke", "gray");
   var box = container.select("#graph-container").node().getBBox();
   this.widthScale = this.width / (maxX - minX);
@@ -93,18 +93,15 @@ Minimap.prototype.create = function () {
 Minimap.prototype.generateFrame = function () {
   var frame = d3.select(".minimap>.frame");
   var window = frame.select(".background");
-
   window
     .attr("width", this.width)
     .attr("height", this.svgHeight * 0.9)
     .style("stroke", "#111111")
-    .style("fill-opacity", "0.1")
-    .style("fill", "#000000")
-    .style("fill", "url(#minimapGradient)")
+    .style("fill-opacity", "0.2")
+    .style("fill", "var(--font-color)")
     .style("filter", "url(#minimapDropShadow)")
     .style("cursor", "move")
     .attr("transform", "scale(" + this.widthScale + ")");
-  frame.attr("transform", "translate(" + 0 + "," + 0 + ")scale(1)");
 
   var frameEl = document.getElementsByClassName("frame")[0];
   var minimapEl = document.getElementById("minimap-background");
@@ -208,4 +205,4 @@ Minimap.prototype.generateFrame = function () {
       );
     }
   };
-}
+};

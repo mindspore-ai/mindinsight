@@ -222,6 +222,7 @@
        method: 'get',
        url: 'v1/mindinsight/profile/summary/cluster-propose',
        params: params,
+       timeout: 1000 * 240,
      });
    },
    // query training trace

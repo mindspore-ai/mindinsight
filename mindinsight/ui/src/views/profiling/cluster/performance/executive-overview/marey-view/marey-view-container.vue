@@ -59,166 +59,192 @@ limitations under the License.
           :height="height - margin.top - margin.bottom"
           :style="{
             left: margin.left + margin.padding + 'px',
-            top: margin.top + 'px',
+            top: margin.top + textHeight + 'px',
           }"
         />
         <svg
-          :viewbox="`0 0 ${width} ${height}`"
+          :viewbox="`0 0 ${width} ${height + textHeight}`"
           :width="width"
-          :height="height"
+          :height="height + textHeight"
+          fill="var(--font-color)"
         >
-          <defs>
-            <clipPath id="clip">
-              <rect x="0" y="0" :width="innerWidth" :height="innerHeight" />
-            </clipPath>
-          </defs>
-          <g :transform="`translate(${margin.left}, ${margin.top})`">
-            <g v-for="item in stageDeviceRelationship" :key="item.stage">
-              <foreignObject
-                x="0"
-                :y="yScale(item.stage)"
-                width="16"
-                height="16"
-                @click="clickStageMenu(item.stage)"
-              >
-                <svg
-                  viewBox="0 0 1024 1024"
-                  :transform="isStageExpand[item.stage] ? 'rotate(90)' : ''"
+          <g>
+            <text
+              :transform="`translate(${
+                infoXScale('FLOPs') - bannerHeight
+              } ,${textHeight} ) rotate(${textRotate})`"
+            >
+              FLOPs
+            </text>
+            <text
+              :transform="`translate(${
+                infoXScale('FLOPS') - bannerHeight
+              } ,${textHeight} ) rotate(${textRotate})`"
+            >
+              FLOPS
+            </text>
+            <text
+              :transform="`translate(${
+                infoXScale('PeakMem') - bannerHeight
+              } ,${textHeight} ) rotate(${textRotate})`"
+            >
+              PeakMem
+            </text>
+          </g>
+          <g :transform="`translate(0,${textHeight})`">
+            <defs>
+              <clipPath id="clip">
+                <rect x="0" y="0" :width="innerWidth" :height="innerHeight" />
+              </clipPath>
+            </defs>
+            <g :transform="`translate(${margin.left}, ${margin.top})`">
+              <g v-for="item in stageDeviceRelationship" :key="item.stage">
+                <foreignObject
+                  x="0"
+                  :y="yScale(item.stage)"
+                  width="16"
+                  height="16"
+                  @click="clickStageMenu(item.stage)"
                 >
-                  <path
-                    fill="#ccc"
-                    d="M761.856 405.504l-255.68-170.432A128 128 0 0 0 307.2 341.568
+                  <svg
+                    viewBox="0 0 1024 1024"
+                    :transform="isStageExpand[item.stage] ? 'rotate(90)' : ''"
+                  >
+                    <path
+                      fill="#ccc"
+                      d="M761.856 405.504l-255.68-170.432A128 128 0 0 0 307.2 341.568
                       v340.864a128 128 0 0 0 199.008 106.496l255.648-170.432a128 128 0 0 0 0-212.992z"
-                  ></path>
-                </svg>
-              </foreignObject>
-              <path
-                fill="none"
-                stroke="#ccc"
-                :d="`M8,${yScale(item.stage) + bannerHeight} L8,${
-                  10 + yScale(item.devices[item.devices.length - 1])
-                }`"
-              />
-              <text
-                x="30"
-                :y="yScale(item.stage) + bannerHeight"
-                dominant-baseline="middle"
-              >
-                {{ item.stage }}
-              </text>
-
-              <template v-if="isStageExpand[item.stage]">
-                <text
-                  v-for="device in item.devices"
-                  :key="device + '-text'"
-                  x="30"
-                  :y="yScale(device) + bannerHeight"
-                  dominant-baseline="middle"
-                >
-                  {{ device }}
-                </text>
-
+                    ></path>
+                  </svg>
+                </foreignObject>
                 <path
-                  v-for="device in item.devices"
-                  :key="device + '-path'"
                   fill="none"
                   stroke="#ccc"
-                  :d="`M8,${yScale(device) + 10} L30,${yScale(device) + 10}`"
-                  dominant-baseline="middle"
+                  :d="`M8,${yScale(item.stage) + bannerHeight} L8,${
+                    10 + yScale(item.devices[item.devices.length - 1])
+                  }`"
                 />
+                <text
+                  x="30"
+                  :y="yScale(item.stage) + bannerHeight"
+                  dominant-baseline="middle"
+                >
+                  {{ item.stage }}
+                </text>
+
+                <template v-if="isStageExpand[item.stage]">
+                  <text
+                    v-for="device in item.devices"
+                    :key="device + '-text'"
+                    x="30"
+                    :y="yScale(device) + bannerHeight"
+                    dominant-baseline="middle"
+                  >
+                    {{ device }}
+                  </text>
+
+                  <path
+                    v-for="device in item.devices"
+                    :key="device + '-path'"
+                    fill="none"
+                    stroke="#ccc"
+                    :d="`M8,${yScale(device) + 10} L30,${yScale(device) + 10}`"
+                    dominant-baseline="middle"
+                  />
+                </template>
+              </g>
+            </g>
+            <g :transform="`translate(${margin.left}, 0)`">
+              <template v-for="data in memoryDataInfo">
+                <rect
+                  v-if="yScale(data.y) !== undefined"
+                  :key="`${data.y}-${data.x}`"
+                  :x="infoXScale(data.x) - bannerHeight"
+                  :y="yScale(data.y) + bannerHeight"
+                  :width="bannerHeight * 2"
+                  :height="bannerHeight * 2"
+                  :fill="colorScale(data.value)"
+                  :stroke="colorScale(0.5)"
+                  @mouseover="onMouseOverInfo($event, data, 'memory')"
+                  @mouseout="onMouseOutInfo"
+                ></rect>
+              </template>
+
+              <template v-for="data in flopsDataInfo">
+                <rect
+                  v-if="yScale(data.y) !== undefined"
+                  :key="`${data.y}-${data.x}`"
+                  :x="infoXScale(data.x) - bannerHeight"
+                  :y="yScale(data.y) + bannerHeight"
+                  :width="bannerHeight * 2"
+                  :height="bannerHeight * 2"
+                  :fill="colorScale(data.value)"
+                  :stroke="colorScale(0.5)"
+                  @mouseover="onMouseOverInfo($event, data, 'flops')"
+                  @mouseout="onMouseOutInfo"
+                ></rect>
               </template>
             </g>
-          </g>
-          <g :transform="`translate(${margin.left}, 0)`">
-            <template v-for="data in memoryDataInfo">
-              <rect
-                v-if="yScale(data.y) !== undefined"
-                :key="`${data.y}-${data.x}`"
-                :x="infoXScale(data.x) - bannerHeight"
-                :y="yScale(data.y) + bannerHeight"
-                :width="bannerHeight * 2"
-                :height="bannerHeight * 2"
-                :fill="colorScale(data.value)"
-                :stroke="colorScale(0.5)"
-                @mouseover="onMouseOverInfo($event, data, 'memory')"
-                @mouseout="onMouseOutInfo"
-              ></rect>
-            </template>
-
-            <template v-for="data in flopsDataInfo">
-              <rect
-                v-if="yScale(data.y) !== undefined"
-                :key="`${data.y}-${data.x}`"
-                :x="infoXScale(data.x) - bannerHeight"
-                :y="yScale(data.y) + bannerHeight"
-                :width="bannerHeight * 2"
-                :height="bannerHeight * 2"
-                :fill="colorScale(data.value)"
-                :stroke="colorScale(0.5)"
-                @mouseover="onMouseOverInfo($event, data, 'flops')"
-                @mouseout="onMouseOutInfo"
-              ></rect>
-            </template>
-          </g>
-          <g
-            :transform="`translate(${margin.left + margin.padding}, ${
-              margin.top
-            })`"
-            @dblclick="handleDoubleClick"
-            clip-path="url(#clip)"
-          >
-            <g v-for="item in stageDeviceRelationship" :key="item.stage">
-              <rect
-                x="0"
-                :y="yScale(item.stage)"
-                :width="innerWidth"
-                :height="2 * bannerHeight"
-                class="stage-banner"
-              />
-
-              <template v-if="isStageExpand[item.stage]">
+            <g
+              :transform="`translate(${margin.left + margin.padding}, ${
+                margin.top
+              })`"
+              @dblclick="handleDoubleClick"
+              clip-path="url(#clip)"
+            >
+              <g v-for="item in stageDeviceRelationship" :key="item.stage">
                 <rect
-                  v-for="device in item.devices"
-                  :key="device"
                   x="0"
-                  :y="yScale(device)"
+                  :y="yScale(item.stage)"
                   :width="innerWidth"
                   :height="2 * bannerHeight"
                   class="stage-banner"
-                  @mousemove="onMouseOverPolygon($event, device)"
-                  @mouseout="onMouseOutInfo"
                 />
-              </template>
-            </g>
 
-            <g ref="g"></g>
+                <template v-if="isStageExpand[item.stage]">
+                  <rect
+                    v-for="device in item.devices"
+                    :key="device"
+                    x="0"
+                    :y="yScale(device)"
+                    :width="innerWidth"
+                    :height="2 * bannerHeight"
+                    class="stage-banner"
+                    @mousemove="onMouseOverPolygon($event, device)"
+                    @mouseout="onMouseOutInfo"
+                  />
+                </template>
+              </g>
 
-            <g class="flops-chart" clip-path="url(#clip)">
-              <template v-for="d in FLOPsData">
-                <path
-                  v-if="isStageExpand[d.stage]"
-                  :key="d.device"
-                  :transform="`translate(0, ${yScale(d.device)})`"
-                  :d="MFLOPsLinePath(d.data)"
-                  class="performance-cls-2"
-                  @mousemove="onMouseOverInfo($event, d.data, 'chart')"
-                  @mouseout="onMouseOutInfo"
-                />
-              </template>
-            </g>
+              <g ref="g"></g>
 
-            <g class="memory-chart" clip-path="url(#clip)" v-if="memoryData">
-              <template v-for="d in memoryData">
-                <path
-                  v-if="isStageExpand[d.stage]"
-                  :key="`memory-${d.device}`"
-                  :transform="`translate(0, ${yScale(d.device)})`"
-                  :d="memoryLinePath(d.data)"
-                  class="performance-cls-3"
-                  @mousemove="onMouseOverInfo($event, d.data, 'chart')"
-                  @mouseout="onMouseOutInfo"
-                />
-              </template>
+              <g class="flops-chart" clip-path="url(#clip)">
+                <template v-for="d in FLOPsData">
+                  <path
+                    v-if="isStageExpand[d.stage]"
+                    :key="d.device"
+                    :transform="`translate(0, ${yScale(d.device)})`"
+                    :d="MFLOPsLinePath(d.data)"
+                    class="performance-cls-2"
+                    @mousemove="onMouseOverInfo($event, d.data, 'chart')"
+                    @mouseout="onMouseOutInfo"
+                  />
+                </template>
+              </g>
+
+              <g class="memory-chart" clip-path="url(#clip)" v-if="memoryData">
+                <template v-for="d in memoryData">
+                  <path
+                    v-if="isStageExpand[d.stage]"
+                    :key="`memory-${d.device}`"
+                    :transform="`translate(0, ${yScale(d.device)})`"
+                    :d="memoryLinePath(d.data)"
+                    class="performance-cls-3"
+                    @mousemove="onMouseOverInfo($event, d.data, 'chart')"
+                    @mouseout="onMouseOutInfo"
+                  />
+                </template>
+              </g>
             </g>
           </g>
         </svg>
@@ -263,6 +289,8 @@ export default {
       },
       // half bannerHeight
       bannerHeight: 10,
+      textHeight: 30,
+      textRotate: -20,
       operatorColor: {
         [FBOP]: "#74ba62",
         [SOP]: "#bf73d6",
@@ -287,8 +315,6 @@ export default {
       flopsDataInfo: [],
       memoryData: null,
       memoryDataInfo: [],
-      scopeMap: {},
-
       isOpenSwitch: true, // open brush
       hoveredNodeInfo: {
         show: false,
@@ -315,7 +341,6 @@ export default {
     },
     stepNumber(newV) {
       this.getTimeLineData();
-      this.getScopeData();
     },
   },
   computed: {
@@ -375,12 +400,10 @@ export default {
         .range([this.bannerHeight * 2, 0]);
     },
     MFLOPsLinePath() {
-      return (
-        d3
-          .line()
-          .x((d) => this.xScale(d.x))
-          .y((d) => this.MFLOPsScale(d.y))
-      );
+      return d3
+        .line()
+        .x((d) => this.xScale(d.x))
+        .y((d) => this.MFLOPsScale(d.y));
     },
     memoryScale() {
       return d3
@@ -399,7 +422,6 @@ export default {
     this.getBoundingRect();
     this.getTimeLineData();
     this.initBrush();
-    this.getScopeData();
   },
   methods: {
     initBrush() {
@@ -438,20 +460,6 @@ export default {
       this.height = Math.floor(height);
       this.top = top;
       this.elementHeight = Math.floor(height - 15);
-    },
-    getScopeData() {
-      const params = {
-        train_id: this.$route.query.path,
-        device_type: "ascend",
-        step: this.stepNumber,
-      };
-      RequestService.getScopeMap(params)
-        .then(({ data }) => {
-          this.scopeMap = Object.freeze(data.scope_map);
-        })
-        .catch((err) => {
-          console.log(err);
-        });
     },
     getTimeLineData() {
       RequestService.getTimeLineData(this.$route.query.path, this.stepNumber)
@@ -700,6 +708,7 @@ export default {
           this.flopsDataInfo = flopsDataInfo;
           this.mFLOPsMin = min;
           this.mFLOPsMax = max;
+          console.log("flopsDataInfo", flopsDataInfo);
         })
         .catch(console.error);
     },
@@ -794,6 +803,7 @@ export default {
           this.memoryDataInfo = memoryDataInfo;
           this.memoryMin = min;
           this.memoryMax = max;
+          console.log("memoryDataInfo", memoryDataInfo);
         })
         .catch(console.error);
     },
@@ -1247,7 +1257,7 @@ export default {
 
 .brush-switch {
   position: absolute;
-  top: 0;
+  top: -20px;
   right: 0;
   display: flex;
   line-height: 20px;
@@ -1283,6 +1293,7 @@ export default {
   font: 14px / 21px sans-serif;
   white-space: nowrap;
   transition: all 300ms ease-in-out;
+  color: #333;
 }
 .view {
   width: 100%;
@@ -1306,7 +1317,7 @@ export default {
 .stage-banner {
   stroke: #cecece;
   stroke-width: 1px;
-  fill: #fff;
+  fill: var(--bg-color);
 }
 
 .brush {
