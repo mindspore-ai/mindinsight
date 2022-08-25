@@ -556,7 +556,7 @@
     "parallelStrategy": "并行方式",
     "hasStrategy": "含切分策略算子",
     "redistribution": "重排布算子",
-    "gradientAggregate": "梯度聚合算子",
+    "gradientAggregate": "梯度合并算子",
     "recomputeGraph": "重计算图",
     "forwardGraph": "正向图",
     "backwardGraph": "反向图",

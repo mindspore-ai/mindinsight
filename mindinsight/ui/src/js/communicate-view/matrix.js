@@ -383,7 +383,7 @@ Matrix.prototype.renderBoxPlot = function (
           this.locallayer
             .append("text")
             .attr("id", "hover-circle-text")
-            .attr("x", k * d.value + b - 20)
+            .attr("x", Math.max(0, k * d.value + b - 20))
             .attr("y", y - 5)
             .attr("font-size", 15 / scale)
             .text(d.name);

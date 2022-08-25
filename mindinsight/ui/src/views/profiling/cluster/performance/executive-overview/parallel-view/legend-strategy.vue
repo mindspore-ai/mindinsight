@@ -17,7 +17,7 @@ limitations under the License.
   <div class="parallel-legend">
     <div class="normal-operator operator-legend">
       <svg width="100%" height="100%">
-        <g>
+        <g fill="var(--font-color)">
           <circle
             cx="18"
             cy="17.5"
@@ -46,7 +46,7 @@ limitations under the License.
     <div class="vertical-dashed-line operator-legend"></div>
     <div class="special-operator operator-legend">
       <svg width="100%" height="100%">
-        <g>
+        <g fill="var(--font-color)">
           <text x="15" y="17.5" class="text" alignment-baseline="middle">
             {{ $t("profilingCluster.specialTypeOperator") }}
           </text>

@@ -219,7 +219,7 @@ limitations under the License.
                   ></line>
                 </g>
 
-                <g id="graph-node-container">
+                <g id="graph-node-container" fill="var(--font-color)">
                   <g
                     id="isomorphic-subgraph-circle-g"
                     v-for="(circle, circleIndex) in isomorphicSubgraphCircles"
@@ -258,7 +258,11 @@ limitations under the License.
                         :cx="node.x"
                         :cy="node.y"
                         :r="node.r"
-                        :class="`${node.type.toLowerCase()} ${
+                        :class="`${
+                          node.instance_type
+                            ? node.instance_type.toLowerCase()
+                            : node.type.toLowerCase()
+                        } ${
                           node.parallel_shard.length !== 0 ? ' strategy ' : ''
                         } node${node.isAggreNode ? ' aggre-node' : ''}`"
                       ></circle>
@@ -267,18 +271,22 @@ limitations under the License.
                         :cx="node.x + 2"
                         :cy="node.y + 2"
                         :r="node.r"
-                        :class="`${node.type.toLowerCase()} node${
-                          node.isAggreNode ? ' aggre-node' : ''
-                        }`"
+                        :class="`${
+                          node.instance_type
+                            ? node.instance_type.toLowerCase()
+                            : node.type.toLowerCase()
+                        } node${node.isAggreNode ? ' aggre-node' : ''}`"
                       ></circle>
                       <circle
                         v-if="node.isAggreNode"
                         :cx="node.x + 4"
                         :cy="node.y + 4"
                         :r="node.r"
-                        :class="`${node.type.toLowerCase()} node${
-                          node.isAggreNode ? ' aggre-node' : ''
-                        }`"
+                        :class="`${
+                          node.instance_type
+                            ? node.instance_type.toLowerCase()
+                            : node.type.toLowerCase()
+                        } node${node.isAggreNode ? ' aggre-node' : ''}`"
                       ></circle>
                       <text
                         :x="node.x - 10"
@@ -372,7 +380,23 @@ limitations under the License.
                   style="stroke: #ababab; fill: none; stroke-width: 2"
                 ></rect>
               </g>
-
+              <g id="graph-edge-container">
+                <g id="normal-edge-container">
+                  <g
+                    v-for="(normalEdgesGroup, groupIndex) in normalEdgesShow"
+                    :key="'host_normalEdge_group' + groupIndex"
+                  >
+                    <line
+                      v-for="(edge, index) in normalEdgesGroup"
+                      :key="'host_normal_edge' + index"
+                      :x1="edge.source.x"
+                      :y1="edge.source.y"
+                      :x2="edge.target.x"
+                      :y2="edge.target.y"
+                    ></line>
+                  </g>
+                </g>
+              </g>
               <g id="graph-node-container">
                 <g
                   id="isomorphic-subgraph-circle-g"
@@ -408,8 +432,12 @@ limitations under the License.
                     <circle
                       :cx="node.x"
                       :cy="node.y"
-                      :r="node.r"
-                      :class="`${node.type.toLowerCase()} ${
+                      :r="node.r * 4"
+                      :class="`${
+                        node.instance_type
+                          ? node.instance_type.toLowerCase()
+                          : node.type.toLowerCase()
+                      } ${
                         node.parallel_shard.length !== 0 ? ' strategy ' : ''
                       } node${node.isAggreNode ? ' aggre-node' : ''}`"
                     ></circle>
@@ -418,18 +446,22 @@ limitations under the License.
                       :cx="node.x + 2"
                       :cy="node.y + 2"
                       :r="node.r"
-                      :class="`${node.type.toLowerCase()} node${
-                        node.isAggreNode ? ' aggre-node' : ''
-                      }`"
+                      :class="`${
+                        node.instance_type
+                          ? node.instance_type.toLowerCase()
+                          : node.type.toLowerCase()
+                      } node${node.isAggreNode ? ' aggre-node' : ''}`"
                     ></circle>
                     <circle
                       v-if="node.isAggreNode"
                       :cx="node.x + 4"
                       :cy="node.y + 4"
                       :r="node.r"
-                      :class="`${node.type.toLowerCase()} node${
-                        node.isAggreNode ? ' aggre-node' : ''
-                      }`"
+                      :class="`${
+                        node.instance_type
+                          ? node.instance_type.toLowerCase()
+                          : node.type.toLowerCase()
+                      } node${node.isAggreNode ? ' aggre-node' : ''}`"
                     ></circle>
                     <text
                       :x="node.x - 10"
@@ -458,10 +490,9 @@ import {
   processedGraph,
   getPipelineBlockInfo,
   buildPipelinedStageInfo,
-  getTreeData,
-  levelOrder,
   resetTreeData,
   getStrategyInfo,
+  resetSpecialNodesMap,
 } from "@/js/profile-graph/build-graph.js";
 import * as d3 from "d3";
 import { layout } from "@/js/profile-graph/force-layout.js";
@@ -664,6 +695,7 @@ export default {
 
         this.parallelStrategyRawData = getStrategyInfo(res.graphs);
         resetTreeData();
+        resetSpecialNodesMap();
         Object.keys(res.graphs).forEach((rankID) => {
           const thisGraph = res.graphs[rankID];
           buildGraph(thisGraph);
@@ -671,6 +703,7 @@ export default {
         });
       } else {
         this.isPipelineLayout = false;
+        resetSpecialNodesMap();
         buildGraphOld(res.data);
         this.nodeMaps.push(processedGraph.nodeMap);
       }
@@ -820,7 +853,7 @@ export default {
     },
     initMiniMap() {
       this.canvas = new Canvas(this);
-      this.canvas.create();
+      this.canvas.create(this.opNodes.length);
     },
     initNodeEdgeMap() {
       this.normalEdges.forEach((group) => {
@@ -1006,34 +1039,16 @@ export default {
   fill: #cbcbcb;
 }
 
-#profile-graph circle.allreduce {
+#profile-graph circle.gradientaggregation {
   stroke: white;
   stroke-width: 1;
   fill: var(--allreduce-operator-color);
 }
 
-#profile-graph circle.stridedslice {
+#profile-graph circle.redistribution {
   stroke: white;
   stroke-width: 1;
   fill: var(--redistribution-operator-color);
-}
-
-#profile-graph circle.allgather {
-  stroke: white;
-  stroke-width: 1;
-  fill: var(--allreduce-operator-color);
-}
-
-#profile-graph circle.alltoall {
-  stroke: white;
-  stroke-width: 1;
-  fill: var(--allreduce-operator-color);
-}
-
-#profile-graph circle.reducescatter {
-  stroke: white;
-  stroke-width: 1;
-  fill: var(--allreduce-operator-color);
 }
 
 #profile-graph circle.strategy {

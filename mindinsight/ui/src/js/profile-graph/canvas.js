@@ -32,7 +32,7 @@ export function Canvas(father) {
   this.father = father;
 }
 
-Canvas.prototype.create = function () {
+Canvas.prototype.create = function (stageNum) {
   this.svgHeight =
     document.getElementsByClassName("strategy-view")[0].clientHeight;
   this.svgWidth =
@@ -54,7 +54,7 @@ Canvas.prototype.create = function () {
     .select(".background")
     .attr("width", this.width + 2 * this.wrapperBorder)
     .attr("height", this.height + 2 * this.wrapperBorder)
-    .style("fill", "#ffffff");
+    .style("fill", "var(--bg-color)");
 
   var innerWrapper = outerWrapper.select(".wrapperInner");
   innerWrapper
@@ -68,7 +68,7 @@ Canvas.prototype.create = function () {
     .select(".background")
     .attr("width", this.width)
     .attr("height", this.height)
-    .style("fill", "#ffffff")
+    .style("fill", "var(--bg-color)")
     .style("cursor", "move");
 
   var panCanvas = innerWrapper.select(".panCanvas");
@@ -80,9 +80,11 @@ Canvas.prototype.create = function () {
     .select("#graph-container")
     .attr("transform", "translate(" + -box.x + "," + -box.y + ")");
   this.father.setBoxTransform([box.x, box.y]);
+
+  var scale = stageNum >= 2 ? (500 * 2) / this.height : 500 / this.height;
   innerWrapper
     .select("#profile-graph")
-    .attr("viewBox", "0 0 " + this.width + " " + this.height)
+    .attr("viewBox", "0 0 " + this.width * scale + " " + this.height * scale)
     .attr("height", this.height)
     .attr("width", this.width);
 
@@ -91,11 +93,12 @@ Canvas.prototype.create = function () {
     .attr("viewBox")
     .split(" ")
     .map((d) => Number(d));
-  this.father.viewboxChanged(this.viewBox);
-  this.store.setViewBox(this.viewBox);
 
   var minimap = new Minimap(this.store);
   minimap.create();
+  this.father.viewboxChanged(this.viewBox);
+  this.store.setViewBox(this.viewBox);
+  this.store.changeViewBox(this.viewBox);
 
   var innerEl = document.getElementsByClassName("wrapperInner")[0];
   innerEl.onwheel = (e) => {

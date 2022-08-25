@@ -15,8 +15,8 @@
 """The Timeline Processor for Marey's Graph."""
 import os
 import re
-import json
 import stat
+import json
 import collections
 from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
@@ -31,8 +31,7 @@ class TimelineService:
     _ascend_display_filename = 'ascend_timeline_display_{}.json'
     _gpu_display_filename = 'gpu_timeline_display_{}.json'
 
-    def __init__(self, path, device_type):
-        self.device_type = device_type
+    def __init__(self, path):
         self.__read_data(path)
         self.__align_time()
         self.scope_map = {}
@@ -178,11 +177,12 @@ class TimelineService:
         self.align_info = {}
         one_step_op = self.__get_raw_ops_by_step("1")
         self.stage_info = []
+        stages = []
         for device_name, cur_one_step_op in one_step_op.items():
             if device_name in visited:
                 continue
             visited.add(device_name)
-            stages = [device_name]
+            stages.append(device_name)
             self.align_info[device_name] = 0
             min_all_reduce = ""
             minn = float('inf')
@@ -192,7 +192,7 @@ class TimelineService:
                         minn = item['dur']
                         min_all_reduce = item
             if min_all_reduce == '':
-                return
+                continue
             for device_name2 in self.all_data:
                 if device_name2 in visited:
                     continue
@@ -202,6 +202,9 @@ class TimelineService:
                         self.align_info[device_name2] = min_all_reduce['ts'] - item['ts']
                         stages.append(device_name2)
                         break
+            self.stage_info.append(stages)
+            stages = []
+        if stages:
             self.stage_info.append(stages)
         for device_name, cur_data in self.all_data.items():
             for item in cur_data:
