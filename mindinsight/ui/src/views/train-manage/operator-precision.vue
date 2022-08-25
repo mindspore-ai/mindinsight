@@ -411,7 +411,7 @@ export default {
               })
               this.tableData = reduceData.concat(raiseData).concat(showData);
               this.tableTotalData = this.tableData;
-              this.pagination.total = showData.length || 0;
+              this.pagination.total = this.tableTotalData.length || 0;
             }
           },
           (error) => {
