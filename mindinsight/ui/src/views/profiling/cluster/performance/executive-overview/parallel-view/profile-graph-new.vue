@@ -205,6 +205,26 @@ limitations under the License.
                       ></line>
                     </g>
                   </g>
+                  <g id="special-edge-container">
+                    <g
+                      v-for="(specialEdgesGroup, groupIndex) in specialEdges"
+                      :key="'host_specialEdge_group' + groupIndex"
+                    >
+                      <g
+                        v-for="cls in Object.keys(specialEdgesGroup)"
+                        :key="'host_special_edge' + cls"
+                      >
+                        <path
+                          v-for="(edge, index) in specialEdgesGroup[cls].values"
+                          :key="'host_special_path' + index"
+                          :class="cls"
+                          :d="
+                            specialEdgesGroup[cls].path(edge.source, edge.target)
+                          "
+                        ></path>
+                      </g>
+                    </g>
+                  </g>
                 </g>
 
                 <g id="graph-hovernode-edge-container">
@@ -424,7 +444,6 @@ limitations under the License.
                 >
                   <g
                     v-for="node in opNodesGroup
-                      .slice(20)
                       .filter((v) => v.x !== undefined)"
                     :key="'mini_opNode_group_g' + node.id"
                     :class="clickedNodeId === node.id ? 'active' : ''"
@@ -534,9 +553,7 @@ export default {
       hoverNodeEdges: [],
       nodeEdgesMap: {},
       selectHighlightNodes: [],
-
       oldHaloInfo: [],
-
       boxTransform: [0, 0],
     };
   },
@@ -935,7 +952,7 @@ export default {
         }
         edgesShow.push(es);
       }
-      this.normalEdgesShow = edgesShow;
+      this.normalEdgesShow = edgesShow; 
     },
     lower_bound(nums, target) {
       let low = 0;
@@ -1081,12 +1098,12 @@ export default {
 
 #profile-graph path.load-edge {
   stroke: rgb(93, 213, 235);
-  opacity: 0.2;
+  opacity: 0.8;
 }
 
 #profile-graph path.update-state-edge {
   stroke: rgb(126, 233, 112);
-  opacity: 0.2;
+  opacity: 0.3;
 }
 
 #profile-graph path.get-next-edge {

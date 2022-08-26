@@ -51,6 +51,12 @@ limitations under the License.
       </el-switch>
     </div>
     <div class="content">
+      <empty
+        v-if="isLoading"
+        :state="loadingState"
+        style="position: absolute; z-index: 999"
+      >
+      </empty>
       <div class="view" ref="container">
         <canvas
           ref="graph"
@@ -260,6 +266,8 @@ import LegendPerformance from "./LegendPerformance.vue";
 import RequestService from "@/services/request-service";
 import { mergeNearbyRects, mergeNearbyGap } from "./util";
 
+import empty, { NO_DATA, LOADING_DATA } from "@/components/empty.vue";
+
 const FBOP = "f";
 const CCOP = "c";
 const SOP = "s";
@@ -273,6 +281,7 @@ const filterNode = (op) => {
 export default {
   components: {
     LegendPerformance,
+    empty,
   },
   data() {
     return {
@@ -323,6 +332,8 @@ export default {
         title: "",
         content: {},
       },
+      isLoading: true,
+      loadingState: LOADING_DATA,
     };
   },
   created() {
@@ -462,6 +473,8 @@ export default {
       this.elementHeight = Math.floor(height - 15);
     },
     getTimeLineData() {
+      this.isLoading = true;
+      this.loadingState = LOADING_DATA;
       RequestService.getTimeLineData(this.$route.query.path, this.stepNumber)
         .then(({ data }) => {
           const { stage_data, maps } = data || {};
@@ -590,7 +603,13 @@ export default {
             this.render();
           });
         })
-        .catch(console.error);
+        .then(() => {
+          this.isLoading = false;
+        })
+        .catch((e) => {
+          console.error(e);
+          this.loadingState = NO_DATA;
+        });
     },
     getFLOPsData(maps, device2stage, stages) {
       RequestService.getFLOPsData(this.$route.query.path)
