@@ -921,7 +921,7 @@ def get_cluster_link_info():
     return jsonify(link_info)
 
 
-@BLUEPRINT.route("/profile/communication-data", methods=["POST"])
+@BLUEPRINT.route("/profile/communication-data", methods=["GET"])
 def get_communication_data():
     """
     Get communication data for the communication overview graph.

@@ -205,7 +205,7 @@ limitations under the License.
                       ></line>
                     </g>
                   </g>
-                  <g id="special-edge-container">
+                  <g id="special-edge-container" v-show="isShowHiddenEdges">
                     <g
                       v-for="(specialEdgesGroup, groupIndex) in specialEdges"
                       :key="'host_specialEdge_group' + groupIndex"
@@ -557,7 +557,7 @@ export default {
       boxTransform: [0, 0],
     };
   },
-
+  props: ['isShowHiddenEdges'],
   watch: {
     storeGraphData: function (val) {
       this.graphData = val;
