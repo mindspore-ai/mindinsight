@@ -48,7 +48,7 @@ export default {
           top: "20%",
           left: "10%",
           right: "10%",
-          bottom: "15%",
+          bottom: "30%",
         },
       },
       state: false,
@@ -226,7 +226,7 @@ export default {
         yAxis: [
           {
             type: "value",
-            name: this.$t('profilingCluster.commWaitTime'),
+            name: this.$t("profilingCluster.commWaitTime"),
             splitLine: {
               show: false,
             },
@@ -259,7 +259,7 @@ export default {
           },
           {
             type: "value",
-            name: this.$t('profilingCluster.totalTrainingTimeMs'),
+            name: this.$t("profilingCluster.totalTrainingTimeMs"),
             splitLine: {
               show: false,
             },

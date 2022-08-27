@@ -14,9 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div class="legend-container">
-    <div class="legend-linear-gradient">
-      <svg width="100%" height="100%" fill="var(--font-color)">
+  <div
+    class="legend-container"
+    :style="{
+      width: `${width}%`,
+    }"
+  >
+    <div class="one-legend">
+      <svg width="105px" height="100%" fill="var(--font-color)">
         <defs>
           <linearGradient id="gradient">
             <stop
@@ -27,130 +32,109 @@ limitations under the License.
             ></stop>
           </linearGradient>
         </defs>
-        <text x="25" y="17.5" font-size="14" alignment-baseline="middle">
-          0
-        </text>
+        <text x="5" y="17.5" font-size="14" alignment-baseline="middle">0</text>
         <rect
-          x="42"
+          x="22"
           y="12"
           height="9"
-          width="72"
+          width="60"
           style="fill: url(#gradient)"
         ></rect>
-        <text x="120" y="17.5" font-size="14" alignment-baseline="middle">
+        <text x="92" y="17.5" font-size="14" alignment-baseline="middle">
           1
         </text>
-        <text x="140" y="17.5" font-size="14" alignment-baseline="middle">
-          {{ $t("profilingCluster.ratio") }}
-        </text>
       </svg>
+      <div>{{ $t("profilingCluster.ratio") }}</div>
     </div>
     <div class="vertical-dashed-line operator-legend"></div>
-    <div class="legend-linechart">
-      <svg width="100%" height="100%" fill="var(--font-color)">
-        <g>
-          <text x="12" y="17.5" font-size="14" alignment-baseline="middle">
-            {{ $t("profilingCluster." + performance_legend[0]["name"]) }}
-          </text>
-          <path />
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -8 102.06 32.56">
-            <g>
-              <rect
-                class="cls-1"
-                x="6.62"
-                y="0.5"
-                width="37.06"
-                height="15.28"
-              />
-              <polyline
-                class="cls-2"
-                points="12.06 6.97 21.2 6.97 25.78 4.52 30.68 6.97 39.9 6.97"
-              />
-              <polyline
-                class="cls-3"
-                points="12.06 9.97 19.01 9.97 23.65 9.97 29.98 11.97 33.97 10.97 39.19 9.97"
-              />
-              <line class="cls-1" x1="0.01" y1="7.14" x2="10.64" y2="6.97" />
-              <line class="cls-1" x1="40.72" y1="9.97" x2="51.03" y2="9.97" />
-            </g>
-          </svg>
-          <text x="120" y="17.5" font-size="14" alignment-baseline="middle">
-            {{ $t("profilingCluster." + performance_legend[1]["name"]) }}
-          </text>
+    <div class="one-legend">
+      <div>{{ $t("profilingCluster." + performance_legend[0]["name"]) }}</div>
+      <svg width="70px" height="100%">
+        <g transform="translate(10,10)">
+          <rect class="cls-1" x="6.62" y="0.5" width="37.06" height="15.28" />
+          <polyline
+            class="cls-2"
+            points="12.06 6.97 21.2 6.97 25.78 4.52 30.68 6.97 39.9 6.97"
+          />
+          <polyline
+            class="cls-3"
+            points="12.06 9.97 19.01 9.97 23.65 9.97 29.98 11.97 33.97 10.97 39.19 9.97"
+          />
+          <line class="cls-1" x1="0.01" y1="7.14" x2="10.64" y2="6.97" />
+          <line class="cls-1" x1="40.72" y1="9.97" x2="51.03" y2="9.97" />
         </g>
       </svg>
+      <div>{{ $t("profilingCluster." + performance_legend[1]["name"]) }}</div>
     </div>
     <div class="vertical-dashed-line operator-legend"></div>
-    <div class="legend-operators">
-      <svg width="100%" height="100%" fill="var(--font-color)">
+    <div class="one-legend">
+      <svg width="20px" height="100%" fill="var(--font-color)">
         <g>
           <polygon
-            transform="translate(15,10)"
+            transform="translate(5,10)"
             :fill="performance_legend[2]['color']"
             opacity="0.5"
             points="0 0 0 8.55 3.23 15.77 11 15.77 9.16 7.91 11.61 0 0 0"
           />
-          <text x="35" y="17.5" font-size="14" alignment-baseline="middle">
-            {{ $t("profilingCluster." + performance_legend[2]["name"]) }}
-          </text>
-
+        </g>
+      </svg>
+      <div>{{ $t("profilingCluster." + performance_legend[2]["name"]) }}</div>
+    </div>
+    <div class="one-legend">
+      <svg width="20px" height="100%" fill="var(--font-color)">
+        <g>
           <polygon
-            transform="translate(268,10)"
+            transform="translate(5,10)"
             :fill="performance_legend[3]['color']"
             opacity="0.5"
             points="0 0 0 8.55 3.23 15.77 11 15.77 9.16 7.91 11.61 0 0 0"
           />
-          <text x="288" y="17.5" font-size="14" alignment-baseline="middle">
-            {{ $t("profilingCluster." + performance_legend[3]["name"]) }}
-          </text>
         </g>
       </svg>
+      <div>{{ $t("profilingCluster." + performance_legend[3]["name"]) }}</div>
     </div>
     <div class="vertical-dashed-line operator-legend"></div>
-    <div class="legend-communication">
-      <svg width="100%" height="100%" fill="var(--font-color)">
+
+    <div>{{ $t("profilingCluster.p2pcomm") }}</div>
+    <div class="one-legend">
+      <svg width="30px" height="100%" fill="var(--font-color)">
         <g>
-          <text x="15" y="17.5" font-size="14" alignment-baseline="middle">
-            {{ $t("profilingCluster.p2pcomm") }}
-          </text>
           <polygon
-            transform="translate(215,10)"
+            transform="translate(10,10)"
             :fill="performance_legend[4]['color']"
             opacity="0.5"
             points="0 0 0 8.55 3.23 15.77 11 15.77 9.16 7.91 11.61 0 0 0"
           />
-          <text x="235" y="17.5" font-size="14" alignment-baseline="middle">
-            {{ $t("profilingCluster." + performance_legend[4]["name"]) }}
-          </text>
-
+        </g>
+      </svg>
+      <div>{{ $t("profilingCluster." + performance_legend[4]["name"]) }}</div>
+    </div>
+    <div class="one-legend">
+      <svg width="20px" height="100%" fill="var(--font-color)">
+        <g>
           <polygon
-            transform="translate(335,10)"
+            transform="translate(5,10)"
             :fill="performance_legend[5]['color']"
             opacity="0.5"
             points="0 0 0 8.55 3.23 15.77 11 15.77 9.16 7.91 11.61 0 0 0"
           />
-          <text x="355" y="17.5" font-size="14" alignment-baseline="middle">
-            {{ $t("profilingCluster." + performance_legend[5]["name"]) }}
-          </text>
         </g>
       </svg>
+      <div>{{ $t("profilingCluster." + performance_legend[5]["name"]) }}</div>
     </div>
     <div class="vertical-dashed-line operator-legend"></div>
-    <div class="stage-legend">
-      <svg width="100%" height="100%" fill="var(--font-color)">
+    <div class="one-legend">
+      <svg width="20px" height="100%" fill="var(--font-color)">
         <g>
-          <text x="35" y="17.5" font-size="14" alignment-baseline="middle">
-            {{ $t("profilingCluster.averageCondition") }}
-          </text>
-
           <polygon
-            transform="translate(15,10)"
+            transform="translate(5,10)"
             fill="#789395"
             opacity="0.8"
             points="0 0 0 8.55 3.23 15.77 11 15.77 9.16 7.91 11.61 0 0 0"
           />
         </g>
       </svg>
+      <div>{{ $t("profilingCluster.averageCondition") }}</div>
     </div>
   </div>
 </template>
@@ -162,10 +146,22 @@ limitations under the License.
   flex-direction: row;
   margin-right: 10px;
   height: 35px;
-  width: 100%;
+  line-height: 35px;
+  /* width: 100%; */
+  justify-content: space-around;
+}
+.one-legend {
+  display: flex;
+  flex-direction: row;
+  height: 35px;
+  line-height: 35px;
+  width: fit-content;
+}
+.legend-container div {
+  white-space: nowrap;
 }
 .legend-linear-gradient {
-  width: 180px;
+  width: 140px;
   height: 100%;
 }
 .legend-linechart {
@@ -189,6 +185,8 @@ limitations under the License.
   width: 1px;
   top: 20%;
   border-right: 1px dashed #aaaaaa;
+  margin-left: 8px;
+  margin-right: 8px;
 }
 .stage-legend {
   height: 100%;
@@ -260,12 +258,14 @@ export default {
         },
       ],
       colorStop: null,
+      width: 100,
     };
   },
   mounted() {
     this.colorStop = d3.range(0.2, 1.01, 0.1).map((d) => {
       return { offset: d, color: this.colorScale(d), value: d };
     });
+    this.width = this.$store.state.language === "en-us" ? 80 : 70;
   },
   computed: {
     colorScale() {

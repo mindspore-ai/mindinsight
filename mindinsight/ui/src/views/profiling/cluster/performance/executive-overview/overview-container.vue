@@ -21,10 +21,26 @@ limitations under the License.
           $t("profilingCluster.parallelStrategyView")
         }}</span>
         <LegendStrategy />
+        <div class="brush-switch">
+          <div>{{ $t("profilingCluster.showHiddenEdges") }}</div>
+          <el-switch
+            v-model="isShowHiddenEdges"
+            active-color="#13ce66"
+            inactive-color="#ccc"
+            @change="handleSwitchChange"
+          >
+          </el-switch>
+        </div>
       </div>
+      <empty
+        v-if="profileIsLoading"
+        class="strategy-loading"
+        :state="profileLoadingState"
+        style="position: absolute; z-index: 999"
+      ></empty>
       <div class="strategy-content">
         <div class="right strategy-view">
-          <ProfileGraph />
+          <ProfileGraph :isShowHiddenEdges="isShowHiddenEdges" />
           <AttributePanel />
         </div>
         <div class="left">
@@ -61,6 +77,8 @@ import AttributePanel from "./parallel-view/attribute-panel-new.vue";
 import ConfigureView from "./parallel-view/configure-view-new.vue";
 import TimelineView from "./time-view/timeline-view.vue";
 import MareyView from "./marey-view/marey-view-container.vue";
+import empty, { LOADING_DATA } from "@/components/empty.vue";
+
 export default {
   components: {
     ProfileGraph,
@@ -69,28 +87,43 @@ export default {
     TimelineView,
     LegendStrategy,
     MareyView,
+    empty,
+  },
+  data() {
+    return {
+      isShowHiddenEdges: true,
+      profileIsLoading: true,
+      profileLoadingState: LOADING_DATA,
+    };
   },
   created() {
+    this.profileIsLoading = true;
     this.fetchData();
   },
   methods: {
     async fetchData() {
       const fetchFunc = async () => {
         const res = await (
-          await requestService.getGraphs(this.$route.query.path).catch((err) => {
-            throw err;
-          })
+          await requestService
+            .getGraphs(this.$route.query.path)
+            .catch((err) => {
+              throw err;
+            })
         ).data;
-        if (res.status === 'loading' || res.status === 'pending') {
+        if (res.status === "loading" || res.status === "pending") {
           setTimeout(fetchFunc, 1500);
           return;
         } else {
           $store.commit("setGraphData", res);
         }
-      }
+      };
       await fetchFunc();
-    }
-  }
+      this.profileIsLoading = false;
+    },
+    handleSwitchChange(value) {
+      this.isShowHiddenEdges = value;
+    },
+  },
 };
 </script>
 
@@ -133,6 +166,10 @@ export default {
   width: 100%;
   height: calc(100% - 24px);
 }
+.strategy-loading {
+  width: 100%;
+  height: calc(100% - 24px);
+}
 .line-content {
   width: 100%;
   height: calc(100% - 24px);
@@ -147,5 +184,22 @@ export default {
 .timeview-content {
   width: 100%;
   height: calc(100% - 24px);
+}
+.brush-switch {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  line-height: 20px;
+}
+.brush-switch div {
+  margin-left: 10px;
+  margin-right: 4px;
+}
+.brush-switch svg {
+  width: 16px;
+  height: 16px;
+  margin: 2px 0;
+  cursor: pointer;
 }
 </style>

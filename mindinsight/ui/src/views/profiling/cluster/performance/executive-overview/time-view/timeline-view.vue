@@ -15,6 +15,12 @@ limitations under the License.
 -->
 <template>
   <div class="performance-view-container">
+    <empty
+      v-if="isLoading.comm && isLoading.overview"
+      class="strategy-loading"
+      :state="loadingState"
+      style="position: absolute; z-index: 999"
+    ></empty>
     <LineChart @getStepNumber="getStepNumber" />
   </div>
 </template>
@@ -22,11 +28,13 @@ limitations under the License.
 import RequestService from "@/services/request-service";
 import LineChart from "./LineChart.vue";
 import $store from "../store";
+import empty, { LOADING_DATA } from "@/components/empty.vue";
 
 export default {
   name: "TimelineView",
   components: {
     LineChart,
+    empty,
   },
   data() {
     return {
@@ -40,9 +48,13 @@ export default {
       deviceToStage: null, //device - stage的映射
       closeCircleProps: null,
       communicateNodes: null,
+      isLoading: { overview: true, comm: true },
+      loadingState: LOADING_DATA,
     };
   },
   mounted() {
+    this.isLoading = { overview: true, comm: true };
+    this.loadingState = LOADING_DATA;
     this.getOverviewTimeData();
     this.getCommunicateNodes();
   },
@@ -51,6 +63,7 @@ export default {
       RequestService.getOverviewTime(this.$route.query.path)
         .then(({ data }) => {
           $store.commit("setOverviewData", data);
+          this.isLoading.overview = false;
         })
         .catch((err) => {
           console.error(err);
@@ -66,7 +79,7 @@ export default {
           for (var device in data) {
             for (var i in data[device]) {
               var step_info = data[device][i];
-              if (step_info["step_num"] == '-') {
+              if (step_info["step_num"] == "-") {
                 continue;
               }
               var new_node = {
@@ -87,6 +100,7 @@ export default {
           }
           this.communicateNodes = res;
           $store.commit("setCommunicateNodes", res);
+          this.isLoading.comm = false;
         }
       );
     },

@@ -14,101 +14,132 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div class="parallel-legend">
-    <div class="normal-operator operator-legend">
-      <svg width="100%" height="100%">
+  <div
+    class="parallel-legend"
+    :style="{
+      paddingRight: `${padding}px`,
+    }"
+  >
+    <div class="one-legend">
+      <svg width="24px" height="100%">
         <g fill="var(--font-color)">
           <circle
-            cx="18"
+            cx="12"
             cy="17.5"
             r="6"
             :fill="normal_strategy_legend[0]['color']"
             stroke="white"
             stroke-width="1px"
           ></circle>
-          <text x="32" y="17.5" class="text" alignment-baseline="middle">
-            {{ $t("profilingCluster." + normal_strategy_legend[0]['name']) }}
-          </text>
+        </g>
+      </svg>
+      <div>
+        {{ $t("profilingCluster." + normal_strategy_legend[0]["name"]) }}
+      </div>
+    </div>
+    <div class="one-legend">
+      <svg width="12px" height="100%">
+        <g fill="var(--font-color)">
           <circle
-            cx="112"
+            cx="6"
             cy="17.5"
             r="3"
             :fill="normal_strategy_legend[1]['color']"
             stroke="white"
             stroke-width="1px"
           ></circle>
-          <text x="122" y="17.5" class="text" alignment-baseline="middle">
-            {{ $t("profilingCluster." + normal_strategy_legend[1]['name']) }}
-          </text>
         </g>
       </svg>
+      <div>
+        {{ $t("profilingCluster." + normal_strategy_legend[1]["name"]) }}
+      </div>
     </div>
     <div class="vertical-dashed-line operator-legend"></div>
-    <div class="special-operator operator-legend">
-      <svg width="100%" height="100%">
+    <div>{{ $t("profilingCluster.specialTypeOperator") }}</div>
+    <div class="one-legend">
+      <svg width="24px" height="100%">
         <g fill="var(--font-color)">
-          <text x="15" y="17.5" class="text" alignment-baseline="middle">
-            {{ $t("profilingCluster.specialTypeOperator") }}
-          </text>
           <circle
             r="6"
             cy="17.5"
-            cx="170"
+            cx="12"
             :fill="special_strategy_legend[0]['color']"
             stroke="white"
             stroke-width="1px"
           ></circle>
-          <text x="182" y="17.5" class="text" alignment-baseline="middle">
-            {{ $t("profilingCluster." + special_strategy_legend[0]['name']) }}
-          </text>
+        </g>
+      </svg>
+      <div>
+        {{ $t("profilingCluster." + special_strategy_legend[0]["name"]) }}
+      </div>
+    </div>
+    <div class="one-legend">
+      <svg width="24px" height="100%">
+        <g fill="var(--font-color)">
           <circle
             r="6"
             cy="17.5"
-            cx="290"
+            cx="12"
             :fill="special_strategy_legend[1]['color']"
             stroke="white"
             stroke-width="1px"
           ></circle>
-          <text x="302" y="17.5" class="text" alignment-baseline="middle">
-            {{ $t("profilingCluster." + special_strategy_legend[1]['name']) }}
-          </text>
+        </g>
+      </svg>
+      <div>
+        {{ $t("profilingCluster." + special_strategy_legend[1]["name"]) }}
+      </div>
+    </div>
+    <div class="one-legend">
+      <svg width="24px" height="100%">
+        <g fill="var(--font-color)">
           <circle
             r="6"
             cy="17.5"
-            cx="425"
+            cx="12"
             :fill="special_strategy_legend[2]['color']"
             stroke="white"
             stroke-width="1px"
           ></circle>
-          <text x="437" y="17.5" class="text" alignment-baseline="middle">
-            {{ $t("profilingCluster." + special_strategy_legend[2]['name']) }}
-          </text>
-
+        </g>
+      </svg>
+      <div>
+        {{ $t("profilingCluster." + special_strategy_legend[2]["name"]) }}
+      </div>
+    </div>
+    <div class="one-legend">
+      <svg width="24px" height="100%">
+        <g fill="var(--font-color)">
           <circle
             r="6"
             cy="17.5"
-            cx="600"
+            cx="12"
             :fill="special_strategy_legend[3]['color']"
             stroke="white"
             stroke-width="1px"
           ></circle>
-          <text x="612" y="17.5" class="text" alignment-baseline="middle">
-            {{ $t("profilingCluster." + special_strategy_legend[3]['name']) }}
-          </text>
-
+        </g>
+      </svg>
+      <div>
+        {{ $t("profilingCluster." + special_strategy_legend[3]["name"]) }}
+      </div>
+    </div>
+    <div class="one-legend">
+      <svg width="24px" height="100%">
+        <g fill="var(--font-color)">
           <circle
             r="6"
             cy="17.5"
-            cx="780"
+            cx="12"
             :fill="special_strategy_legend[4]['color']"
             stroke="white"
             stroke-width="1px"
           ></circle>
-          <text x="792" y="17.5" class="text" alignment-baseline="middle">
-            {{ $t("profilingCluster." + special_strategy_legend[4]['name']) }}
-          </text>
         </g>
       </svg>
+      <div>
+        {{ $t("profilingCluster." + special_strategy_legend[4]["name"]) }}
+      </div>
     </div>
   </div>
 </template>
@@ -118,7 +149,21 @@ limitations under the License.
   float: right;
   height: 35px;
   display: flex;
-  width: 1250px;
+  flex-direction: row;
+  width: 1350px;
+  flex-direction: row;
+  line-height: 35px;
+  justify-content: space-around;
+}
+.one-legend {
+  display: flex;
+  flex-direction: row;
+  height: 35px;
+  line-height: 35px;
+  width: fit-content;
+}
+.legend-container div {
+  white-space: nowrap;
 }
 .normal-operator {
   width: 200px;
@@ -147,39 +192,43 @@ limitations under the License.
 export default {
   data() {
     return {
+      padding: 200,
       normal_strategy_legend: [
         {
-          name: 'operator',
-          color: 'var(--normal-operator-color)',
+          name: "operator",
+          color: "var(--normal-operator-color)",
         },
         {
-          name: 'parameter',
-          color: 'var(--parameter-operator-color)',
+          name: "parameter",
+          color: "var(--parameter-operator-color)",
         },
       ],
       special_strategy_legend: [
         {
-          name: 'sendOperator',
-          color: 'var(--send-operator-color)',
+          name: "sendOperator",
+          color: "var(--send-operator-color)",
         },
         {
-          name: 'receiveOperator',
-          color: 'var(--receive-operator-color)',
+          name: "receiveOperator",
+          color: "var(--receive-operator-color)",
         },
         {
-          name: 'parallelShardOperator',
-          color: 'var(--slice-operator-color)',
+          name: "parallelShardOperator",
+          color: "var(--slice-operator-color)",
         },
         {
-          name: 'redistributionOperator',
-          color: 'var(--redistribution-operator-color)',
+          name: "redistributionOperator",
+          color: "var(--redistribution-operator-color)",
         },
         {
-          name: 'gradientAggOperator',
-          color: 'var(--allreduce-operator-color)',
+          name: "gradientAggOperator",
+          color: "var(--allreduce-operator-color)",
         },
       ],
     };
+  },
+  mounted() {
+    this.padding = this.$store.state.language === "en-us" ? 265 : 250;
   },
 };
 </script>

@@ -694,7 +694,7 @@
   },
   getCommunicationGraph(trainId) {
     return axios({
-      method: "post",
+      method: "get",
       url: "v1/mindinsight/profile/communication-data",
       params: { train_id: trainId },
       headers: {

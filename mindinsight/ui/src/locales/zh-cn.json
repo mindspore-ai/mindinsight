@@ -654,6 +654,7 @@
     "p2pcomm": "点对点通信",
     "averageCondition": "一个Stage内的平均情况",
     "openBrush": "是否打开时间线刷选",
+    "showHiddenEdges": "是否展示隐藏边",
     "collectiveCommunication": "集合通信",
     "sendOperator": "Send算子",
     "receiveOperator": "Receive算子",
