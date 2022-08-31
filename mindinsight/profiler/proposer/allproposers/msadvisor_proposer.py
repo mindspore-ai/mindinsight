@@ -15,6 +15,7 @@
 """The msadvisor proposer."""
 import os
 import json
+import stat
 
 from collections import OrderedDict
 
@@ -71,13 +72,14 @@ class MsadvisorProposer(Proposer):
         if not os.path.exists(recommendation_path):
             raise ProfilerDirNotFoundException("Msadvisor recommendation dir does not exist!")
         file_list = os.listdir(recommendation_path)
-        file_list.sort(key=lambda fn: os.path.getmtime(recommendation_path + "/" + fn))
+        file_list.sort(key=lambda fn: os.path.getmtime(os.path.join(recommendation_path, fn)), reverse=True)
         for rec_file in file_list:
             if rec_file.endswith('.json'):
                 recommendation_path = os.path.join(recommendation_path, rec_file)
                 recommendation_path = validate_and_normalize_path(recommendation_path,
                                                                   'recommendation', allow_parent_dir=True)
-                with os.fdopen(os.open(recommendation_path, os.O_RDONLY, 0o660), "r") as recommendation_file:
+                with os.fdopen(os.open(recommendation_path, os.O_RDONLY,
+                                       stat.S_IRUSR | stat.S_IWUSR), "r") as recommendation_file:
                     recommendation = json.load(recommendation_file)
                     recommendation['msadvisor-proposer'] = recommendation.pop('model', None)
                     logger.info(recommendation)
