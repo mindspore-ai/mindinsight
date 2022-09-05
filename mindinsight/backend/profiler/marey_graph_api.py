@@ -49,10 +49,13 @@ def get_memory_data():
     """Get memory data by train id."""
 
     train_id = request.args.get('train_id')
-    device_type = request.args.get("device_type", default='ascend')
+    device_type = request.args.get("device_type")
     if device_type not in ['ascend']:
         logger.info("Invalid device_type, device_type should be gpu or ascend.")
         raise ParamValueError("Invalid device_type.")
+    if train_id is None:
+        logger.info("Invalid train_id parameter of None.")
+        raise ParamValueError("Invalid train_id.")
 
     profiler_dir = os.path.realpath(os.path.join(settings.SUMMARY_BASE_DIR, train_id, 'profiler'))
     try:
@@ -71,8 +74,11 @@ def get_flops_data():
     """Get memory data by train id."""
 
     train_id = request.args.get('train_id')
-    profiler_dir = os.path.realpath(os.path.join(settings.SUMMARY_BASE_DIR, train_id, 'profiler'))
+    if train_id is None:
+        logger.info("Invalid train_id parameter of None.")
+        raise ParamValueError("Invalid train_id.")
 
+    profiler_dir = os.path.realpath(os.path.join(settings.SUMMARY_BASE_DIR, train_id, 'profiler'))
     try:
         profiler_dir = validate_and_normalize_path(profiler_dir, 'profiler')
     except ValidationError as exc:
@@ -89,8 +95,11 @@ def get_overview_time():
     """Get memory data by train id."""
 
     train_id = request.args.get('train_id')
-    profiler_dir = os.path.realpath(os.path.join(settings.SUMMARY_BASE_DIR, train_id, 'profiler'))
+    if train_id is None:
+        logger.info("Invalid train_id parameter of None.")
+        raise ParamValueError("Invalid train_id.")
 
+    profiler_dir = os.path.realpath(os.path.join(settings.SUMMARY_BASE_DIR, train_id, 'profiler'))
     try:
         profiler_dir = validate_and_normalize_path(profiler_dir, 'profiler')
     except ValidationError as exc:
@@ -107,8 +116,12 @@ def get_timeline():
     """Get memory data by train id."""
 
     train_id = request.args.get('train_id')
+    if train_id is None:
+        logger.info("Invalid train_id parameter of None.")
+        raise ParamValueError("Invalid train_id.")
+
     step = request.args.get('step', default='1')
-    device_type = request.args.get("device_type", default='ascend')
+    device_type = request.args.get("device_type")
     if device_type not in ['ascend']:
         logger.info("Invalid device_type, device_type should be gpu or ascend.")
         raise ParamValueError("Invalid device_type.")
@@ -130,11 +143,14 @@ def get_scope_map():
     """Get memory data by train id."""
 
     train_id = request.args.get('train_id')
-    device_type = request.args.get("device_type", default='ascend')
+    if train_id is None:
+        logger.info("Invalid train_id parameter of None.")
+        raise ParamValueError("Invalid train_id.")
+
+    device_type = request.args.get("device_type")
     if device_type not in ['ascend']:
         logger.info("Invalid device_type, device_type should be gpu or ascend.")
         raise ParamValueError("Invalid device_type.")
-
     profiler_dir = os.path.realpath(os.path.join(settings.SUMMARY_BASE_DIR, train_id, 'profiler'))
     try:
         profiler_dir = validate_and_normalize_path(profiler_dir, 'profiler')
