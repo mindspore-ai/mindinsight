@@ -32,6 +32,8 @@ AICPU_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "percent"]
 AICPU_DETAIL_COL = ["op_name", "serial_number", "op_type", "total_time", "dispatch_time", "execution_frequency",
                     "run_start", "run_end"]
 GPU_TYPE_COL = ["op_type", "type_occurrences", "total_time", "proportion", "avg_time"]
+GPU_OP_TYPE_COL = ["op_side", "op_type", "op_name", "duration"]
+GPU_CUDA_TYPE_COL = ["op_type", "op_name", "op_full_name", "duration"]
 GPU_ACTIVITY_COL = ["name", "type", "op_full_name", "stream_id",
                     "block_dim", "grid_dim", "occurrences", "total_duration",
                     "avg_duration", "max_duration", "min_duration"]
@@ -75,37 +77,12 @@ def validate_condition(search_condition):
             raise ProfilerDeviceIdException("Invalid device_id type, it should be str.")
 
     if "op_type" in search_condition:
-        op_type = search_condition.get("op_type")
-        if op_type == "aicpu_type":
-            search_scope = AICPU_TYPE_COL
-        elif op_type == "aicpu_detail":
-            search_scope = AICPU_DETAIL_COL
-        elif op_type == "aicore_type":
-            search_scope = AICORE_TYPE_COL
-        elif op_type == "aicore_detail":
-            search_scope = AICORE_DETAIL_COL
-        elif op_type == "gpu_op_type":
-            search_scope = GPU_TYPE_COL
-        elif op_type == "gpu_op_info":
-            search_scope = GPU_DETAIL_COL
-        elif op_type == "gpu_cuda_activity":
-            search_scope = GPU_ACTIVITY_COL
-        elif op_type == "cpu_op_type":
-            search_scope = CPU_TYPE_COL
-        elif op_type == "cpu_op_info":
-            search_scope = CPU_DETAIL_COL
-        elif op_type == "pynative_type":
-            search_scope = PYNATIVE_TYPE_COL
-        elif op_type == "pynative_detail":
-            search_scope = PYNATIVE_DETAIL_COL
-        else:
-            raise ProfilerOpTypeException(
-                "The op_type must in ['aicpu_type','aicpu_detail', 'aicore_type', 'aicore_detail', "
-                "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity', 'cpu_op_type', 'cpu_op_info']")
+        search_scope = get_search_scope(search_condition)
     else:
         raise ProfilerOpTypeException(
             "The op_type must in ['aicpu_type','aicpu_detail', 'aicore_type', 'aicore_detail', "
-            "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity', 'cpu_op_type', 'cpu_op_info']")
+            "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity', 'cpu_op_type', 'cpu_op_info', "
+            "'gpu_op_type_info', 'gpu_cuda_type_info']")
 
     if "group_condition" in search_condition:
         validate_group_condition(search_condition)
@@ -115,6 +92,43 @@ def validate_condition(search_condition):
 
     if "filter_condition" in search_condition:
         validate_filter_condition(search_condition)
+
+
+def get_search_scope(search_condition):
+    """Get search scope."""
+    op_type = search_condition.get("op_type")
+    if op_type == "aicpu_type":
+        search_scope = AICPU_TYPE_COL
+    elif op_type == "aicpu_detail":
+        search_scope = AICPU_DETAIL_COL
+    elif op_type == "aicore_type":
+        search_scope = AICORE_TYPE_COL
+    elif op_type == "aicore_detail":
+        search_scope = AICORE_DETAIL_COL
+    elif op_type == "gpu_op_type":
+        search_scope = GPU_TYPE_COL
+    elif op_type == "gpu_op_info":
+        search_scope = GPU_DETAIL_COL
+    elif op_type == "gpu_cuda_activity":
+        search_scope = GPU_ACTIVITY_COL
+    elif op_type == "cpu_op_type":
+        search_scope = CPU_TYPE_COL
+    elif op_type == "cpu_op_info":
+        search_scope = CPU_DETAIL_COL
+    elif op_type == "pynative_type":
+        search_scope = PYNATIVE_TYPE_COL
+    elif op_type == "pynative_detail":
+        search_scope = PYNATIVE_DETAIL_COL
+    elif op_type == "gpu_op_type_info":
+        search_scope = GPU_OP_TYPE_COL
+    elif op_type == "gpu_cuda_type_info":
+        search_scope = GPU_CUDA_TYPE_COL
+    else:
+        raise ProfilerOpTypeException(
+            "The op_type must in ['aicpu_type','aicpu_detail', 'aicore_type', 'aicore_detail', "
+            "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity', 'cpu_op_type', 'cpu_op_info', "
+            "'gpu_op_type_info', 'gpu_cuda_type_info']")
+    return search_scope
 
 
 def validate_group_condition(search_condition):
@@ -197,7 +211,7 @@ def validate_op_filter_condition(op_condition, value_type=str, value_type_msg='s
     Raises:
         ProfilerFilterConditionException: If the filter_condition param in search_condition is invalid.
     """
-    filter_key = ["in", "not_in", "partial_match_str_in"]
+    filter_key = ["in", "not_in", "partial_match_str_in", "display_op_type", "step"]
     if not isinstance(op_condition, dict):
         raise ProfilerFilterConditionException("The filter condition value must be dict.")
     for key, value in op_condition.items():
