@@ -1056,7 +1056,6 @@ export default {
       };
       params.body= {
         dir:this.relativePath,
-        device_id: this.currentCard,
         type : 0,
         device_type: "gpu",
         op_type: "gpu_op_type_info",
@@ -1071,7 +1070,6 @@ export default {
       };
       RequestService.queryDynamicShapeGPU(params).then(
               (res) => {
-                console.log(res)
                 this.svg.initOver = true;
                 this.isHeterogeneous = res.data.graph_info.is_heterogeneous;
                 if (res && res.data && res.data.graph_info.training_trace_graph && res.data.graph_info.training_trace_graph.length) {
@@ -1506,7 +1504,7 @@ export default {
       this.initGpuOperatorShape();
       // this.getTableOperatorList(this.opAllTypeList, false);
     },
-    initGpuOperatorShape(){ // 初始化的时候，还要初始化表格
+    initGpuOperatorShape(){
       const params = {}
       params.params={
       };
@@ -1515,7 +1513,6 @@ export default {
         device_id: this.currentCard,
         device_type: "gpu",
         op_type: this.onType,
-        device_id:this.rankID,
         filter_condition:
                 {
                   // op_type: {partial_match_str_in: ["Add"]},
@@ -1526,10 +1523,9 @@ export default {
       RequestService.queryDynamicShapeGPU(params).then(
               (res) => {
                 if (res && res.data) {
-                  let data = res.data.dynamic_info; // 时间线和表格的数据
-                  let op_type_arr = data.all_type; //这个是一共有多少算子类型,gpu这里是一个数组
+                  let data = res.data.dynamic_info;
+                  let op_type_arr = data.all_type;
                   this.isHeterogeneous = res.data.graph_info.is_heterogeneous;
-                  //将数组加到绑定的下拉框中//将要展示的加到content中
                   op_type_arr.forEach((operatorName) => {
                     let content = null;
                     content ={
@@ -1540,15 +1536,12 @@ export default {
                     details.push(content);
                   });
                   this.topOperatorArr = details;
-                  // 在这整出来需要默认绘制哪些，然后将那些值加进去
                   let ssChart = [];
                   this.topOperatorArr.slice(0,3).forEach(
                           elem => ssChart.push(elem.name)
                   );
-                  console.log("sschart" + ssChart);
-                  // console.log("")
                   this.topOperatorValueGPU = ssChart;
-                  this.getGpuOperatorShape(); //申请数据
+                  this.getGpuOperatorShape(); //
                 }
               }
       );
@@ -1567,7 +1560,6 @@ export default {
         device_id: this.currentCard,
         device_type: "gpu",
         op_type: this.onType,
-        device_id: this.rankID, // TODO 待修改
         filter_condition:
                 {
                   dispaly_op_type: this.topOperatorValueGPU,
@@ -1580,22 +1572,14 @@ export default {
               (res) => {
                 if (res && res.data) {
                   this.svg.noData = false;
-                  let data = res.data.dynamic_info; // 时间线和表格的数据
-                  let op_type_arr = data.all_type; //这个是一共有多少算子类型,gpu这里是一个数组
-                  let filter_type = data.filter_type;//假设默认有3个
-                  let count_num = 0; //默认是
-
-                  console.log("ssssssssssss");
-                  console.log(op_type_arr);
-                  console.log(params.body.filter_condition.dispaly_op_type);
-                  //将数组加到绑定的下拉框中//将要展示的加到content中
+                  let data = res.data.dynamic_info;
+                  let op_type_arr = data.all_type;
+                  let filter_type = data.filter_type;
+                  let count_num = 0;
                   op_type_arr.forEach((operatorName) => {
                             let content = null;
                             let sig = false;
-                            console.log("1122");
-                            console.log(operatorName);
                             if(params.body.filter_condition.dispaly_op_type.includes(operatorName)){
-                              console.log("包含");
                               sig = true;
                               content ={
                                 name: operatorName,
@@ -1610,8 +1594,6 @@ export default {
                                 showSymbol: false,
                               };
                               this.step.max = filter_type[operatorName].length;
-                              console.log("naxxxx");
-                              console.log("max = " + this.step.max);
                               series.push(item);
                               legend.push(item.name);
                               count_num++;
@@ -1622,7 +1604,6 @@ export default {
                                 check: sig,
                                 data: [],
                               }
-                              console.log("不包含");
                             }
                             details.push(content)
                           }
@@ -1634,13 +1615,12 @@ export default {
                 this.operatorOptions.series = series;
                 this.operatorOptions.legend.data = legend;
                 this.topOperatorArr = details;
-                //DONE 是否可以初始化一次
                 if(!this.chartObj)
                   this.chartObj = echarts.init(document.getElementById('operatorShapeDetailChart'), echartsThemeName);
                 this.operatorOptions.tooltip.formatter = (params) => {
                   return this.formatChartTip(params);
                 };
-                // 当点击选中的时候，应该查询
+                // search
                 this.$nextTick(() => {
                   this.chartObj.setOption(this.operatorOptions, true);
                 })
@@ -2076,8 +2056,10 @@ export default {
   padding-top: 10px;
 }
 .pro-router-wrap .pro-router-left .operator-detail{
+  width: 100%;
   height: calc(100% - 275px);
   margin-bottom: 15px;
+  overflow: auto;
 }
 .pro-router-wrap .pro-router-left .operator-shape-option{
   line-height: 25px;
@@ -2091,7 +2073,7 @@ export default {
 }
 .pro-router-left .operator-shape-select .operator-detail-select {
   border-radius: 10%;
-  width: 22%;
+  width: 42%;
   line-height: 30px;
   height: 30px;
   margin: 0 auto;
@@ -2104,15 +2086,15 @@ export default {
   min-width: 120px
 }
 .operator-shape-detail{
-  display: flex;
+  /*display: flex;*/
   width: calc(100% - 20px);
   margin: 50px 0;
   height: calc(100% - 130px);
-  border: 1px solid var(--border-color);
-  flex-grow: 1;
-  flex-direction: column;
-  overflow-x: auto;
-  overflow-y: auto;
+  /*border: 1px solid var(--border-color);*/
+  /*flex-grow: 1;*/
+  /*flex-direction: column;*/
+  /*overflow-x: auto;*/
+  /*overflow-y: auto;*/
 }
 .operator-type-select{
   padding-left: 40px;

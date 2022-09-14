@@ -466,6 +466,7 @@
     "BPMessage": "反向终止算子：",
     "approximateTime": "总时长 ≈ ",
     "stepInputTip": "请输入step值（1~{max}的正整数，值为空时展示平均值）",
+    "stepInput": "1~{max}",
     "stageTip": "请选择stage",
     "inputError": "输入参数异常，请输入一个1~{max}的正整数",
     "defaultTip": "默认展示平均值",

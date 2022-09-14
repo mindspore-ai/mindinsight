@@ -466,6 +466,7 @@
     "BPMessage": "BP termination operator:",
     "approximateTime": "Total duration ≈ ",
     "stepInputTip": "Steps (an integer ranging from 1 to {max})",
+    "stepInput": "1~{max}",
     "stageTip": "Please select stage",
     "inputError": "Input parameter error. Please enter a positive integer ranging from 1 to {max}",
     "defaultTip": "Average value (default)",
