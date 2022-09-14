@@ -17,15 +17,22 @@ limitations under the License.
   <div class="pro-router-wrap">
     <div class="pro-router-left">
       <!-- Step trace area -->
-      <div class="step-trace">
+      <div v-show="!isHeterogeneous" class="step-trace">
         <div class="title-wrap">
           <div class="title">{{ $t('profiling.stepTrace') }}</div>
-          <div class="view-detail">
+          <div class="view-detail" v-if="isDynamic">
+            <button @click="viewDetail('step-trace-dynamic')"
+                    :class="">{{ $t('profiling.viewDetail') }}
+              <i class="el-icon-d-arrow-right"></i></button>
+            <!--{disabled:svg.noData && svg.data.length === 0}-->
+          </div>
+          <div class="view-detail" v-else>
             <button @click="viewDetail('step-trace')"
                     :disabled="svg.noData && svg.data.length === 0"
                     :class="{disabled:svg.noData && svg.data.length === 0}">{{ $t('profiling.viewDetail') }}
               <i class="el-icon-d-arrow-right"></i></button>
           </div>
+
           <!-- Step trace description -->
           <div class="tip-icon">
             <el-tooltip placement="bottom"
@@ -107,6 +114,111 @@ limitations under the License.
             </div>
             <p v-show="!svg.initOver">{{$t("public.dataLoading")}}</p>
             <p v-show="svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noData")}}</p>
+          </div>
+        </div>
+      </div>
+      <!--Operator Detail-->
+      <div v-show="isHeterogeneous" class="operator-detail">
+        <div class="title-wrap">
+          <div class="title"> {{$t('profiling.operatorShapeDetail')}}</div>
+          <div class="view-detail" v-if="isDynamic">
+            <button @click="viewDetail('step-trace-dynamic')"
+                    :class="">{{ $t('profiling.viewDetail') }}
+              <i class="el-icon-d-arrow-right"></i></button>
+            <!--{disabled:svg.noData && svg.data.length === 0}-->
+          </div>
+          <div class="view-detail" v-else>
+            <button @click="viewDetail('step-trace')"
+                    :disabled="svg.noData && svg.data.length === 0"
+                    :class="{disabled:svg.noData && svg.data.length === 0}"> {{ $t('profiling.viewDetail') }}
+              <i class="el-icon-d-arrow-right"></i></button>
+          </div>
+          <!-- Step trace description -->
+          <div class="tip-icon">
+            <el-tooltip placement="bottom"
+                        effect="light">
+              <div slot="content"
+                   class="tooltip-container">
+                <div class="pro-dash-tooltip">
+                  <div class="font-size-style">{{$t("profiling.features")}}</div>
+                  <div>{{$t('profiling.iterationInfo')}}</div>
+                  <div>
+                    <span class="font-style">{{$t('profiling.queueInfo')}}&nbsp;</span>
+                    <span>{{$t('profiling.iterationGapInfo')}}</span>
+                  </div>
+                  <div>
+                    <span class="font-style">{{$t('profiling.fpbpTitle')}}&nbsp;</span>
+                    <span>{{$t('profiling.fpbpInfo')}}</span>
+                  </div>
+                  <div>
+                    <span class="font-style">{{$t('profiling.iterativeTailingTitle')}}&nbsp;</span>
+                    <span>{{$t('profiling.iterativeTailingInfo')}}</span>
+                  </div>
+                  <br />
+                  <div class="font-size-style">{{$t('profiling.statistics')}}</div>
+                  <div>{{$t('profiling.totalTime')}}
+                    <span>{{totalTime}}{{$t('profiling.millisecond')}}</span>
+                  </div>
+                  <div>{{$t('profiling.totalSteps')}}<span>{{totalSteps}}</span></div>
+                  <div>{{$t('profiling.iterationGapTimeRatio')}}<span>{{iterationIntervalPercent}}</span></div>
+                  <div v-if="fpBpPercent">{{$t('profiling.fpbpTimeRatio')}}<span>{{fpBpPercent}}</span></div>
+                  <div v-else>{{$t('profiling.fpTimeRatio')}}<span>{{fpPercent}}</span></div>
+                  <div v-if="tailPercent">
+                    {{$t('profiling.iterativeTailingTimeRatio')}}
+                    <span>{{tailPercent}}</span>
+                  </div>
+                </div>
+              </div>
+              <i class="el-icon-info"></i>
+            </el-tooltip>
+          </div>
+        </div>
+        <div class="image-noData"
+             v-if="svg.noData">
+          <div>
+            <img :src="require('@/assets/images/nodata.png')"
+                 alt="" />
+          </div>
+          <p v-show="!svg.initOver">{{$t("public.dataLoading")}}</p>
+          <p v-show="svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noData")}}</p>
+        </div>
+        <div v-if="isDynamic" class="operator-shape-option">
+          <div class="operator-shape-select">
+            <span class="operator-filter-title">{{$t('profiling.operatorFilterTitle')}}</span>
+            <el-select class="operator-detail-select"
+                       v-model="topOperatorValueGPU"
+                       @remove-tag="operatorRemoveGPU"
+                       :collapse-tags="true"
+                       multiple
+                       filterable
+                       :placeholder="selectTip">
+              <el-option
+                      v-for="(item, index) in topOperatorArr"
+                      :key="index"
+                      :label="item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name"
+                      disabled
+                      :value="item.name">
+                <el-checkbox :key="item.name"
+                             v-model="item.check"
+                             :title="item.name"
+                             :disabled="checkSig"
+                             @change="operatorChangeGPU(item)">
+                  {{item.name.length > 18 ? item.name.substring(0, 18) + "..." : item.name}}
+                </el-checkbox>
+              </el-option>
+            </el-select>
+            <el-radio-group class="operator-type-select" v-model="operatorStatisticType"
+                            @change="coreTableChange"
+                            fill="#00A5A7"
+                            text-color="#FFFFFF"
+                            size="small">
+              <el-radio-button label="0">operator</el-radio-button>
+              <el-radio-button label="1">kernel</el-radio-button>
+            </el-radio-group>
+          </div>
+        </div>
+        <div class="operator-shape-detail" >
+          <div class="operator-shape-chart" id="operatorShapeDetailChart">
           </div>
         </div>
       </div>
@@ -415,7 +527,7 @@ limitations under the License.
   </div>
 </template>
 <script>
-import echarts from '@/js/echarts';
+import echarts ,{echartsThemeName}from '@/js/echarts';
 import RequestService from '@/services/request-service';
 import CommonProperty from '@/common/common-property';
 export default {
@@ -433,6 +545,9 @@ export default {
       totalSteps: '--',
       totalTime: '--',
       tailPercent: '--', // Ratio of time consumed by step tail
+      // graphMode:this.$route.query.graphMode,
+      isDynamic:this.$route.query.graphMode === 'dynamic' ? true : false, // dynamic
+
       svg: {
         // Step trace svg information
         data: [], // Data of svg
@@ -516,6 +631,59 @@ export default {
       },
       themeIndex: this.$store.state.themeIndex,
       isHeterogeneous: false,
+      operatorOptions: { // operator
+        dataZoom: [{
+          type: 'slider',
+          show: true,
+          start: 0,
+          end: 100,
+        }],
+        tooltip: {
+          trigger: 'axis',
+          formatter: null,
+          confine: true,
+        },
+        legend: {
+          right: 70,
+          top: 8,
+          data: [],
+          formatter:function(name){
+            return name.length > 12 ?name.substr(0,12)+"...":name;
+          },
+          tooltip:{
+            show:true,
+            trigger:'axis'
+          },
+          padding: [0, 0, 0, 120],
+          type: 'scroll',
+        },
+        color: CommonProperty.dynamicLineColor,
+        xAxis: {
+          type: 'category',
+          name: 'step',
+          data: [],
+        },
+        yAxis: {
+          type: 'value',
+          name: this.$t('profiling.timeConsume') + '(ms)',
+        },
+        series: []
+      },
+      topOperatorValue: [],
+      topOperatorValueGPU:[],
+      topOperatorArr: [],
+      selectTip: this.$t('public.select'),
+      onType:'gpu_op_type_info',
+      operatorStatisticType:0,
+      checkSig: false,
+      chartObj: null,
+      filterCondition:{
+        displayOnType:[]
+      },
+      step:{
+        max:0,
+        label:this.$t('profiling.stepInputTip')
+      },
     };
   },
   mounted() {
@@ -566,7 +734,18 @@ export default {
       this.initPieChart();
       this.getProccessSummary();
       this.queryTrainingTrace();
+      if(this.isDynamic){
+        this.$nextTick(() => {
+          this.initDynamicShape();
+          this.initGpuOperatorShape();
+          window.addEventListener('resize', this.resizeCallback, false);
+        })
+      }
+      // initial data
       window.addEventListener('resize', this.resizeTrace, false);
+    },
+    test(){
+
     },
     /**
      * Get the data of process summary
@@ -637,6 +816,7 @@ export default {
           id: this.trainingJobId,
           dir: this.summaryPath,
           path: this.relativePath,
+          graphMode:this.$route.query.graphMode
         },
       });
     },
@@ -865,6 +1045,79 @@ export default {
         return num;
       }
       return Math.round(num * Math.pow(10, pow)) / Math.pow(10, pow);
+    },
+
+    /**
+     * init dynamic shape info by request dynamic shape api
+     */
+    initDynamicShape(){
+      const params = {}
+      params.params={
+      };
+      params.body= {
+        dir:this.relativePath,
+        device_id: this.currentCard,
+        type : 0,
+        device_type: "gpu",
+        op_type: "gpu_op_type_info",
+        device_id: this.currentCard,
+        filter_condition:
+                {
+                  op_type: {partial_match_str_in: ["Add"]},
+                  dispaly_op_type: ["GetNext"],
+                  step_filter: ["1"],
+                },
+        sort_condition: {name: "duration", type: "descending"},
+      };
+      RequestService.queryDynamicShapeGPU(params).then(
+              (res) => {
+                console.log(res)
+                this.svg.initOver = true;
+                this.isHeterogeneous = res.data.graph_info.is_heterogeneous;
+                if (res && res.data && res.data.graph_info.training_trace_graph && res.data.graph_info.training_trace_graph.length) {
+                  this.svg.noData = false;
+                  this.removeTrace();
+                  this.$nextTick(() => {
+                    this.packageTraceData(JSON.parse(JSON.stringify(res.data.graph_info.training_trace_graph)));
+                  });
+
+                  // Set the display information in tip
+                  if (res.data.graph_info.summary) {
+                    this.fpBpPercent = res.data.graph_info.summary.fp_and_bp_percent;
+                    this.fpPercent = res.data.graph_info.summary.fp_percent;
+                    this.iterationIntervalPercent = res.data.graph_info.summary.iteration_interval_percent;
+                    this.totalSteps = res.data.graph_info.summary.total_steps;
+                    this.totalTime = res.data.graph_info.summary.total_time;
+                    this.tailPercent = res.data.graph_info.summary.tail_percent;
+                  } else {
+                    this.fpBpPercent = '--';
+                    this.iterationIntervalPercent = '--';
+                    this.totalSteps = '--';
+                    this.totalTime = '--';
+                    this.tailPercent = '--';
+                  }
+                } else {
+                  this.svg.totalHeight = 0;
+                  this.svg.noData = true;
+                  this.svg.data = [];
+                  this.svg.initOver = true;
+                  this.removeTrace();
+                }
+              },
+              (error) => {
+                this.svg.totalHeight = 0;
+                this.svg.noData = true;
+                this.svg.data = [];
+                this.svg.initOver = true;
+                this.removeTrace();
+                this.fpBpPercent = '--';
+                this.iterationIntervalPercent = '--';
+                this.totalSteps = '--';
+                this.totalTime = '--';
+                this.tailPercent = '--';
+                this.isHeterogeneous = false;
+              }
+      )
     },
     /**
      * Get the data of training trace
@@ -1244,6 +1497,265 @@ export default {
         this.svg.resizeTimer = null;
       }, 500);
     },
+
+    /**
+     *  switcher
+     */
+    coreTableChange(){
+      this.onType = this.operatorStatisticType == 0? "gpu_op_type_info" : "gpu_cuda_type_info";
+      this.initGpuOperatorShape();
+      // this.getTableOperatorList(this.opAllTypeList, false);
+    },
+    initGpuOperatorShape(){ // 初始化的时候，还要初始化表格
+      const params = {}
+      params.params={
+      };
+      params.body= {
+        dir:this.relativePath,
+        device_id: this.currentCard,
+        device_type: "gpu",
+        op_type: this.onType,
+        device_id:this.rankID,
+        filter_condition:
+                {
+                  // op_type: {partial_match_str_in: ["Add"]},
+                  step_filter: ["1"],
+                },
+      };
+      let details = [];//
+      RequestService.queryDynamicShapeGPU(params).then(
+              (res) => {
+                if (res && res.data) {
+                  let data = res.data.dynamic_info; // 时间线和表格的数据
+                  let op_type_arr = data.all_type; //这个是一共有多少算子类型,gpu这里是一个数组
+                  this.isHeterogeneous = res.data.graph_info.is_heterogeneous;
+                  //将数组加到绑定的下拉框中//将要展示的加到content中
+                  op_type_arr.forEach((operatorName) => {
+                    let content = null;
+                    content ={
+                      name: operatorName,
+                      check: false,
+                      data: [],
+                    };
+                    details.push(content);
+                  });
+                  this.topOperatorArr = details;
+                  // 在这整出来需要默认绘制哪些，然后将那些值加进去
+                  let ssChart = [];
+                  this.topOperatorArr.slice(0,3).forEach(
+                          elem => ssChart.push(elem.name)
+                  );
+                  console.log("sschart" + ssChart);
+                  // console.log("")
+                  this.topOperatorValueGPU = ssChart;
+                  this.getGpuOperatorShape(); //申请数据
+                }
+              }
+      );
+
+    },
+    /**
+     *
+     * init gpu operator shape info by request dynamic shape api
+     */
+    getGpuOperatorShape(){
+      const params = {}
+      params.params={
+      };
+      params.body= {
+        dir:this.relativePath,
+        device_id: this.currentCard,
+        device_type: "gpu",
+        op_type: this.onType,
+        device_id: this.rankID, // TODO 待修改
+        filter_condition:
+                {
+                  dispaly_op_type: this.topOperatorValueGPU,
+                },
+      };
+      let details = [];//
+      let series = [];
+      let legend = [];
+      RequestService.queryDynamicShapeGPU(params).then(
+              (res) => {
+                if (res && res.data) {
+                  this.svg.noData = false;
+                  let data = res.data.dynamic_info; // 时间线和表格的数据
+                  let op_type_arr = data.all_type; //这个是一共有多少算子类型,gpu这里是一个数组
+                  let filter_type = data.filter_type;//假设默认有3个
+                  let count_num = 0; //默认是
+
+                  console.log("ssssssssssss");
+                  console.log(op_type_arr);
+                  console.log(params.body.filter_condition.dispaly_op_type);
+                  //将数组加到绑定的下拉框中//将要展示的加到content中
+                  op_type_arr.forEach((operatorName) => {
+                            let content = null;
+                            let sig = false;
+                            console.log("1122");
+                            console.log(operatorName);
+                            if(params.body.filter_condition.dispaly_op_type.includes(operatorName)){
+                              console.log("包含");
+                              sig = true;
+                              content ={
+                                name: operatorName,
+                                check: sig,
+                                data: filter_type[operatorName],
+                              };
+                              const item = {
+                                type: 'line',
+                                name: operatorName,
+                                data: filter_type[operatorName],
+                                smooth: true,
+                                showSymbol: false,
+                              };
+                              this.step.max = filter_type[operatorName].length;
+                              console.log("naxxxx");
+                              console.log("max = " + this.step.max);
+                              series.push(item);
+                              legend.push(item.name);
+                              count_num++;
+                            }else {
+                              sig = false;
+                              content ={
+                                name: operatorName,
+                                check: sig,
+                                data: [],
+                              }
+                              console.log("不包含");
+                            }
+                            details.push(content)
+                          }
+                  );
+                  // this.getFormatterDetailData(row,isSort);
+                }
+                //
+                this.operatorOptions.xAxis.data = series[0].data.map((_v, i) => i + 1);
+                this.operatorOptions.series = series;
+                this.operatorOptions.legend.data = legend;
+                this.topOperatorArr = details;
+                //DONE 是否可以初始化一次
+                if(!this.chartObj)
+                  this.chartObj = echarts.init(document.getElementById('operatorShapeDetailChart'), echartsThemeName);
+                this.operatorOptions.tooltip.formatter = (params) => {
+                  return this.formatChartTip(params);
+                };
+                // 当点击选中的时候，应该查询
+                this.$nextTick(() => {
+                  this.chartObj.setOption(this.operatorOptions, true);
+                })
+                this.resizeEchart();
+              }
+      ).catch(() => {
+        this.svg.noData = true;
+      })
+    },
+    /**
+     * operator select change
+     * @param {String} val operator name
+     */
+    operatorChangeGPU(item) {
+      if (item.check && this.topOperatorValueGPU.indexOf(item.name) == -1) {
+        this.topOperatorValueGPU.push(item.name);
+      } else if(!item.check){
+        this.topOperatorValueGPU.forEach((elm, idx) => {
+          if (elm == item.name) {
+            this.topOperatorValueGPU.splice(idx, 1)
+          }
+        })
+      }
+      if(this.topOperatorValueGPU && this.topOperatorValueGPU.length){ // not null
+        this.filterCondition.displayOnType = this.topOperatorValueGPU;
+        this.getGpuOperatorShape(); //调用绘图方法
+      }else {
+        this.operatorOptions.series = [];
+        this.operatorOptions.legend.data = [];
+      }
+      this.drawChart();
+      if (this.topOperatorValueGPU.length > 9) {
+        this.checkSig = true;
+      }
+      this.resizeEchart();
+    },
+    /**
+     * selector remove the operator by name
+     * @param {String} opName operator name
+     */
+    operatorRemoveGPU(opName) {
+      this.topOperatorArr.forEach((elm) => {
+        if (elm.name == opName) {
+          elm.check = !elm.check;
+          this.drawChart();
+        }
+      })
+      if (this.topOperatorValueGPU.length <= 9) {
+        this.checkSig = false;
+      }
+    },
+    /**
+     * init the operator chart
+     */
+    drawChart() {
+      let series = [];
+      let legend = [];
+      this.topOperatorArr.forEach((obj) => {
+        const check = obj.check;
+        if (check) {
+          const item = {
+            type: 'line',
+            name: obj.name,
+            data: obj.data,
+            smooth: true,
+            showSymbol: false,
+          }
+          series.push(item);
+          legend.push(obj.name);
+        }
+      })
+      this.operatorOptions.series = series;
+      this.operatorOptions.legend.data = legend;
+      this.chartObj = echarts.init(document.getElementById('operatorShapeDetailChart'), echartsThemeName);
+      this.$nextTick(() => {
+        this.chartObj.setOption(this.operatorOptions, true);
+      })
+    },
+    /**
+     * echart resize
+     */
+    resizeEchart() {
+      if (this.chartObj) {
+        setTimeout(() => {
+          this.chartObj.resize();
+        }, 100);
+      }
+    },
+    /**
+     * format the chart
+     * @param {object} params html dom object
+     */
+    formatChartTip(params) {
+      const tipInnerHTML = [];
+      if (params && params.length) {
+        const colorArray = CommonProperty.dynamicLineColor;
+        const index = params[0].dataIndex + 1;
+        tipInnerHTML.push(`step: ${index}`);
+        params.forEach((item, idx) => {
+          tipInnerHTML.push(
+                  `<span class="define-chart-tip" style="background-color:${colorArray[idx]};"></span>` +
+                  `${item.seriesName}: <span style="margin: 0 6px;">${item.data}</span>`
+          );
+        });
+      }
+      return tipInnerHTML.join('<br>');
+    },
+    /**
+     * Window resize
+     */
+    resizeCallback() {
+      if (this.chartObj) {
+        this.chartObj.resize();
+      }
+    },
   },
   destroyed() {
     window.removeEventListener('resize', this.resizeTrace, false);
@@ -1562,5 +2074,47 @@ export default {
 .pro-router-wrap .image-noData p {
   font-size: 16px;
   padding-top: 10px;
+}
+.pro-router-wrap .pro-router-left .operator-detail{
+  height: calc(100% - 275px);
+  margin-bottom: 15px;
+}
+.pro-router-wrap .pro-router-left .operator-shape-option{
+  line-height: 25px;
+  height: 25px;
+  margin: 0 auto;
+  text-align: center;
+}
+.pro-router-wrap .pro-router-left .operator-shape-option .operator-filter-title {
+  color: #00A5A7;
+  margin: 0 10px;
+}
+.pro-router-left .operator-shape-select .operator-detail-select {
+  border-radius: 10%;
+  width: 22%;
+  line-height: 30px;
+  height: 30px;
+  margin: 0 auto;
+}
+#operatorShapeDetailChart{
+  width: 100%;
+  height: 80%;
+  margin: 0 auto;
+  min-height: 200px;
+  min-width: 120px
+}
+.operator-shape-detail{
+  display: flex;
+  width: calc(100% - 20px);
+  margin: 50px 0;
+  height: calc(100% - 130px);
+  border: 1px solid var(--border-color);
+  flex-grow: 1;
+  flex-direction: column;
+  overflow-x: auto;
+  overflow-y: auto;
+}
+.operator-type-select{
+  padding-left: 40px;
 }
 </style>

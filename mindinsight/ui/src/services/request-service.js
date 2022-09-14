@@ -15,7 +15,7 @@
  */
  import axios from './fetcher';
  import { transCode } from './fetcher';
- 
+
  export default {
    // query dataset graph data
    queryDatasetGraph(params) {
@@ -25,7 +25,7 @@
        params: params,
      });
    },
- 
+
    // NEW API for model and data source tracing
    queryLineagesData(params) {
      return axios({
@@ -42,7 +42,7 @@
        data: params.body,
      });
    },
- 
+
    queryTargetsData(params) {
      return axios({
        method: 'post',
@@ -50,7 +50,7 @@
        data: params.body,
      });
    },
- 
+
    // query summary list
    querySummaryList(params, isIgnoreError) {
      return axios({
@@ -62,7 +62,7 @@
        },
      });
    },
- 
+
    // query scalar sample
    getScalarsSample(params) {
      return axios({
@@ -74,7 +74,7 @@
        },
      });
    },
- 
+
    // query tensors sample
    getTensorsSample(params) {
      return axios({
@@ -86,7 +86,7 @@
        },
      });
    },
- 
+
    // query graph data
    queryGraphData(params) {
      return axios({
@@ -95,7 +95,7 @@
        params: params,
      });
    },
- 
+
    // search graph node
    searchNodesNames(params) {
      return axios({
@@ -104,7 +104,7 @@
        params: params,
      });
    },
- 
+
    // query the level of the node from the first layer based on node name
    querySingleNode(params) {
      return axios({
@@ -113,7 +113,7 @@
        params: params,
      });
    },
- 
+
    // query single train job list(image/scalar/graph)
    getSingleTrainJob(params, isIgnoreError) {
      return axios({
@@ -125,7 +125,7 @@
        },
      });
    },
- 
+
    // set caches
    trainJobsCaches(params) {
      return axios({
@@ -134,7 +134,7 @@
        data: params,
      });
    },
- 
+
    // query metedata
    getSummarySample(params) {
      const trainIds = params.train_id;
@@ -150,7 +150,7 @@
        url: `v1/mindinsight/datavisual/scalars?${requestStr}`,
      });
    },
- 
+
    // query image meta data
    getImageMetadatas(params) {
      return axios({
@@ -162,7 +162,7 @@
        },
      });
    },
- 
+
    // query image data
    getImageData(params) {
      return axios({
@@ -174,7 +174,7 @@
        },
      });
    },
- 
+
    // query training job visualization plugins
    getDatavisualPlugins(params) {
      return axios({
@@ -491,7 +491,7 @@
        data: params,
      });
    },
- 
+
    getEvaluation(params) {
      return axios({
        method: 'get',
@@ -643,7 +643,7 @@
   // query operator dynamic shape detail
   queryDynamicShape(params) {
     return axios({
-      method: 'get',
+      method: 'post',
       url: 'v1/mindinsight/profile/dynamic-shape-detail',
       params: params,
       headers: {
@@ -736,5 +736,17 @@
       },
       timeout: 1000 * 240,
     });
-  }
+  },
+   // query operator gpu dynamic shape detail
+   queryDynamicShapeGPU(params) {
+     return axios({
+       method: 'post',
+       url: 'v1/mindinsight/profile/dynamic-shape-detail',
+       params: params.params,
+       data: params.body,
+       headers: {
+         ignoreError: true,
+       }
+     });
+   },
 };

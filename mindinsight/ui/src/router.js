@@ -148,6 +148,10 @@ export default new Router({
               component: () => import('./views/profiling/single/performance/step-trace.vue'),
             },
             {
+              path: 'step-trace-dynamic',
+              component: () => import('./views/profiling-gpu/single/step-trace-dynamic.vue'),
+            },
+            {
               path: 'cpu-detail',
               component: () => import('./views/profiling/single/resource/cpu-utilization.vue'),
             },
