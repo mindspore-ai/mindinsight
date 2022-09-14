@@ -54,6 +54,7 @@ class BaseAnalyser(ABC):
         self._size = 0
         self._none_filter_condition_key = []
         self._none_sort_col_names = []
+        self._all_type = []
         self._ms_to_us = 1e3
         self._round_digits = 6
         self._ms_round_digits = 3
@@ -191,10 +192,11 @@ class BaseAnalyser(ABC):
             if condition_key in self._col_names:
                 index = self._col_names.index(condition_key)
                 actual_value = item[index]
-                for exp_key, exp_value in condition_value.items():
-                    if not self._is_match_condition(
-                            exp_key, exp_value, actual_value):
-                        return False
+                if isinstance(condition_value, dict):
+                    for exp_key, exp_value in condition_value.items():
+                        if not self._is_match_condition(
+                                exp_key, exp_value, actual_value):
+                            return False
         return True
 
     def _is_match_condition(self, exp_key, exp_value, actual_value):

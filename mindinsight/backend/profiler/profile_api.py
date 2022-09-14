@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -599,7 +599,7 @@ def get_memory_usage_graphics():
     return graphics
 
 
-@BLUEPRINT.route("/profile/dynamic-shape-detail", methods=["GET"])
+@BLUEPRINT.route("/profile/dynamic-shape-detail", methods=["POST"])
 def get_dynamic_shape_info():
     """
     Get dynamic shape information of operators.
@@ -608,24 +608,57 @@ def get_dynamic_shape_info():
         Response, the operator shape and execution time information.
 
     Examples:
-        >>> GET http://xxxx/v1/mindinsight/profile/dynamic-shape-detail
+        >>> POST http://xxxx/v1/mindinsight/profile/dynamic-shape-detail
     """
-    summary_dir = request.args.get("dir")
+    search_condition = request.stream.read()
+    try:
+        search_condition = json.loads(search_condition if search_condition else "{}")
+    except (json.JSONDecodeError, ValueError):
+        raise ParamValueError("Json data parse failed.")
+    summary_dir = search_condition.get("dir")
     profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
     check_train_job_and_profiler_dir(profiler_dir_abs)
 
-    device_id = request.args.get("device_id", default='0')
+    result = {}
+    device_id = search_condition.get("device_id", '0')
     to_int(device_id, 'device_id')
-    device_type = request.args.get("device_type", default='ascend')
-    if device_type not in ['ascend']:
-        logger.info("Invalid device_type, Memory Usage only supports Ascend for now.")
+
+    device_type = search_condition.get("device_type", 'ascend')
+    if device_type not in ['ascend', 'gpu']:
+        logger.info("Invalid device_type, dynamic shape only supports Ascend/GPU for now.")
         raise ParamValueError("Invalid device_type.")
 
-    analyser = AnalyserFactory.instance().get_analyser(
-        'dynamic_shape', profiler_dir_abs, device_id)
-    shape_info = analyser.get_dynamic_shape_detail()
+    if device_type == "gpu":
+        # Get dynamic shape information.
+        graph_type = search_condition.get("type", '0')
+        graph_type = to_int(graph_type, 'graph_type')
 
-    return shape_info
+        validate_condition(search_condition)
+        op_type = search_condition.get("op_type")
+        dynamic_analyser = AnalyserFactory.instance().get_analyser(
+            op_type, profiler_dir_abs, device_id)
+        shape_info = dynamic_analyser.query(search_condition)
+
+        # Get step trace information.
+        graph_info = {}
+        trace_analyser = AnalyserFactory.instance().get_analyser(
+            'step_trace', profiler_dir_abs, device_id)
+        graph_info = trace_analyser.query({'filter_condition': {'mode': 'step', 'step_id': graph_type}})
+        graph_info['summary'] = trace_analyser.summary
+        graph_info['point_info'] = trace_analyser.point_info(graph_type)
+        graph_info['is_heterogeneous'] = False
+        # In heterogeneous training scene, do not display step trace data.
+        cpu_op_type_file_name = f"cpu_op_type_info_{device_id}.csv"
+        if cpu_op_type_file_name in os.listdir(profiler_dir_abs):
+            graph_info = {'is_heterogeneous': True}
+
+        result["dynamic_info"] = shape_info
+        result["graph_info"] = graph_info
+        return jsonify(result)
+    dynamic_analyser = AnalyserFactory.instance().get_analyser(
+        'dynamic_shape', profiler_dir_abs, device_id)
+    result = dynamic_analyser.get_dynamic_shape_detail()
+    return jsonify(result)
 
 
 @BLUEPRINT.route("/profile/memory-breakdowns", methods=["GET"])
@@ -827,6 +860,7 @@ def get_flops_summary():
     summary = analyser.get_flops_summary()
 
     return summary
+
 
 @BLUEPRINT.route("/profile/flops-scope", methods=["GET"])
 def get_flops_scope():

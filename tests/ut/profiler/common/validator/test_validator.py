@@ -1,4 +1,4 @@
-# Copyright 2020-2021 Huawei Technologies Co., Ltd
+# Copyright 2020-2022 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,9 @@ from mindinsight.profiler.common.validator.validate import \
 
 class TestMinddataPipelineCondition:
     """Test the method of `validate_minddata_pipeline_condition`."""
-    def test_validate_minddata_pipeline_condition_1(self):
+
+    @staticmethod
+    def test_validate_minddata_pipeline_condition_1():
         """Test the method exceptions."""
         with pytest.raises(ProfilerParamTypeErrorException) as exc_info:
             validate_minddata_pipeline_condition([])
@@ -33,7 +35,8 @@ class TestMinddataPipelineCondition:
         assert exc_info.value.message == 'Param type error. Invalid condition ' \
                                          'type, it should be dict.'
 
-    def test_validate_minddata_pipeline_condition_2(self):
+    @staticmethod
+    def test_validate_minddata_pipeline_condition_2():
         """Test the method exceptions."""
         condition = {'device_id': 0}
         with pytest.raises(ProfilerDeviceIdException) as exc_info:
@@ -42,7 +45,8 @@ class TestMinddataPipelineCondition:
         assert exc_info.value.message == 'The device_id in search_condition error, ' \
                                          'Invalid device_id type, it should be str.'
 
-    def test_validate_minddata_pipeline_condition_3(self):
+    @staticmethod
+    def test_validate_minddata_pipeline_condition_3():
         """Test the method exceptions."""
         condition = {'group_condition': 0}
         with pytest.raises(ProfilerGroupConditionException) as exc_info:
@@ -73,7 +77,8 @@ class TestMinddataPipelineCondition:
         assert exc_info.value.message == 'The group_condition in search_condition error, ' \
                                          'The limit must be int.'
 
-    def test_validate_minddata_pipeline_condition_4(self):
+    @staticmethod
+    def test_validate_minddata_pipeline_condition_4():
         """Test the method exceptions."""
         condition = {
             'group_condition': {
@@ -108,7 +113,8 @@ class TestMinddataPipelineCondition:
         assert exc_info.value.message == 'The group_condition in search_condition error, ' \
                                          'The offset must le 1000000.'
 
-    def test_validate_minddata_pipeline_condition_5(self):
+    @staticmethod
+    def test_validate_minddata_pipeline_condition_5():
         """Test the method exceptions."""
         condition = {'sort_condition': 0}
         with pytest.raises(ProfilerSortConditionException) as exc_info:
@@ -152,7 +158,8 @@ class TestMinddataPipelineCondition:
         assert exc_info.value.message == 'The sort_condition in search_condition error, ' \
                                          'The sorted type must be ascending or descending.'
 
-    def test_validate_minddata_pipeline_condition_6(self):
+    @staticmethod
+    def test_validate_minddata_pipeline_condition_6():
         """Test the method exceptions."""
         condition = {
             'filter_condition': '0'
@@ -185,7 +192,8 @@ class TestMinddataPipelineCondition:
         assert exc_info.value.message == 'The filter_condition in search_condition error, ' \
                                          'The condition must be bool.'
 
-    def test_validate_minddata_pipeline_condition_7(self):
+    @staticmethod
+    def test_validate_minddata_pipeline_condition_7():
         """Test the method exceptions."""
         condition = {
             'filter_condition': {
@@ -214,7 +222,9 @@ class TestMinddataPipelineCondition:
 
 class TestValidateCondition:
     """Test the function of validate condition."""
-    def test_validate_condition_normal(self):
+
+    @staticmethod
+    def test_validate_condition_normal():
         """Test the validate condition of normal input."""
         op_type_list = ['aicpu_type', 'aicpu_detail', 'aicore_type', 'aicore_detail',
                         'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity']
@@ -238,7 +248,8 @@ class TestValidateCondition:
             }
             validate_condition(condition)
 
-    def test_validate_condition_param_type_error_exception(self):
+    @staticmethod
+    def test_validate_condition_param_type_error_exception():
         """Test the exception of parameter type error."""
         condition = "not a dict"
         exception_message = 'Param type error. Invalid search_condition type, it should be dict.'
@@ -247,19 +258,22 @@ class TestValidateCondition:
         assert exc_info.value.error_code == '50546082'
         assert exc_info.value.message == exception_message
 
-    def test_validate_condition_op_type_exception(self):
+    @staticmethod
+    def test_validate_condition_op_type_exception():
         """Test the exception of profiler operation type."""
         condition_list = [{'op_type': "xxx"}, {}]
         exception_message = "The op_type in search_condition error, The op_type must in " \
-                            "['aicpu_type','aicpu_detail', 'aicore_type', 'aicore_detail', "\
-                            "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity', 'cpu_op_type', 'cpu_op_info']"
+                            "['aicpu_type','aicpu_detail', 'aicore_type', 'aicore_detail', " \
+                            "'gpu_op_type', 'gpu_op_info', 'gpu_cuda_activity', 'cpu_op_type', " \
+                            "'cpu_op_info', 'gpu_op_type_info', 'gpu_cuda_type_info']"
         for condition in condition_list:
             with pytest.raises(ProfilerOpTypeException) as exc_info:
                 validate_condition(condition)
             assert exc_info.value.error_code == '50546183'
             assert exc_info.value.message == exception_message
 
-    def test_validate_condition_group_exception(self):
+    @staticmethod
+    def test_validate_condition_group_exception():
         """Test the exception of group condition related."""
         condition_list = [
             {
