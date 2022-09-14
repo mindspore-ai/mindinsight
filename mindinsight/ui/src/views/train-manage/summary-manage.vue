@@ -435,6 +435,7 @@ export default {
       switch (row.profiler_type) {
         case 'gpu':
           router = '/profiling-gpu';
+          graph_mode = row.hasOwnProperty("graph_mode") ? row.graph_mode : graph_mode;
           break;
         case 'cpu':
           router = '/profiling-cpu';

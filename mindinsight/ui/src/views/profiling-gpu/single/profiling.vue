@@ -325,16 +325,24 @@ export default {
       if (this.tabData.activeName === this.tabData.tabPanes[1].name) {
         path = '/profiling-gpu/single/resource-utilization';
       }
-      this.$router.push({
-        path: path,
-        query: {
-          dir: this.curDashboardInfo.query.dir,
-          id: this.curDashboardInfo.query.id,
-          path: this.curDashboardInfo.query.path,
-          activePane: this.tabData.activeName,
-          cardNum: this.curDashboardInfo.curCardNum,
-        },
-      });
+      let isDynamic = (this.$route.query.graphMode === 'dynamic' ? true : false) // dynamic
+      if(isDynamic){
+        this.$router.push({
+          path: path,
+          query: this.$route.query,
+        })
+      }else {
+        this.$router.push({
+          path: path,
+          query: {
+            dir: this.curDashboardInfo.query.dir,
+            id: this.curDashboardInfo.query.id,
+            path: this.curDashboardInfo.query.path,
+            activePane: this.tabData.activeName,
+            cardNum: this.curDashboardInfo.curCardNum,
+          },
+        });
+      }
     },
     collapseLeft() {
       this.collapse = !this.collapse;
