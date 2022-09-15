@@ -111,7 +111,7 @@ limitations under the License.
         <el-input style="width: 170px;"
                 v-model="searchByStepInput"
                   clearable
-                  :placeholder = "this.$t('profiling.stepInputTip').substring(0,8)"
+                  :placeholder = "this.step.label"
                   @clear="searchOpCoreList"
                   @keyup.enter.native="searchOpCoreList">
         </el-input>
@@ -169,28 +169,28 @@ limitations under the License.
 import echarts, {echartsThemeName} from '@/js/echarts';
 import RequestService from '@/services/request-service';
 import CommonProperty from '@/common/common-property';
+import {isInteger} from '@/js/utils';
 export default {
   props: {
     rankID: String,
     showHelp: Boolean,
   },
-  // watch:{
-  //   showHelp:{
-  //     handler(newValue){
-  //         if (!this.newValue) {
-  //           this.newValue.resize();
-  //         }
-  //     }
-  //   },
-  //   // rankID:{
-  //   //   handler(newValue){
-  //   //   }
-  //   // }
-  // },
-  watch() {
-    if (!this.showHelp) {
-      this.chartObj.resize();
-    }
+  watch:{
+    rankID:{
+      immediate:true,
+      handler(val){
+        if(isInteger(val)){
+          this.initData();
+        }
+      }
+    },
+    showHelp:{
+      handler(newValue){
+          if (!this.newValue) {
+            this.newValue.resize();
+          }
+      }
+    },
   },
   data() {
     return {
@@ -270,33 +270,31 @@ export default {
       deviceId: this.rankID,
       step:{
         max:0,
-        label:this.$t('profiling.stepInputTip')
+        label:this.$t('profiling.stepInput')
       },
       isHeterogeneous:false
     }
   },
   created() {
     Object.getPrototypeOf(this.$options.components).ElSelect.options.methods.handleFocus = (event) => {};
-    this.$nextTick(() => {
-      this.initGpuOperatorShape(this.opAllTypeList,false);
-      this.getTableOperatorList(this.opAllTypeList, false);//init table data
-      window.addEventListener('resize', this.resizeCallback, false);
-      setTimeout(() => {
-        this.$bus.$on('collapse', this.resizeEchart);
-      }, 300)
-    })
   },
   mounted() {
-    this.$nextTick(() => {
-      this.getGpuOperatorShape();
-      // this.getOperatorShape();
-      window.addEventListener('resize', this.resizeCallback, false);
-      setTimeout(() => {
-        this.$bus.$on('collapse', this.resizeEchart);
-      }, 300)
-    })
   },
   methods: {
+    /**
+     *
+     * init  data
+     */
+    initData(){
+      this.$nextTick(() => {
+        this.initGpuOperatorShape(this.opAllTypeList,false);
+        this.getTableOperatorList(this.opAllTypeList, false);//init table data
+        window.addEventListener('resize', this.resizeCallback, false);
+        setTimeout(() => {
+          this.$bus.$on('collapse', this.resizeEchart);
+        }, 300)
+      })
+    },
     coreTableChange(){
       this.onType = this.operatorStatisticType == 0? "gpu_op_type_info" : "gpu_cuda_type_info";
       this.initGpuOperatorShape(this.opAllTypeList,false);
@@ -312,7 +310,6 @@ export default {
       };
       params.body = {
         dir:this.trainInfo.path,
-        device_id: this.rankID,
         device_type: "gpu",
         op_type: this.onType,
         device_id: this.rankID,
@@ -338,7 +335,6 @@ export default {
       };
       params.body= {
         dir:this.trainInfo.path,
-        device_id: this.rankID,
         device_type: "gpu",
         op_type: this.onType,
         device_id:this.rankID,
@@ -387,7 +383,6 @@ export default {
       };
       params.body= {
         dir:this.trainInfo.path,
-        device_id: this.rankID,
         device_type: "gpu",
         op_type: this.onType,
         device_id: this.rankID,
@@ -425,7 +420,7 @@ export default {
                         showSymbol: false,
                       };
                       this.step.max = filter_type[operatorName].length;
-                      console.log("max = " + this.step.max);
+                      this.step.label = this.step.label.replace('{max}', this.step.max);
                       series.push(item);
                       legend.push(item.name);
                       count_num++;
@@ -801,7 +796,7 @@ export default {
 
 .operator-shape-step .operator-shape-select .operator-detail-select {
   border-radius: 10%;
-  width: 22%;
+  width: 35%;
   line-height: 30px;
   height: 30px;
   margin: 0 auto;
@@ -840,7 +835,7 @@ export default {
   display: flex;
   width: calc(100% - 20px);
   margin: 50px 0;
-  height: calc(100% - 200px);
+  height: calc(100% - 150px);
   border: 1px solid var(--border-color);
   flex-grow: 1;
   flex-direction: column;

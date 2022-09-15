@@ -645,7 +645,7 @@
     return axios({
       method: 'post',
       url: 'v1/mindinsight/profile/dynamic-shape-detail',
-      params: params,
+      data: params,
       headers: {
         ignoreError: true,
       }

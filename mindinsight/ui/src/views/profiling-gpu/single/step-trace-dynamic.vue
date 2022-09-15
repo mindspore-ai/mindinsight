@@ -137,8 +137,6 @@ limitations under the License.
           </div>
         </template>
       </div>
-      <!--不行的原因是因为id只能使用一次-->
-      <!--TODO 刷新的时候，传值失败，怎么办-->
       <Operator :rankID="this.deviceID"></Operator>
     </div>
     <div class="image-noData"
@@ -157,7 +155,6 @@ import echarts, {echartsThemeName} from '@/js/echarts';
 import RequestService from '@/services/request-service';
 import CommonProperty from '@/common/common-property';
 import {isInteger} from '@/js/utils';
-// import Operator from '@views/profiling-gpu-single/Operator'
 import Operator from './operator-shape-step'
 export default {
   props: {
@@ -274,7 +271,9 @@ export default {
             val.noData = true;
             val.initOver = false;
           });
+          this.deviceID  = newValue;
           this.init();
+          // drawChart();
         } else {
           if (newValue === '') {
             this.svg.initOver = true;
@@ -283,7 +282,6 @@ export default {
             });
           }
         }
-        console.log("rankID = " + newValue)
       },
       immediate: true,
     },
@@ -349,7 +347,6 @@ export default {
       RequestService.queryDynamicShapeGPU(params).then(
               (res) => {
                 this.isHeterogeneous = res.data.graph_info.is_heterogeneous;
-                console.log(res)
                 this.svg.initOver = true;
                 if (res && res.data && res.data.graph_info.training_trace_graph && res.data.graph_info.training_trace_graph.length) {
                   this.svg.noData = false;
