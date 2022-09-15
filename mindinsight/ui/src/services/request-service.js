@@ -726,17 +726,6 @@
       timeout: 1000 * 240,
     });
   },
-  getScopeMap(params) {
-    return axios({
-      method: "get",
-      url: "/v1/mindinsight/profile/marey-graph/scopemap",
-      params: params,
-      headers: {
-        ignoreError: true,
-      },
-      timeout: 1000 * 240,
-    });
-  },
    // query operator gpu dynamic shape detail
    queryDynamicShapeGPU(params) {
      return axios({

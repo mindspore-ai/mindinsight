@@ -122,22 +122,6 @@ class TestTimelineAnalyser:
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
-    def test_get_scope_map(self):
-        """Test the function of get marey timeline data for UI display."""
-        ascend_file_path = os.path.join(
-            self.marey_data_path,
-            self.ascend_scope_map_filename.format(1)
-        )
-
-        result = self._marey_analyser.get_scope_map("ascend")
-        compare_result_with_file(result, ascend_file_path)
-
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
     def test_timeline_file_not_exist(self):
         """Test the function of get timeline data for UI display."""
         device_id = 1

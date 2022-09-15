@@ -15,13 +15,10 @@
 """The Timeline Processor for Marey's Graph."""
 import os
 import re
-import stat
 import json
 import collections
 from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
-from mindinsight.profiler.common.exceptions.exceptions import ProfilerIOException
-from mindinsight.profiler.common.log import logger as log
 
 
 class TimelineService:
@@ -34,7 +31,6 @@ class TimelineService:
     def __init__(self, path):
         self.__read_data(path)
         self.__align_time()
-        self.scope_map = {}
 
     def get_ops_by_step(self, step):
         """
@@ -103,50 +99,6 @@ class TimelineService:
             ['operator_time_maps', 'min_time', 'max_time', 'stage_data'])
         timeline_data = TimelineData(operator_time_maps, min_time, max_time, stage_data)
         return timeline_data
-
-    def process_scope(self, path):
-        """Process scope map."""
-        if os.path.exists(path + '/scope_map.json'):
-            with open(path + '/scope_map.json', "r", encoding='utf-8') as fp:
-                data = fp.read()
-                self.scope_map = json.loads(data)
-                fp.close()
-            return self.scope_map
-        self.scope_map = {}
-        scopes = self.__get_scopes_by_step("1")  # the scope map of each step is the same
-        ops = self.__get_raw_ops_by_step("1")
-        for device_name, cur_scope_data in scopes.items():
-            scope_by_level = {}
-            for item in cur_scope_data:
-                cur_level = item['scope_level']
-                scope_name = item['name']
-                if cur_level not in scope_by_level:
-                    scope_by_level[cur_level] = {}
-                if scope_name not in scope_by_level.get(cur_level):
-                    scope_by_level.get(cur_level)[scope_name] = []
-                scope_by_level.get(cur_level).get(scope_name).append([item['ts'], item['dur']])
-            for op in ops.get(device_name):   # use binary search to construct namescope for each operator
-                if op['name'] in self.scope_map:
-                    continue
-                scope_str = ""
-                for _, cur_scope_by_level in scope_by_level.items():
-                    cur_scope_str, flag = _find_scope(cur_scope_by_level, op)
-                    if scope_str != "":
-                        scope_str += '/' + cur_scope_str
-                    if not flag:
-                        break
-                self.scope_map[op['name']] = scope_str
-        try:
-            output_path = path + '/scope_map.json'
-            flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-            modes = stat.S_IREAD | stat.S_IWRITE
-            with os.fdopen(os.open(output_path, flags, modes), "w") as fp:
-                json.dump(self.scope_map, fp)
-
-        except (IOError, OSError) as err:
-            log.error('Error occurred when write scope map file: %s', err)
-            raise ProfilerIOException()
-        return self.scope_map
 
     def __read_data(self, path):
         """

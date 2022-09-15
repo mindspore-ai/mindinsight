@@ -136,28 +136,3 @@ def get_timeline():
 
     analyser = AnalyserFactory.instance().get_analyser('timeline', profiler_dir, train_id)
     return jsonify(analyser.get_marey_timeline(step))
-
-
-@BLUEPRINT.route("/profile/marey-graph/scopemap", methods=["GET"])
-def get_scope_map():
-    """Get memory data by train id."""
-
-    train_id = request.args.get('train_id')
-    if train_id is None:
-        logger.info("Invalid train_id parameter of None.")
-        raise ParamValueError("Invalid train_id.")
-
-    device_type = request.args.get("device_type")
-    if device_type not in ['ascend']:
-        logger.info("Invalid device_type, device_type should be gpu or ascend.")
-        raise ParamValueError("Invalid device_type.")
-    profiler_dir = os.path.realpath(os.path.join(settings.SUMMARY_BASE_DIR, train_id, 'profiler'))
-    try:
-        profiler_dir = validate_and_normalize_path(profiler_dir, 'profiler')
-    except ValidationError as exc:
-        raise ProfilerFileNotFoundException('Invalid cluster_profiler dir, detail: %s.' % str(exc))
-
-    check_train_job_and_profiler_dir(profiler_dir)
-
-    analyser = AnalyserFactory.instance().get_analyser('timeline', profiler_dir, train_id)
-    return jsonify(analyser.get_scope_map())

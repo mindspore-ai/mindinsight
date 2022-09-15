@@ -125,8 +125,3 @@ class TimelineAnalyser(BaseAnalyser):
         operator_time_maps, min_time, max_time, stage_data = self.timeline_service.get_ops_by_step(step)
         ret = {"maps": operator_time_maps, "minT": min_time, "maxT": max_time, "stage_data": stage_data}
         return ret
-
-    def get_scope_map(self):
-        scope_map = self.timeline_service.process_scope(self._profiling_dir)
-        ret = {"scope_map": scope_map}
-        return ret
