@@ -136,6 +136,7 @@ class GpuCudaActivityAnalyser(GpuAnalyser):
 
 class GpuDynamicAnalyser(BaseAnalyser):
     """Gpu dynamic shape data analyser."""
+    _filter_type = defaultdict(list)
     _csv_file_to_analyse = 'dynamic_shape_info_{}.json'
 
     def query(self, condition=None):
@@ -157,6 +158,7 @@ class GpuDynamicAnalyser(BaseAnalyser):
         group_condition = condition.get('group_condition')
 
         self._result = []
+        self._filter_type = defaultdict(list)
         self._display_col_names = self._col_names[:]
         self._filter(filter_condition)
         self._size = len(self._result)
@@ -233,13 +235,11 @@ class GpuDynamicAnalyser(BaseAnalyser):
 
 class GpuOpTypeInfoAnalyser(GpuDynamicAnalyser):
     """Gpu Op type info analyser."""
-    _filter_type = defaultdict(list)
     _switch_type = "operator"
     _col_names = ["step", "op_side", "op_type", "op_name", "duration", "op_shape"]
 
 
 class GpuCudaTypeInfoAnalyser(GpuDynamicAnalyser):
     """Gpu Cuda type info analyser."""
-    _filter_type = defaultdict(list)
     _switch_type = "kernel"
     _col_names = ["step", "op_type", "op_name", "op_full_name", "duration", "block_dim", "grid_dim"]
