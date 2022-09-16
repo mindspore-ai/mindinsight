@@ -516,10 +516,8 @@ import {
 import * as d3 from "d3";
 import { layout } from "@/js/profile-graph/force-layout.js";
 import { extractVisNodeAndEdge } from "@/js/profile-graph/graph-process.js";
-import { TreeSelect } from "ant-design-vue";
 import { Canvas } from "@/js/profile-graph/canvas.js";
 import * as _ from "lodash";
-const SHOW_PARENT = TreeSelect.SHOW_PARENT;
 
 export default {
   data() {
