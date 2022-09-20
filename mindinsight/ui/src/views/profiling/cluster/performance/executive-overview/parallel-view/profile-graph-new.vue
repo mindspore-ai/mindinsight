@@ -525,7 +525,6 @@ export default {
       selectNamespaces: [],
       nodeMaps: [],
       treeData: [],
-      SHOW_PARENT,
       nodeBlocks: [],
       nodeOrder: [],
       dependNodes: {},
