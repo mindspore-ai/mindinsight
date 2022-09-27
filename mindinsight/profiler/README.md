@@ -41,4 +41,4 @@ Profiler currently supports Graph mode for Ascend, GPU and Cluster and PyNative 
 
 ## Usage Details
 
-For the usage details of MindSpore Profiler, please refer to <https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling.html>.
+For the usage details of MindSpore Profiler, please refer to <https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.9/performance_profiling.html>.
