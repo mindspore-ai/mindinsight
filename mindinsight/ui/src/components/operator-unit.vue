@@ -993,7 +993,7 @@ export default {
             let legendStr = '';
             for (let i = 0; i < chart.data.length; i++) {
               if (chart.data[i].name === params) {
-                const percent = chart.data[i].percent.toString().substring(0, 4) + '%';
+                const percent = `${map[params].toFixed(2)}%`;
                 const name =
                   chart.data[i].name.length > 10 ? `${chart.data[i].name.slice(0, 10)}...` : chart.data[i].name;
                 legendStr = `{a|${i + 1}}{b|${name}  ${chart.data[i].value.toFixed(2)}}\n{c|${percent}}`;
@@ -1182,7 +1182,7 @@ export default {
                   let legendStr = '';
                   for (let i = 0; i < chart.data.length; i++) {
                     if (chart.data[i].name === params) {
-                      const percent = chart.data[i].percent.toString() + '%';
+                      const percent = `${map[params].toFixed(2)}%`;
                       const name =
                         chart.data[i].name.length > 10 ? `${chart.data[i].name.slice(0, 10)}...` : chart.data[i].name;
                       legendStr = `{a|${i + 1}}{b|${name}  ${chart.data[i].value.toFixed(
