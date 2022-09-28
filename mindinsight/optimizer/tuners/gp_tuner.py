@@ -150,9 +150,14 @@ class GPBaseTuner(BaseTuner):
             if not res.success:
                 continue
 
-            if max_acq is None or -res.fun[0] >= max_acq:
+            if isinstance(res.fun, float):
+                res_fun = -res.fun
+            else:
+                res_fun = -res.fun[0]
+
+            if max_acq is None or res_fun >= max_acq:
                 x_max = match_value_type(x_max, params_info)
-                max_acq = -res.fun[0]
+                max_acq = res_fun
 
         return np.clip(x_max, bounds[:, 0], bounds[:, 1])
 
