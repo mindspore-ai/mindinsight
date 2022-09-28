@@ -21,7 +21,9 @@ limitations under the License.
         <el-tab-pane v-for="tab in tabs"
                      :key="tab"
                      :label="tab"
-                     :name="tab">
+                     :name="tab"
+                     v-if="!(isSingle && (tab === $t('profiling.cluster')))"
+        >
         </el-tab-pane>
       </el-tabs>
       <div class="path"
@@ -42,7 +44,8 @@ limitations under the License.
   </div>
 </template>
 <script>
-export default {
+  import RequestService from '@/services/request-service';
+  export default {
   data() {
     return {
       trainInfo: {
@@ -56,6 +59,7 @@ export default {
         this.$t('profiling.cluster'),
       ],
       left: 0,
+      isSingle:true,
     };
   },
   created() {
@@ -86,6 +90,34 @@ export default {
       this.$router.push({
         path: '/profiling-gpu/' + path,
         query: this.$route.query,
+      });
+    },
+    /**
+     *  init
+     */
+    initProfilerInfo() {
+      return new Promise((resolve) => {
+        const params = {
+          profile: this.trainInfo.dir,
+          train_id: this.trainInfo.id,
+        };
+        RequestService.getProfilerDeviceData(params)
+                .then(
+                        (res) => {
+                          if (Object.keys(res.data).length > 0) {
+                            const rankIDList = res.data.device_list.sort((a, b) => +a - +b);
+                            this.isSingle =  rankIDList.length() > 1 ? false : true;
+                            resolve(true);
+                          } else {
+                            resolve(false);
+                          };
+                        },
+                )
+                .catch(() => {
+                  // this.rankIDList = [];
+                  this.rankID = '';
+                  resolve(false);
+                });
       });
     },
   },
