@@ -140,8 +140,8 @@ class TimelineService:
             minn = float('inf')
             for item in cur_one_step_op:
                 if 'name' in item and 'AllReduce' in item['name']:
-                    if item['dur'] < minn:
-                        minn = item['dur']
+                    if item['ts'] < minn:
+                        minn = item['ts']
                         min_all_reduce = item
             if min_all_reduce == '':
                 continue
@@ -151,7 +151,9 @@ class TimelineService:
                 for item in one_step_op.get(device_name2):
                     if item['name'] == min_all_reduce['name']:
                         visited.add(device_name2)
-                        self.align_info[device_name2] = min_all_reduce['ts'] - item['ts']
+                        min_all_reduce['ed'] = min_all_reduce['ts'] + min_all_reduce['dur']
+                        item['ed'] = item['ts'] + item['dur']
+                        self.align_info[device_name2] = min_all_reduce['ed'] - item['ed']
                         stages.append(device_name2)
                         break
             self.stage_info.append(stages)
