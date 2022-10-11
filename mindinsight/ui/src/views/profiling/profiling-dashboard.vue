@@ -21,7 +21,9 @@ limitations under the License.
         <el-tab-pane v-for="tab in tabs"
                      :key="tab"
                      :label="tab"
-                     :name="tab">
+                     :name="tab"
+                     v-if="!(isSingle && (tab === $t('profiling.cluster')))"
+        >
         </el-tab-pane>
       </el-tabs>
       <div class="path"
@@ -58,6 +60,7 @@ export default {
       ],
       left: 0,
       isPynative: false,
+      isSingle:true,
     };
   },
   created() {
@@ -76,7 +79,7 @@ export default {
       },
       immediate: true
     }
-    
+
   },
   methods: {
     /**
@@ -96,6 +99,7 @@ export default {
                 const mode = res.data.profiler_mode
                 this.rankIDList = res.data.device_list.sort((a, b) => +a - +b);
                 this.rankID = this.rankIDList[0];
+                this.isSingle = this.rankIDList.length > 1 ? false : true;
                 this.isPynative = mode === 'pynative'? true: false;
                 this.$route.query.rankID = this.rankID;
                 this.$route.query.mode = mode;
