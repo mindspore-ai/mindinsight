@@ -31,7 +31,8 @@
     "dark": "深色主题",
     "light": "浅色主题",
     "noOperatorData": "非异构网络暂无数据",
-    "noAICPUOperatorData": "该网络无AICPU算子，暂无数据。"
+    "noAICPUOperatorData": "该网络无AICPU算子，暂无数据。",
+    "noStepStraceData": "迭代轨迹目前仅支持Graph模式单图场景，暂不支持PyNative、异构、多子图等场景。"
   },
   "unit": {
     "KiB": "KiB",
@@ -347,9 +348,6 @@
       ],
       "gpuUrl": [
         "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_gpu.html"
-      ],
-      "pynativeUrl": [
-        "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_ascend_pynative.html"
       ]
     },
     "step_trace-proposer_type_label": {
