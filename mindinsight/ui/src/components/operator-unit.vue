@@ -1395,7 +1395,7 @@ export default {
 }
 .el-radio-group .el-radio-button--small .el-radio-button__inner {
   height: 30px;
-  width: 70px;
+  width: 80px;
   font-size: 14px;
   line-height: 10px;
 }

@@ -64,6 +64,7 @@ limitations under the License.
   },
   created() {
     this.updateTab();
+    this.initProfilerInfo();
   },
   updated() {
     this.updateTab();
@@ -106,7 +107,7 @@ limitations under the License.
                         (res) => {
                           if (Object.keys(res.data).length > 0) {
                             const rankIDList = res.data.device_list.sort((a, b) => +a - +b);
-                            this.isSingle =  rankIDList.length() > 1 ? false : true;
+                            this.isSingle =  rankIDList.length > 1 ? false : true;
                             resolve(true);
                           } else {
                             resolve(false);

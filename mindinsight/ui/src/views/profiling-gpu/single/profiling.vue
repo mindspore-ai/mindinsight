@@ -109,6 +109,8 @@ export default {
           },
         ],
       },
+      isDynamic:this.$route.query.graphMode === 'dynamic' ? true : false,
+      pathQuery:this.$route.query
     };
   },
   watch: {
@@ -325,8 +327,8 @@ export default {
       if (this.tabData.activeName === this.tabData.tabPanes[1].name) {
         path = '/profiling-gpu/single/resource-utilization';
       }
-      let isDynamic = (this.$route.query.graphMode === 'dynamic' ? true : false) // dynamic
-      if(isDynamic){
+      // let isDynamic = (this.$route.query.graphMode === 'dynamic' ? true : false) // dynamic
+      if(this.isDynamic){
         this.$router.push({
           path: path,
           query: this.$route.query,
@@ -355,24 +357,27 @@ export default {
     paneChange(tabItem) {
       if (tabItem && tabItem.name) {
         let path = '';
+        let query = {};
         switch (tabItem.name) {
           case this.tabData.tabPanes[0].name:
             path = '/profiling-gpu/single/profiling-dashboard';
+            query  = this.pathQuery;
             break;
           case this.tabData.tabPanes[1].name:
             path = '/profiling-gpu/single/resource-utilization';
-            break;
-        }
-        if (path) {
-          this.$router.push({
-            path: path,
-            query: {
+            query = {
               dir: this.curDashboardInfo.query.dir,
               id: this.curDashboardInfo.query.id,
               path: this.curDashboardInfo.query.path,
               activePane: this.tabData.activeName,
               cardNum: this.curDashboardInfo.curCardNum,
-            },
+            };
+            break;
+        }
+        if (path) {
+          this.$router.push({
+            path: path,
+            query: query,
           });
         }
       }

@@ -22,7 +22,8 @@ limitations under the License.
           <div class="title">{{ $t('profiling.stepTrace') }}</div>
           <div class="view-detail" v-if="isDynamic">
             <button @click="viewDetail('step-trace-dynamic')"
-                    :class="">{{ $t('profiling.viewDetail') }}
+                    :disabled="svg.noData && svg.data.length === 0"
+                    :class="{disabled:svg.noData && svg.data.length === 0}">{{ $t('profiling.viewDetail') }}
               <i class="el-icon-d-arrow-right"></i></button>
             <!--{disabled:svg.noData && svg.data.length === 0}-->
           </div>
@@ -112,8 +113,8 @@ limitations under the License.
               <img :src="require('@/assets/images/nodata.png')"
                    alt="" />
             </div>
-            <p v-show="!svg.initOver">{{$t("public.dataLoading")}}</p>
-            <p v-show="svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noStepStraceData")}}</p>
+            <p v-show="!isHeterogeneous && !svg.initOver">{{$t("public.dataLoading")}}</p>
+            <p v-show="!isDynamic && svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noStepStraceData")}}</p>
           </div>
         </div>
       </div>
@@ -173,15 +174,7 @@ limitations under the License.
             </el-tooltip>
           </div>
         </div>
-        <div class="image-noData"
-             v-if="svg.noData">
-          <div>
-            <img :src="require('@/assets/images/nodata.png')"
-                 alt="" />
-          </div>
-          <p v-show="!svg.initOver">{{$t("public.dataLoading")}}</p>
-          <p v-show="svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noData")}}</p>
-        </div>
+
         <div v-if="isDynamic" class="operator-shape-option">
           <div class="operator-shape-select">
             <span class="operator-filter-title">{{$t('profiling.operatorFilterTitle')}}</span>
@@ -217,9 +210,20 @@ limitations under the License.
             </el-radio-group>
           </div>
         </div>
-        <div class="operator-shape-detail" >
+        <div v-show="isDynamic" class="operator-shape-detail" >
           <div class="operator-shape-chart" id="operatorShapeDetailChart">
           </div>
+        </div>
+        <div class="image-noData"
+             v-if="svg.noData">
+          <div>
+            <img :src="require('@/assets/images/nodata.png')"
+                 alt="" />
+          </div>
+          <p v-show="isHeterogeneous && !svg.initOver">{{$t("public.dataLoading")}}</p>
+          <!--static，display no isHeterogeneous data-->
+          <p v-show="!isDynamic && svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noData")}}
+          </p>
         </div>
       </div>
       <!-- Process summary display area -->
@@ -733,19 +737,19 @@ export default {
       this.queryTimelineInfo();
       this.initPieChart();
       this.getProccessSummary();
-      this.queryTrainingTrace();
+      // this.queryTrainingTrace();
       if(this.isDynamic){
         this.$nextTick(() => {
           this.initDynamicShape();
           this.initGpuOperatorShape();
           window.addEventListener('resize', this.resizeCallback, false);
+          window.addEventListener('resize', this.resizeEchart, false);
         })
+      }else{
+        this.queryTrainingTrace();
       }
       // initial data
       window.addEventListener('resize', this.resizeTrace, false);
-    },
-    test(){
-
     },
     /**
      * Get the data of process summary
@@ -1051,7 +1055,7 @@ export default {
      * init dynamic shape info by request dynamic shape api
      */
     initDynamicShape(){
-      const params = {}
+      const params = {};
       params.params={
       };
       params.body= {
@@ -1062,18 +1066,17 @@ export default {
         device_id: this.currentCard,
         filter_condition:
                 {
-                  op_type: {partial_match_str_in: ["Add"]},
-                  dispaly_op_type: ["GetNext"],
+                  op_type: {partial_match_str_in: []},
+                  dispaly_op_type: [],
                   step_filter: ["1"],
                 },
-        sort_condition: {name: "duration", type: "descending"},
       };
       RequestService.queryDynamicShapeGPU(params).then(
               (res) => {
                 this.svg.initOver = true;
+                this.svg.noData = false;
                 this.isHeterogeneous = res.data.graph_info.is_heterogeneous;
                 if (res && res.data && res.data.graph_info.training_trace_graph && res.data.graph_info.training_trace_graph.length) {
-                  this.svg.noData = false;
                   this.removeTrace();
                   this.$nextTick(() => {
                     this.packageTraceData(JSON.parse(JSON.stringify(res.data.graph_info.training_trace_graph)));
@@ -1096,7 +1099,7 @@ export default {
                   }
                 } else {
                   this.svg.totalHeight = 0;
-                  this.svg.noData = true;
+                  // this.svg.noData = true;
                   this.svg.data = [];
                   this.svg.initOver = true;
                   this.removeTrace();
@@ -1128,10 +1131,10 @@ export default {
       };
       RequestService.queryTrainingTrace(params).then(
         (res) => {
-          this.svg.initOver = true;
           this.isHeterogeneous = res.data.is_heterogeneous;
           if (res && res.data && res.data.training_trace_graph && res.data.training_trace_graph.length) {
             this.svg.noData = false;
+            this.svg.initOver = true;
             this.removeTrace();
             this.$nextTick(() => {
               this.packageTraceData(JSON.parse(JSON.stringify(res.data.training_trace_graph)));
@@ -1501,8 +1504,8 @@ export default {
      */
     coreTableChange(){
       this.onType = this.operatorStatisticType == 0? "gpu_op_type_info" : "gpu_cuda_type_info";
-      this.initGpuOperatorShape();
-      // this.getTableOperatorList(this.opAllTypeList, false);
+      this.topOperatorValueGPU =[];
+      this.initGpuOperatorShape(); // default 3
     },
     initGpuOperatorShape(){
       const params = {}
@@ -1515,34 +1518,73 @@ export default {
         op_type: this.onType,
         filter_condition:
                 {
-                  // op_type: {partial_match_str_in: ["Add"]},
+                  op_type: {partial_match_str_in: []},
                   step_filter: ["1"],
                 },
       };
       let details = [];//
+      let series = [];
+      let legend = [];
+      let ssChart = [];
       RequestService.queryDynamicShapeGPU(params).then(
               (res) => {
                 if (res && res.data) {
+                  this.svg.noData = false;
+                  this.svg.initOver = true;
                   let data = res.data.dynamic_info;
                   let op_type_arr = data.all_type;
+                  let filter_type = data.filter_type;
                   this.isHeterogeneous = res.data.graph_info.is_heterogeneous;
+                  let cc = Object.keys(filter_type);
                   op_type_arr.forEach((operatorName) => {
                     let content = null;
-                    content ={
-                      name: operatorName,
-                      check: false,
-                      data: [],
-                    };
+                    let sig = false;
+                    if(cc.includes(operatorName)){
+                      sig = true;
+                      content = {
+                        name: operatorName,
+                        check: sig,
+                        data: filter_type[operatorName],
+                      };
+                      const item = {
+                        type: 'line',
+                        name: operatorName,
+                        data: filter_type[operatorName],
+                        smooth: true,
+                        showSymbol: false,
+                      };
+                      series.push(item);
+                      legend.push(item.name);
+                      ssChart.push(operatorName);
+                    }else{
+                      sig = false;
+                      content ={
+                        name: operatorName,
+                        check: sig,
+                        data: [],
+                      }
+                    }
                     details.push(content);
                   });
-                  this.topOperatorArr = details;
-                  let ssChart = [];
-                  this.topOperatorArr.slice(0,3).forEach(
-                          elem => ssChart.push(elem.name)
-                  );
-                  this.topOperatorValueGPU = ssChart;
-                  this.getGpuOperatorShape(); //
                 }
+                this.checkSig = false;
+                this.topOperatorValueGPU = ssChart;  // default 3
+                this.operatorOptions.xAxis.data = series[0].data.map((_v, i) => i + 1);
+                this.operatorOptions.series = series;
+                this.operatorOptions.legend.data = legend;
+                this.topOperatorArr = details;
+                if(this.isHeterogeneous){
+                  this.$nextTick(() => {
+                    if(!this.chartObj)
+                      this.chartObj = echarts.init(document.getElementById('operatorShapeDetailChart'), echartsThemeName);
+                    this.chartObj.setOption(this.operatorOptions, true);
+                  });
+                }
+                this.operatorOptions.tooltip.formatter = (params) => {
+                  return this.formatChartTip(params);
+                };
+                // search
+                this.resizeEchart();
               }
       );
 
@@ -1562,6 +1604,9 @@ export default {
         op_type: this.onType,
         filter_condition:
                 {
+                  op_type:{
+                    "partial_match_str_in": []
+                  },
                   dispaly_op_type: this.topOperatorValueGPU,
                 },
       };
@@ -1572,6 +1617,7 @@ export default {
               (res) => {
                 if (res && res.data) {
                   this.svg.noData = false;
+                  this.svg.initOver = true;
                   let data = res.data.dynamic_info;
                   let op_type_arr = data.all_type;
                   let filter_type = data.filter_type;
@@ -1627,7 +1673,6 @@ export default {
                 this.resizeEchart();
               }
       ).catch(() => {
-        this.svg.noData = true;
       })
     },
     /**
@@ -1646,7 +1691,7 @@ export default {
       }
       if(this.topOperatorValueGPU && this.topOperatorValueGPU.length){ // not null
         this.filterCondition.displayOnType = this.topOperatorValueGPU;
-        this.getGpuOperatorShape(); //调用绘图方法
+        this.getGpuOperatorShape();
       }else {
         this.operatorOptions.series = [];
         this.operatorOptions.legend.data = [];
@@ -2075,7 +2120,7 @@ export default {
   border-radius: 10%;
   width: 42%;
   line-height: 30px;
-  height: 30px;
+  height: 40px;
   margin: 0 auto;
 }
 #operatorShapeDetailChart{
@@ -2098,5 +2143,11 @@ export default {
 }
 .operator-type-select{
   padding-left: 40px;
+}
+.el-radio-group .el-radio-button--small .el-radio-button__inner {
+  height: 30px;
+  width: 80px;
+  font-size: 14px;
+  line-height: 10px;
 }
 </style>

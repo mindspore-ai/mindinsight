@@ -180,7 +180,13 @@ export default {
       immediate:true,
       handler(val){
         if(isInteger(val)){
+          this.svg.initOver = false;// display  Data Loading
           this.initData();
+        }else{
+          if (val === '') {
+            this.svg.noData = true;
+            this.svg.initOver = true; // display no Data
+          }
         }
       }
     },
@@ -279,6 +285,12 @@ export default {
     Object.getPrototypeOf(this.$options.components).ElSelect.options.methods.handleFocus = (event) => {};
   },
   mounted() {
+    window.addEventListener('resize', this.resizeEchart, false);
+    setTimeout(() => {
+      this.$bus.$on('collapse', () => {
+        this.resizeEchart();
+      });
+    }, 500);
   },
   methods: {
     /**
@@ -297,6 +309,7 @@ export default {
     },
     coreTableChange(){
       this.onType = this.operatorStatisticType == 0? "gpu_op_type_info" : "gpu_cuda_type_info";
+      this.topOperatorValueGPU =[];
       this.initGpuOperatorShape(this.opAllTypeList,false);
       this.getTableOperatorList(this.opAllTypeList, false);
     },
@@ -347,6 +360,7 @@ export default {
       RequestService.queryDynamicShapeGPU(params).then(
               (res) => {
                 if (res && res.data) {
+                  this.svg.noData = false;
                   let data = res.data.dynamic_info; // Timeline and tabular data
                   let op_type_arr = data.all_type; //operator type
                   this.isHeterogeneous = res.data.graph_info.is_heterogeneous;
@@ -366,6 +380,7 @@ export default {
                   this.topOperatorArr.slice(0,3).forEach(
                           elem => ssChart.push(elem.name)
                   );
+                  this.checkSig = false;
                   this.topOperatorValueGPU = ssChart;
                   this.getGpuOperatorShape(this.opAllTypeList, false);
                 }
@@ -398,6 +413,7 @@ export default {
               (res) => {
                 if (res && res.data) {
                   this.svg.noData = false;
+                  this.svg.initOver = false;
                   let data = res.data.dynamic_info;
                   let op_type_arr = data.all_type;
                   let filter_type = data.filter_type;
@@ -452,7 +468,6 @@ export default {
                 this.resizeEchart();
               }
       ).catch(() => {
-        this.svg.noData = true;
       })
     },
     /**
@@ -553,7 +568,6 @@ export default {
           })
         }
       ).catch(() => {
-        this.svg.noData = true;
       })
     },
 
@@ -798,7 +812,7 @@ export default {
   border-radius: 10%;
   width: 35%;
   line-height: 30px;
-  height: 30px;
+  height: 40px;
   margin: 0 auto;
 }
 
