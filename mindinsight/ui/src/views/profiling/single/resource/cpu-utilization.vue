@@ -760,9 +760,7 @@ export default {
       const option = deviceCpuChart.option;
       option.series = series;
       option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;
-      if (this.cpuInfo.stepArray.length) {
-        option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map((_v, i) => i + 1);
-      }
+      option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map((_v, i) => i + 1);
       option.legend.data = legend;
       option.tooltip.formatter = (params) => {
         return this.formatCpuChartTip(params, this.cpuInfo.stepArray);
@@ -877,9 +875,7 @@ export default {
           const option = operatorCpuChart.option;
           option.series = series;
           option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;
-          if (this.cpuInfo.stepArray.length) {
-            option.xAxis.data = currentOpInfo[Object.keys(currentOpInfo)[0]].metrics.map((_v, i) => i + 1);
-          }
+          option.xAxis.data = currentOpInfo[Object.keys(currentOpInfo)[0]].metrics.map((_v, i) => i + 1);
           option.legend.data = legend;
           option.tooltip.formatter = (params) => {
             return this.formatCpuChartTip(params, this.cpuInfo.stepArray);
