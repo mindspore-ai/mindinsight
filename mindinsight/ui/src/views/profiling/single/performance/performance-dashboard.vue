@@ -73,7 +73,7 @@ limitations under the License.
                alt="" />
         </div>
         <p v-show="!svg.initOver">{{$t("public.dataLoading")}}</p>
-        <p v-show="svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noData")}}</p>
+        <p v-show="svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noStepStraceData")}}</p>
       </div>
       <!-- Step trace SVG container -->
       <div class="item-content step-trace"
