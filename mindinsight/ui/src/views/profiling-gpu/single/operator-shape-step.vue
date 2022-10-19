@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div class="operator-shape-step">
+  <div class="operator-shape-step-dynamic">
     <div class="shape-step">
       <span class="shape-step-title">
         {{$t('profiling.operatorShapeDetail')}}
@@ -133,7 +133,7 @@ limitations under the License.
                 stripe
                 tooltip-effect="light"
                 border style="width: calc(100% - 20px)"
-                :height=" isHeterogeneous ? 'calc(80% - 80px)' :'calc(100% - 80px)' "
+                :height=" isHeterogeneous ? 'calc(100% - 80px)' :'calc(100% - 80px)' "
                 @sort-change="(...args)=>{coreDetailSortChange(opAllTypeList, ...args)}"
                 default-expand-all >
         <el-table-column v-if="onType === 'gpu_op_type_info'" v-for="(item,$index) in opAllTypeList.opDetailCol"
@@ -460,7 +460,7 @@ export default {
                 if(!this.chartObj)
                     this.chartObj = echarts.init(document.getElementById('operatorShapeDetailChart'), echartsThemeName);
                 this.operatorOptions.tooltip.formatter = (params) => {
-                  return this.formatChartTip(params);
+                   return this.formatChartTip(params);
                 };
                 this.$nextTick(() => {
                   this.chartObj.setOption(this.operatorOptions, true);
@@ -677,7 +677,7 @@ export default {
       if (this.chartObj) {
         setTimeout(() => {
           this.chartObj.resize();
-        }, 100);
+        }, 400);
       }
     },
 
@@ -786,29 +786,29 @@ export default {
 
 }
 </script>
-<style>
-.operator-shape-step {
+<style >
+.operator-shape-step-dynamic {
   width: 100%;
   height: 100%;
 }
 
-.operator-shape-step .shape-step {
+.operator-shape-step-dynamic .shape-step {
   margin: 20px 0;
 }
 
-.operator-shape-step .operator-shape-option {
+.operator-shape-step-dynamic .operator-shape-option {
   line-height: 25px;
   height: 25px;
   margin: 0 auto;
   text-align: center;
 }
 
-.operator-shape-step .operator-shape-option .operator-filter-title {
+.operator-shape-step-dynamic .operator-shape-option .operator-filter-title {
   color: #00A5A7;
   margin: 0 10px;
 }
 
-.operator-shape-step .operator-shape-select .operator-detail-select {
+.operator-shape-step-dynamic .operator-shape-select .operator-detail-select {
   border-radius: 10%;
   width: 35%;
   line-height: 30px;
@@ -816,7 +816,7 @@ export default {
   margin: 0 auto;
 }
 
-.operator-shape-step .shape-step .shape-step-title {
+.operator-shape-step-dynamic .shape-step .shape-step-title {
   height: 40px;
   line-height: 40px;
   font-size: 16px;
@@ -824,28 +824,28 @@ export default {
   display: flex;
 }
 
-.operator-shape-step .shape-step .shape-step-title .el-icon-info {
+.operator-shape-step-dynamic .shape-step .shape-step-title .el-icon-info {
   line-height: 40px;
   margin: 0 5px;
 }
 
-.operator-shape-step .shape-step .item {
+.operator-shape-step-dynamic .shape-step .item {
   margin-right: 10px;
   font-size: 20px;
   color: #6c7280;
   cursor: pointer;
 }
 
-.operator-shape-step .shape-step .el-input {
+.operator-shape-step-dynamic .shape-step .el-input {
   width: 30%;
   margin: 0 50px;
 }
 
-.operator-shape-step .shape-step .shape-step-right {
+.operator-shape-step-dynamic .shape-step .shape-step-right {
   margin-left: 35px;
 }
 
-.operator-shape-step .operator-shape-detail {
+.operator-shape-step-dynamic .operator-shape-detail {
   display: flex;
   width: calc(100% - 20px);
   margin: 50px 0;
@@ -863,7 +863,7 @@ export default {
   margin: 0 auto;
 }
 
-.operator-shape-step .operator-shape-title {
+.operator-shape-step-dynamic .operator-shape-title {
   height: 20px;
   font-size: 15px;
   font-weight: bold;
@@ -878,14 +878,14 @@ display: inline-block;
   height: 10px;
 }
 
-.operator-shape-step .operator-shape-dialog .el-dialog {
+.operator-shape-step-dynamic .operator-shape-dialog .el-dialog {
   position: relative;
   top: 14%;
   height: 42%;
   overflow-y: hidden;
 }
 
-.operator-shape-step .image-noData {
+.operator-shape-step-dynamic .image-noData {
   width: 100%;
   height: calc(100% - 10px);
   display: flex;
@@ -894,7 +894,7 @@ display: inline-block;
   flex-direction: column;
 }
 
-.operator-shape-step .image-noData p {
+.operator-shape-step-dynamic .image-noData p {
   font-size: 16px;
   padding-top: 10px;
   text-align: center;
@@ -911,4 +911,9 @@ display: inline-block;
 .operator-type-select {
   padding-left: 40px;
 }
+.el-pagination {
+  margin: 7px 0;
+  float: right;
+}
+
 </style>

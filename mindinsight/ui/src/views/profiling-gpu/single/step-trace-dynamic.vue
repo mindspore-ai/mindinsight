@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <template>
-  <div class="step-trace">
+  <div class="step-trace-dynamic">
     <div :class="[`profiling-content-title${isGPU ? '-gpu' : ''}`, 'step-trace-title']" v-show="!isHeterogeneous">
       {{$t('profiling.stepTraceDetail')}}
       <el-tooltip class="item"
@@ -489,7 +489,7 @@ export default {
                     },
                   },
                   grid: {
-                    left: 50,
+                    left: 60,
                     top: 50,
                     right: 50,
                     bottom: 50,
@@ -981,65 +981,65 @@ export default {
     this.$bus.$off('collapse');
   },
 };
-</script>
+</script >
 <style>
-.step-trace {
+.step-trace-dynamic {
   width: 100%;
   height: 100%;
 }
-.step-trace .step-trace-title {
+.step-trace-dynamic .step-trace-title {
   height: 32px;
 }
-.step-trace .step-trace-title .el-icon-question {
+.step-trace-dynamic .step-trace-title .el-icon-question {
   cursor: pointer;
 }
-.step-trace .step-trace-title .pf-content-right {
+.step-trace-dynamic .step-trace-title .pf-content-right {
   display: inline-block;
   margin-left: 35px;
 }
-.step-trace .step-trace-title .pf-content-right .input-wrap {
+.step-trace-dynamic .step-trace-title .pf-content-right .input-wrap {
   font-weight: normal;
 }
-.step-trace .step-trace-title .pf-content-right .input-wrap label {
+.step-trace-dynamic .step-trace-title .pf-content-right .input-wrap label {
   margin-right: 20px;
 }
-.step-trace .step-trace-title .pf-content-right .input-wrap .el-input {
+.step-trace-dynamic .step-trace-title .pf-content-right .input-wrap .el-input {
   width: 150px;
   margin-right: 16px;
 }
-.step-trace .step-trace-title .el-button {
+.step-trace-dynamic .step-trace-title .el-button {
   border: 1px solid var(--theme-color);
   border-radius: 2px;
   background-color: var(--bg-color);
   color: var(--theme-color);
   padding: 7px 15px;
 }
-.step-trace .step-trace-title .el-button:hover {
+.step-trace-dynamic .step-trace-title .el-button:hover {
   background: var(--button-hover-color);
 }
-.step-trace .step-trace-title .show-average {
+.step-trace-dynamic .step-trace-title .show-average {
   position: absolute;
   right: 36px;
 }
-.step-trace .step-message {
+.step-trace-dynamic .step-message {
   height: calc(10% + 10px);
   line-height: 16px;
   margin-top: 8px;
   overflow-y: auto;
 }
-.step-trace .step-padding-right {
+.step-trace-dynamic .step-padding-right {
   padding-right: 20px;
   display: inline-block;
 }
-.step-trace .step-left-padding-right {
+.step-trace-dynamic .step-left-padding-right {
   padding-right: 30px;
   display: inline-block;
 }
-.step-trace .font-weight-style {
+.step-trace-dynamic .font-weight-style {
   font-weight: bold;
 }
-.step-trace .pf-content-middle {
-  display: grid;
+.step-trace-dynamic .pf-content-middle {
+  /*display: grid;*/
   /* grid-template-rows: repeat(2, calc(50% - 10px)); */
   /*grid-template-rows: 40% calc(50% - 10px);*/
   grid-template-rows: 40% calc(50% - 10px) 80% calc(50% - 10px) 42px;
@@ -1048,35 +1048,38 @@ export default {
   height: calc(100% - 72px);
   overflow: auto;
 }
-.step-trace .pf-content-middle-heterogeneous {
-  display: grid;
-  grid-template-rows: 100%;
-  gap: 20px;
+.step-trace-dynamic .pf-content-middle-heterogeneous {
+  display: block;
+  /*grid-template-rows: 100%;*/
+  /*gap: 20px;*/
   padding-top: 10px;
   height: calc(100%);
   overflow: auto;
 }
-.step-trace .pf-content-middle-heterogeneous #trace-container {
+.step-trace-dynamic .pf-content-middle-heterogeneous #trace-container {
   width: 100%;
+  min-height: 50%;
   height: 100%;
+  margin-bottom: 20px;
   border: 1px solid var(--border-color);
   overflow: auto;
 }
-.step-trace .pf-content-middle #trace-container {
+.step-trace-dynamic .pf-content-middle #trace-container {
   width: 100%;
-  height: 100%;
+  min-height: 50%;
+  margin-bottom: 20px;
   border: 1px solid var(--border-color);
   overflow: auto;
 }
-.step-trace .pf-content-middle #trace-container .training-trace {
+.step-trace-dynamic .pf-content-middle #trace-container .training-trace {
   position: relative;
   height: 0;
 }
-.step-trace .pf-content-middle-heterogeneous #trace-container .training-trace {
+.step-trace-dynamic .pf-content-middle-heterogeneous #trace-container .training-trace {
   position: relative;
   height: 0;
 }
-.step-trace .pf-content-middle #trace-container .training-trace .content {
+.step-trace-dynamic .pf-content-middle #trace-container .training-trace .content {
   overflow: hidden;
   text-align: center;
   text-overflow: ellipsis;
@@ -1084,7 +1087,7 @@ export default {
   font-size: 12px;
   line-height: 40px;
 }
-.step-trace .pf-content-middle-heterogeneous #trace-container .training-trace .content {
+.step-trace-dynamic .pf-content-middle-heterogeneous #trace-container .training-trace .content {
   overflow: hidden;
   text-align: center;
   text-overflow: ellipsis;
@@ -1092,27 +1095,20 @@ export default {
   font-size: 12px;
   line-height: 40px;
 }
-.step-trace .pf-content-middle #trace-container .training-trace .content-mini {
+.step-trace-dynamic .pf-content-middle #trace-container .training-trace .content-mini {
   overflow: visible;
 }
-.step-trace .pf-content-middle-heterogeneous #trace-container .training-trace .content-mini {
+.step-trace-dynamic .pf-content-middle-heterogeneous #trace-container .training-trace .content-mini {
   overflow: visible;
 }
-.step-trace .chart-container {
+.step-trace-dynamic .chart-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 15px;
-  height: 100%;
+  height:60%;
+  margin-bottom: 20px;
 }
-.step-trace .pf-content-middle .chart-wrap {
-  height: 100%;
-  width: 100%;
-  border: 1px solid var(--border-color);
-  padding-top: 20px;
-  border-radius: 1px;
-  overflow: auto;
-}
-.step-trace .pf-content-middle-heterogeneous .chart-wrap {
+.step-trace-dynamic .pf-content-middle .chart-wrap {
   height: 100%;
   width: 100%;
   border: 1px solid var(--border-color);
@@ -1120,61 +1116,69 @@ export default {
   border-radius: 1px;
   overflow: auto;
 }
-.step-trace .pf-content-middle .chart-wrap .chart {
+.step-trace-dynamic .pf-content-middle-heterogeneous .chart-wrap {
+  height: 100%;
+  width: 100%;
+  border: 1px solid var(--border-color);
+  padding-top: 20px;
+  border-radius: 1px;
+  overflow: auto;
+}
+.step-trace-dynamic .pf-content-middle .chart-wrap .chart {
   height: calc(100% - 110px);
   min-height: 180px;
   min-width: 250px;
   overflow: hidden;
 }
-.step-trace .pf-content-middle-heterogeneous .chart-wrap .chart {
+.step-trace-dynamic .pf-content-middle-heterogeneous .chart-wrap .chart {
   height: calc(100% - 110px);
   min-height: 180px;
   min-width: 250px;
   overflow: hidden;
 }
-.step-trace .pf-content-middle .chart-wrap .title {
+.step-trace-dynamic .pf-content-middle .chart-wrap .title {
   margin: 0 0 15px 20px;
   font-weight: bold;
   font-size: 16px;
 }
-.step-trace .pf-content-middle-heterogeneous .chart-wrap .title {
+.step-trace-dynamic .pf-content-middle-heterogeneous .chart-wrap .title {
   margin: 0 0 15px 20px;
   font-weight: bold;
   font-size: 16px;
 }
-.step-trace .pf-content-middle .chart-wrap .rate-wrap {
+.step-trace-dynamic .pf-content-middle .chart-wrap .rate-wrap {
   font-size: 12px;
   padding-left: 20px;
 }
-.step-trace .pf-content-middle-heterogeneous .chart-wrap .rate-wrap {
+.step-trace-dynamic .pf-content-middle-heterogeneous .chart-wrap .rate-wrap {
   font-size: 12px;
   padding-left: 20px;
 }
-.step-trace .pf-content-middle .chart-wrap .rate-wrap > div {
+.step-trace-dynamic .pf-content-middle .chart-wrap .rate-wrap > div {
   display: inline-block;
   margin: 0 15px 5px 0;
   color: var(--step-trace-chart-text-color);
 }
-.step-trace .pf-content-middle-heterogeneous .chart-wrap .rate-wrap > div {
+.step-trace-dynamic .pf-content-middle-heterogeneous .chart-wrap .rate-wrap > div {
   display: inline-block;
   margin: 0 15px 5px 0;
   color: var(--step-trace-chart-text-color);
 }
-.step-trace .pf-content-middle .chart-wrap .rate-wrap > div span {
+.step-trace-dynamic .pf-content-middle .chart-wrap .rate-wrap > div span {
   margin-right: 10px;
   color: var(--step-trace-chart-label-color);
 }
-.step-trace .pf-content-middle-heterogeneous .chart-wrap .rate-wrap > div span {
+.step-trace-dynamic .pf-content-middle-heterogeneous .chart-wrap .rate-wrap > div span {
   margin-right: 10px;
   color: var(--step-trace-chart-label-color);
 }
-.step-trace .pf-content-middle .chart-wrap.chart-show {
+.step-trace-dynamic .pf-content-middle .chart-wrap.chart-show {
   width: calc(50% - 7.5px);
 }
-.step-trace .pf-content-middle-heterogeneous .chart-wrap.chart-show {
+.step-trace-dynamic .pf-content-middle-heterogeneous .chart-wrap.chart-show {
   width: calc(50% - 7.5px);
 }
-.step-trace .image-noData {
+.step-trace-dynamic .image-noData {
   width: 100%;
   height: calc(100% - 52px);
   display: flex;
@@ -1182,14 +1186,14 @@ export default {
   align-items: center;
   flex-direction: column;
 }
-.step-trace .image-noData p {
+.step-trace-dynamic .image-noData p {
   font-size: 16px;
   padding-top: 10px;
 }
-.step-trace .image-noData.svg {
+.step-trace-dynamic .image-noData.svg {
   height: 100%;
 }
-.step-trace .el-icon-info {
+.step-trace-dynamic .el-icon-info {
   font-size: 18px;
   color: #6c7280;
 }
