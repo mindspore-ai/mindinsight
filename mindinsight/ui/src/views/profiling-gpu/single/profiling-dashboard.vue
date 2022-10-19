@@ -693,6 +693,8 @@ export default {
   mounted() {
     setTimeout(() => {
       this.$bus.$on('collapse', this.resizeTrace);
+      this.$bus.$on('collapse', this.resizeEchart);
+
     }, 500);
   },
   watch: {
@@ -750,6 +752,7 @@ export default {
       }
       // initial data
       window.addEventListener('resize', this.resizeTrace, false);
+      window.addEventListener('resize', this.resizeEchart, false);
     },
     /**
      * Get the data of process summary
@@ -1751,7 +1754,7 @@ export default {
       if (this.chartObj) {
         setTimeout(() => {
           this.chartObj.resize();
-        }, 100);
+        }, 200);
       }
     },
     /**
