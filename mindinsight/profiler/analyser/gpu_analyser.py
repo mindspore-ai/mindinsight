@@ -196,17 +196,19 @@ class GpuDynamicAnalyser(BaseAnalyser):
         def _inner_filter(item: list):
             return self._default_filter(item, filter_condition)
 
-        step_filter = filter_condition.get("step_filter", ["1"])[0]
-        for item in self._data.get(self._switch_type).get(step_filter):
-            op_info = list(item.values())
-            self._result.append(op_info)
+        step = filter_condition.get("step_filter", ["1"])[0]
+        step_info = self._data.get(self._switch_type, {}).get(step)
+        if not step_info:
+            return
+        for item in step_info:
+            self._result.append(list(item.values()))
         self._result = list(filter(_inner_filter, self._result))
 
         if self._switch_type == default_type:
             operator_data = self._data.get("operator_type")
         else:
             operator_data = self._data.get("kernel_type")
-        self._all_type = list(operator_data[step_filter].keys())
+        self._all_type = list(operator_data[step].keys())
 
         if len(self._all_type) > limit:
             dispaly_op_type = filter_condition.get("dispaly_op_type", self._all_type[:limit])
