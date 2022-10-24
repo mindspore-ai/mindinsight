@@ -319,7 +319,7 @@
   },
   "profiling": {
     "rankID": "逻辑卡号",
-    "singleHost": "单机",
+    "singleHost": "单卡",
     "cluster": "集群",
     "titleText": "性能分析 - 单机",
     "profilingDashboard": "性能看板",

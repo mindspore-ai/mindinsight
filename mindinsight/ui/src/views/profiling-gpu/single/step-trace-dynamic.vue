@@ -981,7 +981,7 @@ export default {
     this.$bus.$off('collapse');
   },
 };
-</script >
+</script>
 <style>
 .step-trace-dynamic {
   width: 100%;
@@ -1039,19 +1039,12 @@ export default {
   font-weight: bold;
 }
 .step-trace-dynamic .pf-content-middle {
-  /*display: grid;*/
-  /* grid-template-rows: repeat(2, calc(50% - 10px)); */
-  /*grid-template-rows: 40% calc(50% - 10px);*/
-  grid-template-rows: 40% calc(50% - 10px) 80% calc(50% - 10px) 42px;
-  gap: 20px;
   padding-top: 10px;
   height: calc(100% - 72px);
   overflow: auto;
 }
 .step-trace-dynamic .pf-content-middle-heterogeneous {
   display: block;
-  /*grid-template-rows: 100%;*/
-  /*gap: 20px;*/
   padding-top: 10px;
   height: calc(100%);
   overflow: auto;

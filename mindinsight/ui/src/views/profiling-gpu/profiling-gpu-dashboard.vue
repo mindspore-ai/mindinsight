@@ -60,6 +60,9 @@ limitations under the License.
       ],
       left: 0,
       isSingle:true,
+      tabsSingle:[
+        this.$t('profiling.singleHost'),
+      ]
     };
   },
   created() {
@@ -71,9 +74,31 @@ limitations under the License.
   },
   mounted() {
     let length = 0;
-    this.tabs.forEach((t) => length += t.length);
-    // 10(px of en-us char), 20(px of zh-cn char), 40(padding) used to calculate the position of path label
-    this.left = length * (this.$store.state.language === 'en-us' ? 10 : 20) + 40;
+    if(this.isSingle){
+      this.tabsSingle.forEach((t) => length += t.length);
+      this.left = length * (this.$store.state.language === 'en-us' ? 10 : 20) + 10;
+    }else {
+      this.tabs.forEach((t) => length += t.length);
+      // 10(px of en-us char), 20(px of zh-cn char), 40(padding) used to calculate the position of path label
+      this.left = length * (this.$store.state.language === 'en-us' ? 10 : 20) + 40;
+    }
+  },
+  watch:{
+    isSingle:{
+      handler(newValue,oldValue){
+        if(newValue != oldValue){
+          let length = 0;
+          if(this.isSingle){
+            this.tabsSingle.forEach((t) => length += t.length);
+            this.left = length * (this.$store.state.language === 'en-us' ? 10 : 20) + 10;
+          }else{
+            this.tabs.forEach((t) => length += t.length);
+            // 10(px of en-us char), 20(px of zh-cn char), 40(padding) used to calculate the position of path label
+            this.left = length * (this.$store.state.language === 'en-us' ? 10 : 20) + 40;
+          }
+        }
+      }
+    }
   },
   methods: {
     /**
@@ -115,7 +140,6 @@ limitations under the License.
                         },
                 )
                 .catch(() => {
-                  // this.rankIDList = [];
                   this.rankID = '';
                   resolve(false);
                 });
