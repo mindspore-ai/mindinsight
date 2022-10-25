@@ -581,9 +581,10 @@ export default {
         const index = params[0].dataIndex + 1;
         tipInnerHTML.push(`step: ${index}`);
         params.forEach((item, idx) => {
-          tipInnerHTML.push(
-            `<span class="define-chart-tip" style="background-color:${colorArray[idx]};"></span>` +
-            `${item.seriesName}: <span style="margin: 0 6px;">${item.data}</span>`
+        tipInnerHTML.push(
+                `<div class="formatter-shape" >
+               <span class="formatter-image" style="background-color:${colorArray[idx]};"></span>
+               <span  class="formatter-text">${item.seriesName}&nbsp;:&nbsp;${item.data}</span></div> `
           );
         });
       }
@@ -914,5 +915,29 @@ display: inline-block;
   margin: 7px 0;
   float: right;
 }
-
+.formatter-shape {
+  position: relative;
+  display:inline-block;
+  padding:0px;
+  margin:0px;
+}
+.formatter-shape .formatter-image{
+  display: inline-block;
+  position: absolute;
+  top: 5px;
+  margin-right: 5px;
+  width: 10px;
+  height: 10px;
+}
+.formatter-shape .formatter-text{
+  display:inline-block;
+  width:100%;
+  padding-left: 10px;
+  overflow-wrap:break-word;
+  white-space: normal;
+  word-wrap: break-word;
+  font-size:14px;
+  font-weight:400;
+  margin-left:2px;
+}
 </style>

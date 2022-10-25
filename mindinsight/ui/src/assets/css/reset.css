@@ -157,9 +157,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
   color: var(--font-color);
   box-sizing: border-box;
+  overflow: hidden;
 }
 
-/* 
+/*
  * Defines the width of the scroll bar and the width of the background, respectively corresponding to the dimensions of the horizontal and vertical scroll bars.
  */
 ::-webkit-scrollbar {
