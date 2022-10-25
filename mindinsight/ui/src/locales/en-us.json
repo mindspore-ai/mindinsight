@@ -320,7 +320,7 @@
   },
   "profiling": {
     "rankID": "Rank ID",
-    "singleHost": "SingleHost",
+    "singleHost": "SingleCard",
     "cluster": "Cluster",
     "titleText": "Profiling - Single-host",
     "profilingDashboard": "Profiling Dashboard",

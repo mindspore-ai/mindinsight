@@ -2133,16 +2133,16 @@ export default {
   min-height: 200px;
   min-width: 120px
 }
+.define-chart-tip {
+  display: inline-block;
+  margin-right: 5px;
+  width: 10px;
+  height: 10px;
+}
 .operator-shape-detail{
-  /*display: flex;*/
   width: calc(100% - 20px);
   margin: 50px 0;
   height: calc(100% - 130px);
-  /*border: 1px solid var(--border-color);*/
-  /*flex-grow: 1;*/
-  /*flex-direction: column;*/
-  /*overflow-x: auto;*/
-  /*overflow-y: auto;*/
 }
 .operator-type-select{
   padding-left: 40px;

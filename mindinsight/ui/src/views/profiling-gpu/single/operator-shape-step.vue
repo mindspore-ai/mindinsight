@@ -104,7 +104,6 @@ limitations under the License.
         </el-table>
       </el-dialog>
     </div>
-
     <div style="height: 100%">
       <div class="cl-search-box">
         <label>Steps:</label>
