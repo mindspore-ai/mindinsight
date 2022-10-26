@@ -269,6 +269,8 @@ export default {
   display: flex;
   color: #fff;
   flex-shrink: 0;
+  position: relative;
+  z-index: 99999;
 }
 .cl-header .md-header-theme {
   width: 100px;
