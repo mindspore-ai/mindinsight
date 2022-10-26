@@ -270,7 +270,7 @@ export default {
   color: #fff;
   flex-shrink: 0;
   position: relative;
-  z-index: 99999;
+  z-index: 1000;
 }
 .cl-header .md-header-theme {
   width: 100px;

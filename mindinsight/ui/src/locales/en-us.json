@@ -606,6 +606,7 @@
     "flopsScopeTipThree": "Selected: Click to select a scope node, and its associated parent and child nodes will be highlighted for a long time, and click again to cancel the highlighting.",
     "operatorShapeStep": "Operator time-consuming (by iteration)",
     "opeatorFeatures": "The operator time-consuming (by iteration) shows the time-consuming of different types of operators under the specified step. You can select different types of operators to display through the filter box.",
+    "gpuOpeatorFeatures": "The operator time consumption (by iteration) analysis component displays the execution time of each type of operator in different iterations, so as to quickly understand the detailed time consumption of each type of operator in each iteration.",
     "operatorSelectTitle": "Filter the specified operator type:",
     "timeConsume": "time consuming",
     "operatorShapeDetail": "Operator time-consuming details (by iteration)",
