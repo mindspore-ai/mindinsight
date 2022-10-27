@@ -2,6 +2,35 @@
 
 [查看中文](./RELEASE_CN.md)
 
+## MindInsight 1.9.0 Release Notes
+
+### Major Features and Improvements
+
+#### Profiling
+
+- [BETA] Parallel Training Execution Analysis (Ascend)
+- [BETA] Msadvisor function integration into Mindspore / MindStudio (Ascend)
+
+#### Summary
+
+- [STABLE] Automatic identification of precision reduction operator,In Ascend scenario, some operators only support float16 with the highest accuracy, which will cause the accuracy of this type of operator to automatically decline. This function is used to help users identify this type of precision reducing operator.
+
+### API Change
+
+#### Backwards Compatible Change
+
+##### Python API
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Kai Wen, Yue Wang, Ximiao Yu, Ning Ma, Haitao Yang, Han Gao, Chuting Liu, Jiaxing Zhu, Qingxiang Zang.
+
+Special thanks to Zhongwei Wang, Rongchen Zhu, Jiaying Lu, Zhiyong Wang, Yating Wei, Yong Dai, Luoxuan Weng, etc., from State Key Lab of CAD&CG, Zhejiang University led by Prof. Wei Chen, for their contributions of innovative frontend and interaction technology to support parallel training execution analysis module, collective communication analysis module, etc.
+
+Contributions of any kind are welcome!
+
 ## MindInsight 1.8.0 Release Notes
 
 ### Major Features and Improvements
