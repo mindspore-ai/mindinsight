@@ -1190,4 +1190,7 @@ export default {
   font-size: 18px;
   color: #6c7280;
 }
+.el-select-dropdown {
+  z-index: 999 !important;
+}
 </style>

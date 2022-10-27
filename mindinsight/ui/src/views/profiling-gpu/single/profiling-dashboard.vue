@@ -142,32 +142,7 @@ limitations under the License.
                    class="tooltip-container">
                 <div class="pro-dash-tooltip">
                   <div class="font-size-style">{{$t("profiling.features")}}</div>
-                  <div>{{$t('profiling.iterationInfo')}}</div>
-                  <div>
-                    <span class="font-style">{{$t('profiling.queueInfo')}}&nbsp;</span>
-                    <span>{{$t('profiling.iterationGapInfo')}}</span>
-                  </div>
-                  <div>
-                    <span class="font-style">{{$t('profiling.fpbpTitle')}}&nbsp;</span>
-                    <span>{{$t('profiling.fpbpInfo')}}</span>
-                  </div>
-                  <div>
-                    <span class="font-style">{{$t('profiling.iterativeTailingTitle')}}&nbsp;</span>
-                    <span>{{$t('profiling.iterativeTailingInfo')}}</span>
-                  </div>
-                  <br />
-                  <div class="font-size-style">{{$t('profiling.statistics')}}</div>
-                  <div>{{$t('profiling.totalTime')}}
-                    <span>{{totalTime}}{{$t('profiling.millisecond')}}</span>
-                  </div>
-                  <div>{{$t('profiling.totalSteps')}}<span>{{totalSteps}}</span></div>
-                  <div>{{$t('profiling.iterationGapTimeRatio')}}<span>{{iterationIntervalPercent}}</span></div>
-                  <div v-if="fpBpPercent">{{$t('profiling.fpbpTimeRatio')}}<span>{{fpBpPercent}}</span></div>
-                  <div v-else>{{$t('profiling.fpTimeRatio')}}<span>{{fpPercent}}</span></div>
-                  <div v-if="tailPercent">
-                    {{$t('profiling.iterativeTailingTimeRatio')}}
-                    <span>{{tailPercent}}</span>
-                  </div>
+                  <div>{{$t('profiling.gpuOpeatorFeatures')}}</div>
                 </div>
               </div>
               <i class="el-icon-info"></i>
@@ -2178,5 +2153,8 @@ export default {
   font-size:14px;
   font-weight:400;
   margin-left:2px;
+}
+.el-select-dropdown {
+  z-index: 999 !important;
 }
 </style>

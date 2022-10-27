@@ -606,6 +606,7 @@
     "flopsScopeTipThree": "选中：点击选中某一个scope节点，其关联的父子节点长期高亮，再次点击可取消高亮。",
     "operatorShapeStep": "算子耗时（按迭代）",
     "opeatorFeatures": "算子耗时（按迭代）展示的是不同类型的算子在指定step下的耗时，可以通过筛选框选择不同类型的算子进行展示。",
+    "gpuOpeatorFeatures": "算子耗时详情（按迭代）分析组件对不同迭代中各类型算子的执行时间进行统计展示，可以快速了解训练各迭代中各类型算子的耗时与算子耗时按迭代展开的耗时详情。",
     "operatorSelectTitle": "筛选指定算子类型：",
     "timeConsume": "耗时",
     "operatorShapeDetail": "算子耗时详情（按迭代）",

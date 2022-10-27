@@ -751,25 +751,26 @@ export default {
       this.getTableOperatorList(row, false);
     },
     searchOpCoreList(){
-      // if (this.coreStatisticType) {
-        if(this.searchByStepInput > this.step.max)
-          this.$message.error(this.$t('profiling.inputError').replace('{max}', this.step.max));
-
-      this.opAllTypeList.op_filter_condition = {};
-        if (this.searchByTypeInput) {
-          this.opAllTypeList.op_filter_condition['op_type']={
-            partial_match_str_in: [this.searchByTypeInput.trim()],
-          }
-        }
-        if(this.searchByStepInput){
-          this.opAllTypeList.op_filter_condition['step_filter']=[this.searchByStepInput.trim()];
-        }
-      if(!this.searchByTypeInput && !this.searchByStepInput){
           this.opAllTypeList.op_filter_condition = {};
-        }
-        this.opAllTypeList.opDetailPage.offset = 0;
-        this.getTableOperatorList(this.opAllTypeList, false);
-      }
+          if (this.searchByTypeInput) {
+            this.opAllTypeList.op_filter_condition['op_type']={
+              partial_match_str_in: [this.searchByTypeInput.trim()],
+            }
+          }
+          if(this.searchByStepInput){
+            if (/^[0-9]*[1-9][0-9]*$/.test(this.searchByStepInput) && this.searchByStepInput <= this.step.max){
+              this.opAllTypeList.op_filter_condition['step_filter']=[this.searchByStepInput.trim()];
+            }else {
+              this.searchByStepInput = null;
+              this.$message.error(this.$t('profiling.inputError').replace('{max}', this.step.max));
+            }
+          }
+          if(!this.searchByTypeInput && !this.searchByStepInput){
+            this.opAllTypeList.op_filter_condition = {};
+          }
+          this.opAllTypeList.opDetailPage.offset = 0;
+          this.getTableOperatorList(this.opAllTypeList, false);
+    }
   },
   /**
    * Object destroyed
@@ -939,5 +940,8 @@ display: inline-block;
   font-size:14px;
   font-weight:400;
   margin-left:2px;
+}
+.el-select-dropdown {
+  z-index: 999 !important;
 }
 </style>
