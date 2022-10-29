@@ -198,6 +198,9 @@ export default {
           yAxis: {
             name: this.$t('profiling.utilizationTitle'),
             type: 'value',
+            min: 0,
+            max: 100,
+            splitNumber: 5,
           },
           series: [],
         },
@@ -230,6 +233,9 @@ export default {
           yAxis: {
             name: this.$t('profiling.utilizationTitle'),
             type: 'value',
+            min: 0,
+            max: 100,
+            splitNumber: 5,
           },
           series: [],
         },
@@ -257,6 +263,9 @@ export default {
           yAxis: {
             name: this.$t('profiling.utilizationTitle'),
             type: 'value',
+            min: 0,
+            max: 100,
+            splitNumber: 5,
           },
           series: [],
         },
@@ -747,6 +756,20 @@ export default {
           legend.push(item.name);
         }
         });
+      } else {
+        Object.keys(this.cpuInfo.cpuInfoStr).forEach((val) => {
+        const info = deviceInfo[val];
+        if (info && info.metrics) {
+          const item = {
+            type: 'line',
+            name: this.cpuInfo.cpuInfoStr[val],
+            data: [],
+            showSymbol: false,
+          };
+          series.push(item);
+          legend.push(item.name);
+        }
+        });
       }
       // Data process
       const deviceCpuChart = this.deviceCpuChart;
@@ -761,6 +784,8 @@ export default {
       option.series = series;
       option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;
       option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map((_v, i) => i + 1);
+      const curMaxYAxis = Math.max.apply(null, series.map((i) => i.data.length ? Math.max.apply(null, i.data) : 0))
+      option.yAxis.max = curMaxYAxis ? curMaxYAxis : 100
       option.legend.data = legend;
       option.tooltip.formatter = (params) => {
         return this.formatCpuChartTip(params, this.cpuInfo.stepArray);
@@ -802,7 +827,13 @@ export default {
       const option = processCpuChart.option;
       option.series = series;
       option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;
-      option.xAxis.data = processInfo[Object.keys(processInfo)[0]].metrics.map((_v, i) => i + 1);
+      if (processInfo[Object.keys(processInfo)[0]].metrics.length) {
+        option.xAxis.data = processInfo[Object.keys(processInfo)[0]].metrics.map((_v, i) => i + 1);
+      } else {
+        option.xAxis.data = [1]
+      }
+      const curMaxYAxis = Math.max.apply(null, series.map((i) => i.data.length ? Math.max.apply(null, i.data) : 0))
+      option.yAxis.max = curMaxYAxis ? curMaxYAxis : 100
       option.legend.data = legend;
       option.tooltip.formatter = (params) => {
         return this.formatCpuChartTip(params, this.cpuInfo.stepArray);
@@ -852,14 +883,14 @@ export default {
         const currentOpInfo = operatorInfo.metrics;
         const numWorkers = operatorInfo.num_workers;
         if (currentOpInfo) {
-          if (this.cpuInfo.stepArray.length) {
+          if (this.cpuInfo.cpuInfoStr) {
             Object.keys(this.cpuInfo.cpuInfoStr).forEach((val) => {
             const info = currentOpInfo[val];
             if (info && info.metrics) {
               const item = {
                 type: 'line',
                 name: this.cpuInfo.cpuInfoStr[val],
-                data: info.metrics,
+                data: this.cpuInfo.stepArray.length ? info.metrics : [],
                 showSymbol: info.metrics.length === 1,
               };
               series.push(item);
@@ -875,7 +906,13 @@ export default {
           const option = operatorCpuChart.option;
           option.series = series;
           option.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;
-          option.xAxis.data = currentOpInfo[Object.keys(currentOpInfo)[0]].metrics.map((_v, i) => i + 1);
+          if (currentOpInfo[Object.keys(currentOpInfo)[0]].metrics.length) {
+            option.xAxis.data = currentOpInfo[Object.keys(currentOpInfo)[0]].metrics.map((_v, i) => i + 1);
+          } else {
+            option.xAxis.data = [1]
+          }
+          const curMaxYAxis = Math.max.apply(null, series.map((i) => i.data.length ? Math.max.apply(null, i.data) : 0))
+          option.yAxis.max = curMaxYAxis ? curMaxYAxis : 100
           option.legend.data = legend;
           option.tooltip.formatter = (params) => {
             return this.formatCpuChartTip(params, this.cpuInfo.stepArray);
