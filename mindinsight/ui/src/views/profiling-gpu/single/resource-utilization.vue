@@ -117,6 +117,9 @@ export default {
           yAxis: {
             name: this.$t('profiling.utilizationTitle'),
             type: 'value',
+            min: 0,
+            max: 100,
+            splitNumber: 5,
           },
           dataZoom: [
             {
@@ -327,6 +330,8 @@ export default {
       this.deviceCpuChart.option.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map(
         (val, index) => index + 1
       );
+      const curMaxYAxis = Math.max.apply(null, series.map((i) => i.data.length ? Math.max.apply(null, i.data) : 0))
+      this.deviceCpuChart.option.yAxis.max = curMaxYAxis ? curMaxYAxis : 100
       this.deviceCpuChart.option.legend.data = legend;
       this.deviceCpuChart.option.tooltip.formatter = (params) => {
         return this.formatCpuChartTip(params, this.cpuInfo.stepArray);

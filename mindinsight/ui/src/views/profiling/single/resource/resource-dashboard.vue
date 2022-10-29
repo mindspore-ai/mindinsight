@@ -171,6 +171,9 @@ export default {
           yAxis: {
             name: this.$t('profiling.utilizationTitle'),
             type: 'value',
+            min: 0,
+            max: 100,
+            splitNumber: 5,
           },
           dataZoom: [
             {
@@ -644,21 +647,19 @@ export default {
     initDeviceCpu(deviceInfo) {
       const series = [];
       const legend = [];
-      if (this.cpuInfo.stepArray.length) {
-        Object.keys(this.cpuInfo.cpuInfoStr).forEach((val) => {
-        const info = deviceInfo[val];
-        if (info && info.metrics) {
-          const item = {
-            type: 'line',
-            name: this.cpuInfo.cpuInfoStr[val],
-            data: info.metrics,
-            showSymbol: false,
-          };
-          series.push(item);
-          legend.push(item.name);
-        }
-        });
+      Object.keys(this.cpuInfo.cpuInfoStr).forEach((val) => {
+      const info = deviceInfo[val];
+      if (info && info.metrics) {
+        const item = {
+          type: 'line',
+          name: this.cpuInfo.cpuInfoStr[val],
+          data: this.cpuInfo.stepArray.length ? info.metrics : [],
+          showSymbol: false,
+        };
+        series.push(item);
+        legend.push(item.name);
       }
+      });
       const deviceCpuChart = this.deviceCpuChart;
       deviceCpuChart.cpuAvgUser = deviceInfo.user_utilization.avg_value;
       deviceCpuChart.cpuAvgSystem = deviceInfo.sys_utilization.avg_value;
@@ -670,9 +671,9 @@ export default {
       const deviceCpuChartOption = deviceCpuChart.option;
       deviceCpuChartOption.series = series;
       deviceCpuChartOption.xAxis.name = `${this.$t('profiling.sampleInterval')}\n${this.samplingInterval}ms`;
-      if (this.cpuInfo.stepArray.length) {
-        deviceCpuChartOption.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map((val, index) => index + 1);
-      }
+      deviceCpuChartOption.xAxis.data = deviceInfo[Object.keys(deviceInfo)[0]].metrics.map((val, index) => index + 1);
+      const curMaxYAxis = Math.max.apply(null, series.map((i) => i.data.length ? Math.max.apply(null, i.data) : 0))
+      deviceCpuChartOption.yAxis.max = curMaxYAxis ? curMaxYAxis : 100
       deviceCpuChartOption.legend.data = legend;
       deviceCpuChartOption.tooltip.formatter = (params) => {
         return this.formatCpuChartTip(params, this.cpuInfo.stepArray);
