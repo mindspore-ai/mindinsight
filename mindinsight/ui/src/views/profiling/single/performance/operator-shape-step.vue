@@ -18,8 +18,8 @@ limitations under the License.
     <div class="shape-step">
       <span class="shape-step-title">
         {{$t('profiling.operatorShapeDetail')}}
-        <el-tooltip class="item" 
-                    effect="light" 
+        <el-tooltip class="item"
+                    effect="light"
                     placement="right-end">
           <div slot="content" class="tooltip-container">
             <div>{{$t('profiling.operatorShapeTip')}}</div>
@@ -31,12 +31,12 @@ limitations under the License.
     <div class="operator-shape-option">
       <div class="operator-shape-select">
         <span class="operator-filter-title">{{$t('profiling.operatorFilterTitle')}}</span>
-        <el-select class="operator-detail-select" 
+        <el-select class="operator-detail-select"
                    v-model="topOperatorValue"
                    @remove-tag="operatorRemove"
                    :collapse-tags="true"
                    multiple
-                   filterable 
+                   filterable
                    :placeholder="selectTip">
           <el-option
             v-for="(item, index) in topOperatorArr"
@@ -44,7 +44,7 @@ limitations under the License.
             :label="item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name"
             disabled
             :value="item.name">
-            <el-checkbox :key="item.name" 
+            <el-checkbox :key="item.name"
                          v-model="item.check"
                          :title="item.name"
                          :disabled="checkSig"
@@ -61,7 +61,7 @@ limitations under the License.
       </div>
       <div class="image-noData" v-if="svg.noData">
         <div>
-            <img :src="require('@/assets/images/nodata.png')" 
+            <img :src="require('@/assets/images/nodata.png')"
                  alt="" />
             <p v-show="svg.noData">{{$t('public.noData')}}</p>
         </div>
@@ -265,7 +265,7 @@ export default {
         tipInnerHTML.push(`step: ${index}`);
         params.forEach((item, idx) => {
           tipInnerHTML.push(
-            `<span class="define-chart-tip" style="background-color:${colorArray[idx]};"></span>` +
+            `<span class="define-chart-tip" style="background-color:${item.color};"></span>` +
             `${item.seriesName}: <span style="margin: 0 6px;">${item.data}</span>`
           );
         });
@@ -348,7 +348,7 @@ export default {
       })
     },
     /**
-     * show operator shape detail by click the pointer of echarts 
+     * show operator shape detail by click the pointer of echarts
      * @param {Object} params html dom object
      */
     showOperatorDetail(params) {

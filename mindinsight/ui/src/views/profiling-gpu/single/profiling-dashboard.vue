@@ -19,7 +19,7 @@ limitations under the License.
       <!-- Step trace area -->
       <div v-show="!isHeterogeneous" class="step-trace">
         <div class="title-wrap">
-          <div class="title">{{ $t('profiling.stepTrace') }}</div>
+          <div class="title" v-show="!svg.noData && !isHeterogeneous ">{{ $t('profiling.stepTrace') }}</div>
           <div class="view-detail" v-if="isDynamic">
             <button @click="viewDetail('step-trace-dynamic')"
                     :disabled="svg.noData && svg.data.length === 0"
@@ -631,7 +631,8 @@ export default {
           },
           tooltip:{
             show:true,
-            trigger:'axis'
+            trigger:'axis',
+            formatter:null
           },
           padding: [0, 0, 0, 120],
           type: 'scroll',
@@ -1561,6 +1562,9 @@ export default {
                 this.operatorOptions.tooltip.formatter = (params) => {
                   return this.formatChartTip(params);
                 };
+                this.operatorOptions.legend.tooltip.formatter = (params) =>{
+                  return this.formatLegendTip(params);
+                };
                 // search
                 this.resizeEchart();
               }
@@ -1644,10 +1648,14 @@ export default {
                 this.operatorOptions.tooltip.formatter = (params) => {
                   return this.formatChartTip(params);
                 };
+                this.operatorOptions.legend.tooltip.formatter = (params) =>{
+                  return this.formatLegendTip(params);
+                };
                 // search
                 this.$nextTick(() => {
                   this.chartObj.setOption(this.operatorOptions, true);
-                })
+                  this.drawChart();
+                });
                 this.resizeEchart();
               }
       ).catch(() => {
@@ -1658,6 +1666,7 @@ export default {
      * @param {String} val operator name
      */
     operatorChangeGPU(item) {
+      let length = this.topOperatorValueGPU.length;
       if (item.check && this.topOperatorValueGPU.indexOf(item.name) == -1) {
         this.topOperatorValueGPU.push(item.name);
       } else if(!item.check){
@@ -1667,7 +1676,7 @@ export default {
           }
         })
       }
-      if(this.topOperatorValueGPU && this.topOperatorValueGPU.length){ // not null
+      if(this.topOperatorValueGPU && this.topOperatorValueGPU.length && length < this.topOperatorValueGPU.length){ // not null
         this.filterCondition.displayOnType = this.topOperatorValueGPU;
         this.getGpuOperatorShape();
       }else {
@@ -1745,11 +1754,23 @@ export default {
         params.forEach((item, idx) => {
           tipInnerHTML.push(
                 `<div class="formatter-shape" >
-               <span class="formatter-image" style="background-color:${colorArray[idx]};"></span>
+               <span class="formatter-image" style="background-color:${item.color};"></span>
                <span  class="formatter-text">${item.seriesName}&nbsp;:&nbsp;${item.data}</span></div> `
           );
         });
       }
+      return tipInnerHTML.join('<br>');
+    },
+    /**
+     * format the formatLegendTip
+     * @param {object} params html dom object
+     */
+    formatLegendTip(params){
+      const tipInnerHTML = [];
+      tipInnerHTML.push(
+              `<div class="formatter-shape" >
+             <span  class="formatter-text">${params.name}</span></div> `
+      );
       return tipInnerHTML.join('<br>');
     },
     /**

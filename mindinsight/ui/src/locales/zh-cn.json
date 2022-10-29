@@ -741,7 +741,7 @@
     "parallel_strategy_title": "通信算子切分合理性分析",
     "clusterPerformanceTest": "如何使用Profiler进行集群性能调试",
     "clusterGuideUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_of_cluster.html",
-    "clusterGPUGuideUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_gpu.html"
+    "clusterGPUGuideUrl": "https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling_of_cluster.html"
   },
   "components": {
     "summaryTitle": "训练选择",

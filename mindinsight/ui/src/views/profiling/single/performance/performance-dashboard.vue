@@ -139,12 +139,12 @@ limitations under the License.
       </div>
       <div class="operator-select">
         <span class="operator-select-title">{{$t('profiling.operatorSelectTitle')}}</span>
-        <el-select class="operator-select-option" 
+        <el-select class="operator-select-option"
                    v-model="defaultOperatorValue"
                    @remove-tag="operatorRemove"
                    :collapse-tags="true"
                    multiple
-                   filterable 
+                   filterable
                    :placeholder="selectTip">
           <el-option
             v-for="(item, index) in defaultOperatorArr"
@@ -152,7 +152,7 @@ limitations under the License.
             :label="item.name.length > 16 ? item.name.substring(0, 16) + '...' : item.name"
             disabled
             :value="item.name">
-            <el-checkbox :key="item.name" 
+            <el-checkbox :key="item.name"
                          v-model="item.check"
                          :title="item.name"
                          :disabled="checkSig"
@@ -920,7 +920,7 @@ export default {
         tipInnerHTML.push(`step: ${index}`);
         params.forEach((item, idx) => {
           tipInnerHTML.push(
-            `<span class="define-chart-tip" style="background-color:${colorArray[idx]};"></span>` +
+            `<span class="define-chart-tip" style="background-color:${item.color};"></span>` +
             `${item.seriesName}: <span style="margin: 0 6px;">${item.data}</span>`
           );
         });

@@ -15,7 +15,7 @@ limitations under the License.
 -->
 <template>
   <div class="step-trace-dynamic">
-    <div :class="[`profiling-content-title${isGPU ? '-gpu' : ''}`, 'step-trace-title']" v-show="!isHeterogeneous">
+    <div :class="[`profiling-content-title${isGPU ? '-gpu' : ''}`, 'step-trace-title']" v-show="!svg.noData && !isHeterogeneous">
       {{$t('profiling.stepTraceDetail')}}
       <el-tooltip class="item"
                   effect="light"
@@ -50,9 +50,9 @@ limitations under the License.
       </el-button>
     </div>
     <div class="step-message"
-         v-show="!(tabsArr[0].noData && tabsArr[1].noData && tabsArr[2].noData && svg.noData && isHeterogeneous)">
+         v-show="!svg.noData && !isHeterogeneous">
       <div class="step-left-padding-right">
-        <span class="font-weight-style">{{$t('profiling.FPMessage')}}</span>
+        <span class="font-weight-style" >{{$t('profiling.FPMessage')}}</span>
         <span>{{fp_start}}</span>
       </div>
       <div class="step-padding-right"
@@ -140,7 +140,7 @@ limitations under the License.
       <Operator :rankID="this.deviceID"></Operator>
     </div>
     <div class="image-noData"
-         v-if="tabsArr[0].noData && tabsArr[1].noData && tabsArr[2].noData && svg.noData && !isHeterogeneous">
+         v-if="tabsArr[0].noData && tabsArr[1].noData && tabsArr[2].noData && svg.noData">
       <div>
         <img :src="require('@/assets/images/nodata.png')"
              alt="" />
@@ -257,6 +257,7 @@ export default {
           initOver: false,
         },
       ],
+      isHeterogeneous:false,
     };
     deviceID = rankID;
   },
