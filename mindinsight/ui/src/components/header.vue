@@ -31,7 +31,6 @@ limitations under the License.
           <el-menu-item index="/summary-manage">{{$t("summaryManage.summaryList")}}</el-menu-item>
           <el-menu-item index="/debugger"
                         v-if="showDebugger">{{$t("debugger.debugger")}}</el-menu-item>
-          <el-menu-item index="/explain">{{$t("explain.explain")}}</el-menu-item>
         </el-menu>
       </div>
     </div>
