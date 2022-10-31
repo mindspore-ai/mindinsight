@@ -1123,7 +1123,7 @@ export default {
         };
         chart.data.forEach((item) => {
           option.xAxis.data.push(item.name);
-          option.series[0].data.push(item.value);
+          option.series[0].data.push(parseFloat(item.value.toFixed(2)));
         });
       }
       this.$nextTick(() => {
