@@ -51,6 +51,7 @@
   "onnx::Sin": "mindconverter.graph_based_converter.mapper.onnx.ops.sin_mapper.SinMapper",
   "onnx::Slice": "mindconverter.graph_based_converter.mapper.onnx.ops.slice_mapper.SliceMapper",
   "onnx::Softmax": "mindconverter.graph_based_converter.mapper.onnx.nn.softmax_mapper.SoftmaxMapper",
+  "onnx::Softplus": "mindconverter.graph_based_converter.mapper.onnx.nn.softplus_mapper.SoftplusMapper",
   "onnx::Split": "mindconverter.graph_based_converter.mapper.onnx.ops.split_mapper.SplitMapper",
   "onnx::Sqrt": "mindconverter.graph_based_converter.mapper.onnx.ops.sqrt_mapper.SqrtMapper",
   "onnx::Squeeze": "mindconverter.graph_based_converter.mapper.onnx.ops.squeeze_mapper.SqueezeMapper",
