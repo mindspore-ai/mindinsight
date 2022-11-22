@@ -18,13 +18,11 @@ import os
 import sys
 import stat
 import argparse
-import time
 from importlib import import_module
 
 import mindinsight
 from mindinsight.utils.log import setup_logger
 from mindinsight.utils.exceptions import MindInsightException
-from mindinsight._version import VERSION
 
 
 class BaseCommand:
@@ -86,45 +84,6 @@ class BaseCommand:
         self.run(args)
 
 
-def _mindspore_version_check():
-    """
-    Do the MindSpore version check for MindSpore Reinforcement. If the
-    MindSpore can not be imported, it will give a warning. If its
-    version is not compatibale with current MindSpore Reinforcement verision,
-    it will print a warning.
-
-    Raise:
-        ImportError: If the MindSpore can not be imported.
-    """
-    console = setup_logger('mindinsight', 'console', console=True, logfile=False, formatter='%(message)s')
-
-    mi_version_x = ".".join(VERSION.split(".")[:2]) + ".x"
-    try:
-        import mindspore as ms
-    except (ImportError, ModuleNotFoundError):
-
-        console.warning("[WARNING] Can not find MindSpore in current environment."
-                        "You can install MindSpore, by following "
-                        "the instruction at https://www.mindspore.cn/install. Note that "
-                        "the summary data under the `summary-base-dir` should be from "
-                        "MindSpore version == %s", mi_version_x)
-        return
-
-    ms_version_x = ".".join(ms.__version__.split(".")[:2]) + ".x"
-
-    if mi_version_x != ms_version_x:
-        console.warning("[WARNING] Current version of MindSpore is not compatible with MindInsight. "
-                        "The summary data under the `summary-base-dir` should be from MindSpore which "
-                        "the version equal to MindInsight`s . Otherwise some functions might not "
-                        "work or even raise error. Please install MindSpore "
-                        "version == %s, or install MindInsight version == %s.", mi_version_x, ms_version_x)
-
-        warning_countdown = 3
-        for i in range(warning_countdown, 0, -1):
-            console.warning("[WARNING] Please pay attention to the above warning, countdonw: %d", i)
-            time.sleep(1)
-
-
 def main():
     """Entry point for mindinsight CLI."""
 
@@ -132,8 +91,6 @@ def main():
     if (sys.version_info.major, sys.version_info.minor) < (3, 7):
         console.error('Python version should be at least 3.7')
         sys.exit(1)
-
-    _mindspore_version_check()
 
     # set umask to 0o077
     os.umask(stat.S_IRWXG | stat.S_IRWXO)

@@ -16,7 +16,6 @@
 
 from mindinsight._version import VERSION
 from mindinsight.modelarts import notebook
-from mindinsight.utils.log import setup_logger
 
 __version__ = VERSION
 __version_info__ = tuple(VERSION.split('.'))
