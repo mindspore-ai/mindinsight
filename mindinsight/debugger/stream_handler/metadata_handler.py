@@ -36,6 +36,7 @@ class MetadataHandler(StreamHandlerBase):
         # it does not necessarily mean that the user will use the recommended watch points.
         self._recommendation_confirmed = False
         self._debugger_version = {}
+        self._data_version = {}
         # maximum step number among all devices
         self._max_step_num = 0
         self._debugger_type = DebuggerServerMode.ONLINE.value
@@ -157,6 +158,22 @@ class MetadataHandler(StreamHandlerBase):
         self._debugger_version = value
 
     @property
+    def data_version(self):
+        """The property of data_version."""
+        return self._data_version
+
+    @data_version.setter
+    def data_version(self, value):
+        """
+        Set the property of data_version.
+
+        Args:
+            value (dict): The semantic versioning of mindinsight and mindspore dump data,
+            format is {'state': True, 'ms': 'x.x.x', 'mi': 'x.x.x'}.
+        """
+        self._data_version = value
+
+    @property
     def max_step_num(self):
         """The property of max_step_num."""
         return self._max_step_num
@@ -202,7 +219,8 @@ class MetadataHandler(StreamHandlerBase):
                 'enable_recheck': self.enable_recheck,
                 'graph_name': self.graph_name,
                 'recommendation_confirmed': self._recommendation_confirmed,
-                'debugger_version': self.debugger_version
+                'debugger_version': self.debugger_version,
+                'data_version': self.data_version
             }
             if self.debugger_type == 'offline':
                 metadata['total_step_num'] = self.max_step_num

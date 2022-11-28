@@ -21,11 +21,12 @@ from importlib import import_module
 from threading import Event
 
 import mindinsight
+from mindinsight.common.util import version_match
 from mindinsight.conf.constants import MAX_GRAPH_NODE_SIZE
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotFoundError, DebuggerParamValueError, \
     DebuggerToolkitNotFoundError, DebuggerNodeTooLarge
 from mindinsight.debugger.common.log import LOGGER as log
-from mindinsight.debugger.common.utils import Streams, ServerStatus, version_match, DebuggerServerMode, get_ack_reply, \
+from mindinsight.debugger.common.utils import Streams, ServerStatus, DebuggerServerMode, get_ack_reply, \
     RunLevel, MAX_SINGLE_TENSOR_CACHE_BYTES, ViewCommandLevelEnum, convert_tensor_stats, put_tensor_base_in_cache, \
     put_tensor_stats_in_cache, get_tensor_value, MAX_MS_CACHE_SPACE_MB, get_download_file_name, add_to_download_mgr, \
     gc_disable, enter_tag
@@ -182,11 +183,15 @@ class DebuggerOfflineManager:
         ms_version = self._dbg_services_module.get_version()
         mi_version = mindinsight.__version__
         self._metadata_stream.debugger_version = {'ms': ms_version, 'mi': mi_version}
-        if version_match(ms_version, mi_version) is False:
+        config_json = self._data_loader.get_config_json_data()
+        ms_data_version = config_json.get("ms_version", None)
+        self._metadata_stream.data_version = {'state': version_match(ms_data_version, mi_version),
+                                              'ms': ms_data_version, 'mi': mi_version}
+        if not version_match(ms_version, mi_version):
             log.info("Version is mismatched, dbg_services is: %s, mindinsight is: %s",
                      ms_version, mi_version)
             self._metadata_stream.state = ServerStatus.MISMATCH.value
-            metadata = self._metadata_stream.get(['state', 'debugger_version'])
+            metadata = self._metadata_stream.get(['state', 'debugger_version', 'data_version'])
             self._cache_store.put_data(metadata)
 
     def _load_metadata(self):

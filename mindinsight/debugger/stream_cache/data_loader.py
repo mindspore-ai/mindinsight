@@ -247,6 +247,10 @@ class DataLoader:
 
         return step_num
 
+    def get_config_json_data(self):
+        rank_dir = self._rank_dirs[0].path
+        return self._load_json_file(rank_dir / self.DUMP_METADATA / 'config.json')
+
     def get_rank_dir(self, rank_id):
         """
         Get the rank directory according to rank_id.

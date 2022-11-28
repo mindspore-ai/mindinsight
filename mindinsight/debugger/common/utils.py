@@ -55,7 +55,6 @@ NUMPY_TYPE_MAP = {
     'DT_TYPE': np.str
 }
 
-MS_VERSION = '1.0.x'
 # The buffer is used for the MI side of the offline debugger, the unit is MB.
 BUFFER_MS = 1024
 # The offline debugger need at least 2g memory space.
@@ -206,18 +205,6 @@ def is_scope_type(node_type):
 def is_cst_type(node_type):
     """Judge whether the type is const type."""
     return node_type == NodeTypeEnum.CONST.value
-
-
-def version_match(ms_version, mi_version):
-    """Judge if the version of Mindinsight and Mindspore is matched."""
-    if not ms_version:
-        ms_version = MS_VERSION
-    # the debugger version in MS 1.4.xxx is still 1.3.xxx
-    if mi_version.startswith('1.4.') and ms_version.startswith('1.3.'):
-        return True
-    mi_major, mi_minor = mi_version.split('.')[:2]
-    ms_major, ms_minor = ms_version.split('.')[:2]
-    return mi_major == ms_major and mi_minor == ms_minor
 
 
 @enum.unique

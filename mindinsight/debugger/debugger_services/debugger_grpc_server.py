@@ -19,9 +19,10 @@ from functools import wraps
 from queue import Queue, Full, Empty
 
 import mindinsight
+from mindinsight.common.util import version_match
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.utils import MAX_SINGLE_TENSOR_CACHE_BYTES, get_ack_reply, ServerStatus, \
-    Streams, RunLevel, version_match, load_tensor, convert_tensor_stats, \
+    Streams, RunLevel, load_tensor, convert_tensor_stats, \
     put_tensor_stats_in_cache, put_tensor_base_in_cache, get_tensor_value
 from mindinsight.debugger.conditionmgr.condition import TargetTypeEnum, ParamNameEnum
 from mindinsight.debugger.debugger_services.debugger_server_base import debugger_server_wrap

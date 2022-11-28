@@ -16,19 +16,23 @@
 import os.path
 from typing import Iterable
 
+import mindinsight
 from mindinsight.debugger.api.conditions import WatchpointHit, HitDetail, WatchpointHandle, WatchpointHitImpl
 from mindinsight.debugger.api.debugger_engine import DebuggerEngine
 from mindinsight.debugger.api.debugger_tensor import DebuggerTensor, DebuggerTensorImpl
 from mindinsight.debugger.api.node import Node, NodeImpl, NodeUniqueId
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
+from mindinsight.debugger.common.log import setup_logger
 from mindinsight.debugger.common.utils import (
     validate_type, validate_slots, parse_param_to_iterable_obj
 )
+from mindinsight.common.util import version_match
 from mindinsight.debugger.dump.parser import DebuggerParser
 from mindinsight.debugger.stream_cache.data_loader import DataLoader
 from mindinsight.domain.graph.base import NodeType
 from mindinsight.domain.graph.query import construct_filter_func
+from mindinsight.utils.exceptions import VersionNotMatchError
 
 
 class DumpAnalyzer:
@@ -68,6 +72,7 @@ class DumpAnalyzer:
         self._validate_mem_limit(self._mem_limit)
         self._data_loader = DataLoader(self._dump_dir)
         self._debugger_engine = DebuggerEngine(self._data_loader, self._mem_limit)
+        self._check_version()
         self._parse()
 
     @staticmethod
@@ -80,6 +85,26 @@ class DumpAnalyzer:
         if mem_limit and mem_limit < min_limit_value or mem_limit > max_limit_value:
             msg = f"If mem_limit is not None, it should be set in [{min_limit_value}, {max_limit_value}]."
             raise DebuggerParamValueError(msg)
+
+    def _check_version(self):
+        """Check version."""
+        dbg_services_module = self._debugger_engine.dbg_services_module
+        console = setup_logger('debugger', 'console', console=True, logfile=False, formatter='%(message)s')
+        ms_version = dbg_services_module.get_version()
+        mi_version = mindinsight.__version__
+        if not version_match(ms_version, mi_version):
+            raise VersionNotMatchError(f"[WARNING] Current version of MindSpore({ms_version}) "
+                                       f"is not compatible with MindInsight({mi_version}). "
+                                       f"Otherwise some functions might not "
+                                       f"work or even raise error. Please make MindSpore "
+                                       f"version equal to MindInsight`s.")
+
+        config_json = self._data_loader.get_config_json_data()
+        ms_data_version = config_json.get("ms_version", None)
+        if not version_match(ms_data_version, mi_version):
+            console.warning("[WARNING] The summary data under the `summary-base-dir` should be from MindSpore(%s) "
+                            "which the version equal to MindInsight`s(%s) . Otherwise some functions might not "
+                            "work or even raise error.", ms_data_version, mi_version)
 
     def _parse(self):
         """Parse graph into nodes and tensors."""
