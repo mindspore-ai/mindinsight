@@ -108,6 +108,10 @@ def delete_random_items(res):
             if res['metadata'].get('debugger_version') and res['metadata']['debugger_version'].get('mi'):
                 res['metadata']['debugger_version'].pop('mi')
                 res['metadata']['debugger_version'].pop('ms')
+            if res['metadata'].get('data_version') and res['metadata']['data_version'].get('mi'):
+                res['metadata']['data_version'].pop('mi')
+                res['metadata']['data_version'].pop('ms')
+                res['metadata']['data_version'].pop('state')
         if res.get('devices'):
             for device in res.get('devices'):
                 if device.get('server_ip'):

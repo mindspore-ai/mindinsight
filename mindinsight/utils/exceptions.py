@@ -215,3 +215,12 @@ class SettingValueError(MindInsightException):
             GeneralErrors.SETTING_VALUE_ERROR,
             error_msg,
             http_code=400)
+
+
+class VersionNotMatchError(MindInsightException):
+    """Version not match error."""
+    def __init__(self, error_msg):
+        super(VersionNotMatchError, self).__init__(
+            GeneralErrors.PARAM_TYPE_ERROR,
+            error_msg,
+            http_code=400)

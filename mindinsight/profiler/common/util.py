@@ -17,11 +17,15 @@ Profiler util.
 
 This module provides the utils.
 """
+import json
 import os
+import re
 
+from mindinsight import __version__ as mi_version
 from mindinsight.datavisual.utils.tools import to_int
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerDirNotFoundException
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
+from mindinsight.common.util import version_match
 
 # one sys count takes 10 ns, 1 ms has 100000 system count
 PER_MS_SYSCNT = 100000
@@ -229,3 +233,25 @@ def check_train_job_and_profiler_dir(profiler_dir_abs):
         raise TrainJobNotExistError(error_detail=train_job_dir_abs)
     if not os.path.exists(profiler_dir_abs):
         raise ProfilerDirNotFoundException(msg=profiler_dir_abs)
+
+
+def get_profile_data_version(profiler_dir):
+    """ get the profiler data version """
+
+    profile_info_pattern = re.compile(r"profiler_info_(\d+).json")
+    profile_info_file = None
+    for f_name in os.listdir(profiler_dir):
+        re_match = re.match(profile_info_pattern, f_name)
+        if re_match:
+            profile_info_file = re_match.group()
+    if profile_info_file:
+        full_path = os.path.join(profiler_dir, profile_info_file)
+        with open(full_path, 'r') as fr:
+            data = json.load(fr)
+        ms_data_version = data.get('ms_version', '')
+        if ms_data_version:
+            result_data = {'status': version_match(ms_data_version, mi_version),
+                           'ms_data_version': ms_data_version,
+                           'mi_version': mi_version}
+            return result_data
+    return {}

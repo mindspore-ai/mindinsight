@@ -31,7 +31,7 @@ from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.analyser.minddata_analyser import MinddataAnalyser
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException
 from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir, \
-    check_train_job_and_profiler_dir
+    check_train_job_and_profiler_dir, get_profile_data_version
 from mindinsight.profiler.common.validator.validate import validate_condition, validate_ui_proc
 from mindinsight.profiler.common.validator.validate import validate_minddata_pipeline_condition
 from mindinsight.profiler.common.validator.validate_path import \
@@ -978,6 +978,34 @@ def get_communication_data():
         'cluster_hccl', profiler_dir_abs, device_id
     )
     return jsonify(analyser.get_communication_data())
+
+
+@BLUEPRINT.route("/profile/profiler_info", methods=["GET"])
+def get_profiler_info():
+    """
+    Get profile info.
+
+    Returns:
+        dict, the version of profile info.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/profile_info
+    """
+    profiler_dir = request.args.get('profile')
+    train_id = request.args.get('train_id')
+    if not profiler_dir or not train_id:
+        raise ParamValueError("No profiler_dir or train_id.")
+
+    profiler_dir_abs = os.path.join(settings.SUMMARY_BASE_DIR, train_id, profiler_dir)
+    try:
+        profiler_dir_abs = validate_and_normalize_path(profiler_dir_abs, "profiler")
+    except ValidationError:
+        raise ParamValueError("Invalid profiler dir")
+
+    check_train_job_and_profiler_dir(profiler_dir_abs)
+
+    profiler_info = get_profile_data_version(profiler_dir_abs)
+    return jsonify(profiler_info)
 
 
 def init_module(app):
