@@ -738,4 +738,12 @@
        }
      });
    },
+   // check profile data 
+   getProfilerInfo(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/profile_info',
+      params: params,
+    });
+  },
 };

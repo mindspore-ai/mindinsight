@@ -1431,6 +1431,18 @@ export default {
               });
             }
             if (res.data.metadata) {
+              if (res.data.metadata.data_version) {
+                if (!res.data.metadata.data_version.status) {
+                  const meta_data = res.data.metadata.data_version;
+                  this.$message({
+                    type: 'warning',
+                    offset: 15,
+                    center: true,
+                    duration: 5000,
+                    message: this.$t('debugger.dataVersionTips', {ms_version: meta_data.ms, mi_version: meta_data.mi})
+                  });
+                }
+              }
               if (res.data.metadata.debugger_version) {
                 this.debuggerVersion = res.data.metadata.debugger_version;
               }
@@ -1515,6 +1527,7 @@ export default {
                   leaf: val.type === 'name_scope' || val.type === 'aggregation_scope' ? false : true,
                   ...val,
                   showCheckbox: val.watched !== -1,
+                  disabled: val.disable,
                 };
               });
               if (this.curNodeData.length > this.nodesCountLimit) {

@@ -130,16 +130,6 @@ limitations under the License.
                  :class="!collapseConditions ? 'collapse':''">
               <div class="select-all-files"
                    v-if="curWatchPointId && treeFlag">
-                <el-button type="primary"
-                           size="mini"
-                           class="custom-btn"
-                           :disabled="metadata.state === state.running || metadata.state === state.sending"
-                           @click="selectAllFiles(true)">{{ $t('public.selectAll') }}</el-button>
-                <el-button type="primary"
-                           size="mini"
-                           class="custom-btn"
-                           :disabled="metadata.state === state.running || metadata.state === state.sending"
-                           @click="selectAllFiles(false)">{{ $t('public.deselectAll') }}</el-button>
               </div>
               <tree v-show="treeFlag"
                     :props="props"
@@ -165,6 +155,9 @@ limitations under the License.
                          class="image-type" />
                     <img v-else-if="data.type ==='aggregation_scope'"
                          :src="require('@/assets/images/polymetric.svg')"
+                         class="image-type" />
+                    <img v-else-if="!nodeIsDynamicShape(node.data)"
+                         :src="require('@/assets/images/dynamic-shape-node.svg')"
                          class="image-type" />
                     <img v-else
                          :src="require('@/assets/images/operator-node.svg')"
@@ -196,6 +189,9 @@ limitations under the License.
                          class="image-type" />
                     <img v-else-if="data.type ==='aggregation_scope'"
                          :src="require('@/assets/images/polymetric.svg')"
+                         class="image-type" />
+                    <img v-else-if="!nodeIsDynamicShape(node.data)"
+                         :src="require('@/assets/images/dynamic-shape-node.svg')"
                          class="image-type" />
                     <img v-else
                          :src="require('@/assets/images/operator-node.svg')"
@@ -624,6 +620,16 @@ limitations under the License.
                 <div class="legend-text"
                      :title="$t('graph.constantNode')">
                   {{ $t('graph.constantNode') }}
+                </div>
+              </div>
+              <div class="legend-item">
+                <div class="pic">
+                  <img :src="require(`@/assets/images/${themeIndex}/dynamic-shape-node.svg`)"
+                       alt="" />
+                </div>
+                <div class="legend-text"
+                     :title="$t('graph.dynamicShapeNode')">
+                  {{ $t('graph.dynamicShapeNode') }}
                 </div>
               </div>
               <br>
@@ -1721,6 +1727,7 @@ export default {
                 label: val.name.split('/').pop(),
                 ...val,
                 showCheckbox: val.watched !== -1,
+                disabled: val.disable,
               };
             });
             this.node.childNodes = [];
@@ -2406,6 +2413,26 @@ export default {
         }, this.resizeDelay);
       }
     },
+    /**
+     * check node is dynamic shape
+     */
+    nodeIsDynamicShape(node) {
+      const output = node.output;
+        let sig = true;
+        if (output) {
+          for(const key in output) {
+            const val = output[key];
+            for (const v of val.shape) {
+              const idx = v.indexOf(-1);
+              if (idx != -1) {
+                sig = false;
+                break;
+              }
+            }
+          }
+        }
+      return sig;
+    },
   },
   destroyed() {
     window.removeEventListener('resize', this.initSvgSize);
@@ -3068,6 +3095,10 @@ export default {
 .deb-wrap .rightTop .svg-wrap .graph-container #graph .node > ellipse {
   stroke: #4ea6e6;
   fill: var(--graph-operator-color);
+}
+.deb-wrap .rightTop .svg-wrap .graph-container #graph .node.dynamicShape > ellipse {
+  stroke: #0080a0;
+  fill: #00a055;
 }
 .deb-wrap .rightTop .svg-wrap .graph-container #graph .plain > path,
 .deb-wrap .rightTop .svg-wrap .graph-container #graph .plain ellipse {

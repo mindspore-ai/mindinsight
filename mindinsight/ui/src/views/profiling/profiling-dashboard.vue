@@ -64,6 +64,7 @@ export default {
     };
   },
   created() {
+    this.checkProfilerDataVersion();
     this.initProfilerInfo();
   },
   updated() {
@@ -162,6 +163,25 @@ export default {
           path: '/profiling/' + path,
           query: this.$route.query,
         });
+    },
+    /**
+     * check profiler data version
+     */
+    checkProfilerDataVersion() {
+      let params = {'profile': this.trainInfo.dir, "train_id": this.trainInfo.id};
+      RequestService.getProfilerInfo(params).then(
+        (res) => {
+          if (res.data && !res.data.status) {
+            this.$message({
+              type: 'warning',
+              offset: 50,
+              center: true,
+              message: this.$t('profiling.dataVersionTips',
+                {ms_version: res.data.ms_data_version, mi_version: res.data.mi_version})
+            });
+          }
+        },(error) => {}
+      ).catch((e) => {})
     },
   },
 };
