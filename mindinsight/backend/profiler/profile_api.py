@@ -980,7 +980,7 @@ def get_communication_data():
     return jsonify(analyser.get_communication_data())
 
 
-@BLUEPRINT.route("/profile/profiler_info", methods=["GET"])
+@BLUEPRINT.route("/profile/profile_info", methods=["GET"])
 def get_profiler_info():
     """
     Get profile info.

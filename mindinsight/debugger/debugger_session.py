@@ -59,6 +59,7 @@ class DebuggerSession:
         self.cache_store = DebuggerCache()
         self.context = context
         self.back_server = DebuggerServerFactory().get_debugger_server(self.cache_store, context)
+        self.watch_point_nodes_cache = {}
 
     @property
     def train_job(self):
@@ -266,7 +267,7 @@ class DebuggerSession:
 
         devices = result['devices']
         if not devices:
-            graph = result['graph']
+            graph = result.get('graph')
             metadata = result['metadata']
             device = {'rank_id': 0, 'server_ip': metadata.get('ip', 'localhost'),
                       'device_id': metadata.get('device_name', ''),
@@ -331,10 +332,23 @@ class DebuggerSession:
         # get graph
         graph_stream = self.cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(rank_id)
         reply = graph_stream.get(filter_condition)
+        if watch_point_id <= 0:
+            return reply
         graph = reply.get('graph')
         # add watched label to graph
         watchpoint_stream.set_watch_nodes(graph, graph_stream, watch_point_id, filter_condition.get('graph_name'),
                                           rank_id)
+
+        self.watch_point_nodes_cache[watch_point_id] = self.watch_point_nodes_cache.get(watch_point_id, {})
+        for node in graph.get('nodes', []):
+            name = node.get('name')
+            disable = node.get('disable', True)
+            if name not in self.watch_point_nodes_cache.get(watch_point_id).keys():
+                self.watch_point_nodes_cache.get(watch_point_id)[name] = disable
+            else:
+                node['disable'] = self.watch_point_nodes_cache.get(watch_point_id).get(name)
+        reply['graph'] = graph
+        log.info("self.watch_point_node_list: %s", self.watch_point_nodes_cache)
         return reply
 
     def retrieve_tensor_history(self, node_name, graph_name=None, rank_id=0):

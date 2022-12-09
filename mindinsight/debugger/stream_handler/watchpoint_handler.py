@@ -182,6 +182,8 @@ class WatchpointHandler(StreamHandlerBase):
         for node in nodes:
             node_name = node.get('name')
             # search result could have `nodes` in nodes object
+
+            disable = True
             if node.get('nodes'):
                 flag = self._set_watch_state_for_nodes(node.get('nodes'), graph_stream, watchpoint, graph_name, rank_id)
             else:
@@ -190,12 +192,15 @@ class WatchpointHandler(StreamHandlerBase):
                 flag = watchpoint.get_node_status(new_node_name, node.get('type'), full_name, rank_id)
             node['watched'] = flag
             if flag == WatchNodeTree.NOT_WATCH:
+                node['disable'] = disable
                 continue
             state = WatchNodeTree.PARTIAL_WATCH
             if flag == WatchNodeTree.INVALID:
                 valid_node_num -= 1
             elif flag == WatchNodeTree.TOTAL_WATCH:
+                disable = False
                 all_watched_num += 1
+            node['disable'] = disable
         # update the watch status of current node
         if not valid_node_num:
             state = WatchNodeTree.INVALID
