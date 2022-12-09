@@ -244,14 +244,15 @@ def get_profile_data_version(profiler_dir):
         re_match = re.match(profile_info_pattern, f_name)
         if re_match:
             profile_info_file = re_match.group()
+            break
     if profile_info_file:
         full_path = os.path.join(profiler_dir, profile_info_file)
         with open(full_path, 'r') as fr:
             data = json.load(fr)
         ms_data_version = data.get('ms_version', '')
         if ms_data_version:
-            result_data = {'status': version_match(ms_data_version, mi_version),
-                           'ms_data_version': ms_data_version,
-                           'mi_version': mi_version}
+            result_data = {'state': version_match(ms_data_version, mi_version),
+                           'ms': ms_data_version,
+                           'mi': mi_version}
             return result_data
     return {}
