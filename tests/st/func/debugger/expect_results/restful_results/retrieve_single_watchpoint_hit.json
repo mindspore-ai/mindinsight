@@ -283,7 +283,8 @@
         "proxy_output": {},
         "subnode_count": 7,
         "independent_layout": false,
-        "watched": 2
+        "watched": 2,
+        "disable": false
       },
       {
         "name": "Gradients",
@@ -550,7 +551,8 @@
         "proxy_output": {},
         "subnode_count": 1,
         "independent_layout": false,
-        "watched": 2
+        "watched": 2,
+        "disable": false
       }
     ],
     "scope_name": "",
@@ -602,7 +604,8 @@
           "proxy_output": {},
           "subnode_count": 0,
           "independent_layout": false,
-          "watched": 2
+          "watched": 2,
+          "disable": false
         },
         {
           "name": "Default/Depend-op61",
@@ -648,7 +651,8 @@
           "proxy_output": {},
           "subnode_count": 0,
           "independent_layout": false,
-          "watched": 2
+          "watched": 2,
+          "disable": false
         },
         {
           "name": "Default/args0",
@@ -678,7 +682,8 @@
           "proxy_output": {},
           "subnode_count": 0,
           "independent_layout": false,
-          "watched": 2
+          "watched": 2,
+          "disable": false
         },
         {
           "name": "Default/tuple_getitem[10]_0",
@@ -878,7 +883,8 @@
           "proxy_output": {},
           "subnode_count": 20,
           "independent_layout": false,
-          "watched": 2
+          "watched": 2,
+          "disable": false
         },
         {
           "name": "Default/make_tuple[9]_3",
@@ -1151,7 +1157,8 @@
           "proxy_output": {},
           "subnode_count": 9,
           "independent_layout": false,
-          "watched": 2
+          "watched": 2,
+          "disable": false
         },
         {
           "name": "Default/network-WithLossCell",
@@ -1446,7 +1453,8 @@
           "proxy_output": {},
           "subnode_count": 2,
           "independent_layout": false,
-          "watched": 2
+          "watched": 2,
+          "disable": false
         },
         {
           "name": "Default/optimizer-Momentum",
@@ -1726,7 +1734,8 @@
           "proxy_output": {},
           "subnode_count": 5,
           "independent_layout": false,
-          "watched": 2
+          "watched": 2,
+          "disable": false
         }
       ],
       "scope_name": "Default",
