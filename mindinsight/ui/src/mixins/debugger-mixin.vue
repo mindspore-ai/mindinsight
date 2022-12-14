@@ -1432,7 +1432,7 @@ export default {
             }
             if (res.data.metadata) {
               if (res.data.metadata.data_version) {
-                if (!res.data.metadata.data_version.status) {
+                if (res.data.metadata.data_version.state == false) {
                   const meta_data = res.data.metadata.data_version;
                   this.$message({
                     type: 'warning',
