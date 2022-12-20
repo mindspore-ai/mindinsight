@@ -35,7 +35,7 @@ from mindinsight.utils.tensor import Statistics
 
 # translate the MindSpore type to numpy type.
 NUMPY_TYPE_MAP = {
-    'DT_BOOL': np.bool,
+    'DT_BOOL': np.bool_,
 
     'DT_INT8': np.int8,
     'DT_INT16': np.int16,
@@ -51,8 +51,8 @@ NUMPY_TYPE_MAP = {
     'DT_FLOAT32': np.float32,
     'DT_FLOAT64': np.float64,
 
-    'DT_STRING': np.str,
-    'DT_TYPE': np.str
+    'DT_STRING': np.str_,
+    'DT_TYPE': np.str_
 }
 
 # The buffer is used for the MI side of the offline debugger, the unit is MB.
