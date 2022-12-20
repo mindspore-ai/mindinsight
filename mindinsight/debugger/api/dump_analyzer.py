@@ -102,8 +102,9 @@ class DumpAnalyzer:
         config_json = self._data_loader.get_config_json_data()
         ms_data_version = config_json.get("ms_version", None)
         if not version_match(ms_data_version, mi_version):
-            console.warning("[WARNING] The summary data under the `summary-base-dir` should be from MindSpore(%s) "
-                            "which the version equal to MindInsight`s(%s) . Otherwise some functions might not "
+            console.warning("[WARNING] The summary data under the `dump_dir` from MindSpore(%s) "
+                            "which the version should be equal to MindInsight`s(%s) . "
+                            "Otherwise some functions might not "
                             "work or even raise error.", ms_data_version, mi_version)
 
     def _parse(self):
