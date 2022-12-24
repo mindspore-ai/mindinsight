@@ -20,6 +20,7 @@
       {
         "name": "Default",
         "type": "name_scope",
+        "is_dynamic_shape_node": false,
         "attr": {},
         "input": {
           "Gradients/Default/network-WithLossCell/_backbone-LeNet5/fc3-Dense/gradBiasAdd/BiasAddGrad-op21": {
@@ -283,6 +284,7 @@
       {
         "name": "Gradients",
         "type": "name_scope",
+        "is_dynamic_shape_node": false,
         "attr": {},
         "input": {
           "Default/tuple_getitem[10]_0/tuple_getitem-op210": {

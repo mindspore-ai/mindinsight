@@ -1,1 +1,158 @@
-{"nodes": [{"name": "Default/conv1-Conv2d/Conv2D-op55", "type": "Conv2D", "attr": {"output_names": "dtype: DT_GRAPHS\nvalues {\n  dtype: DT_FLOAT64\n  str_val: \"output\"\n}\n", "pad_mode": "dtype: DT_FLOAT64\nstr_val: \"same\"\n"}, "input": {"Default/conv1-Conv2d/Parameter[12]_2/x": {"shape": [[]], "edge_type": "data", "independent_layout": true, "data_type": "DT_STRING"}, "Default/conv1-Conv2d/Parameter[12]_2/x1": {"shape": [[]], "edge_type": "data", "independent_layout": true, "data_type": "DT_STRING"}, "Default/conv1-Conv2d/Parameter[12]_2/x2": {"shape": [[]], "edge_type": "data", "independent_layout": true, "data_type": "DT_STRING"}, "Default/conv1-Conv2d/Parameter[12]_2/x3": {"shape": [[]], "edge_type": "data", "independent_layout": true, "data_type": "DT_STRING"}, "Default/conv1-Conv2d/Parameter[12]_2/x4": {"shape": [[]], "edge_type": "data", "independent_layout": true, "data_type": "DT_STRING"}, "Default/conv1-Conv2d/Parameter[12]_2/x5": {"shape": [[]], "edge_type": "data", "independent_layout": true, "data_type": "DT_STRING"}, "Default/conv1-Conv2d/Parameter[12]_2/x6": {"shape": [[]], "edge_type": "data", "independent_layout": true, "data_type": "DT_STRING"}, "Default/conv1-Conv2d/Parameter[12]_2/x7": {"shape": [[]], "edge_type": "data", "independent_layout": true, "data_type": "DT_STRING"}, "Default/conv1-Conv2d/Parameter[12]_2/x8": {"shape": [[]], "edge_type": "data", "independent_layout": true, "data_type": "DT_STRING"}, "Default/conv1-Conv2d/Parameter[12]_2/x9": {"shape": [[]], "edge_type": "data", "independent_layout": true, "data_type": "DT_STRING"}, "Default/conv1-Conv2d/Parameter[12]_2/x10": {"shape": [[]], "edge_type": "data", "independent_layout": true, "data_type": "DT_STRING"}, "Default/conv1-Conv2d/Parameter[12]_2/conv1.weight": {"shape": [[]], "edge_type": "data", "independent_layout": true, "data_type": "DT_STRING"}}, "output": {"Default/bn1/Reshape[12]_1/Reshape-op6": {"shape": [[]], "edge_type": "data", "independent_layout": false, "data_type": "DT_STRING"}}, "output_i": 0, "proxy_input": {"Default/conv1-Conv2d/Parameter[12]_2": {"edge_type": "data"}}, "proxy_output": {}, "subnode_count": 0, "independent_layout": false, "stack_info": []}, {"name": "Default/conv1-Conv2d/Parameter[12]_2", "type": "aggregation_scope", "attr": {}, "input": {}, "output": {"Default/conv1-Conv2d/Conv2D-op55": {"shape": [[]], "edge_type": "data", "independent_layout": false, "data_type": "DT_STRING"}}, "output_i": 0, "proxy_input": {}, "proxy_output": {"Default/conv1-Conv2d/Conv2D-op55": {"edge_type": "data"}}, "subnode_count": 12, "independent_layout": true, "stack_info": []}]}
+{
+  "nodes": [
+    {
+      "name": "Default/conv1-Conv2d/Conv2D-op55",
+      "type": "Conv2D",
+      "is_dynamic_shape_node": false,
+      "attr": {
+        "output_names": "dtype: DT_GRAPHS\nvalues {\n  dtype: DT_FLOAT64\n  str_val: \"output\"\n}\n",
+        "pad_mode": "dtype: DT_FLOAT64\nstr_val: \"same\"\n"
+      },
+      "input": {
+        "Default/conv1-Conv2d/Parameter[12]_2/x": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": true,
+          "data_type": "DT_STRING"
+        },
+        "Default/conv1-Conv2d/Parameter[12]_2/x1": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": true,
+          "data_type": "DT_STRING"
+        },
+        "Default/conv1-Conv2d/Parameter[12]_2/x2": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": true,
+          "data_type": "DT_STRING"
+        },
+        "Default/conv1-Conv2d/Parameter[12]_2/x3": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": true,
+          "data_type": "DT_STRING"
+        },
+        "Default/conv1-Conv2d/Parameter[12]_2/x4": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": true,
+          "data_type": "DT_STRING"
+        },
+        "Default/conv1-Conv2d/Parameter[12]_2/x5": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": true,
+          "data_type": "DT_STRING"
+        },
+        "Default/conv1-Conv2d/Parameter[12]_2/x6": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": true,
+          "data_type": "DT_STRING"
+        },
+        "Default/conv1-Conv2d/Parameter[12]_2/x7": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": true,
+          "data_type": "DT_STRING"
+        },
+        "Default/conv1-Conv2d/Parameter[12]_2/x8": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": true,
+          "data_type": "DT_STRING"
+        },
+        "Default/conv1-Conv2d/Parameter[12]_2/x9": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": true,
+          "data_type": "DT_STRING"
+        },
+        "Default/conv1-Conv2d/Parameter[12]_2/x10": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": true,
+          "data_type": "DT_STRING"
+        },
+        "Default/conv1-Conv2d/Parameter[12]_2/conv1.weight": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": true,
+          "data_type": "DT_STRING"
+        }
+      },
+      "output": {
+        "Default/bn1/Reshape[12]_1/Reshape-op6": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": false,
+          "data_type": "DT_STRING"
+        }
+      },
+      "output_i": 0,
+      "proxy_input": {
+        "Default/conv1-Conv2d/Parameter[12]_2": {
+          "edge_type": "data"
+        }
+      },
+      "proxy_output": {},
+      "subnode_count": 0,
+      "independent_layout": false,
+      "stack_info": []
+    },
+    {
+      "name": "Default/conv1-Conv2d/Parameter[12]_2",
+      "type": "aggregation_scope",
+      "is_dynamic_shape_node": false,
+      "attr": {},
+      "input": {},
+      "output": {
+        "Default/conv1-Conv2d/Conv2D-op55": {
+          "shape": [
+            []
+          ],
+          "edge_type": "data",
+          "independent_layout": false,
+          "data_type": "DT_STRING"
+        }
+      },
+      "output_i": 0,
+      "proxy_input": {},
+      "proxy_output": {
+        "Default/conv1-Conv2d/Conv2D-op55": {
+          "edge_type": "data"
+        }
+      },
+      "subnode_count": 12,
+      "independent_layout": true,
+      "stack_info": []
+    }
+  ]
+}

@@ -21,9 +21,10 @@ from mindinsight.datavisual.common.log import logger as log
 
 class NodeTree:
     """A class for building a node tree."""
-    def __init__(self, node_name='', node_type=None):
+    def __init__(self, node_name='', node_type=None, is_dynamic_shape_node=False):
         self.node_name = node_name
         self._node_type = node_type
+        self.is_dynamic_shape_node = is_dynamic_shape_node
         self._children = {}
 
     @property
@@ -36,10 +37,10 @@ class NodeTree:
         """Set the node type."""
         self._node_type = value
 
-    def add(self, name, node_type=None):
+    def add(self, name, node_type=None, is_dynamic_shape_node=False):
         """Add sub node."""
         sub_name = '/'.join([self.node_name, name]) if self.node_name else name
-        sub_node = NodeTree(sub_name, node_type)
+        sub_node = NodeTree(sub_name, node_type, is_dynamic_shape_node)
         self._children[name] = sub_node
         return sub_node
 

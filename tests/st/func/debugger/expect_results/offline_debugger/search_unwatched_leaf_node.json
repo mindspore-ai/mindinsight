@@ -1,1 +1,39 @@
-{"nodes": [{"name": "Default", "type": "name_scope", "nodes": [{"name": "Default/optimizer-Momentum", "type": "name_scope", "nodes": [{"name": "Default/optimizer-Momentum/ApplyMomentum[8]_1", "type": "aggregation_scope", "nodes": [{"name": "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op56", "type": "ApplyMomentum", "nodes": [], "watched": 2, "disable": false}], "watched": 2, "disable": false}], "watched": 2, "disable": false}], "watched": 2, "disable": false}]}
+{
+  "nodes": [
+    {
+      "name": "Default",
+      "type": "name_scope",
+      "is_dynamic_shape_node": false,
+      "nodes": [
+        {
+          "name": "Default/optimizer-Momentum",
+          "type": "name_scope",
+          "is_dynamic_shape_node": false,
+          "nodes": [
+            {
+              "name": "Default/optimizer-Momentum/ApplyMomentum[8]_1",
+              "type": "aggregation_scope",
+              "is_dynamic_shape_node": false,
+              "nodes": [
+                {
+                  "name": "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op56",
+                  "type": "ApplyMomentum",
+                  "is_dynamic_shape_node": false,
+                  "nodes": [],
+                  "watched": 2,
+                  "disable": false
+                }
+              ],
+              "watched": 2,
+              "disable": false
+            }
+          ],
+          "watched": 2,
+          "disable": false
+        }
+      ],
+      "watched": 2,
+      "disable": false
+    }
+  ]
+}

@@ -1,1 +1,23 @@
-{"nodes": [{"name": "Default", "type": "name_scope", "nodes": [{"name": "Default/bn1-BatchNorm2d", "type": "name_scope", "nodes": []}, {"name": "Default/bn1", "type": "name_scope", "nodes": []}]}]}
+{
+  "nodes": [
+    {
+      "name": "Default",
+      "type": "name_scope",
+      "is_dynamic_shape_node": false,
+      "nodes": [
+        {
+          "name": "Default/bn1-BatchNorm2d",
+          "type": "name_scope",
+          "is_dynamic_shape_node": false,
+          "nodes": []
+        },
+        {
+          "name": "Default/bn1",
+          "type": "name_scope",
+          "is_dynamic_shape_node": false,
+          "nodes": []
+        }
+      ]
+    }
+  ]
+}

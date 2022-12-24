@@ -1,1 +1,61 @@
-{"metadata": {"state": "waiting", "step": 1, "device_name": "0", "node_name": "", "backend": "Ascend", "enable_recheck": false, "graph_name": "", "recommendation_confirmed": false, "debugger_version": {}, "data_version": {}}, "graph": {"graph_names": ["graph_0", "graph_1"], "nodes": [{"name": "graph_0", "type": "name_scope", "attr": {}, "input": {}, "output": {}, "output_i": 0, "proxy_input": {}, "proxy_output": {}, "subnode_count": 2, "independent_layout": false, "stack_info": []}, {"name": "graph_1", "type": "name_scope", "attr": {}, "input": {}, "output": {}, "output_i": 0, "proxy_input": {}, "proxy_output": {}, "subnode_count": 2, "independent_layout": false, "stack_info": []}]}, "devices": [{"rank_id": 0, "device_id": "0", "graph_names": ["graph_0", "graph_1"]}], "watch_points": []}
+{
+  "metadata": {
+    "state": "waiting",
+    "step": 1,
+    "device_name": "0",
+    "node_name": "",
+    "backend": "Ascend",
+    "enable_recheck": false,
+    "graph_name": "",
+    "recommendation_confirmed": false,
+    "debugger_version": {},
+    "data_version": {}
+  },
+  "graph": {
+    "graph_names": [
+      "graph_0",
+      "graph_1"
+    ],
+    "nodes": [
+      {
+        "name": "graph_0",
+        "type": "name_scope",
+        "is_dynamic_shape_node": false,
+        "attr": {},
+        "input": {},
+        "output": {},
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {},
+        "subnode_count": 2,
+        "independent_layout": false,
+        "stack_info": []
+      },
+      {
+        "name": "graph_1",
+        "type": "name_scope",
+        "is_dynamic_shape_node": false,
+        "attr": {},
+        "input": {},
+        "output": {},
+        "output_i": 0,
+        "proxy_input": {},
+        "proxy_output": {},
+        "subnode_count": 2,
+        "independent_layout": false,
+        "stack_info": []
+      }
+    ]
+  },
+  "devices": [
+    {
+      "rank_id": 0,
+      "device_id": "0",
+      "graph_names": [
+        "graph_0",
+        "graph_1"
+      ]
+    }
+  ],
+  "watch_points": []
+}

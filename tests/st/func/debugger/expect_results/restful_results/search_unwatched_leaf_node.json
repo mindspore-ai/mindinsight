@@ -1,1 +1,39 @@
-{"nodes": [{"name": "Default", "type": "name_scope", "nodes": [{"name": "Default/optimizer-Momentum", "type": "name_scope", "nodes": [{"name": "Default/optimizer-Momentum/Parameter[18]_7", "type": "aggregation_scope", "nodes": [{"name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc3.bias", "type": "Parameter", "nodes": [], "watched": 2, "disable": false}], "watched": 2, "disable": false}], "watched": 2, "disable": false}], "watched": 2, "disable": false}]}
+{
+  "nodes": [
+    {
+      "name": "Default",
+      "type": "name_scope",
+      "is_dynamic_shape_node": false,
+      "nodes": [
+        {
+          "name": "Default/optimizer-Momentum",
+          "type": "name_scope",
+          "is_dynamic_shape_node": false,
+          "nodes": [
+            {
+              "name": "Default/optimizer-Momentum/Parameter[18]_7",
+              "type": "aggregation_scope",
+              "is_dynamic_shape_node": false,
+              "nodes": [
+                {
+                  "name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc3.bias",
+                  "type": "Parameter",
+                  "is_dynamic_shape_node": false,
+                  "nodes": [],
+                  "watched": 2,
+                  "disable": false
+                }
+              ],
+              "watched": 2,
+              "disable": false
+            }
+          ],
+          "watched": 2,
+          "disable": false
+        }
+      ],
+      "watched": 2,
+      "disable": false
+    }
+  ]
+}
