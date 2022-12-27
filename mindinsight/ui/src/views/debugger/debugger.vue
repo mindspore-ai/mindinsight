@@ -156,7 +156,7 @@ limitations under the License.
                     <img v-else-if="data.type ==='aggregation_scope'"
                          :src="require('@/assets/images/polymetric.svg')"
                          class="image-type" />
-                    <img v-else-if="!nodeIsDynamicShape(node.data)"
+                    <img v-else-if="nodeIsDynamicShape(node.data)"
                          :src="require('@/assets/images/dynamic-shape-node.svg')"
                          class="image-type" />
                     <img v-else
@@ -190,7 +190,7 @@ limitations under the License.
                     <img v-else-if="data.type ==='aggregation_scope'"
                          :src="require('@/assets/images/polymetric.svg')"
                          class="image-type" />
-                    <img v-else-if="!nodeIsDynamicShape(node.data)"
+                    <img v-else-if="nodeIsDynamicShape(node.data)"
                          :src="require('@/assets/images/dynamic-shape-node.svg')"
                          class="image-type" />
                     <img v-else
@@ -2417,20 +2417,7 @@ export default {
      * check node is dynamic shape
      */
     nodeIsDynamicShape(node) {
-      const output = node.output;
-        let sig = true;
-        if (output) {
-          for(const key in output) {
-            const val = output[key];
-            for (const v of val.shape) {
-              const idx = v.indexOf(-1);
-              if (idx != -1) {
-                sig = false;
-                break;
-              }
-            }
-          }
-        }
+      const sig = node.is_dynamic_shape_node;
       return sig;
     },
   },
@@ -3221,10 +3208,13 @@ export default {
   text-align: right;
 }
 .deb-wrap .rightBottom .table-container .table-content .el-table--border {
+  border-top: 1px solid #cdcdcd;
   border-right: none;
   border-left: none;
+  border-bottom: 1px solid #cdcdcd;
 }
 .deb-wrap .rightBottom .table-container .table-content .el-table--border td {
+  border-top: 1px solid #cdcdcd;
   border-right: none;
   border-left: none;
 }
