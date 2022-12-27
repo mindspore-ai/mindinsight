@@ -580,24 +580,11 @@ export default {
             `<${node.name}>[id="${node.name}";label="${name}\n\n\n";` +
             `shape="circle";width="0.14";height="0.14";fixedsize=true;];`;
         } else {
-          const output = node.output;
-          let sig = true;
-          if (output) {
-            for(const key in output) {
-              const val = output[key];
-              for (const v of val.shape) {
-                const idx = v.indexOf(-1);
-                if (idx != -1) {
-                  sig = false;
-                  break;
-                }
-              }
-            }
-          }
+          const sig = node.is_dynamic_shape_node;
           if (sig) {
-            tempStr += `<${node.name}>[id="${node.name}";shape="ellipse";` + `label="${name}"];`;
-          } else {
             tempStr += `<${node.name}>[id="${node.name}";shape="ellipse";class="dynamicShape"` + `label="${name}"];`;
+          } else {
+            tempStr += `<${node.name}>[id="${node.name}";shape="ellipse";` + `label="${name}"];`;
           }
         }
         // A maximum of five virtual nodes can be displayed. Other virtual nodes are displayed in XXXmore.
