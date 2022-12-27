@@ -250,7 +250,7 @@ class MSGraph(Graph):
         # save the node in the NodeTree
         root = NodeTree()
         for node in searched_node_list:
-            self._build_node_tree(root, node.name, node.type)
+            self._build_node_tree(root, node.name, node.type, node.is_dynamic_shape_node)
 
         # get the searched nodes in the NodeTree and reorganize them
         searched_list = []
@@ -304,7 +304,7 @@ class MSGraph(Graph):
                     searched_nodes.append(node)
         return searched_nodes
 
-    def _build_node_tree(self, root, node_name, node_type):
+    def _build_node_tree(self, root, node_name, node_type, is_dynamic_shape_node):
         """
         Build node tree.
 
@@ -321,9 +321,9 @@ class MSGraph(Graph):
             scope_node = self._get_normal_node(node_name=full_name)
             sub_node = cur_node.get(scope_name)
             if not sub_node:
-                sub_node = cur_node.add(scope_name, scope_node.type)
+                sub_node = cur_node.add(scope_name, scope_node.type, is_dynamic_shape_node)
             cur_node = sub_node
-        cur_node.add(scope_names[-1], node_type)
+        cur_node.add(scope_names[-1], node_type, is_dynamic_shape_node)
 
     def _traverse_node_tree(self, cur_node, search_node_list):
         """Traverse the node tree and construct the searched nodes list."""
@@ -333,6 +333,7 @@ class MSGraph(Graph):
             sub_node_dict = {
                 'name': sub_node.node_name,
                 'type': sub_node.node_type,
+                'is_dynamic_shape_node': sub_node.is_dynamic_shape_node,
                 'nodes': sub_nodes
             }
             search_node_list.append(sub_node_dict)
@@ -383,6 +384,9 @@ class MSGraph(Graph):
                           f"is over {self.MAX_NODE_ATTRIBUTE_VALUE_BYTES} Bytes, will ignore."
                 logger.warning(message)
                 continue
+            if attr.name in ('input_is_dynamic_shape', 'output_is_dynamic_shape') and not \
+                    node.is_dynamic_shape_node and attr.value.bool_val:
+                node.is_dynamic_shape_node = True
             node.add_attr({attr.name: str(attr.value)})
 
     def _update_input_after_create_node(self):

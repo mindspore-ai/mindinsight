@@ -1,1 +1,21 @@
-{"tensor_history": [{"name": "Default/TransData-op99:0", "full_name": "Default/TransData-op99:0", "node_type": "TransData", "type": "output", "graph_name": "kernel_graph_0"}, {"name": "Default/args0:0", "full_name": "Default/args0:0", "node_type": "Parameter", "type": "input", "graph_name": "kernel_graph_0"}], "metadata": {"step": 1}}
+{
+  "tensor_history": [
+    {
+      "name": "Default/TransData-op99:0",
+      "full_name": "Default/TransData-op99:0",
+      "node_type": "TransData",
+      "type": "output",
+      "graph_name": "kernel_graph_0"
+    },
+    {
+      "name": "Default/args0:0",
+      "full_name": "Default/args0:0",
+      "node_type": "Parameter",
+      "type": "input",
+      "graph_name": "kernel_graph_0"
+    }
+  ],
+  "metadata": {
+    "step": 1
+  }
+}

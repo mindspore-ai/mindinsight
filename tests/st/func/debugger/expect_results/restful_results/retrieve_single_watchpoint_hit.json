@@ -25,6 +25,7 @@
       {
         "name": "Default",
         "type": "name_scope",
+        "is_dynamic_shape_node": false,
         "attr": {},
         "input": {
           "Gradients/Default/network-WithLossCell/_backbone-LeNet5/fc3-Dense/gradBiasAdd/BiasAddGrad-op21": {
@@ -289,6 +290,7 @@
       {
         "name": "Gradients",
         "type": "name_scope",
+        "is_dynamic_shape_node": false,
         "attr": {},
         "input": {
           "Default/tuple_getitem[10]_0/tuple_getitem-op210": {
@@ -561,6 +563,7 @@
         {
           "name": "Default/TransData-op99",
           "type": "TransData",
+          "is_dynamic_shape_node": false,
           "attr": {
             "dst_format": "dtype: DT_STRING\nstr_val: \"NC1HWC0\"\n",
             "IsFeatureMapInputList": "dtype: DT_TUPLE\nvalues {\n  dtype: DT_UINT64\n  uint_val: 0\n}\n",
@@ -610,6 +613,7 @@
         {
           "name": "Default/Depend-op61",
           "type": "Depend",
+          "is_dynamic_shape_node": false,
           "attr": {},
           "input": {
             "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/ReduceMean-op60": {
@@ -657,6 +661,7 @@
         {
           "name": "Default/args0",
           "type": "Parameter",
+          "is_dynamic_shape_node": false,
           "attr": {
             "type": "DT_TENSOR[DT_FLOAT32]",
             "shape": "[[32, 1, 32, 32]]"
@@ -688,6 +693,7 @@
         {
           "name": "Default/tuple_getitem[10]_0",
           "type": "aggregation_scope",
+          "is_dynamic_shape_node": false,
           "attr": {},
           "input": {
             "Default/network-WithLossCell/_backbone-LeNet5/relu-ReLU/ReLUV2-op87": {
@@ -889,6 +895,7 @@
         {
           "name": "Default/make_tuple[9]_3",
           "type": "aggregation_scope",
+          "is_dynamic_shape_node": false,
           "attr": {},
           "input": {
             "Default/optimizer-Momentum/tuple_getitem[16]_2/tuple_getitem-op250": {
@@ -1163,6 +1170,7 @@
         {
           "name": "Default/network-WithLossCell",
           "type": "name_scope",
+          "is_dynamic_shape_node": false,
           "attr": {},
           "input": {
             "Default/TransData-op99": {
@@ -1459,6 +1467,7 @@
         {
           "name": "Default/optimizer-Momentum",
           "type": "name_scope",
+          "is_dynamic_shape_node": false,
           "attr": {},
           "input": {
             "Gradients/Default/network-WithLossCell/_backbone-LeNet5/fc3-Dense/gradBiasAdd/BiasAddGrad-op21": {

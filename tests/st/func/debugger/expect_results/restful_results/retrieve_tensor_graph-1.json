@@ -1,1 +1,120 @@
-{"graph": {"nodes": [{"name": "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op38", "full_name": "Default/optimizer-Momentum/ApplyMomentum-op38", "type": "ApplyMomentum", "input": {"Default/optimizer-Momentum/Parameter[18]_7/moments.fc1.bias": {"shape": [[120]], "edge_type": "data", "independent_layout": false, "data_type": "DT_TENSOR[DT_FLOAT32]", "slot_mapping": [["0", ""]]}}, "output": {}, "slots": [{"slot": "0", "statistics": {"overall_max": 6.0, "overall_min": 1.0, "overall_avg": 3.5, "overall_count": 6, "overall_nan_count": 0, "overall_neg_inf_count": 0, "overall_pos_inf_count": 0, "overall_zero_count": 0.0, "overall_neg_zero_count": 0.0, "overall_pos_zero_count": 6.0}, "shape": [2, 3]}, {"slot": "1", "statistics": {"overall_max": 6.0, "overall_min": 1.0, "overall_avg": 3.5, "overall_count": 6, "overall_nan_count": 0, "overall_neg_inf_count": 0, "overall_pos_inf_count": 0, "overall_zero_count": 0.0, "overall_neg_zero_count": 0.0, "overall_pos_zero_count": 6.0}, "shape": [2, 3]}], "stack_info": [], "graph_name": "graph_0"}, {"name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc1.bias", "full_name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc1.bias", "type": "Parameter", "input": {}, "output": {"Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op38": {"shape": [[120]], "edge_type": "data", "independent_layout": false, "data_type": "DT_TENSOR[DT_FLOAT32]", "slot_mapping": [["0", ""]]}}, "slots": [{"slot": "0", "statistics": {"overall_max": 6.0, "overall_min": 1.0, "overall_avg": 3.5, "overall_count": 6, "overall_nan_count": 0, "overall_neg_inf_count": 0, "overall_pos_inf_count": 0, "overall_zero_count": 0.0, "overall_neg_zero_count": 0.0, "overall_pos_zero_count": 6.0}, "shape": [2, 3], "has_prev_step": true}], "stack_info": [], "graph_name": "graph_0"}]}}
+{
+  "graph": {
+    "nodes": [
+      {
+        "name": "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op38",
+        "full_name": "Default/optimizer-Momentum/ApplyMomentum-op38",
+        "type": "ApplyMomentum",
+        "input": {
+          "Default/optimizer-Momentum/Parameter[18]_7/moments.fc1.bias": {
+            "shape": [
+              [
+                120
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TENSOR[DT_FLOAT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "output": {},
+        "slots": [
+          {
+            "slot": "0",
+            "statistics": {
+              "overall_max": 6.0,
+              "overall_min": 1.0,
+              "overall_avg": 3.5,
+              "overall_count": 6,
+              "overall_nan_count": 0,
+              "overall_neg_inf_count": 0,
+              "overall_pos_inf_count": 0,
+              "overall_zero_count": 0.0,
+              "overall_neg_zero_count": 0.0,
+              "overall_pos_zero_count": 6.0
+            },
+            "shape": [
+              2,
+              3
+            ]
+          },
+          {
+            "slot": "1",
+            "statistics": {
+              "overall_max": 6.0,
+              "overall_min": 1.0,
+              "overall_avg": 3.5,
+              "overall_count": 6,
+              "overall_nan_count": 0,
+              "overall_neg_inf_count": 0,
+              "overall_pos_inf_count": 0,
+              "overall_zero_count": 0.0,
+              "overall_neg_zero_count": 0.0,
+              "overall_pos_zero_count": 6.0
+            },
+            "shape": [
+              2,
+              3
+            ]
+          }
+        ],
+        "stack_info": [],
+        "graph_name": "graph_0"
+      },
+      {
+        "name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc1.bias",
+        "full_name": "Default/optimizer-Momentum/Parameter[18]_7/moments.fc1.bias",
+        "type": "Parameter",
+        "input": {},
+        "output": {
+          "Default/optimizer-Momentum/ApplyMomentum[8]_1/ApplyMomentum-op38": {
+            "shape": [
+              [
+                120
+              ]
+            ],
+            "edge_type": "data",
+            "independent_layout": false,
+            "data_type": "DT_TENSOR[DT_FLOAT32]",
+            "slot_mapping": [
+              [
+                "0",
+                ""
+              ]
+            ]
+          }
+        },
+        "slots": [
+          {
+            "slot": "0",
+            "statistics": {
+              "overall_max": 6.0,
+              "overall_min": 1.0,
+              "overall_avg": 3.5,
+              "overall_count": 6,
+              "overall_nan_count": 0,
+              "overall_neg_inf_count": 0,
+              "overall_pos_inf_count": 0,
+              "overall_zero_count": 0.0,
+              "overall_neg_zero_count": 0.0,
+              "overall_pos_zero_count": 6.0
+            },
+            "shape": [
+              2,
+              3
+            ],
+            "has_prev_step": true
+          }
+        ],
+        "stack_info": [],
+        "graph_name": "graph_0"
+      }
+    ]
+  }
+}

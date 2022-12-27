@@ -1,1 +1,18 @@
-{"nodes": [{"name": "Default", "type": "name_scope", "attr": {}, "input": {}, "output": {}, "output_i": 0, "proxy_input": {}, "proxy_output": {}, "subnode_count": 3, "independent_layout": false, "stack_info": []}]}
+{
+  "nodes": [
+    {
+      "name": "Default",
+      "type": "name_scope",
+      "is_dynamic_shape_node": false,
+      "attr": {},
+      "input": {},
+      "output": {},
+      "output_i": 0,
+      "proxy_input": {},
+      "proxy_output": {},
+      "subnode_count": 3,
+      "independent_layout": false,
+      "stack_info": []
+    }
+  ]
+}

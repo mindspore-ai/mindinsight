@@ -1,1 +1,58 @@
-{"nodes": [{"name": "Default", "type": "name_scope", "nodes": [{"name": "Default/network-WithLossCell", "type": "name_scope", "nodes": [{"name": "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits", "type": "name_scope", "nodes": []}]}]}, {"name": "Gradients", "type": "name_scope", "nodes": [{"name": "Gradients/Default", "type": "name_scope", "nodes": [{"name": "Gradients/Default/network-WithLossCell", "type": "name_scope", "nodes": [{"name": "Gradients/Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits", "type": "name_scope", "nodes": [{"name": "Gradients/Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/gradSoftmaxCrossEntropyWithLogits", "type": "name_scope", "nodes": []}]}]}]}]}]}
+{
+  "nodes": [
+    {
+      "name": "Default",
+      "type": "name_scope",
+      "is_dynamic_shape_node": false,
+      "nodes": [
+        {
+          "name": "Default/network-WithLossCell",
+          "type": "name_scope",
+          "is_dynamic_shape_node": false,
+          "nodes": [
+            {
+              "name": "Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits",
+              "type": "name_scope",
+              "is_dynamic_shape_node": false,
+              "nodes": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Gradients",
+      "type": "name_scope",
+      "is_dynamic_shape_node": false,
+      "nodes": [
+        {
+          "name": "Gradients/Default",
+          "type": "name_scope",
+          "is_dynamic_shape_node": false,
+          "nodes": [
+            {
+              "name": "Gradients/Default/network-WithLossCell",
+              "type": "name_scope",
+              "is_dynamic_shape_node": false,
+              "nodes": [
+                {
+                  "name": "Gradients/Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits",
+                  "type": "name_scope",
+                  "is_dynamic_shape_node": false,
+                  "nodes": [
+                    {
+                      "name": "Gradients/Default/network-WithLossCell/_loss_fn-SoftmaxCrossEntropyWithLogits/gradSoftmaxCrossEntropyWithLogits",
+                      "type": "name_scope",
+                      "is_dynamic_shape_node": false,
+                      "nodes": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
