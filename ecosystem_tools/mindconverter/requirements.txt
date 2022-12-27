@@ -1,5 +1,5 @@
-google-pasta>=0.1.8
-numpy>=1.17.0
-protobuf>=3.13.0
-yapf>=0.30.0
-networkx==2.5
+google-pasta >= 0.1.8
+numpy >= 1.17.0
+protobuf >= 3.13.0
+yapf >= 0.30.0
+networkx == 2.5
