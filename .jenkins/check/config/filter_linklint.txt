@@ -1,0 +1,4 @@
+# r2.0.0-alpha
+
+https://mindspore.cn*/r2.0.0-alpha/*
+https://www.mindspore.cn*/r2.0.0-alpha/*
