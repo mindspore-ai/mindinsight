@@ -29,6 +29,7 @@ class TimelineService:
     _gpu_display_filename = 'gpu_timeline_display_{}.json'
 
     def __init__(self, path):
+        self._display_timeline = True
         self.__read_data(path)
         self.__align_time()
 
@@ -116,6 +117,9 @@ class TimelineService:
             file_path = validate_and_normalize_path(
                 file_path, raise_key='Invalid timeline display file path.'
             )
+            if not os.path.exists(file_path):
+                self._display_timeline = False
+                return
             with open(file_path, "r") as fp:
                 j_data = json.loads(fp.read())
                 self.all_data[device_entry] = j_data
@@ -125,6 +129,8 @@ class TimelineService:
 
     def __align_time(self):
         """Align timeline on each device."""
+        if not self._display_timeline:
+            return
         visited = set()
         self.align_info = {}
         one_step_op = self.__get_raw_ops_by_step("1")
