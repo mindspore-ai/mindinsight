@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Huawei Technologies Co., Ltd
+# Copyright 2019-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ more log file.
 """
 import re
 import struct
+import time
+from os import path
 
 from google.protobuf.message import DecodeError
 from google.protobuf.text_format import ParseError
@@ -376,6 +378,7 @@ class _SummaryParser(_Parser):
         while True:
             start_offset = file_handler.offset
             try:
+                self.is_integrity = True
                 event_str = self.event_load(file_handler)
                 if event_str is None:
                     file_handler.reset_offset(start_offset)
@@ -412,7 +415,12 @@ class _SummaryParser(_Parser):
                              "file_path: %s, offset: %s, file size: %s. Detail: %s.",
                              file_handler.file_path, file_handler.offset, file_size, str(exc))
                 self.is_integrity = False
-                return True
+                modify_time = path.getmtime(file_handler.file_path)
+                current_time = time.time()
+                if current_time - modify_time > 600:
+                    logger.error("The file: %s is damaged.", file_handler.file_path)
+                    return True
+                return False
             except (OSError, DecodeError, exceptions.MindInsightException) as ex:
                 logger.error("Parse log file fail, and ignore this file, detail: %r, "
                              "file path: %s.", str(ex), file_handler.file_path)
