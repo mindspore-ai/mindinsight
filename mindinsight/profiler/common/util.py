@@ -41,10 +41,12 @@ def analyse_device_list_from_profiler_dir(profiler_dir):
     gpu_profiler_file_prefix = ["gpu_op_detail_info", "gpu_activity_data", "gpu_op_type_info"]
     cpu_profiler_file_prefix = ["cpu_op_detail_info", "cpu_op_type_info"]
     pynative_profiler_file_prefix = "pynative_op_intermediate"
+    minddata_profiler_file_prefix = "minddata_pipeline_summary"
 
     device_id_list = set()
     gpu_device_id_list = set()
     cpu_device_id_list = set()
+    minddata_device_id_list = set()
     pynative_device_id_list = set()
 
     depth = 0
@@ -60,17 +62,20 @@ def analyse_device_list_from_profiler_dir(profiler_dir):
             else:
                 items = filename.split("_")
                 device_num = items[-1].split(".")[0] if items[-1].split(".") else ""
-
-            if device_num.isdigit() and '_'.join(items[:-1]) in profiler_file_prefix:
-                device_id_list.add(device_num)
-            elif device_num.isdigit() and '_'.join(items[:-1]) in gpu_profiler_file_prefix:
-                gpu_device_id_list.add(device_num)
-            elif device_num.isdigit() and '_'.join(items[:-1]) in cpu_profiler_file_prefix:
-                cpu_device_id_list.add(device_num)
+            file_prefix = '_'.join(items[:-1])
+            if device_num.isdigit():
+                if file_prefix in profiler_file_prefix:
+                    device_id_list.add(device_num)
+                elif file_prefix in gpu_profiler_file_prefix:
+                    gpu_device_id_list.add(device_num)
+                elif file_prefix in cpu_profiler_file_prefix:
+                    cpu_device_id_list.add(device_num)
+                elif file_prefix in minddata_profiler_file_prefix:
+                    minddata_device_id_list.add(device_num)
             if '_'.join(items[:-2]) == pynative_profiler_file_prefix and items[3].isdigit():
                 pynative_device_id_list.add(items[3])
         depth += 1
-
+    profiler_type = ""
     if device_id_list:
         result_list = sorted(list(device_id_list))
         profiler_type = "ascend"
@@ -80,9 +85,10 @@ def analyse_device_list_from_profiler_dir(profiler_dir):
     elif cpu_device_id_list:
         result_list = sorted(list(cpu_device_id_list))
         profiler_type = "cpu"
+    elif minddata_device_id_list:
+        result_list = sorted(list(minddata_device_id_list))
     else:
         result_list = []
-        profiler_type = ""
     profiler_mode = "pynative" if pynative_device_id_list else "graph"
     return result_list, profiler_type, profiler_mode
 
