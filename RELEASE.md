@@ -19,12 +19,6 @@
 
 - [STABLE] Dump supports dynamic shape
 
-### API Change
-
-#### Backwards Compatible Change
-
-##### Python API
-
 ### Contributors
 
 Thanks goes to these wonderful people:
