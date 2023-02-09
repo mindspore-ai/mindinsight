@@ -2,6 +2,47 @@
 
 [View English](./RELEASE.md)
 
+## MindInsight 2.0.0 Release Notes
+
+### 主要特性和增强
+
+#### Profiling
+
+- [STABLE] Profiler支持通过环境变量使能
+- [STABLE] 提供生成PMU性能数据的接口（Ascend）
+- [BETA] Pynative模式下，Profiler算子性能数据准确性优化（Ascend）
+- [BETA] Profiler支持PyNative模式基础功能（GPU）
+- [STABLE] 支持Msprof二进制工具拉起Mindspore Profiling（Ascend）
+- [BETA] Profiling支持动态shape网络（GPU）
+
+#### Summary
+
+- [STABLE] Summary算子支持PyNative模式
+
+#### Dump
+
+- [BETA] Dump支持动态shape
+- [STABLE] Dump支持kernelbykernel模式溢出检测（Ascend）
+- [STABLE] Dump支持可指定算子类型
+
+#### Debugger
+
+- [BETA] Debugger支持静态图的动态shape（Ascend/GPU）
+
+#### 兼容性变更
+
+##### 新增API
+
+- [STABLE] Profiler新增可配置分析指标
+
+### 贡献者
+
+感谢以下人员做出的贡献:
+
+Ning Ma, Chuting Liu, Jiaxing Zhu, Qingxiang Zang, Yaomin Mao.
+
+欢迎以任何形式对项目提供贡献！
+
 ## MindInsight 1.9.0 Release Notes
 
 ### 主要特性和增强
