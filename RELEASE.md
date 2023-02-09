@@ -2,7 +2,7 @@
 
 [查看中文](./RELEASE_CN.md)
 
-## MindInsight 2.0.0 Release Notes
+## MindInsight 2.0.0-alpha Release Notes
 
 ### Major Features and Improvements
 
@@ -10,32 +10,14 @@
 
 - [STABLE] Profiler supports enabling through environment variables
 - [STABLE] Provides an interface for generating PMU performance data (Ascend)
-- [BETA] Pynative Mode, Accuracy optimization of Profiler operator performance data (Ascend)
+- [BETA] PyNative Mode, Accuracy optimization of Profiler operator performance data (Ascend)
 - [BETA] Profiler supports PyNative mode basics (GPU)
-- [STABLE] Supports Msprof binary tool to pull up Mindspore Profiling (Ascend)
+- [STABLE] Support Msprof binary tool to pull up Mindspore Profiling (Ascend)
 - [BETA] Profiling supports Dynamic shape network (GPU)
-
-#### Summary
-
-- [STABLE] Summary operator supports PyNative mode
 
 #### Dump
 
-- [BETA] Dump supports dynamic shape
-- [STABLE] Dump supports overflow detection in kernelbykernel mode (Ascend)
-- [STABLE] Dump supports a specified operator type
-
-#### Debugger
-
-- [BETA] Debugger supports dynamic shape of static graphs (Ascend/GPU)
-
-### API Change
-
-#### Backwards Compatible Change
-
-##### Python API
-
-- [STABLE] Profiler Added configurable analysis indicators
+- [STABLE] Dump supports dynamic shape
 
 ### Contributors
 
