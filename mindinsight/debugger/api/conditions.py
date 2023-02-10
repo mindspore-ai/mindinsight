@@ -1024,7 +1024,7 @@ class Watchpoint:
         Get tensors to check.
 
         Returns:
-            Iterable[DebuggerTensor]), the tensors to check.
+            Iterable[DebuggerTensor], the tensors to check.
         """
         return self._tensors
 

@@ -83,7 +83,7 @@ class Node(ABC):
         Get stack info of the node.
 
         Returns:
-            iterable[dict], each item format like:
+            iterable[dict], each item format as follows,
 
             .. code-block::
 
