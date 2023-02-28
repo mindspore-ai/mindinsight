@@ -1022,7 +1022,7 @@ export default {
         device_id: this.rankID,
         filter_condition: {},
         sort_condition: {
-          name: 'execution_time',
+          name: 'total_time',
           type: 'descending',
         },
       };

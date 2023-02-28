@@ -20,7 +20,7 @@ from unittest import TestCase
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from tests.ut.profiler import PROFILER_DIR
 
-COL_NAMES = ['op_type', 'execution_time', 'execution_frequency', 'percent']
+COL_NAMES = ['op_type', 'total_time', 'execution_frequency', 'percent']
 
 
 def get_type_infos(indexes=None, sort_name=None, sort_type=True):
@@ -194,12 +194,12 @@ class TestAicoreTypeAnalyser(TestCase):
 
         expect_result = {
             'col_name': COL_NAMES,
-            'object': get_type_infos(sort_name='execution_time', sort_type=False),
+            'object': get_type_infos(sort_name='total_time', sort_type=False),
             'size': 5
         }
         condition = {
             'sort_condition': {
-                'name': 'execution_time',
+                'name': 'total_time',
                 'type': 'ascending'
             }
         }
@@ -241,7 +241,7 @@ class TestAicoreTypeAnalyser(TestCase):
         expect_result = {
             'col_name': COL_NAMES,
             'object': get_type_infos(
-                indexes=[1, 3], sort_name='execution_time', sort_type=True
+                indexes=[1, 3], sort_name='total_time', sort_type=True
             ),
             'size': 3
         }
@@ -252,7 +252,7 @@ class TestAicoreTypeAnalyser(TestCase):
                 }
             },
             'sort_condition': {
-                'name': 'execution_time'
+                'name': 'total_time'
             },
             'group_condition': {
                 'limit': 2,

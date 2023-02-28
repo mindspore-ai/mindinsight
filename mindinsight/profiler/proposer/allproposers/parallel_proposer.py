@@ -171,21 +171,24 @@ class ParallelProposer(Proposer):
         warning_link = {}
         for link_type in type_links:
             warning_link[link_type] = []
-            avg_bandwidth = sum_bandwidth[link_type]/len(type_links[link_type])
+            avg_bandwidth = sum_bandwidth[link_type] / len(type_links[link_type])
             for link in type_links[link_type]:
+                if not avg_bandwidth:
+                    continue
                 proportion = (avg_bandwidth - link[2]) / avg_bandwidth
                 if proportion > self._rank_link_threshold and \
                         (not warning_link[link_type] or proportion > warning_link[link_type][4]):
                     warning_link[link_type] = (link[0], link[1], link_type, link[2], proportion)
 
         for link in warning_link:
-            if warning_link[link]:
-                self._proposal_dict["cluster_link"].append({
-                    "src_rank": warning_link[link][0],
-                    "des_rank": warning_link[link][1],
-                    "link_type": warning_link[link][2],
-                    "val": round(warning_link[link][3], self._VAL_DECIMAL_PLACES),
-                    "percent": round(warning_link[link][4] * 100, self._PERCENT_DECIMAL_PLACES)
+            link_info = warning_link.get(link)
+            if link_info:
+                self._proposal_dict.get("cluster_link").append({
+                    "src_rank": link_info[0],
+                    "des_rank": link_info[1],
+                    "link_type": link_info[2],
+                    "val": round(link_info[3], self._VAL_DECIMAL_PLACES),
+                    "percent": round(link_info[4] * 100, self._PERCENT_DECIMAL_PLACES)
                 })
 
     def _communication_analyze(self):
@@ -196,15 +199,15 @@ class ParallelProposer(Proposer):
         communication_rate = self._parallel_analyser.get_communication_rate()
         if self._parallel_mode == self._DATA_PARALLEL and \
                 communication_rate > self._data_parallel_communication_threshold:
-            self._proposal_dict["parallel_strategy"]["data_parallel_communication_rate"]["val"] = \
+            self._proposal_dict.get("parallel_strategy").get("data_parallel_communication_rate")["val"] = \
                 round(communication_rate * 100, self._PERCENT_DECIMAL_PLACES)
-            self._proposal_dict["parallel_strategy"]["data_parallel_communication_rate"]["threshold"] = \
+            self._proposal_dict.get("parallel_strategy").get("data_parallel_communication_rate")["threshold"] = \
                 round(self._data_parallel_communication_threshold * 100, self._PERCENT_DECIMAL_PLACES)
         elif self._parallel_mode == self._MODEL_PARALLEL and \
                 communication_rate > self._model_parallel_communication_threshold:
-            self._proposal_dict["parallel_strategy"]["model_parallel_communication_rate"]["val"] = \
+            self._proposal_dict.get("parallel_strategy").get("model_parallel_communication_rate")["val"] = \
                 round(communication_rate * 100, self._PERCENT_DECIMAL_PLACES)
-            self._proposal_dict["parallel_strategy"]["model_parallel_communication_rate"]["threshold"] = \
+            self._proposal_dict.get("parallel_strategy").get("model_parallel_communication_rate")["threshold"] = \
                 round(self._model_parallel_communication_threshold * 100, self._PERCENT_DECIMAL_PLACES)
 
     def _between_stage_communication_analyze(self):
@@ -214,9 +217,9 @@ class ParallelProposer(Proposer):
 
         communication_rate = self._parallel_analyser.get_between_stage_communication_rate()
         if communication_rate > self._between_stage_communication_threshold:
-            self._proposal_dict["parallel_strategy"]["pipeline_parallel_between_stage"]["val"] = \
+            self._proposal_dict.get("parallel_strategy").get("pipeline_parallel_between_stage")["val"] = \
                 round(communication_rate * 100, self._PERCENT_DECIMAL_PLACES)
-            self._proposal_dict["parallel_strategy"]["pipeline_parallel_between_stage"]["threshold"] = \
+            self._proposal_dict.get("parallel_strategy").get("pipeline_parallel_between_stage")["threshold"] = \
                 round(self._between_stage_communication_threshold * 100, self._PERCENT_DECIMAL_PLACES)
 
     def _within_stage_communication_analyze(self):
@@ -233,11 +236,11 @@ class ParallelProposer(Proposer):
                 stage_id = communication_rate['stage_id']
                 val = communication_rate['rate']
         if stage_id > 0:
-            self._proposal_dict["parallel_strategy"]["pipeline_parallel_within_stage"]["val"] = \
+            self._proposal_dict.get("parallel_strategy").get("pipeline_parallel_within_stage")["val"] = \
                 round(val * 100, self._PERCENT_DECIMAL_PLACES)
-            self._proposal_dict["parallel_strategy"]["pipeline_parallel_within_stage"]["threshold"] = \
+            self._proposal_dict.get("parallel_strategy").get("pipeline_parallel_within_stage")["threshold"] = \
                 round(self._within_stage_communication_threshold * 100, self._PERCENT_DECIMAL_PLACES)
-            self._proposal_dict["parallel_strategy"]["pipeline_parallel_within_stage"]["stage"] = stage_id
+            self._proposal_dict.get("parallel_strategy").get("pipeline_parallel_within_stage")["stage"] = stage_id
 
     def _flops_analyze(self):
         """The flops of stage analyze, find the stage with the most computation."""
@@ -262,19 +265,19 @@ class ParallelProposer(Proposer):
             if proportion > self._flops_threshold and proportion > percent:
                 warn_stage = stage
                 percent = proportion
-                val = stage_rank_avg_flops[stage]
+                val = stage_rank_avg_flops.get(stage)
         if warn_stage >= 0:
-            self._proposal_dict["parallel_strategy"]["pipeline_parallel_flops"]["stage"] = warn_stage
-            self._proposal_dict["parallel_strategy"]["pipeline_parallel_flops"]["val"] = \
+            self._proposal_dict.get("parallel_strategy").get("pipeline_parallel_flops")["stage"] = warn_stage
+            self._proposal_dict.get("parallel_strategy").get("pipeline_parallel_flops")["val"] = \
                 round(val, self._VAL_DECIMAL_PLACES)
-            self._proposal_dict["parallel_strategy"]["pipeline_parallel_flops"]["percent"] = \
+            self._proposal_dict.get("parallel_strategy").get("pipeline_parallel_flops")["percent"] = \
                 round(percent * 100, self._PERCENT_DECIMAL_PLACES)
 
     def _clear_warning_node(self):
         """Clear useless warning node."""
-        for warning in list(self._proposal_dict["parallel_strategy"].keys()):
+        for warning in list(self._proposal_dict.get("parallel_strategy").keys()):
             if not self._proposal_dict["parallel_strategy"][warning]:
-                del self._proposal_dict["parallel_strategy"][warning]
+                del self._proposal_dict.get("parallel_strategy")[warning]
 
         for warning in list(self._proposal_dict.keys()):
             if not self._proposal_dict[warning]:

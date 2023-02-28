@@ -26,54 +26,23 @@ from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from tests.st.func.profiler.conftest import BASE_SUMMARY_DIR
 
 OP_GATHER_V2_INFO = {
-    'col_name': [
-        'op_name', 'op_type', 'avg_execution_time', 'FLOPs', 'FLOPS', 'FLOPS_Utilization',
-        'subgraph', 'full_op_name', 'op_info'
-    ],
+    'col_name':
+        ['op_name', 'op_type', 'avg_execution_time', 'execution_frequency',
+         'FLOPs', 'FLOPS', 'FLOPS_Utilization', 'subgraph', 'full_op_name', 'op_info'],
     'object': [
         [
-            'GatherV2-op55', 'GatherV2', 42220.212, 333.0, 333.0, 33.0, 'Default',
-            'Default/network-TrainStepWrap/network-VirtualDatasetCellTriple/'
-            '_backbone-NetWithLossClass/network-WideDeepModel/GatherV2-op55',
-            {
-                'input_0': {
-                    'format': 'DefaultFormat',
-                    'data_type': 'NUMBER_TYPE_FLOAT32',
-                    'shape': '184696,8'
-                },
-                'input_1': {
-                    'format': 'DefaultFormat',
-                    'data_type': 'NUMBER_TYPE_INT32',
-                    'shape': '128000,39'
-                },
-                'output_0': {
-                    'format': 'DefaultFormat',
-                    'data_type': 'NUMBER_TYPE_FLOAT32',
-                    'shape': '128000,39,8'
-                }
-            }
+            'AssignAdd-op203', 'AssignAdd', 1.79, 3, '-', '-', '-', 'Default', 'Default/AssignAdd-op203',
+            {'input_0': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]},
+             'input_1': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]},
+             'output_0': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]}
+             }
         ],
         [
-            'GatherV2-op33', 'GatherV2', 935.229, 333.0, 333.0, 33.0, 'Default',
-            'Default/network-TrainStepWrap/network-VirtualDatasetCellTriple/'
-            '_backbone-NetWithLossClass/network-WideDeepModel/GatherV2-op33',
-            {
-                'input_0': {
-                    'format': 'DefaultFormat',
-                    'data_type': 'NUMBER_TYPE_FLOAT32',
-                    'shape': '184696,1'
-                },
-                'input_1': {
-                    'format': 'DefaultFormat',
-                    'data_type': 'NUMBER_TYPE_INT32',
-                    'shape': '16000,39'
-                },
-                'output_0': {
-                    'format': 'DefaultFormat',
-                    'data_type': 'NUMBER_TYPE_FLOAT32',
-                    'shape': '16000,39,1'
-                }
-            }
+            'AssignAdd-op206', 'AssignAdd', 1.283, 3, '-', '-', '-', 'Default', 'Default/AssignAdd-op206',
+            {'input_0': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]},
+             'input_1': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]},
+             'output_0': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]}
+             }
         ]
     ],
     'size': 2
@@ -106,43 +75,38 @@ class TestOpAnalyser:
     def test_query_aicore_type_1(self):
         """Test the function of querying AICORE operator type information."""
         expect_result = {
-            'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
+            'col_name':
+                ['op_type', 'total_time', 'execution_frequency', 'percent'],
             'object': [
-                ['UnsortedSegmentSum', 44607.826, 2, 35.28],
-                ['GatherV2', 43155.441, 2, 34.13],
-                ['Slice', 20376.315, 16, 16.12],
-                ['Concat', 5808.454, 4, 4.59],
-                ['Split', 2714.277, 2, 2.15],
-                ['MatMul', 1936.681, 15, 1.53],
-                ['Mul', 1902.949, 32, 1.51],
-                ['StridedSliceGrad', 1506.834, 2, 1.19],
-                ['TransData', 1115.158, 30, 0.88],
-                ['ReluGrad', 854.069, 5, 0.68],
-                ['Cast', 484.685, 15, 0.38],
-                ['ReLU', 483.282, 5, 0.38],
-                ['RealDiv', 422.807, 15, 0.33],
-                ['StridedSlice', 345.569, 2, 0.27],
-                ['Adam', 285.936, 11, 0.23],
-                ['BiasAdd', 189.663, 5, 0.15],
-                ['BiasAddGrad', 71.681, 5, 0.06],
-                ['Tile', 44.158, 4, 0.03],
-                ['ReduceSum', 30.765, 5, 0.02],
-                ['ApplyFtrl', 25.454, 2, 0.02],
-                ['AtomicAddrClean', 19.369, 8, 0.02],
-                ['AddN', 12.836, 1, 0.01],
-                ['Square', 9.799, 1, 0.01],
-                ['SigmoidCrossEntropyWithLogitsGrad', 9.582, 2, 0.01],
-                ['TensorAdd', 9.218, 3, 0.01],
-                ['SigmoidCrossEntropyWithLogits', 4.809, 1, 0.0],
-                ['ReduceMean', 4.535, 1, 0.0],
-                ['Assign', 2.477, 2, 0.0],
-                ['AssignAdd', 1.688, 1, 0.0]
-            ],
-            'size': 29
+                ['MatMul', 2807.82, 25, 57.6],
+                ['Cast', 104.32, 27, 2.14],
+                ['TransData', 86.12, 9, 1.77],
+                ['ApplyMomentumD', 56.68, 24, 1.16],
+                ['MaxPoolGradWithArgmax', 51.6, 6, 1.06],
+                ['AtomicAddrClean', 48.99, 30, 1.01],
+                ['Conv2DBackpropFilterD', 45.68, 6, 0.94],
+                ['Conv2D', 38.97, 6, 0.8],
+                ['MaxPoolWithArgmax', 34.32, 6, 0.7],
+                ['FusionOp_ReluGradV2_Cast', 32.87, 6, 0.67],
+                ['SoftmaxCrossEntropyWithLogits', 28.7, 3, 0.59],
+                ['BiasAddGrad', 26.73, 9, 0.55],
+                ['ReluV2', 25.99, 6, 0.53],
+                ['Conv2DBackpropInputD', 16.07, 3, 0.33],
+                ['OneHotD', 15.89, 3, 0.33],
+                ['ReluGrad', 11.54, 6, 0.24],
+                ['Relu', 9.67, 6, 0.2],
+                ['AssignAdd', 9.22, 6, 0.19],
+                ['TensorMove', 5.31, 3, 0.11],
+                ['Mul', 4.29, 3, 0.09],
+                ['ReduceMeanD', 4.24, 3, 0.09],
+                ['GetNext', 0.15, 3, 0.0],
+                ['StreamRecv', 0.15, 3, 0.0],
+                ['StreamSend', 0.03, 3, 0.0]],
+            'size': 24
         }
         condition = {
             'sort_condition': {
-                'name': 'execution_time',
+                'name': 'total_time',
                 'type': 'descending'
             }
         }
@@ -158,10 +122,11 @@ class TestOpAnalyser:
     def test_query_aicore_type_2(self):
         """Test the function of querying AICORE operator type information."""
         expect_result = {
-            'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
+            'col_name':
+                ['op_type', 'total_time', 'execution_frequency', 'percent'],
             'object': [
-                ['MatMul', 1936.681, 15, 1.53],
-                ['Mul', 1902.949, 32, 1.51]
+                ['MatMul', 2807.82, 25, 57.6],
+                ['Mul', 4.29, 3, 0.09]
             ],
             'size': 2
         }
@@ -172,7 +137,7 @@ class TestOpAnalyser:
                 }
             },
             'sort_condition': {
-                'name': 'execution_time',
+                'name': 'total_time',
                 'type': 'descending'
             }
         }
@@ -191,7 +156,7 @@ class TestOpAnalyser:
         condition = {
             'filter_condition': {
                 'op_type': {
-                    'in': ['GatherV2']
+                    'in': ['AssignAdd']
                 }
             },
             'sort_condition': {
