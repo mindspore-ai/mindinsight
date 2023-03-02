@@ -23,13 +23,13 @@ from mindinsight.profiler.common.exceptions.exceptions import ProfilerParamTypeE
     ProfilerGroupConditionException, ProfilerParamValueErrorException
 from mindinsight.profiler.common.log import logger as log
 
-AICORE_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "percent"]
-AICORE_DETAIL_COL = ["op_name", "op_type", "avg_execution_time", "FLOPs", "FLOPS",
+AICORE_TYPE_COL = ["op_type", "total_time", "execution_frequency", "percent"]
+AICORE_DETAIL_COL = ["op_name", "op_type", "avg_execution_time", "execution_frequency", "FLOPs", "FLOPS",
                      "FLOPS_Utilization", "subgraph", "full_op_name"]
 PYNATIVE_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "percent"]
 PYNATIVE_DETAIL_COL = ["op_name", "op_type", "avg_execution_time", "subgraph", "full_op_name"]
-AICPU_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "percent"]
-AICPU_DETAIL_COL = ["op_name", "serial_number", "op_type", "total_time", "dispatch_time", "execution_frequency",
+AICPU_TYPE_COL = ["op_type", "total_time", "execution_frequency", "percent"]
+AICPU_DETAIL_COL = ["op_name", "serial_number", "op_type", "avg_execution_time", "dispatch_time", "execution_frequency",
                     "run_start", "run_end"]
 GPU_TYPE_COL = ["op_type", "type_occurrences", "total_time", "proportion", "avg_time"]
 GPU_OP_TYPE_COL = ["op_side", "op_type", "op_name", "duration"]

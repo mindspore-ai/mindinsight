@@ -96,7 +96,7 @@ export default {
       },
       coreOpSortCondition: {
         all: {
-          name: 'execution_time',
+          name: 'total_time',
           type: 'descending',
         },
         detail: {
@@ -106,11 +106,11 @@ export default {
       },
       cpuOpSortCondition: {
         all: {
-          name: 'execution_time',
+          name: 'total_time',
           type: 'descending',
         },
         detail: {
-          name: 'total_time',
+          name: 'avg_execution_time',
           type: 'descending',
         },
       },

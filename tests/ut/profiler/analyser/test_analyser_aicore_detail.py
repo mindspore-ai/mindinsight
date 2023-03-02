@@ -21,7 +21,7 @@ from unittest import TestCase
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from tests.ut.profiler import PROFILER_DIR
 
-COL_NAMES = ['op_name', 'op_type', 'avg_execution_time', 'FLOPs', 'FLOPS',
+COL_NAMES = ['op_name', 'op_type', 'avg_execution_time', 'execution_frequency', 'FLOPs', 'FLOPS',
              'FLOPS_Utilization', 'subgraph', 'full_op_name', 'op_info']
 
 
@@ -52,7 +52,7 @@ def get_detail_infos(indexes=None, sort_name=None, sort_type=True):
         for fm_info, detail_info, flops_line in zip(fm_csv_reader, detail_csv_reader, flops_reader):
             flops = flops_line.strip().split(',')
             cache.append(
-                [fm_info[4], fm_info[5], round(float(detail_info[1]) * 1e3, 3), float(flops[1]),
+                [fm_info[4], fm_info[5], round(float(detail_info[1]) * 1e3, 3), int(detail_info[2]), float(flops[1]),
                  float(flops[2]), float(flops[3]), fm_info[6],
                  fm_info[3], json.loads(fm_info[7]) if fm_info[7] else None]
             )
@@ -241,8 +241,8 @@ class TestAicoreDetailAnalyser(TestCase):
         detail_infos = get_detail_infos(indexes=[9])
 
         expect_result = {
-            'col_name': COL_NAMES[0:8],
-            'object': [item[0:8] for item in detail_infos],
+            'col_name': COL_NAMES[0:9],
+            'object': [item[0:9] for item in detail_infos],
             'size': 1
         }
         condition = {
@@ -257,8 +257,8 @@ class TestAicoreDetailAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': COL_NAMES[0:7],
-            'object': [item[0:7] for item in detail_infos],
+            'col_name': COL_NAMES[0:8],
+            'object': [item[0:8] for item in detail_infos],
             'size': 1
         }
         condition = {
@@ -271,14 +271,15 @@ class TestAicoreDetailAnalyser(TestCase):
             }
         }
         result = self._analyser.query(condition)
+        print(expect_result, result)
         self.assertDictEqual(expect_result, result)
 
     def test_query_and_sort_by_op_type_1(self):
         """Test the success of the querying and sorting function by operator type."""
         detail_infos = get_detail_infos(indexes=[9, 0, 2, 1, 5, 3, 4])
         expect_result = {
-            'col_name': COL_NAMES[0:7],
-            'object': [item[0:7] for item in detail_infos]
+            'col_name': COL_NAMES[0:8],
+            'object': [item[0:8] for item in detail_infos]
         }
 
         filter_condition = {
@@ -299,8 +300,8 @@ class TestAicoreDetailAnalyser(TestCase):
         """Test the success of the querying and sorting function by operator type."""
         detail_infos = get_detail_infos(indexes=[9, 0, 2, 1, 3, 4, 8, 6])
         expect_result = {
-            'col_name': COL_NAMES[0:7],
-            'object': [item[0:7] for item in detail_infos]
+            'col_name': COL_NAMES[0:8],
+            'object': [item[0:8] for item in detail_infos]
         }
 
         filter_condition = {
@@ -317,6 +318,8 @@ class TestAicoreDetailAnalyser(TestCase):
         result = self._analyser.query_and_sort_by_op_type(
             filter_condition, op_type_order
         )
+        print(expect_result)
+        print(result)
         self.assertDictEqual(expect_result, result)
 
     def test_col_names(self):
