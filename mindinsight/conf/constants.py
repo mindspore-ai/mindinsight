@@ -65,8 +65,5 @@ MAX_GRAPH_STEP_SIZE_PER_TAG = 1
 MAX_HISTOGRAM_STEP_SIZE_PER_TAG = 50
 MAX_TENSOR_STEP_SIZE_PER_TAG = 20
 MAX_TENSOR_RESPONSE_DATA_SIZE = 100000
-# set MAX_GRAPH_NODE_SIZE to 100000, which is able to support yolov4 with one card 11 graphs
-# will increase the value after supporting to load graphs in parallel
-MAX_GRAPH_NODE_SIZE = 100000
 
 ENABLE_RECOMMENDED_WATCHPOINTS = True

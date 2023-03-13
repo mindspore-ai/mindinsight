@@ -22,7 +22,7 @@ from threading import Event
 
 import mindinsight
 from mindinsight.common.util import version_match
-from mindinsight.conf.constants import MAX_GRAPH_NODE_SIZE
+from mindinsight.conf import settings
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerModuleNotFoundError, DebuggerParamValueError, \
     DebuggerToolkitNotFoundError, DebuggerNodeTooLarge
 from mindinsight.debugger.common.log import LOGGER as log
@@ -221,7 +221,7 @@ class DebuggerOfflineManager:
         """Load graphs."""
         # the format of graphs is a list of {'rank_id': int, 'graph_protos': [GraphProto]}}
         try:
-            graphs = self._data_loader.load_graphs(threshold=MAX_GRAPH_NODE_SIZE)
+            graphs = self._data_loader.load_graphs(threshold=settings.MAX_GRAPH_NODE_SIZE)
         except DebuggerNodeTooLarge as err:
             self._update_state(ServerStatus.NODE_TOO_LARGE)
             log.exception(err)

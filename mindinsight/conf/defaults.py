@@ -40,3 +40,7 @@ MAX_OFFLINE_DEBUGGER_SESSION_NUM = 2
 ####################################
 RELOAD_INTERVAL = 3 # Seconds
 SUMMARY_BASE_DIR = os.getcwd()
+
+# set MAX_GRAPH_NODE_SIZE to 100000, which is able to support yolov4 with one card 11 graphs
+# will increase the value after supporting to load graphs in parallel
+MAX_GRAPH_NODE_SIZE = 100000
