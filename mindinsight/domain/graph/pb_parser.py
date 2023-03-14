@@ -106,7 +106,7 @@ class PBParser(Parser):
                                                         dtype=self.numpy_type_mapping[pb_constant.value.dtype])
         elif pb_constant.value.dtype == self.proto.DT_BOOL:
             constant.output = NodeOutput(OutputType(self.dtype_mapping[pb_constant.value.dtype]))
-            constant.output.info['value'] = pb_constant.value.bool_str
+            constant.output.info['value'] = pb_constant.value.bool_val
             constant.output.info['np_value'] = np.array(pb_constant.value.bool_val,
                                                         dtype=self.numpy_type_mapping[pb_constant.value.dtype])
         elif pb_constant.value.dtype == self.proto.DT_STRING:
