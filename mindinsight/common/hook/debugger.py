@@ -119,6 +119,28 @@ class MemLimitAction(argparse.Action):
         setattr(namespace, self.dest, mem_limit)
 
 
+class MaxGraphNodeSizeAction(argparse.Action):
+    """Graph Node limit action class definition."""
+    MIN_VALUE = 0
+    # The limit for 20000000.
+    MAX_VALUE = 20000000
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        """
+        Inherited __call__ method from argparse.Action.
+
+        Args:
+            parser (ArgumentParser): Passed-in argument parser.
+            namespace (Namespace): Namespace object to hold arguments.
+            values (object): Argument values with type depending on argument definition.
+            option_string (str): Optional string for specific argument name. Default: None.
+        """
+        max_graph_node_size = values
+        if not self.MIN_VALUE <= max_graph_node_size <= self.MAX_VALUE:
+            parser.error(f'{option_string} should be chosen from {self.MIN_VALUE} to {self.MAX_VALUE}')
+        setattr(namespace, self.dest, max_graph_node_size)
+
+
 class Hook(BaseHook):
     """Hook class definition."""
 
@@ -161,3 +183,11 @@ class Hook(BaseHook):
             help="""
                 Max offline debugger session number ranging from %s to %s. Default value is %s.
             """ % (SessionNumAction.MIN_NUM, SessionNumAction.MAX_NUM, settings.MAX_OFFLINE_DEBUGGER_SESSION_NUM))
+
+        parser.add_argument(
+            '--max-graph-node-size',
+            type=int,
+            action=MaxGraphNodeSizeAction,
+            help="""
+                Offline debugger graph node limit ranging from %s to %s MB. Default value is %s.
+            """ % (MaxGraphNodeSizeAction.MIN_VALUE, MaxGraphNodeSizeAction.MAX_VALUE, settings.MAX_GRAPH_NODE_SIZE))
