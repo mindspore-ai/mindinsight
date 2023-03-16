@@ -1097,7 +1097,8 @@ export default {
 }
 .step-trace-dynamic .chart-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: auto;
+  grid-auto-flow: column;
   gap: 15px;
   height:60%;
   margin-bottom: 20px;
@@ -1166,11 +1167,11 @@ export default {
   margin-right: 10px;
   color: var(--step-trace-chart-label-color);
 }
-.step-trace-dynamic .pf-content-middle .chart-wrap.chart-show {
-  width: calc(50% - 7.5px);
+.step-trace .pf-content-middle .chart-wrap.chart-show {
+  width: calc(80% - 7.5px);
 }
-.step-trace-dynamic .pf-content-middle-heterogeneous .chart-wrap.chart-show {
-  width: calc(50% - 7.5px);
+.step-trace .pf-content-middle-heterogeneous .chart-wrap.chart-show {
+  width: calc(80% - 7.5px);
 }
 .step-trace-dynamic .image-noData {
   width: 100%;
