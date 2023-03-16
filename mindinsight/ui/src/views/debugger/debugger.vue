@@ -1081,7 +1081,7 @@ limitations under the License.
       <span v-else-if="initFail"
             class="dialog-content">{{ $t('debugger.debuggerError') }}</span>
       <span v-else
-            class="dialog-content">{{ $t('debugger.pendingTips') }}</span>
+            class="dialog-content">{{ gridStyleKey == 'offline-debugger' ? $t('debugger.pendingTipsOff') : $t('debugger.pendingTips')}}</span>
 
       <span slot="footer"
             class="dialog-footer">
