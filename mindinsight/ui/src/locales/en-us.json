@@ -787,6 +787,7 @@
     "createWP": "Create Watchpoint",
     "successCreateWP": "The watchpoint is created.",
     "successDeleteWP": "The watchpoint is deleted.",
+    "pendingTipsOff": "Waiting for data loading...",
     "pendingTips": "Waiting for training connection...",
     "nextNodeTip": "This is the last node.",
     "previousNodeTip": "This is the first node.",

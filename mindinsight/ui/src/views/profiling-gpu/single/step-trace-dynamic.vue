@@ -1100,7 +1100,8 @@ export default {
 }
 .step-trace .chart-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: auto;
+  grid-auto-flow: column;
   gap: 15px;
   height: 100%;
 }
@@ -1169,10 +1170,10 @@ export default {
   color: var(--step-trace-chart-label-color);
 }
 .step-trace .pf-content-middle .chart-wrap.chart-show {
-  width: calc(50% - 7.5px);
+  width: calc(80% - 7.5px);
 }
 .step-trace .pf-content-middle-heterogeneous .chart-wrap.chart-show {
-  width: calc(50% - 7.5px);
+  width: calc(80% - 7.5px);
 }
 .step-trace .image-noData {
   width: 100%;
