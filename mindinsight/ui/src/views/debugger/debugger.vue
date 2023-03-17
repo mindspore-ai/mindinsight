@@ -1077,7 +1077,7 @@ limitations under the License.
       <span v-else-if="noOfflineGraph"
             class="dialog-content">{{ $t('debugger.noOfflineGraphData') }}</span>
       <span v-else-if="nodeDataIsLarge"
-            class="dialog-content">{{ $t('debugger.nodeIsLargeTip') }}</span>
+            class="dialog-content">{{ $t('debugger.nodeIsLargeTip', {maxGraphNodeSize:maxGraphNodeSize}) }}</span>
       <span v-else-if="initFail"
             class="dialog-content">{{ $t('debugger.debuggerError') }}</span>
       <span v-else

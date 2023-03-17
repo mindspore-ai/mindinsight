@@ -1091,7 +1091,7 @@
     },
     "graphNameExplain": "与节点列表中的图名称不同，此处只展示训练中执行过的图的名称列表。",
     "graphExecutionCountTip": "图执行轮次：该图执行的轮次号\n轮次计算公式：\nround_id = sink_num * sink_size + loop_id\nsink_num：当前所有图累计下发次数\nsink_size：当前图每次下发执行的循环次数\nloop_id：循环的序号\n如：假设一次训练中，目前已经下发了4次图，在新一轮的epoch中图0需要执行6个迭代，分2次下发，每次下发执行3次。\n则该场景下，图0会产生6个轮次号，其中sink_size = 3。\n轮次号分别为：\n12 = 4 * 3 + 0\n13 = 4 * 3 + 1\n14 = 4 * 3 + 2\n15 = 5 * 3 + 0\n16 = 5 * 3 + 1\n17 = 5 * 3 + 2",
-    "nodeIsLargeTip": "该训练保存的图节点数据超过10万，请减少图文件数量重新进入或使用离线调试器API进行数据分析。",
+    "nodeIsLargeTip": "该训练保存的图节点数据超过{maxGraphNodeSize}，请减少图文件数量重新进入或使用离线调试器API进行数据分析。",
     "dataVersionTips": "dump数据来源于MindSpore版本{ms_version}，MindInsight版本为{mi_version}，建议两者保持一致"
   },
   "explain": {
