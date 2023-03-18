@@ -83,6 +83,7 @@ class ClusterAnalyser(BaseAnalyser):
 
 class ClusterStepTraceAnalyser(ClusterAnalyser):
     """The analyser for analyzing the cluster step trace."""
+
     def __init__(self, cluster_profiler_dir, device_id):
         super().__init__(cluster_profiler_dir, device_id)
         self._none_sort_col_names = []
@@ -171,9 +172,9 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
         # step_trace_info[7]: fp_and_bp time
         # step_trace_info[8]: tail time
         # divided by 1e5, the unit becomes a millisecond
-        iteration_interval = round(float(step_trace_info[6])/1e5, 4)
-        fp_and_bp = round(float(step_trace_info[7])/1e5, 4)
-        tail = round(float(step_trace_info[8])/1e5, 4)
+        iteration_interval = round(float(step_trace_info[6]) / 1e5, 4)
+        fp_and_bp = round(float(step_trace_info[7]) / 1e5, 4)
+        tail = round(float(step_trace_info[8]) / 1e5, 4)
         step_trace_info = [iteration_interval, fp_and_bp, tail]
         return step_trace_info
 
@@ -233,8 +234,8 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
                 file_path, raise_key='Invalid memory usage file path.'
             )
             df = pd.read_csv(file_path)
-            df = pd.DataFrame(df, columns=['step_num', 'start_point', 'end_point', 'total',\
-            'fp_point', 'bp_point', 'iteration_interval', 'fp_and_bp', 'tail'])
+            df = pd.DataFrame(df, columns=['step_num', 'start_point', 'end_point', 'total', \
+                                           'fp_point', 'bp_point', 'iteration_interval', 'fp_and_bp', 'tail'])
             cur_data = list(json.loads(df.to_json(orient="index")).values())
             device_entry = "device" + device
             data[device_entry] = cur_data
@@ -435,6 +436,9 @@ class ClusterHcclAnalyser(ClusterAnalyser):
             file_path = validate_and_normalize_path(
                 file_path, raise_key='Invalid memory usage file path.'
             )
+            if not os.path.exists(file_path):
+                log.error('Did not find the file: %s', file_path)
+                raise ProfilerFileNotFoundException(msg='Did not find the file:{}'.format(file_path))
             df = pd.read_csv(file_path)
             cur_data = list(json.loads(df.to_json(orient="index")).values())
             for dt in cur_data:
@@ -460,7 +464,7 @@ class ClusterHcclAnalyser(ClusterAnalyser):
                     lines = src_file.readlines()
                 # The first row is col_name, the last row is the average.
                 if len(lines) > 2:
-                    total_step_num = len(lines)-2
+                    total_step_num = len(lines) - 2
                 break
         return total_step_num
 
@@ -482,6 +486,7 @@ class ClusterHcclAnalyser(ClusterAnalyser):
             if src_dst_pattern and link_type_pattern:
                 return True
             return False
+
         self._result = list(filter(inner_filter, self._result))
         self._cluster_link_info_size = len(self._result)
 
