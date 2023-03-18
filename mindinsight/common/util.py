@@ -18,12 +18,22 @@ MS_VERSION = '1.0.x'
 
 
 def version_match(ms_version, mi_version):
-    """Judge if the version of Mindinsight and Mindspore is matched."""
+    """
+    Judge if the version of Mindinsight and Mindspore is matched.
+    0 means the version is totally matched;
+    1 means the major version is matched but the minor version is mismatch;
+    2 means the version is totally mismatch.
+    """
     if not ms_version:
         ms_version = MS_VERSION
-    # the debugger version in MS 1.4.xxx is still 1.3.xxx
-    if mi_version.startswith('1.4.') and ms_version.startswith('1.3.'):
-        return True
     mi_major, mi_minor = mi_version.split('.')[:2]
     ms_major, ms_minor = ms_version.split('.')[:2]
-    return mi_major == ms_major and mi_minor == ms_minor
+    mi_major_num = int(mi_major)
+    mi_minor_num = int(mi_minor)
+    ms_major_num = int(ms_major)
+    ms_minor_num = int(ms_minor)
+    if ms_major_num == mi_major_num and ms_minor_num == mi_minor_num:
+        return 0
+    if ms_major_num == mi_major_num and ms_minor_num > mi_minor_num:
+        return 1
+    return 2

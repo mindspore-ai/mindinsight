@@ -257,7 +257,11 @@ def get_profile_data_version(profiler_dir):
             data = json.load(fr)
         ms_data_version = data.get('ms_version', '')
         if ms_data_version:
-            result_data = {'state': version_match(ms_data_version, mi_version),
+            data_match_stat = version_match(ms_data_version, mi_version)
+            stat_reply = True
+            if data_match_stat >= 1:
+                stat_reply = False
+            result_data = {'state': stat_reply,
                            'ms': ms_data_version,
                            'mi': mi_version}
             return result_data
