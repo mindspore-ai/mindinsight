@@ -2256,6 +2256,11 @@ export default {
     querySingleNode(graphs, name, isQueryTensor) {
       this.selectedNode.name = name;
       this.selectedNode.more = false;
+      const data = this.findStartUnfoldNode(graphs.children);
+      if (data.nodes && data.nodes.length > this.maxSupportNodesNumber) {
+        this.$message.error(this.$t('graph.tooManyNodes'));
+        this.loadingInstance.close();
+      }
       // If a node exists on the map, select the node.
       if (this.allGraphData[name]) {
         if (d3.select(`g[id="${name}"], g[id="${name}_unfold"]`).size()) {
@@ -2279,7 +2284,6 @@ export default {
           }
         }
       } else {
-        const data = this.findStartUnfoldNode(graphs.children);
         if (data) {
           this.dealAutoUnfoldNamescopesData(data);
         }

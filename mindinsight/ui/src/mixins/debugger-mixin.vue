@@ -25,6 +25,7 @@ export default {
       conditionRulesMap: this.$t('debugger.tensorTuningRule'),
       downloadedTensor: {},
       maxFileSize: [2, 'GB'],
+      maxSupportNodesNumber: 1000,
     };
   },
   methods: {
@@ -439,6 +440,10 @@ export default {
             this.dealMetadata(res.data.metadata);
           }
           if (data.name === this.nodeName) {
+            if (res.data && res.data.tensor_history.length > this.maxSupportNodesNumber) {
+              this.$message.error(this.$t('graph.tooManyNodes'));
+              return;
+            }
             if (res.data && res.data.tensor_history) {
               this.tableData = res.data.tensor_history;
               this.dealTableData(this.tableData);
@@ -2084,6 +2089,9 @@ export default {
      * @param {String} name The name of the node that needs to be highlighted
      */
     dealTreeData(children, name) {
+      if (children.nodes.length > this.maxSupportNodesNumber) {
+        return;
+      }
       if (children.nodes) {
         if (
           (children.nodes.length > this.nodesCountLimit &&
