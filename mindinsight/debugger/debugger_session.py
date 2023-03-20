@@ -33,6 +33,7 @@ from mindinsight.debugger.stream_operator.tensor_detail_info import TensorDetail
 from mindinsight.debugger.stream_operator.training_control_operator import TrainingControlOperator
 from mindinsight.debugger.stream_operator.watchpoint_operator import WatchpointOperator
 from mindinsight.utils.tensor import TensorUtils, MAX_DIMENSIONS_FOR_TENSOR
+from mindinsight.conf import settings
 
 
 def try_except(func):
@@ -273,6 +274,8 @@ class DebuggerSession:
                       'device_id': metadata.get('device_name', ''),
                       'graph_names': graph.get('graph_names', [])}
             devices.append(device)
+        if result.get('metadata')["state"] == ServerStatus.NODE_TOO_LARGE:
+            result.get('metadata')["max_graph_node_size"] = settings.MAX_GRAPH_NODE_SIZE
         sub_res = self._hide_parameters_for_ui()
         result.update(sub_res)
 

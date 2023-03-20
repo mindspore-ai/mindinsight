@@ -26,6 +26,7 @@ export default {
       downloadedTensor: {},
       maxFileSize: [2, 'GB'],
       maxSupportNodesNumber: 1000,
+      maxGraphNodeSize: 100000,
     };
   },
   methods: {
@@ -1377,6 +1378,9 @@ export default {
           this.initFail = false;
           this.dialogVisible = false;
           if (res.data) {
+            if(res.data.metadata && res.data.metadata.max_graph_node_size){
+              this.maxGraphNodeSize = res.data.metadata.max_graph_node_size;
+            }
             if (res.data.metadata && res.data.metadata.state === this.state.node_too_large) {
               this.loadingInstance.close();
               this.dialogVisible = true;
