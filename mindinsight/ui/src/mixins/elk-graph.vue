@@ -196,6 +196,8 @@ export default {
           this.$store.state.themeIndex,
       );
       let width, height;
+      
+      this.processElkGraph(elkGraph);
       await this.elk.layout(elkGraph, this.option).then((res) => {
         let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
         res.children.forEach((node) => {
@@ -214,6 +216,41 @@ export default {
         "width": width,
         "height" : height,
       }
+    },
+
+    /**
+     * The logic of process elkGraph to simplify the layout.
+     * @param {ElkGraph} elkGraph
+     */
+    processElkGraph(elkGraph) {
+      let mp = {};
+      for (let id in elkGraph.edges) {
+        let cur_edge = elkGraph.edges[id]
+        let endpoints = cur_edge.id.split("->")
+        let ending = endpoints[1]
+        if (isNaN(ending)) continue;
+        if (mp.hasOwnProperty(ending)) {
+            mp[ending].push(id);
+        } else {
+            mp[ending] = [id];
+        }
+      }
+      
+      let delete_set = new Set();
+      for (let key in mp) {
+        if (mp[key].length > 1) {
+          for (let i = 0; i < mp[key].length - 1; i++) {
+              delete_set.add(parseFloat(mp[key][i]));
+          }
+        }
+      }
+      
+      let newEdges = [];
+      for (let id in elkGraph.edges) {
+        if (!delete_set.has(parseInt(id))) newEdges.push(elkGraph.edges[id]);
+      }
+      
+      elkGraph.edges = newEdges;
     },
 
     /**
@@ -273,6 +310,7 @@ export default {
           this.$store.state.themeIndex,
       );
 
+      this.processElkGraph(elkGraph);
       await this.elk.layout(elkGraph, this.option).then((res) => {
         this.processDisplayedGraph(res.getDisplayedGraph());
         this.lastClickNode = null;
@@ -480,6 +518,8 @@ export default {
           false,
           this.$store.state.themeIndex,
       );
+
+      this.processElkGraph(elkGraph);
       await this.elk.layout(elkGraph, this.option).then((res) => {
         this.processDisplayedGraph(res.getDisplayedGraph());
         if (isStacked) {
