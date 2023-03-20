@@ -2257,7 +2257,7 @@ export default {
       this.selectedNode.name = name;
       this.selectedNode.more = false;
       const data = this.findStartUnfoldNode(graphs.children);
-      if (data.nodes && data.nodes.length > this.maxSupportNodesNumber) {
+      if (data && data.nodes && data.nodes.length > this.maxSupportNodesNumber) {
         this.$message.error(this.$t('graph.tooManyNodes'));
         this.loadingInstance.close();
       }

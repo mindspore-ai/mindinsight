@@ -201,6 +201,9 @@ limitations under the License.
                         <img v-else-if="data.type ==='aggregation_scope'"
                              :src="require(`@/assets/images/${themeIndex}/polymetric.svg`)"
                              class="image-type" />
+                        <img v-else-if="nodeIsDynamicShape(node.data)"
+                             :src="require('@/assets/images/dynamic-shape-node.svg')"
+                             class="image-type" />
                         <img v-else
                              :src="require(`@/assets/images/${themeIndex}/operator-node.svg`)"
                              class="image-type" />
@@ -227,6 +230,9 @@ limitations under the License.
                              class="image-type" />
                         <img v-else-if="data.type ==='aggregation_scope'"
                              :src="require(`@/assets/images/${themeIndex}/polymetric.svg`)"
+                             class="image-type" />
+                        <img v-else-if="nodeIsDynamicShape(node.data)"
+                             :src="require('@/assets/images/dynamic-shape-node.svg')"
                              class="image-type" />
                         <img v-else
                              :src="require(`@/assets/images/${themeIndex}/operator-node.svg`)"
@@ -479,6 +485,16 @@ limitations under the License.
                     <div class="legend-text"
                          :title="$t('graph.constantNode')">
                       {{ $t('graph.constantNode') }}
+                    </div>
+                  </div>
+                  <div class="legend-item">
+                    <div class="pic">
+                      <img :src="require(`@/assets/images/${themeIndex}/dynamic-shape-node.svg`)"
+                          alt="" />
+                    </div>
+                    <div class="legend-text"
+                        :title="$t('graph.dynamicShapeNode')">
+                      {{ $t('graph.dynamicShapeNode') }}
                     </div>
                   </div>
                   <br>
@@ -775,6 +791,14 @@ export default {
       }
     },
     /**
+     * check node is dynamic shape
+     * @param {Object} node tree node
+     */
+    nodeIsDynamicShape(node) {
+      const sig = node.is_dynamic_shape_node;
+      return sig;
+    },
+    /**
      * Deal search data
      * @param {Array} arr search tree data
      */
@@ -1058,6 +1082,9 @@ export default {
         this.selectedNode.title = selectedNode.name.replace('_unfold', '');
         this.selectedNode.type =
           selectedNode.type === 'name_scope' || selectedNode.type === 'aggregation_scope' ? '' : selectedNode.type;
+        if (selectedNode.is_dynamic_shape_node) {
+          this.selectedNode.type = "dynamic-shape-node";
+        }
         this.selectedNode.countShow = selectedNode.type === 'name_scope' || selectedNode.type === 'aggregation_scope';
         this.selectedNode.count = selectedNode.subnode_count;
         const attrTemp = JSON.parse(JSON.stringify(selectedNode.attr || {}));
@@ -2156,6 +2183,10 @@ export default {
 .cl-graph-manage #graphs .graph-container .node.aggregation > polygon {
   stroke: #e3aa00;
   fill: var(--graph-aggregation-color);
+}
+.cl-graph-manage #graphs .graph-container .node.dynamicShape > ellipse {
+  stroke: #0080a0;
+  fill: #00a055;
 }
 .cl-graph-manage #graphs .graph-container .node.cluster.aggregation > rect {
   stroke: #e3aa00;
