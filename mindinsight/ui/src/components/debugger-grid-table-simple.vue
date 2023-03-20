@@ -35,7 +35,8 @@ limitations under the License.
       <!-- Table Mode -->
       <div :id="itemId"
            v-show="!!fullData.length && !incorrectData && displayMode === displayModes[1].value"
-           class="grid-item"></div>
+           class="grid-item"
+           ref="tablemap"></div>
     </div>
     <!-- Operators container -->
     <div class="operators-container"
@@ -265,11 +266,15 @@ export default {
       this.$nextTick(() => {
         switch (this.displayMode) {
           case TABLE:
+            this.initHeatmapChart();
+            this.chartInstance && this.chartInstance.resize();
             this.updateGridData();
+            this.chartInstance = null;
             break;
           case CHART:
             this.chartInstance && this.chartInstance.resize();
             this.renderHeatmapChart();
+            this.chartInstance = null;
             break;
         }
       });
@@ -402,84 +407,86 @@ export default {
       });
     },
     initHeatmapChart() {
-      if (this.displayMode === CHART && this.$refs.heatmap) {
-        if (!this.chartInstance) {
+      if (!this.chartInstance) {
+        if (this.displayMode === CHART && this.$refs.heatmap) {
           this.chartInstance = echarts.init(this.$refs.heatmap, echartsThemeName);
-          this.chartInstance.setOption({
-            tooltip: {
-              position: 'top',
-            },
-            grid: {
-              top: gridPadding[0],
-              right: gridPadding[1],
-              bottom: gridPadding[2],
-              left: gridPadding[3],
-            },
-            dataZoom: [
-              {
-                type: 'inside',
-                xAxisIndex: 0,
-                yAxisIndex: 0,
-              },
-            ],
-            xAxis: {
-              type: 'category',
-              data: [],
-              position: 'top',
-              splitArea: {
-                show: true,
-              },
-            },
-            yAxis: {
-              type: 'category',
-              data: [],
-              splitArea: {
-                show: true,
-              },
-              inverse: true,
-            },
-            visualMap: {
-              show: false,
-            },
-            series: [
-              {
-                name: 'tensorHeatmap',
-                type: 'heatmap',
-                data: [],
-                label: {
-                  show: false,
-                },
-                emphasis: {
-                  itemStyle: {
-                    shadowBlur: 10,
-                    shadowColor: 'rgba(0, 0, 0, 0.5)',
-                  },
-                },
-                tooltip: {
-                  formatter: (params) => {
-                    let length = params.data.length;
-                    let value = params.data[length - 1]; // Original data
-                    if (length === 5) {
-                      return `
-                      x: ${params.data[0]} &nbsp&nbsp&nbsp&nbsp&nbspy: ${params.data[1]}<br>
-                      ${this.$t('debugger.curStatisticsLabel')} ${params.data[3]}<br>
-                      ${this.$t('debugger.preStatisticsLabel')} ${params.data[2]}<br>
-                      ${this.$t('scalar.charTipHeadValue')} ${this.$t('symbols.colon')} ${value}
-                    `;
-                    } else {
-                      return `
-                      x: ${params.data[0]}<br>
-                      y: ${params.data[1]}<br>
-                      ${this.$t('scalar.charTipHeadValue')} ${this.$t('symbols.colon')} ${value}
-                    `;
-                    }
-                  },
-                  position: [0, 0],
-                },
-              },
-            ],
-          });
+        } else if (this.displayMode === TABLE && this.$refs.tablemap) {
+          this.chartInstance = echarts.init(this.$refs.tablemap, echartsThemeName);
         }
+        this.chartInstance.setOption({
+          tooltip: {
+            position: 'top',
+          },
+          grid: {
+            top: gridPadding[0],
+            right: gridPadding[1],
+            bottom: gridPadding[2],
+            left: gridPadding[3],
+          },
+          dataZoom: [
+            {
+              type: 'inside',
+              xAxisIndex: 0,
+              yAxisIndex: 0,
+            },
+          ],
+          xAxis: {
+            type: 'category',
+            data: [],
+            position: 'top',
+            splitArea: {
+              show: true,
+            },
+          },
+          yAxis: {
+            type: 'category',
+            data: [],
+            splitArea: {
+              show: true,
+            },
+            inverse: true,
+          },
+          visualMap: {
+            show: false,
+          },
+          series: [
+            {
+              name: 'tensorHeatmap',
+              type: 'heatmap',
+              data: [],
+              label: {
+                show: false,
+              },
+              emphasis: {
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)',
+                },
+              },
+              tooltip: {
+                formatter: (params) => {
+                  let length = params.data.length;
+                  let value = params.data[length - 1]; // Original data
+                  if (length === 5) {
+                    return `
+                    x: ${params.data[0]} &nbsp&nbsp&nbsp&nbsp&nbspy: ${params.data[1]}<br>
+                    ${this.$t('debugger.curStatisticsLabel')} ${params.data[3]}<br>
+                    ${this.$t('debugger.preStatisticsLabel')} ${params.data[2]}<br>
+                    ${this.$t('scalar.charTipHeadValue')} ${this.$t('symbols.colon')} ${value}
+                  `;
+                  } else {
+                    return `
+                    x: ${params.data[0]}<br>
+                    y: ${params.data[1]}<br>
+                    ${this.$t('scalar.charTipHeadValue')} ${this.$t('symbols.colon')} ${value}
+                  `;
+                  }
+                },
+                position: [0, 0],
+              },
+            },
+          ],
+        })
         return true;
       }
       return false;
