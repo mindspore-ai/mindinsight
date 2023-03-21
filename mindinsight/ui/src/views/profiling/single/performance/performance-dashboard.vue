@@ -1670,6 +1670,8 @@ export default {
 .single-performance-dashboard .image-noData p {
   font-size: 16px;
   padding-top: 10px;
+  width: 80%;
+  text-align: center;
 }
 .single-performance-dashboard .dashboard-item {
   border: 1px solid var(--border-color);

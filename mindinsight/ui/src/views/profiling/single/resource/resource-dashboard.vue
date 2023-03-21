@@ -633,7 +633,7 @@ export default {
         str += `step: ${stepArray[index]}`;
         data.forEach((item, index) => {
           str +=
-            `<br><span class="cpu-chart-tip" style="background-color:${colorArray[index]};"></span>` +
+            `<br><span class="cpu-chart-tip" style="background-color:${item.color};"></span>` +
             `${item.seriesName}: ${item.data}`;
         });
         str += `</div>`;
@@ -802,6 +802,15 @@ export default {
 .content-item .cpu-chart-info .info-line {
   line-height: 30px;
 }
+.cpu-chart-tip {
+  display: inline-block;
+  margin-right: 5px;
+  border-radius: 10px;
+  width: 10px;
+  height: 10px;
+}
+</style>
+<style>
 .cpu-chart-tip {
   display: inline-block;
   margin-right: 5px;
