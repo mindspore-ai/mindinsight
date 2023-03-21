@@ -122,8 +122,8 @@ class MemLimitAction(argparse.Action):
 class MaxGraphNodeSizeAction(argparse.Action):
     """Graph Node limit action class definition."""
     MIN_VALUE = 0
-    # The limit for 20000000.
-    MAX_VALUE = 20000000
+    # The limit for 2000000.
+    MAX_VALUE = 2000000
 
     def __call__(self, parser, namespace, values, option_string=None):
         """
