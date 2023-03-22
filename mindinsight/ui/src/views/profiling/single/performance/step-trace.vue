@@ -897,7 +897,7 @@ export default {
   },
 };
 </script>
-<style scoped>
+<style>
 .step-trace {
   width: 100%;
   height: 100%;

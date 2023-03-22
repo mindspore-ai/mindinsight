@@ -642,7 +642,7 @@ export default {
         },
         series: [],
         grid: {
-          left: 50,
+          left: 70,
           top: 20,
           right: 50,
           bottom: 60,

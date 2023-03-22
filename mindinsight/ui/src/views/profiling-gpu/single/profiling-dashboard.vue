@@ -2099,6 +2099,8 @@ export default {
 .pro-router-wrap .image-noData p {
   font-size: 16px;
   padding-top: 10px;
+  width: 80%;
+  text-align: center;
 }
 .pro-router-wrap .pro-router-left .operator-detail{
   width: 100%;
