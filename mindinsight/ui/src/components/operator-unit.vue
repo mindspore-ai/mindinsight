@@ -979,7 +979,7 @@ export default {
     setOption(chart) {
       const option = {};
       const maxLabelLength = 20;
-      const maxTooltipLen = 50;
+      const maxTooltipLen = 150;
       const map = {};
       if (!chart.type) {
         option.legend = {
@@ -1092,7 +1092,14 @@ export default {
         option.tooltip = {
           trigger: 'axis',
           formatter: (params) => {
-            return `${params[0].axisValue}<br>${params[0].marker}${params[0].value.toFixed(2)} (${this.unit})`;
+            let axisValueData = params[0].axisValue;
+            const breakCount = Math.ceil(axisValueData.length / maxTooltipLen);
+            let str = '';
+            for (let i = 0; i < breakCount; i++) {
+              const temp = axisValueData.substr(i * maxTooltipLen, maxTooltipLen);
+              str += str ? '<br/>' + temp : temp;
+            }
+            return `${str}<br>${params[0].marker}${params[0].value.toFixed(2)} (${this.unit})`;
           },
           confine: true,
         };
