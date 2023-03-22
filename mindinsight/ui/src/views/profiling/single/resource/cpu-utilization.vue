@@ -727,7 +727,7 @@ export default {
         tipInnerHTML.push(`step: ${stepArray[index]}`);
         params.forEach((item, index) => {
           tipInnerHTML.push(
-            `<span class="cpu-chart-tip" style="background-color:${colorArray[index]};"></span>` +
+            `<span class="cpu-chart-tip" style="background-color:${item.color};"></span>` +
               `${item.seriesName}: ${item.data}`
           );
         });

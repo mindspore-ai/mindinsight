@@ -1113,7 +1113,7 @@ export default {
           triggerEvent: true,
         };
         option.grid = {
-          left: 50,
+          left: '6%',
           top: 20,
           right: 0,
           bottom: 50,

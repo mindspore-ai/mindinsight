@@ -118,7 +118,7 @@ export default {
       length += t.label.length;
     });
     // 6(px of en-us char), 14(px of zh-cn char), 30(padding) used to calculate the position of path label
-    this.left = length * (this.$store.state.language === 'en-us' ? 6 : 14) + 30;
+    this.left = length * (this.$store.state.language === 'en-us' ? 5.7 : 14) + 30;
   },
   methods: {
     /**
