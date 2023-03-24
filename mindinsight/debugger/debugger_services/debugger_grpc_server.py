@@ -404,12 +404,17 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
             log.info("The training from %s has finished.", client_ip)
         else:
             ms_version = request.ms_version
-            if version_match(ms_version, mindinsight.__version__) is False:
-                log.info("Version is mismatched, MindSpore is: %s, MindInsight is: %s",
-                         ms_version, mindinsight.__version__)
+            version_match_stat = version_match(ms_version, mindinsight.__version__)
+            if version_match_stat > 1:
+                log.warning("Version is mismatched, MindSpore is: %s, MindInsight is: %s",
+                            ms_version, mindinsight.__version__)
                 self._status = ServerStatus.MISMATCH
                 reply.version_matched = False
                 metadata_stream.state = ServerStatus.MISMATCH.value
+            elif version_match_stat > 0:
+                log.warning("Version is not completely matched, MindSpore is: %s, MindInsight is: %s",
+                            ms_version, mindinsight.__version__)
+                reply.version_matched = True
             else:
                 log.info("version is matched.")
                 reply.version_matched = True
@@ -486,7 +491,7 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
 
     def _record_parameter_names(self):
         """Record parameter full names in tensor handler."""
-        parameter_nodes = self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(0)\
+        parameter_nodes = self._cache_store.get_stream_handler(Streams.GRAPH).get_graph_handler_by_rank_id(0) \
             .search_in_graph(pattern={'node_category': TargetTypeEnum.PARAMETER.value})
         tensor_stream = self._cache_store.get_stream_handler(Streams.TENSOR).get_tensor_handler_by_rank_id(0)
         for node in parameter_nodes:
@@ -607,7 +612,11 @@ class DebuggerGrpcServer(grpc_server_base.EventListenerServicer):
                                       ParamNameEnum.RANGE_END_INCLUSIVE.value) \
                         and watchpoint_hit_proto.error_code == 0:
                     hit_params[param.name] = param.actual_value
-            for i, param in enumerate(watchpoint_hit['watchpoint'].condition['params']):
+            watchpoint = watchpoint_hit.get('watchpoint', None)
+            if not watchpoint:
+                return get_ack_reply()
+            params = watchpoint.condition.get('params', [])
+            for i, param in enumerate(params):
                 name = param['name']
                 if name in hit_params.keys():
                     watchpoint_hit['watchpoint'].condition['params'][i]['actual_value'] = hit_params[name]

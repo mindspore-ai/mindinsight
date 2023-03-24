@@ -92,16 +92,22 @@ class DumpAnalyzer:
         console = setup_logger('debugger', 'console', console=True, logfile=False, formatter='%(message)s')
         ms_version = dbg_services_module.get_version()
         mi_version = mindinsight.__version__
-        if not version_match(ms_version, mi_version):
+        version_match_stat = version_match(ms_version, mi_version)
+        if version_match_stat > 1:
             raise VersionNotMatchError(f"[WARNING] Current version of MindSpore({ms_version}) "
                                        f"is not compatible with MindInsight({mi_version}). "
                                        f"Otherwise some functions might not "
                                        f"work or even raise error. Please make MindSpore "
                                        f"version equal to MindInsight`s.")
+        if version_match_stat == 1:
+            console.warning("[WARNING] Current version of MindSpore(%s) "
+                            "is not completely compatible with MindInsight(%s). "
+                            "Otherwise some functions might not work.", ms_version, mi_version)
 
         config_json = self._data_loader.get_config_json_data()
         ms_data_version = config_json.get("ms_version", None)
-        if not version_match(ms_data_version, mi_version):
+        data_match_stat = version_match(ms_data_version, mi_version)
+        if data_match_stat > 0:
             console.warning("[WARNING] The summary data under the `dump_dir` from MindSpore(%s) "
                             "which the version should be equal to MindInsight`s(%s) . "
                             "Otherwise some functions might not "

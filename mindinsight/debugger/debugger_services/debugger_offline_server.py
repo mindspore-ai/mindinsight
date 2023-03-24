@@ -185,14 +185,22 @@ class DebuggerOfflineManager:
         self._metadata_stream.debugger_version = {'ms': ms_version, 'mi': mi_version}
         config_json = self._data_loader.get_config_json_data()
         ms_data_version = config_json.get("ms_version", None)
-        self._metadata_stream.data_version = {'state': version_match(ms_data_version, mi_version),
+        data_match_stat = version_match(ms_data_version, mi_version)
+        stat_reply = True
+        if data_match_stat >= 1:
+            stat_reply = False
+        self._metadata_stream.data_version = {'state': stat_reply,
                                               'ms': ms_data_version, 'mi': mi_version}
-        if not version_match(ms_version, mi_version):
-            log.info("Version is mismatched, dbg_services is: %s, mindinsight is: %s",
-                     ms_version, mi_version)
+        version_match_stat = version_match(ms_version, mi_version)
+        if version_match_stat > 1:
+            log.warning("Version is mismatched, dbg_services is: %s, mindinsight is: %s",
+                        ms_version, mi_version)
             self._metadata_stream.state = ServerStatus.MISMATCH.value
             metadata = self._metadata_stream.get(['state', 'debugger_version', 'data_version'])
             self._cache_store.put_data(metadata)
+        elif version_match_stat > 0:
+            log.warning("Version is not completely matched, dbg_services is: %s, mindinsight is: %s",
+                        ms_version, mi_version)
 
     def _load_metadata(self):
         """Load metadata."""
