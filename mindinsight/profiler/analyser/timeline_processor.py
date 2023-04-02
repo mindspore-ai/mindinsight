@@ -110,6 +110,7 @@ class TimelineService:
         """
         device_list, _, _ = analyse_device_list_from_profiler_dir(path)
         self.all_data = {}
+        self.op_nodes = {}
         for device in device_list:
             display_filename = self._ascend_display_filename.format(device)
             device_entry = "device" + device
@@ -123,18 +124,17 @@ class TimelineService:
             with open(file_path, "r") as fp:
                 j_data = json.loads(fp.read())
                 self.all_data[device_entry] = j_data
-        self.op_nodes = {}
         for device_name, cur_data in self.all_data.items():
             self.op_nodes[device_name] = list(filter(_filt_op, cur_data))
 
     def __align_time(self):
         """Align timeline on each device."""
+        self.stage_info = []
         if not self._display_timeline:
             return
         visited = set()
         self.align_info = {}
         one_step_op = self.__get_raw_ops_by_step("1")
-        self.stage_info = []
         stages = []
         for device_name, cur_one_step_op in one_step_op.items():
             if device_name in visited:

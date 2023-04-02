@@ -231,8 +231,11 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
             file_name = 'step_trace_raw_{}_detail_time.csv'.format(device)
             file_path = os.path.join(self._profiling_dir, file_name)
             file_path = validate_and_normalize_path(
-                file_path, raise_key='Invalid memory usage file path.'
+                file_path, raise_key='Invalid step trace file path.'
             )
+            if not os.path.exists(file_path):
+                log.error('Did not find the file: %s', file_path)
+                raise ProfilerFileNotFoundException(msg='Did not find the file:{}'.format(file_path))
             df = pd.read_csv(file_path)
             df = pd.DataFrame(df, columns=['step_num', 'start_point', 'end_point', 'total', \
                                            'fp_point', 'bp_point', 'iteration_interval', 'fp_and_bp', 'tail'])
