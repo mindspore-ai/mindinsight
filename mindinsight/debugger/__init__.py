@@ -24,7 +24,7 @@ Visualize and analyze the change of parameters, such as weights.Visualize the no
 
 Debugger API is a python API interface provided for offline debugger. You need to save dump data before using it.
 For the method of saving dump data, `refer to Using Dump in the Graph Mode
-<https://www.mindspore.cn/tutorials/experts/en/master/debug/dump.html>`_ .
+<https://www.mindspore.cn/tutorials/experts/en/r2.0/debug/dump.html>`_ .
 """
 
 from mindinsight.debugger.api.conditions import \
