@@ -274,7 +274,7 @@ class DebuggerSession:
                       'device_id': metadata.get('device_name', ''),
                       'graph_names': graph.get('graph_names', [])}
             devices.append(device)
-        if result.get('metadata')["state"] == ServerStatus.NODE_TOO_LARGE:
+        if result.get('metadata')["state"] == ServerStatus.NODE_TOO_LARGE.value:
             result.get('metadata')["max_graph_node_size"] = settings.MAX_GRAPH_NODE_SIZE
         sub_res = self._hide_parameters_for_ui()
         result.update(sub_res)
