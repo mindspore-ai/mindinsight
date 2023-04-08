@@ -137,7 +137,8 @@ class MaxGraphNodeSizeAction(argparse.Action):
         """
         max_graph_node_size = values
         if not self.MIN_VALUE <= max_graph_node_size <= self.MAX_VALUE:
-            parser.error(f'{option_string} should be chosen from {self.MIN_VALUE} to {self.MAX_VALUE}')
+            parser.error(f'{option_string} should be chosen from {self.MIN_VALUE} to {self.MAX_VALUE}, default is '
+                         f'{settings.MAX_GRAPH_NODE_SIZE}')
         setattr(namespace, self.dest, max_graph_node_size)
 
 
