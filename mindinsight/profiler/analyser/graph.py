@@ -325,7 +325,8 @@ class Graph:
                                       DataType.DT_UINT32.value, DataType.DT_UINT64.value):
             actual_value = int(value_proto['uintVal'])
         elif value_proto['dtype'] in (DataType.DT_FLOAT16.value, DataType.DT_FLOAT32.value, DataType.DT_FLOAT64.value):
-            actual_value = float(value_proto['floatVal']) if value_proto['floatVal'] else value_proto['doubleVal']
+            actual_value = float(value_proto['floatVal']) if value_proto['floatVal'] \
+                else value_proto.get('doubleVal', 0)
         elif value_proto['dtype'] in (DataType.DT_TUPLE.value, DataType.DT_LIST.value):
             actual_value = []
             for value in value_proto.get('values', []):
