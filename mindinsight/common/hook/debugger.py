@@ -121,7 +121,7 @@ class MemLimitAction(argparse.Action):
 
 class MaxGraphNodeSizeAction(argparse.Action):
     """Graph Node limit action class definition."""
-    MIN_VALUE = 0
+    MIN_VALUE = 1
     # The limit for 2000000.
     MAX_VALUE = 2000000
 
