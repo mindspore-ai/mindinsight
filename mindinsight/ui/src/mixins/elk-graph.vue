@@ -144,7 +144,6 @@ export default {
             graphs[i] = cur_stage_data;
           }
           
-          console.log(graphs)
           // change noData graph  show status
           this.noDataGraphShow = false
           // pipelined stage
@@ -172,7 +171,7 @@ export default {
               label: 'Stage ' + stageCnt + ': ' + JSON.stringify(ranks),
             };
           });
-          this.graphData = graphs;
+          this.graphData = graphs['0'];
           const topScopeSet = _buildTopScopeSet(graphs['0']);
           this.showNodeTypeOptions = [];
           for (const topScope of topScopeSet) {
@@ -201,8 +200,18 @@ export default {
     // the logic of getting displayed graph
     async getDisplayedGraph(showNodeType = null, showRankId = null) {
       if (!showRankId) showRankId = '0';
+      const params = {
+        profile: this.trainInfo.dir,
+        train_id: this.trainInfo.id,
+        stage_id: showRankId
+      };
+      this.graphData = await (
+        await RequestService.getGraphData(params).catch((err) => {
+        this.loading.show = false;
+        throw err;
+      })).data.data;
       const visGraph = buildGraph(
-          JSON.parse(JSON.stringify(this.graphData[showRankId])),
+          JSON.parse(JSON.stringify(this.graphData)),
           this.bipartite,
       );
       const elkGraph = createElkGraph(
