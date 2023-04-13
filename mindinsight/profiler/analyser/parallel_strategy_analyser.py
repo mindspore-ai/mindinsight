@@ -14,12 +14,13 @@
 # ============================================================================
 """The ParallelStrategyAnalyser analyser class."""
 import os
+import stat
 import json
 import time
 import threading
 from pathlib import Path
 from enum import Enum
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from multiprocessing import Pool
 
 from mindinsight.profiler.common.log import logger
@@ -41,6 +42,55 @@ class Status(Enum):
 
 FileData = namedtuple('FileData', ['graph_proto', 'rank_id'])
 STRATEGY_FILE_PATTERN = "parallel_strategy*.json"
+
+
+class ParallelStrategyCache:
+    """Cache the ParallelStrategy Data"""
+    _paraller_data = defaultdict(dict)
+    _lock = threading.Lock()
+    _graph_file = "/graph_{}"
+
+    @classmethod
+    def set_cache(cls, train_id, key, data, profiler_dir=None):
+        """cache parallel data"""
+        try:
+            with cls._lock:
+                cls._paraller_data[train_id].update({key: data})
+            if profiler_dir:
+                sub_graph_path = profiler_dir + cls._graph_file.format(key)
+                flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
+                modes = stat.S_IWGRP | stat.S_IWOTH | stat.S_IWUSR
+                with os.fdopen(os.open(sub_graph_path, flags, modes), "w") as fw:
+                    json.dump(data, fw)
+        except FileExistsError as exc:
+            logger.warning("Cache parallel strategy data failed, detail: %s.", str(exc))
+        except Exception as exc:
+            logger.exception("Cache parallel strategy data failed, detail: %s.", str(exc))
+
+    @classmethod
+    def get_cache(cls, train_id, key, profiler_dir):
+        """get cached parallel data"""
+        try:
+            res_data = cls._paraller_data.get(train_id, {}).get(key, {})
+            sub_graph_path = profiler_dir + cls._graph_file.format(key)
+            if not res_data and os.path.exists(sub_graph_path):
+                logger.warning("get data from l2 cache")
+                with open(sub_graph_path, 'r') as fr:
+                    res_data = json.load(fr)
+                thread = threading.Thread(target=cls.set_cache, args=(train_id, key, res_data))
+                thread.start()
+            elif res_data:
+                logger.warning("get data from l1 cache")
+                if not os.path.exists(sub_graph_path):
+                    thread = threading.Thread(target=cls.set_cache, args=(train_id, key, res_data, profiler_dir))
+                    thread.start()
+            else:
+                logger.warning("data not cached")
+            return res_data
+
+        except Exception as exc:
+            logger.exception("Get cached parallel strategy data failed, detail: %s.", str(exc))
+            return {}
 
 
 class ParallelStrategyAnalyser(BaseAnalyser):
@@ -140,7 +190,7 @@ class ParallelStrategyAnalyser(BaseAnalyser):
             logger.exception("Load parallel strategy data failed, detail: %s.", str(exc))
         finally:
             self._status = Status.FINISH.value
-            logger.info("Load data from %s use time: %s", self._profiling_dir, (time.time()-start))
+            logger.info("Load data from %s use time: %s", self._profiling_dir, (time.time() - start))
 
     def _load_data(self, pool):
         """Load data in thread."""

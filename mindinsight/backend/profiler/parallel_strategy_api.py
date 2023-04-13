@@ -19,7 +19,7 @@ This module provides the interfaces to profile parallel strategy.
 """
 import os
 import json
-import stat
+from threading import Thread
 
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
@@ -31,8 +31,9 @@ from mindinsight.profiler.common.exceptions.exceptions import ProfilerIOExceptio
 from mindinsight.profiler.common.log import logger as log
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.common.util import check_train_job_and_profiler_dir
+from mindinsight.profiler.analyser.parallel_strategy_analyser import Status, ParallelStrategyCache
 
-BLUEPRINT = Blueprint("profile_parallel_strategy", __name__, url_prefix=settings.URL_PATH_PREFIX+settings.API_PREFIX)
+BLUEPRINT = Blueprint("profile_parallel_strategy", __name__, url_prefix=settings.URL_PATH_PREFIX + settings.API_PREFIX)
 
 
 def init_module(app):
@@ -50,14 +51,11 @@ def init_module(app):
 def get_parallel_strategy():
     """Get parallel strategy by train id."""
     train_id = request.args.get('train_id')
+    stage_id = request.args.get('stage_id')
+    if stage_id != "metadata":
+        stage_id = int(stage_id)
+
     profiler_dir = os.path.realpath(os.path.join(settings.SUMMARY_BASE_DIR, train_id, 'profiler'))
-    if os.path.exists(profiler_dir + '/graphs'):
-        try:
-            with open(profiler_dir + '/graphs', 'r') as f:
-                return jsonify(json.load(f))
-        except (IOError, OSError, json.JSONDecodeError) as err:
-            log.error('Error occurred when read graphs file: %s', err)
-            raise ProfilerIOException()
 
     try:
         profiler_dir = validate_and_normalize_path(profiler_dir, 'profiler')
@@ -65,18 +63,39 @@ def get_parallel_strategy():
         raise ProfilerFileNotFoundException('Invalid cluster_profiler dir, detail: %s.' % str(exc))
 
     check_train_job_and_profiler_dir(profiler_dir)
+    log.info("call get_parallel_strategy: %s, %s", str(train_id), str(stage_id))
+
+    res_data = ParallelStrategyCache.get_cache(train_id, stage_id, profiler_dir)
+    if res_data:
+        return jsonify({'status': Status.FINISH.value, 'data': res_data})
 
     analyser = AnalyserFactory.instance().get_analyser('parallel_strategy', profiler_dir, train_id)
 
-    if analyser.data['status'] == "finish" and not os.path.exists(profiler_dir + '/graphs'):
+    if analyser.data['status'] == Status.FINISH.value:
         try:
-            output_path = profiler_dir + '/graphs'
-            flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-            modes = stat.S_IREAD | stat.S_IWRITE
-            with os.fdopen(os.open(output_path, flags, modes), "w") as fp:
-                json.dump(analyser.data, fp)
+            thread_list = []
+            meta_data = analyser.data.get('metadata', {})
+            graphs_data = analyser.data.get('graphs', {})
+
+            if stage_id == 'metadata':
+                res_data = meta_data
+                res_data.update({
+                    "stage_num": len(graphs_data)
+                })
+            else:
+                res_data = graphs_data.get(stage_id, {})
+
+            thread_list.append(Thread(target=ParallelStrategyCache.set_cache,
+                                      args=(train_id, 'metadata', res_data, profiler_dir)))
+
+            for k, v in graphs_data.items():
+                thread_list.append(Thread(target=ParallelStrategyCache.set_cache,
+                                          args=(train_id, k, v, profiler_dir)))
+
+            for t in thread_list:
+                t.start()
 
         except (IOError, OSError, json.JSONDecodeError) as err:
             log.error('Error occurred when read graphs file: %s', err)
             raise ProfilerIOException()
-    return jsonify(analyser.data)
+    return jsonify({'status': analyser.data.get('status'), 'data': res_data})

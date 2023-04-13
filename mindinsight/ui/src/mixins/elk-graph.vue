@@ -116,6 +116,7 @@ export default {
       const params = {
         profile: this.trainInfo.dir,
         train_id: this.trainInfo.id,
+        stage_id: "metadata"     // first fetch metadata
       };
       const fetchFunc = async () => {
         const res = await (
@@ -129,9 +130,23 @@ export default {
           setTimeout(fetchFunc, 1500);
           return;
         } else if (res.status === 'finish') {
+          // get the whole graph data
+          const metadata = res.data;
+          const graphs = {};
+
+          for (let i = 0; i < res.data.stage_num; i++) {
+            params['stage_id'] = i;
+            let cur_stage_data = await (
+              await RequestService.getGraphData(params).catch((err) => {
+              this.loading.show = false;
+              throw err;
+            })).data.data;
+            graphs[i] = cur_stage_data;
+          }
+          
+          console.log(graphs)
           // change noData graph  show status
           this.noDataGraphShow = false
-          const {graphs, metadata} = res;
           // pipelined stage
           this.pipelineStageNum = Object.keys(graphs).length;
           const pipelineInfoRes = buildPipelinedStageInfo(graphs);
