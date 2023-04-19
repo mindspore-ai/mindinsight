@@ -16,7 +16,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
     参数：
         - **dump_dir** (str) - 存储Dump数据文件的目录。
-        - **mem_limit** (int，可选) - 检查监测点的内存限制(以MB为单位)，可选值：从2048MB到2147483647MB，None表示不设限制，只受限于计算机内存。默认值：None。
+        - **mem_limit** (int，可选) - 检查监测点的内存限制(以MB为单位)，可选值：从2048MB到2147483647MB，``None`` 表示不设限制，只受限于计算机内存。默认值：``None``。
 
     .. py:method:: check_watchpoints(watchpoints, error_on_no_value=False)
 
@@ -28,7 +28,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         参数：
             - **watchpoints** (Iterable[Watchpoint]) - 监测点列表。
-            - **error_on_no_value** (bool，可选) - 当指定的张量没有存储在 `dump_dir` 路径中时，是否抛出错误码。默认值：False。
+            - **error_on_no_value** (bool，可选) - 当指定的张量没有存储在 `dump_dir` 路径中时，是否抛出错误码。默认值：``False``。
 
         返回：
             Iterable[WatchpointHit]，监测点命中列表，并按张量落盘时间排序。
@@ -40,7 +40,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         这些文件将包含图节点的堆栈信息。
 
         参数：
-            - **output_dir** (str，可选) - 保存文件的输出目录，None表示使用当前的工作目录。默认值：None。
+            - **output_dir** (str，可选) - 保存文件的输出目录，``None`` 表示使用当前的工作目录。默认值：``None``。
 
         返回：
             str，生成文件的路径。
@@ -60,7 +60,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         获取有Dump数据的迭代序号列表。
 
         参数：
-            - **ranks** (Union[int, list[int], None]，可选) - 指定逻辑卡号。逻辑卡号是指运行分布式训练时，将使用的设备从0开始编号，此编号称为逻辑卡号，例如，对于8卡计算机，指定训练时只使用4-7卡，那么4-7卡分别对应逻辑卡号0-3。如果设置成None，将返回所有逻辑卡的迭代序号列表。默认值：None。
+            - **ranks** (Union[int, list[int], None]，可选) - 指定逻辑卡号。逻辑卡号是指运行分布式训练时，将使用的设备从0开始编号，此编号称为逻辑卡号，例如，对于8卡计算机，指定训练时只使用4-7卡，那么4-7卡分别对应逻辑卡号0-3。如果设置成 ``None``，将返回所有逻辑卡的迭代序号列表。默认值：``None``。
 
         返回：
             Iterable[int]，有Dump数据的迭代序号列表，按从小到大排序。
@@ -102,10 +102,10 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         参数：
             - **query_string** (str) - 查询字符串。对于要选择的节点，匹配目标字段必须包含或能匹配到查询的字符串。
-            - **use_regex** (bool，可选) - 是否对目标字段按照查询字符串进行正则匹配。默认值：False。
-            - **select_by** (str，可选) - 选择节点时要搜索的字段。可用值为“node_name”、“code_stack”。“node_name”表示根据节点的名称进行筛选。“code_stack”表示对系统的堆栈信息进行筛选。默认值：“node_name”。
-            - **ranks** (Union[int, list[int], None]，可选) -  要选择的逻辑卡号或者逻辑卡号列表，None表示将考虑所有逻辑卡。选定的节点必须存在于指定的逻辑卡上。默认值：None。
-            - **case_sensitive** (bool，可选) - 对目标字段进行匹配时是否区分大小写。默认值：True。
+            - **use_regex** (bool，可选) - 是否对目标字段按照查询字符串进行正则匹配。默认值：``False``。
+            - **select_by** (str，可选) - 选择节点时要搜索的字段。可用值为 ``""node_name"``、 ``"code_stack"``。 ``"node_name"`` 表示根据节点的名称进行筛选。``"code_stack"`` 表示对系统的堆栈信息进行筛选。默认值：``"node_name"``。
+            - **ranks** (Union[int, list[int], None]，可选) -  要选择的逻辑卡号或者逻辑卡号列表，``None`` 表示将考虑所有逻辑卡。选定的节点必须存在于指定的逻辑卡上。默认值：``None``。
+            - **case_sensitive** (bool，可选) - 对目标字段进行匹配时是否区分大小写。默认值：``True``。
 
         返回：
             Iterable[Node]，匹配的节点。
@@ -118,12 +118,12 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         参数：
             - **query_string** (str) - 查询字符串。对于要选择的张量，匹配目标字段必须包含或能匹配到查询字符串。
-            - **use_regex** (bool，可选) - 指明查询对象是否为正则表达式。默认值：False。
-            - **select_by** (str，可选) - 选择张量时要搜索的字段。可用值为“node_name”、“code_stack”。“node_name”表示在图中搜索张量的节点名称。“code_stack”表示输出该张量的节点的堆栈信息。默认值：“node_name”。
-            - **iterations** (Union[int, list[int], None]，可选) - 要选择的迭代序号或迭代序号列表，None表示选择保存的所有迭代。默认值：None。
-            - **ranks** (Union[int, list[int], None]，可选) - 要选择的逻辑卡号或逻辑卡号列表，None表示将选择所有逻辑卡。默认值：None。
-            - **slots** (list[int]，可选) -  所选张量的编号，None表示将选择所有编号。默认值：None。
-            - **case_sensitive** (bool，可选) - 选择张量时是否区分大小写。默认值：True。
+            - **use_regex** (bool，可选) - 指明查询对象是否为正则表达式。默认值：``False``。
+            - **select_by** (str，可选) - 选择张量时要搜索的字段。可用值为 ``""node_name"``、 ``"code_stack"``。 ``"node_name"`` 表示在图中搜索张量的节点名称。``"code_stack"`` 表示输出该张量的节点的堆栈信息。默认值：``"node_name"``。
+            - **iterations** (Union[int, list[int], None]，可选) - 要选择的迭代序号或迭代序号列表，``None`` 表示选择保存的所有迭代。默认值：``None``。
+            - **ranks** (Union[int, list[int], None]，可选) - 要选择的逻辑卡号或逻辑卡号列表，``None`` 表示将选择所有逻辑卡。默认值：``None``。
+            - **slots** (list[int]，可选) -  所选张量的编号，``None`` 表示将选择所有编号。默认值：``None``。
+            - **case_sensitive** (bool，可选) - 选择张量时是否区分大小写。默认值：``True``。
 
         返回：
             Iterable[DebuggerTensor]，匹配的张量。
@@ -162,8 +162,8 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         获取当前节点的输入张量。
 
         参数：
-            - **iterations** (Iterable[int]，可选) -  指定迭代序号列表，None，表示将考虑所有可用的迭代。默认值：None。
-            - **slots** (Iterable[int]，可选) - 指定输入张量的编号列表，None表示会返回所有的输入张量。默认值：None。
+            - **iterations** (Iterable[int]，可选) -  指定迭代序号列表，``None`` 表示将考虑所有可用的迭代。默认值：``None``。
+            - **slots** (Iterable[int]，可选) - 指定输入张量的编号列表，``None`` 表示会返回所有的输入张量。默认值：``None``。
 
         返回：
             Iterable[DebuggerTensor]，节点的输入张量列表。
@@ -173,8 +173,8 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         获取当前节点的输出张量。
 
         参数：
-            - **iterations** (Iterable[int]，可选) - 指定迭代序号列表，None表示将考虑所有可用的迭代。默认值：None。
-            - **slots** (Iterable[int]，可选) - 指定输出张量的编号列表，None表示会返回所有的输出张量。默认值：None。
+            - **iterations** (Iterable[int]，可选) - 指定迭代序号列表，``None`` 表示将考虑所有可用的迭代。默认值：``None``。
+            - **slots** (Iterable[int]，可选) - 指定输出张量的编号列表，``None`` 表示会返回所有的输出张量。默认值：``None``。
 
         返回：
             Iterable[DebuggerTensor]，节点的输出张量。
@@ -369,10 +369,10 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         此类中的所有API均为实验版本，将来可能更改或者删除。
 
     参数：
-        - **abs_mean_gt** (float，可选) - 张量绝对值的均值阈值。当实际值大于该阈值时，则满足该检查条件。
-        - **max_gt** (float，可选) - 张量最大值的阈值。当实际值大于该阈值时，则满足该检查条件。
-        - **min_gt** (float，可选) -  张量最小值的阈值。当实际值大于该阈值时，则满足该检查条件。
-        - **mean_gt** (float，可选) - 张量均值的阈值。当实际值大于该阈值时，则满足该检查条件。
+        - **abs_mean_gt** (float，可选) - 张量绝对值的均值阈值。当实际值大于该阈值时，则满足该检查条件。默认值：``None``。
+        - **max_gt** (float，可选) - 张量最大值的阈值。当实际值大于该阈值时，则满足该检查条件。默认值：``None``。
+        - **min_gt** (float，可选) -  张量最小值的阈值。当实际值大于该阈值时，则满足该检查条件。默认值：``None``。
+        - **mean_gt** (float，可选) - 张量均值的阈值。当实际值大于该阈值时，则满足该检查条件。默认值：``None``。
 
     .. py:method:: param_names
         :property:
@@ -392,10 +392,10 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         此类中的所有API均为实验版本，将来可能更改或者删除。
 
     参数：
-        - **abs_mean_lt** (float，可选) - 张量绝对值的均值阈值。当实际值小于该阈值时，则满足该检查条件。
-        - **max_lt** (float，可选) - 张量最大值的阈值。当实际值小于该阈值时，则满足该检查条件。
-        - **min_lt** (float，可选) -  张量最小值的阈值。当实际值小于该阈值时，则满足该检查条件。
-        - **mean_lt** (float，可选) - 张量均值的阈值。当实际值小于该阈值时，则满足该检查条件。
+        - **abs_mean_lt** (float，可选) - 张量绝对值的均值阈值。当实际值小于该阈值时，则满足该检查条件。默认值：``None``。
+        - **max_lt** (float，可选) - 张量最大值的阈值。当实际值小于该阈值时，则满足该检查条件。默认值：``None``。
+        - **min_lt** (float，可选) -  张量最小值的阈值。当实际值小于该阈值时，则满足该检查条件。默认值：``None``。
+        - **mean_lt** (float，可选) - 张量均值的阈值。当实际值小于该阈值时，则满足该检查条件。默认值：``None``。
 
     .. py:method:: param_names
         :property:
@@ -415,12 +415,12 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         此类中的所有API均为实验版本，将来可能更改或者删除。
 
     参数：
-        - **range_start_inclusive** (float，可选) - 指定区间范围的开始。
-        - **range_end_inclusive** (float，可选) - 指定区间范围的结束。
-        - **range_percentage_lt** (float，可选) - `[range_start_inclusive, range_end_inclusive]` 范围内张量百分比的阈值。当指定范围内张量的百分比小于该值时，将满足检查条件。
-        - **range_percentage_gt** (float，可选) - `[range_start_inclusive, range_end_inclusive]` 范围内张量百分比的阈值。当指定范围内张量的百分比大于该值时，将满足检查条件。
-        - **max_min_lt** (float，可选) - 张量的最大值和最小值之差的下限阈值。
-        - **max_min_gt** (float，可选) - 张量的最大值和最小值之差的上限阈值。
+        - **range_start_inclusive** (float，可选) - 指定区间范围的开始。默认值：``None``。
+        - **range_end_inclusive** (float，可选) - 指定区间范围的结束。默认值：``None``。
+        - **range_percentage_lt** (float，可选) - `[range_start_inclusive, range_end_inclusive]` 范围内张量百分比的阈值。当指定范围内张量的百分比小于该值时，将满足检查条件。默认值：``None``。
+        - **range_percentage_gt** (float，可选) - `[range_start_inclusive, range_end_inclusive]` 范围内张量百分比的阈值。当指定范围内张量的百分比大于该值时，将满足检查条件。默认值：``None``。
+        - **max_min_lt** (float，可选) - 张量的最大值和最小值之差的下限阈值。默认值：``None``。
+        - **max_min_gt** (float，可选) - 张量的最大值和最小值之差的上限阈值。默认值：``None``。
 
     .. py:method:: param_names
         :property:
@@ -509,8 +509,8 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         此类中的所有API均为实验版本，将来可能更改或者删除。
 
     参数：
-        - **rtol** (float，可选) - 相对容差参数。默认值：1e-5。
-        - **atol** (float，可选) - 绝对容差参数。默认值：1e-8。
+        - **rtol** (float，可选) - 相对容差参数。默认值：``1e-5``。
+        - **atol** (float，可选) - 绝对容差参数。默认值：``1e-8``。
 
     .. py:method:: param_names
         :property:
@@ -531,7 +531,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
     参数：
         - **abs_mean_update_ratio_lt** (float) - 平均变化比例的阈值。如果平均更新率小于该值，则将触发监测点。
-        - **epsilon** (float，可选) - `Epsilon` 值。默认值：1e-9。
+        - **epsilon** (float，可选) - `Epsilon` 值。默认值：``1e-9``。
 
     .. py:method:: param_names
         :property:
@@ -553,7 +553,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
     参数：
         - **abs_mean_update_ratio_gt** (float) - 平均变化率的阈值，如果平均变化率大于此值，则将触发监测点。
-        - **epsilon** (float，可选) - `Epsilon` 值。默认值：1e-9。
+        - **epsilon** (float，可选) - `Epsilon` 值。默认值：``1e-9``。
 
     .. py:method:: param_names
         :property:

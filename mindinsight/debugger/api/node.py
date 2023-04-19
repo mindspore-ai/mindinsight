@@ -151,9 +151,10 @@ class Node(ABC):
 
         Args:
             iterations (Iterable[int], optional): The iterations to which the returned
-                tensor should belong. None means all available iterations will be considered. Default: None.
+                tensor should belong. ``None`` means all available iterations will be considered.
+                Default: ``None``.
             slots (Iterable[int], optional): The slots in which the returned tensors
-                should be. None means all available slots will be considered. Default: None.
+                should be. ``None`` means all available slots will be considered. Default: ``None``.
 
         Returns:
             Iterable[DebuggerTensor], the input tensors of the node.
@@ -174,9 +175,10 @@ class Node(ABC):
 
         Args:
             iterations (Iterable[int], optional): The iterations to which the returned
-                tensor should belong. None means all available iterations will be considered. Default: None.
+                tensor should belong. ``None`` means all available iterations will be considered.
+                Default: ``None``.
             slots (Iterable[int], optional): The slots in which the returned tensors
-                should be. None means all available slots will be considered. Default: None.
+                should be. ``None`` means all available slots will be considered. Default: ``None``.
 
         Returns:
             Iterable[DebuggerTensor], the output tensors of the node.
@@ -282,10 +284,10 @@ class NodeImpl(Node):
 
         Args:
             iterations (Iterable[int], optional): The iterations to which the returned
-                tensor should belong. None means all available iterations will be considered.
-                Default: None.
+                tensor should belong. ``None`` means all available iterations will be considered.
+                Default: ``None``.
             slots (Iterable[int], optional): The slots in which the returned tensors
-                should be. None means all available slots will be considered. Default: None.
+                should be. ``None`` means all available slots will be considered. Default: ``None``.
 
         Returns:
             Iterable[DebuggerTensor], the input tensors of the node.
@@ -312,9 +314,9 @@ class NodeImpl(Node):
 
         Args:
             iterations (Iterable[int]): The iterations to which the returned
-                tensor should belong.
+                tensor should belong. Default: ``None``.
             slots (Iterable[int]): The slots in which the returned tensors
-                should be.
+                should be. Default: ``None``.
 
         Returns:
             Iterable[DebuggerTensor], the output tensors of the node.

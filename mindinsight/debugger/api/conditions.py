@@ -376,16 +376,16 @@ class TensorTooLargeCondition(ConditionBase):
     Args:
         abs_mean_gt (float, optional): The threshold for mean of the absolute
             value of the tensor. When the actual value was greater than this
-            threshold, this checking condition would be satisfied.
+            threshold, this checking condition would be satisfied. Default: ``None``.
         max_gt (float, optional): The threshold for maximum of the tensor. When
             the actual value was greater than this threshold, this checking
-            condition would be satisfied.
+            condition would be satisfied. Default: ``None``.
         min_gt (float, optional): The threshold for minimum of the tensor. When
             the actual value was greater than this threshold, this checking
-            condition would be satisfied.
+            condition would be satisfied. Default: ``None``.
         mean_gt (float, optional): The threshold for mean of the tensor. When
             the actual value was greater than this threshold, this checking
-            condition would be satisfied.
+            condition would be satisfied. Default: ``None``.
 
     Examples:
         >>> from mindinsight.debugger import TensorTooLargeCondition
@@ -465,16 +465,16 @@ class TensorTooSmallCondition(ConditionBase):
     Args:
         abs_mean_lt (float, optional): The threshold for mean of the absolute
             value of the tensor. When the actual value was less than this
-            threshold, this checking condition would be satisfied.
+            threshold, this checking condition would be satisfied. Default: ``None``.
         max_lt (float, optional): The threshold for maximum of the tensor. When
             the actual value was less than this threshold, this checking
-            condition would be satisfied.
+            condition would be satisfied. Default: ``None``.
         min_lt (float, optional): The threshold for minimum of the tensor. When
             the actual value was less than this threshold, this checking
-            condition would be satisfied.
+            condition would be satisfied. Default: ``None``.
         mean_lt (float, optional): The threshold for mean of the tensor. When
             the actual value was less than this threshold, this checking
-            condition would be satisfied.
+            condition would be satisfied. Default: ``None``.
 
     Examples:
         >>> from mindinsight.debugger import TensorTooSmallCondition
@@ -557,18 +557,20 @@ class TensorRangeCondition(ConditionBase):
         change or deletion.
 
     Args:
-        range_start_inclusive (float, optional): The start of the specified range.
-        range_end_inclusive (float, optional): The end of the specified range.
+        range_start_inclusive (float, optional): The start of the specified range. Default: ``None``.
+        range_end_inclusive (float, optional): The end of the specified range. Default: ``None``.
         range_percentage_lt (float, optional): The threshold for the percentage of the tensor
             in the range `[range_start_inclusive, range_end_inclusive]` . The checking condition
             will be satisfied when the percentage of the tensor in the specified range is less than this value.
+            Default: ``None``.
         range_percentage_gt (float, optional): The threshold for the percentage of the tensor
             in the range `[range_start_inclusive, range_end_inclusive]` . The checking condition
             will be satisfied when the percentage of the tensor in the specified range is greater than this value.
+            Default: ``None``.
         max_min_lt (float, optional): Lowwer threshold for the difference
-            between the maximum and minimum values of a tensor.
+            between the maximum and minimum values of a tensor. Default: ``None``.
         max_min_gt (float, optional): Upper threshold for the difference
-            between the maximum and minimum values of a tensor.
+            between the maximum and minimum values of a tensor. Default: ``None``.
 
     Examples:
         >>> from mindinsight.debugger import TensorRangeCondition
@@ -808,8 +810,8 @@ class TensorUnchangedCondition(ConditionBase):
         change or deletion.
 
     Args:
-        rtol (float, optional): The relative tolerance parameter. Default: 1e-5.
-        atol (float, optional): The absolute tolerance parameter. Default: 1e-8.
+        rtol (float, optional): The relative tolerance parameter. Default: ``1e-5``.
+        atol (float, optional): The absolute tolerance parameter. Default: ``1e-8``.
 
     Examples:
         >>> from mindinsight.debugger import TensorUnchangedCondition
@@ -870,7 +872,7 @@ class TensorChangeBelowThresholdCondition(ConditionBase):
     Args:
         abs_mean_update_ratio_lt (float): The threshold value for mean update ration.
             If the mean update ratio is less that this value the watchpoint will be triggered.
-        epsilon (float, optional): Epsilon value. Default: 1e-9.
+        epsilon (float, optional): Epsilon value. Default: ``1e-9``.
 
     Examples:
         >>> from mindinsight.debugger import TensorChangeBelowThresholdCondition
@@ -931,7 +933,7 @@ class TensorChangeAboveThresholdCondition(ConditionBase):
     Args:
         abs_mean_update_ratio_gt (float): The threshold value for mean update ratio,
             if the mean update ratio is greater than this value the watchpoint will be triggered.
-        epsilon (float, optional): Epsilon value. Default: 1e-9.
+        epsilon (float, optional): Epsilon value. Default: ``1e-9``.
 
     Examples:
         >>> from mindinsight.debugger import TensorChangeAboveThresholdCondition
