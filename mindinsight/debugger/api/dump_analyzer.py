@@ -46,8 +46,8 @@ class DumpAnalyzer:
     Args:
         dump_dir (str): The path of the dump folder.
         mem_limit (int, optional): The memory limit for checking watchpoints in MB.
-            Optional values: from 2048 MB to 2147483647 MB. None means no limit is set, only limited by computor memory.
-            Default: None.
+            Optional values: from 2048 MB to 2147483647 MB. ``None`` means no limit is set,
+            only limited by computor memory. Default: ``None``.
 
     Supported Platforms:
         ``Ascend`` ``GPU``
@@ -168,7 +168,7 @@ class DumpAnalyzer:
 
         Args:
             output_dir (str, optional): Output directory to save the file.
-                None means to use the current working directory. Default: None.
+                ``None`` means to use the current working directory. Default: ``None``.
 
         Returns:
             str, The path of the generated file.
@@ -198,16 +198,16 @@ class DumpAnalyzer:
             query_string (str): Query string. For a node to be selected, the
                 match target field must contains or matches the query string.
             use_regex (bool, optional): Indicates whether query is a regex. Default:
-                False.
+                ``False``.
             select_by (str, optional): The field to search when selecting
-                nodes. Available values are "node_name", "code_stack".
-                "node_name" means to search the name of the nodes in the
-                graph. "code_stack" means the stack info of
-                the node. Default: "node_name".
-            ranks (Union[int, list[int], None], optional): The rank(s) to select. None means all ranks will be
-                considered. The selected nodes must exist on the specified ranks. Default: None.
+                nodes. Available values are ``"node_name"``, ``"code_stack"``.
+                ``"node_name"`` means to search the name of the nodes in the
+                graph. ``"code_stack"`` means the stack info of
+                the node. Default: ``"node_name"``.
+            ranks (Union[int, list[int], None], optional): The rank(s) to select. ``None`` means all ranks will be
+                considered. The selected nodes must exist on the specified ranks. Default: ``None``.
             case_sensitive (bool, optional): Whether case-sensitive when
-                selecting tensors. Default: True.
+                selecting tensors. Default: ``True``.
 
         Returns:
             Iterable[Node], the matched nodes.
@@ -273,19 +273,19 @@ class DumpAnalyzer:
             query_string (str): Query string. For a tensor to be selected, the
                 match target field must contain or match the query string.
             use_regex (bool, optional): Indicates whether query is a regex. Default:
-                False.
+                ``False``.
             select_by (str, optional): The field to search when selecting
-                tensors. Available values are "node_name", "code_stack".
-                "node_name" means to search the node name of the tensors in the
-                graph. "code_stack" means the stack info of
-                the node that outputs this tensor. Default: "node_name".
-            iterations (Union[int, list[int], None], optional): The iteration(s) to select. None means all dumped
-                iterations will be selected. Default: None.
-            ranks (Union[int, list[int], None], optional): The rank(s) to select. None means all ranks will be selected.
-                Default: None.
-            slots (list[int], optional): The slot of the selected tensor. None means all slots will be selected.
-                Default: None.
-            case_sensitive (bool, optional): Whether case-sensitive when selecting tensors. Default: True.
+                tensors. Available values are ``"node_name"``, ``"code_stack"``.
+                ``"node_name"`` means to search the node name of the tensors in the
+                graph. ``"code_stack"`` means the stack info of
+                the node that outputs this tensor. Default: ``"node_name"``.
+            iterations (Union[int, list[int], None], optional): The iteration(s) to select. ``None`` means all dumped
+                iterations will be selected. Default: ``None``.
+            ranks (Union[int, list[int], None], optional): The rank(s) to select. ``None`` means all ranks
+                will be selected. Default: ``None``.
+            slots (list[int], optional): The slot of the selected tensor. ``None`` means all slots will be selected.
+                Default: ``None``.
+            case_sensitive (bool, optional): Whether case-sensitive when selecting tensors. Default: ``True``.
 
         Returns:
           Iterable[DebuggerTensor], the matched tensors.
@@ -323,7 +323,7 @@ class DumpAnalyzer:
                 when running distributed training. This number is called rank.
                 For example, for an 8-card computer, only 4-7 cards are used for
                 specified training, so 4-7 cards correspond to the ranks 0-3 respectively..
-                If None, return iterations of all ranks. Default: None.
+                If ``None``, return iterations of all ranks. Default: ``None``.
 
         Returns:
             Iterable[int], available iterations which have dumped data, sorted in increasing order.
@@ -379,7 +379,7 @@ class DumpAnalyzer:
             watchpoints (Iterable[Watchpoint]): The list of watchpoints.
             error_on_no_value (bool, optional): Whether to report error code in watchpoint
                 hit when the specified tensor have no value stored in
-                dump_dir. Default: False.
+                dump_dir. Default: ``False``.
 
         Returns:
             Iterable[WatchpointHit], the watchpoint hit list, sorted by tensor drop time.
