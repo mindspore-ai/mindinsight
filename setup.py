@@ -130,7 +130,8 @@ def run_script(script):
         shlex.split(cmd),
         shell=False
     )
-    return process.wait()
+    process.communicate()
+    return process.returncode
 
 
 def build_dependencies():
