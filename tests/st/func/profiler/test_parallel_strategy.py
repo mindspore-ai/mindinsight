@@ -67,7 +67,7 @@ class TestParallelStrategy:
     @pytest.mark.platform_x86_ascend_training
     def test_get_parallel_strategy(self, client):
         """Test getting parallel strategy success."""
-        params = dict(train_id='./')
+        params = dict(train_id='./', stage_id='metadata')
         url = get_url(URL, params)
         response = client.get(url)
         assert response.status_code == 200
@@ -78,5 +78,6 @@ class TestParallelStrategy:
             response = client.get(url)
             ret_json = response.get_json()
 
+        print("test_get_parallel_strategy: ", ret_json)
         file_path = os.path.join(self.RESULT_DIR, 'parallel_strategy.json')
         compare_result_with_file(ret_json, file_path)
