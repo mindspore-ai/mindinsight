@@ -116,6 +116,7 @@ def get_timeline():
     """Get memory data by train id."""
 
     train_id = request.args.get('train_id')
+    device_list = request.args.get('device_list')
     if train_id is None:
         logger.info("Invalid train_id parameter of None.")
         raise ParamValueError("Invalid train_id.")
@@ -135,4 +136,4 @@ def get_timeline():
     check_train_job_and_profiler_dir(profiler_dir)
 
     analyser = AnalyserFactory.instance().get_analyser('timeline', profiler_dir, train_id)
-    return jsonify(analyser.get_marey_timeline(step))
+    return jsonify(analyser.get_marey_timeline(step, device_list))
