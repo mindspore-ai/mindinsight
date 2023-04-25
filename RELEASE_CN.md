@@ -2,7 +2,7 @@
 
 [View English](./RELEASE.md)
 
-## MindInsight 2.0.0.rc1 Release Notes
+## MindInsight 2.0.0 Release Notes
 
 ### 主要特性和增强
 

@@ -2,7 +2,7 @@
 
 [查看中文](./RELEASE_CN.md)
 
-## MindInsight 2.0.0.rc1 Release Notes
+## MindInsight 2.0.0 Release Notes
 
 ### Major Features and Improvements
 
