@@ -2,6 +2,34 @@
 
 [查看中文](./RELEASE_CN.md)
 
+## MindInsight 2.0.0.rc1 Release Notes
+
+### Major Features and Improvements
+
+#### MindInsight
+
+- [STABLE] MindInsight and Mindspore version matching verification.
+
+#### Debugger
+
+- [STABLE] The debugger shows that the upper limit of the number of nodes in the calculation graph is configurable.
+
+#### Profiler
+
+- [STABLE] The time-consuming ratio of the Profiler operator is calculated using total time.
+
+#### Bug fixes
+
+- Fix some page display issues.
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Ning Ma, Chuting Liu, Jiaxing Zhu, Qingxiang Zang, Yaomin Mao.
+
+Contributions of any kind are welcome!
+
 ## MindInsight 2.0.0-alpha Release Notes
 
 ### Major Features and Improvements
