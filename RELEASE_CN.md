@@ -2,6 +2,34 @@
 
 [View English](./RELEASE.md)
 
+## MindInsight 2.0.0.rc1 Release Notes
+
+### 主要特性和增强
+
+#### MindInsight
+
+- [STABLE] MindInsight与Mindspore版本匹配校验。
+
+#### Debugger
+
+- [STABLE] 调试器展示计算图节点数上限可配置。
+
+#### Profiler
+
+- [STABLE] Profiler算子耗时占比使用total time计算。
+
+#### Bug fixes
+
+- 修复若干页面展示问题。
+
+### Contributors
+
+感谢以下人员做出的贡献:
+
+Ning Ma, Chuting Liu, Jiaxing Zhu, Qingxiang Zang, Yaomin Mao.
+
+欢迎以任何形式对项目提供贡献！
+
 ## MindInsight 2.0.0-alpha Release Notes
 
 ### 主要特性和增强
