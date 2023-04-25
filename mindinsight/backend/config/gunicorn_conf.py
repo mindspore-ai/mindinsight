@@ -30,9 +30,9 @@ from mindinsight.debugger.session_manager import SessionManager
 
 
 gunicorn.SERVER_SOFTWARE = 'unknown'
-
 worker_class = 'sync'
-workers = 1
+# number of parallel worker processes
+workers = 8
 threads = min(30, os.cpu_count() * 2 + 1)
 worker_connections = 1000
 
