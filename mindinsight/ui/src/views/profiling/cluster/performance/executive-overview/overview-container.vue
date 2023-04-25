@@ -49,11 +49,38 @@ limitations under the License.
       </div>
     </div>
     <div class="container">
-      <div class="header">
+      <div>
         <span class="title">{{ $t("profilingCluster.mareyView") }}</span>
+        <el-popover
+          placement="bottom"
+          width="300"
+          trigger="click"
+          :visible-arrow="false"
+          @show="handleShowPopover"
+          @hide="handleHidePopover"
+        >
+          <el-tree
+            ref="tree"
+            class="tree-selector tree-selector-scroll"
+            :data="options"
+            show-checkbox
+            node-key="value"
+            default-expand-all
+          ></el-tree>
+          <el-button
+            class="button-with-margin"
+            size="mini"
+            type="primary"
+            slot="reference"
+            @click="handleClick"
+            style="min-width: 100px;"
+          >
+            {{ buttonText }}
+          </el-button>
+        </el-popover>
       </div>
       <div class="marey-content">
-        <marey-view />
+        <marey-view ref="child" />
       </div>
     </div>
     <div class="container">
@@ -91,21 +118,82 @@ export default {
   },
   data() {
     return {
+      trainInfo: {
+        id: this.$route.query.id,
+        path: this.$route.query.path,
+        dir: this.$route.query.dir,
+      },
       isShowHiddenEdges: true,
       profileIsLoading: true,
       profileLoadingState: LOADING_DATA,
-    };
+      popoverVisible: false,
+      checkedDevices: [],
+      options: [],
+    }
+  },
+  computed: {
+    buttonText() {
+      return this.popoverVisible ? "确定" : "选择设备";
+    }
   },
   created() {
     this.profileIsLoading = true;
+    this.fetchDevices();
     this.fetchData();
   },
   methods: {
+    handleShowPopover() {
+      this.popoverVisible = true;
+    },
+    handleHidePopover() {
+      this.popoverVisible = false;
+      this.$nextTick(() => {
+        this.$refs.tree.setCheckedKeys(this.checkedDevices);
+      });
+    },
+    handleClick() {
+      if (this.popoverVisible) {  // user confirmed the device_list settings.
+        const device_list = this.$refs.tree.getCheckedKeys();
+        const isEqual = device_list.length === this.checkedDevices.length &&
+          device_list.every((value, index) => value === this.checkedDevices[index]);
+        if (isEqual) return;
+        this.checkedDevices = device_list;
+        this.$refs.child.getTimeLineData(device_list);
+      }
+    },
+
+    fetchDevices() {
+      const params = {
+        profile: this.trainInfo.dir,
+        train_id: this.trainInfo.id,
+      };
+      requestService.getProfilerDeviceData(params).then(({data}) => {
+        this.options = data.device_list
+        .sort((a, b) => a - b) // sort according to device num
+        .map((device, index) => {
+          const value = `${device}`;
+          const label = `Device ${device}`;
+          if (index < 8) { // default checked
+            this.checkedDevices.push(value);
+          }
+          return { value, label };
+        });
+        this.$nextTick(() => {
+          this.$refs.tree.setCheckedKeys(this.checkedDevices);
+        });
+      })
+    },
+
     async fetchData() {
+      const params = {
+        profile: this.trainInfo.dir,
+        train_id: this.trainInfo.id,
+        stage_id: "metadata"     // first fetch metadata
+      };
       const fetchFunc = async () => {
         const res = await (
           await requestService
-            .getGraphs(this.$route.query.path)
+            .getGraphData(params)
             .catch((err) => {
               throw err;
             })
@@ -114,7 +202,23 @@ export default {
           setTimeout(fetchFunc, 1500);
           return;
         } else {
-          $store.commit("setGraphData", res);
+          // get the whole graph data
+          const metadata = res.data;
+          const graphs = {};
+
+          for (let i = 0; i < res.data.stage_num; i++) {
+            params['stage_id'] = i;
+            let cur_stage_data = await (
+              await requestService.getGraphData(params).catch((err) => {
+              throw err;
+            })).data.data;
+            graphs[i] = cur_stage_data;
+          }
+          $store.commit("setGraphData", {
+            "graphs": graphs,
+            "metadata": metadata,
+            "status": "finish"
+          });
         }
       };
       await fetchFunc();
@@ -150,7 +254,7 @@ export default {
   align-items: center;
   justify-content: space-between;
 }
-.overview-dashboard .header .title {
+.title {
   font-size: 16px;
   font-weight: bold;
 }
@@ -201,5 +305,12 @@ export default {
   height: 16px;
   margin: 2px 0;
   cursor: pointer;
+}
+.button-with-margin {
+  margin-left: 8px;
+}
+.tree-selector-scroll {
+  max-height: 300px;
+  overflow-y: auto;
 }
 </style>

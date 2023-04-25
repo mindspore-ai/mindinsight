@@ -28,9 +28,9 @@ class TimelineService:
     _ascend_display_filename = 'ascend_timeline_display_{}.json'
     _gpu_display_filename = 'gpu_timeline_display_{}.json'
 
-    def __init__(self, path):
+    def __init__(self, path, device_list):
         self._display_timeline = True
-        self.__read_data(path)
+        self.__read_data(path, device_list)
         self.__align_time()
 
     def get_ops_by_step(self, step):
@@ -101,14 +101,20 @@ class TimelineService:
         timeline_data = TimelineData(operator_time_maps, min_time, max_time, stage_data)
         return timeline_data
 
-    def __read_data(self, path):
+    def __read_data(self, path, device_list):
         """
         Get timeline data.
 
         Args:
             path (string): The current train log directory.
         """
-        device_list, _, _ = analyse_device_list_from_profiler_dir(path)
+        if device_list is None:
+            device_list, _, _ = analyse_device_list_from_profiler_dir(path)
+            sorted_device_list = sorted(device_list, key=int)
+            device_list = sorted_device_list[:8]
+        else:
+            device_list = device_list.split(",")
+
         self.all_data = {}
         self.op_nodes = {}
         for device in device_list:
@@ -119,8 +125,7 @@ class TimelineService:
                 file_path, raise_key='Invalid timeline display file path.'
             )
             if not os.path.exists(file_path):
-                self._display_timeline = False
-                return
+                continue
             with open(file_path, "r") as fp:
                 j_data = json.loads(fp.read())
                 self.all_data[device_entry] = j_data

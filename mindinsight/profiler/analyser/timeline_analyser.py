@@ -116,7 +116,8 @@ class TimelineAnalyser(BaseAnalyser):
 
         return timeline_summary
 
-    def get_marey_timeline(self, step):
-        operator_time_maps, min_time, max_time, stage_data = TimelineService(self._profiling_dir).get_ops_by_step(step)
+    def get_marey_timeline(self, step, device_list):
+        operator_time_maps, min_time, max_time, stage_data = TimelineService(self._profiling_dir,
+                                                                             device_list).get_ops_by_step(step)
         ret = {"maps": operator_time_maps, "minT": min_time, "maxT": max_time, "stage_data": stage_data}
         return ret

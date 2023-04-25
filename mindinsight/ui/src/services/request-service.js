@@ -659,22 +659,15 @@
       params: params,
     });
   },
-  getGraphs(trainId) {
-    return axios({
-      method: "get",
-      url: "v1/mindinsight/profile/parallel-strategy/graphs",
-      params: { train_id: trainId },
-      headers: {
-        ignoreError: true,
-      },
-      timeout: 1000 * 240,
-    });
-  },
-  getTimeLineData(trainId, stepNum) {
+  getTimeLineData(trainId, stepNum, device_list) {
+    const params = {
+      train_id: trainId, step: stepNum, device_type: "ascend"
+    };
+    if (device_list != null) params["device_list"] = device_list
     return axios({
       method: "get",
       url: "v1/mindinsight/profile/marey-graph/timeline",
-      params: { train_id: trainId, step: stepNum, device_type: "ascend" },
+      params: params,
       headers: {
         ignoreError: true,
       },

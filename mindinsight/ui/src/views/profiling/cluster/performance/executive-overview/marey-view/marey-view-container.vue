@@ -472,10 +472,10 @@ export default {
       this.top = top;
       this.elementHeight = Math.floor(height - 15);
     },
-    getTimeLineData() {
+    getTimeLineData(device_list=null) {
       this.isLoading = true;
       this.loadingState = LOADING_DATA;
-      RequestService.getTimeLineData(this.$route.query.path, this.stepNumber)
+      RequestService.getTimeLineData(this.$route.query.path, this.stepNumber, device_list)
         .then(({ data }) => {
           const { stage_data, maps } = data || {};
           const stages = Object.keys(stage_data);
@@ -727,7 +727,6 @@ export default {
           this.flopsDataInfo = flopsDataInfo;
           this.mFLOPsMin = min;
           this.mFLOPsMax = max;
-          console.log("flopsDataInfo", flopsDataInfo);
         })
         .catch(console.error);
     },
@@ -822,7 +821,6 @@ export default {
           this.memoryDataInfo = memoryDataInfo;
           this.memoryMin = min;
           this.memoryMax = max;
-          console.log("memoryDataInfo", memoryDataInfo);
         })
         .catch(console.error);
     },
