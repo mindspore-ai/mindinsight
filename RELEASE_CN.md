@@ -2,7 +2,7 @@
 
 [View English](./RELEASE.md)
 
-## MindSpore Insight 2.0.0 Release Notes
+## MindSpore Insight 2.0.0-rc1 Release Notes
 
 ### 主要特性和增强
 
