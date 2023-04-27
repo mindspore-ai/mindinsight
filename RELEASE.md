@@ -1,14 +1,14 @@
-# MindInsight Release Notes
+# MindSpore Insight Release Notes
 
 [查看中文](./RELEASE_CN.md)
 
-## MindInsight 2.0.0 Release Notes
+## MindSpore Insight 2.0.0 Release Notes
 
 ### Major Features and Improvements
 
-#### MindInsight
+#### MindSpore Insight
 
-- [STABLE] MindInsight and Mindspore version matching verification.
+- [STABLE] MindSpore Insight and Mindspore version matching verification.
 
 #### Debugger
 
@@ -18,7 +18,7 @@
 
 - [STABLE] The time-consuming ratio of the Profiler operator is calculated using total time.
 
-#### Bug fixes
+### Bug fixes
 
 - Fix some page display issues.
 
