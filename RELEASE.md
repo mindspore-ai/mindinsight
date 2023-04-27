@@ -2,7 +2,7 @@
 
 [查看中文](./RELEASE_CN.md)
 
-## MindSpore Insight 2.0.0 Release Notes
+## MindSpore Insight 2.0.0-rc1 Release Notes
 
 ### Major Features and Improvements
 
