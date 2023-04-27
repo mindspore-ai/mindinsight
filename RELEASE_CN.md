@@ -1,14 +1,14 @@
-# MindInsight Release Notes
+# MindSpore Insight Release Notes
 
 [View English](./RELEASE.md)
 
-## MindInsight 2.0.0 Release Notes
+## MindSpore Insight 2.0.0 Release Notes
 
 ### 主要特性和增强
 
-#### MindInsight
+#### MindSpore Insight
 
-- [STABLE] MindInsight与Mindspore版本匹配校验。
+- [STABLE] MindSpore Insight与Mindspore版本匹配校验。
 
 #### Debugger
 
@@ -18,11 +18,11 @@
 
 - [STABLE] Profiler算子耗时占比使用total time计算。
 
-#### Bug fixes
+### Bug fixes
 
 - 修复若干页面展示问题。
 
-### Contributors
+### 贡献者
 
 感谢以下人员做出的贡献:
 
