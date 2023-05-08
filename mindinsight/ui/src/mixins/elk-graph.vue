@@ -138,12 +138,11 @@ export default {
             params['stage_id'] = i;
             let cur_stage_data = await (
               await RequestService.getGraphData(params).catch((err) => {
-              this.loading.show = false;
               throw err;
             })).data.data;
             graphs[i] = cur_stage_data;
           }
-          
+
           // change noData graph  show status
           this.noDataGraphShow = false
           // pipelined stage

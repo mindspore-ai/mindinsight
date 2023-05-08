@@ -325,6 +325,7 @@
        headers: {
          ignoreError: true,
        },
+       timeout: 60000
      });
    },
    // debugger
