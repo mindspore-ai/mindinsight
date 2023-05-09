@@ -33,7 +33,7 @@ gunicorn.SERVER_SOFTWARE = 'unknown'
 
 worker_class = 'sync'
 # number of parallel worker processes
-workers = 8
+workers = 1
 threads = min(30, os.cpu_count() * 2 + 1)
 worker_connections = 1000
 
