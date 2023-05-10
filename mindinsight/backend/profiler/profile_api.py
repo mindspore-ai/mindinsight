@@ -151,6 +151,17 @@ def get_training_trace_graph():
     if dynamic_shape_file_name in os.listdir(profiler_dir_abs):
         return jsonify(graph_info)
     try:
+        profiler_info_file = os.path.join(profiler_dir_abs, f'profiler_info_{device_id}.json')
+        if os.path.exists(profiler_info_file):
+            with open(profiler_info_file, 'r', encoding='utf-8') as file:
+                profiler_info = json.loads(file.read())
+            if profiler_info.get("context_mode", "graph").lower() == "pynative" or len(profiler_info.get("graph_ids",
+                                                                                                         [])) > 1:
+                return jsonify(graph_info)
+            if profiler_info.get("is_heterogeneous", False):
+                graph_info = {'is_heterogeneous': True}
+                return jsonify(graph_info)
+
         analyser = AnalyserFactory.instance().get_analyser(
             'step_trace', profiler_dir_abs, device_id)
     except ProfilerFileNotFoundException:
