@@ -62,6 +62,17 @@ class ProfilerDirNotFoundException(MindInsightException):
         )
 
 
+class ProfilerInfoFieldMissingException(MindInsightException):
+    """Some fields in profiler info are missed."""
+
+    def __init__(self, msg):
+        super(ProfilerInfoFieldMissingException, self).__init__(
+            error=ProfilerErrors.FIELD_MISSED_ERROR,
+            message=msg,
+            http_code=400
+        )
+
+
 class ProfilerFileNotFoundException(MindInsightException):
     """The file not found exception in profiler module."""
 
@@ -256,6 +267,17 @@ class NotFoundParallelStrategyDataException(MindInsightException):
         super(NotFoundParallelStrategyDataException, self).__init__(
             error=ProfilerErrors.NOT_FOUND_PARALLEL_STRATEGY_DATA_ERROR,
             message=ProfilerErrorMsg.NOT_FOUND_PARALLEL_STRATEGY_DATA_ERROR.value,
+            http_code=400
+        )
+
+
+class FileNumNotMatchException(MindInsightException):
+    """Wrong parallel strategy data num."""
+
+    def __init__(self):
+        super(FileNumNotMatchException, self).__init__(
+            error=ProfilerErrors.WRONG_PARALLEL_STRATEGY_DATA_NUM_ERROR,
+            message=ProfilerErrorMsg.WRONG_PARALLEL_STRATEGY_DATA_NUM_ERROR.value,
             http_code=400
         )
 

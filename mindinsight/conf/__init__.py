@@ -59,7 +59,6 @@ class Settings:
             setattr(self, setting, value)
             self._explicit_settings.add(setting)
 
-
     def _load_from_defaults(self):
         """Update settings from defaults module."""
         default_settings = import_module('mindinsight.conf.defaults')
@@ -77,6 +76,7 @@ class Settings:
 
 
 settings = Settings()
+
 
 def get_web_address():
     """Get web address."""

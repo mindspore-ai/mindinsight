@@ -22,15 +22,19 @@ from pathlib import Path
 from enum import Enum
 from collections import defaultdict, namedtuple
 from multiprocessing import Pool
+from marshmallow import ValidationError
 
 from mindinsight.profiler.common.log import logger
 from mindinsight.profiler.common.exceptions.exceptions import NotFoundParallelStrategyDataException
 from mindinsight.profiler.common.exceptions.exceptions import WrongParallelStrategyDataException
 from mindinsight.profiler.common.exceptions.exceptions import ParseParallelStrategyDataException
 from mindinsight.profiler.common.exceptions.exceptions import UnsupportedParallelTypeException
+from mindinsight.profiler.common.exceptions.exceptions import FileNumNotMatchException
+from mindinsight.profiler.common.exceptions.exceptions import ProfilerPathErrorException
 from mindinsight.utils.exceptions import MindInsightException
+from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
+from mindinsight.profiler.common.util import get_parallel_message
 
-from .base_analyser import BaseAnalyser
 from .graph import GraphManager, Graph, SupportedParallelType
 
 
@@ -51,12 +55,12 @@ class ParallelStrategyCache:
     _graph_file = "/graph_{}"
 
     @classmethod
-    def set_cache(cls, train_id, key, data, profiler_dir=None):
+    def set_cache(cls, key, data, profiler_dir, save=False):
         """cache parallel data"""
         try:
             with cls._lock:
-                cls._paraller_data[train_id].update({key: data})
-            if profiler_dir:
+                cls._paraller_data[profiler_dir].update({key: data})
+            if save:
                 sub_graph_path = profiler_dir + cls._graph_file.format(key)
                 flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
                 modes = stat.S_IWGRP | stat.S_IWOTH | stat.S_IWUSR
@@ -68,21 +72,21 @@ class ParallelStrategyCache:
             logger.exception("Cache parallel strategy data failed, detail: %s.", str(exc))
 
     @classmethod
-    def get_cache(cls, train_id, key, profiler_dir):
+    def get_cache(cls, key, profiler_dir):
         """get cached parallel data"""
         try:
-            res_data = cls._paraller_data.get(train_id, {}).get(key, {})
+            res_data = cls._paraller_data.get(profiler_dir, {}).get(key, {})
             sub_graph_path = profiler_dir + cls._graph_file.format(key)
             if not res_data and os.path.exists(sub_graph_path):
                 logger.warning("get data from l2 cache")
                 with open(sub_graph_path, 'r') as fr:
                     res_data = json.load(fr)
-                thread = threading.Thread(target=cls.set_cache, args=(train_id, key, res_data))
+                thread = threading.Thread(target=cls.set_cache, args=(key, res_data, profiler_dir))
                 thread.start()
             elif res_data:
                 logger.warning("get data from l1 cache")
                 if not os.path.exists(sub_graph_path):
-                    thread = threading.Thread(target=cls.set_cache, args=(train_id, key, res_data, profiler_dir))
+                    thread = threading.Thread(target=cls.set_cache, args=(key, res_data, profiler_dir, True))
                     thread.start()
             else:
                 logger.warning("data not cached")
@@ -93,21 +97,12 @@ class ParallelStrategyCache:
             return {}
 
 
-class ParallelStrategyAnalyser(BaseAnalyser):
+class ParallelStrategyAnalyser:
     """The analyser for parallel strategy."""
 
     _instance = None
     _lock = threading.Lock()
     _should_init = None
-
-    def __init__(self, *args, **kwargs):
-        if not self._should_init:
-            return
-
-        self._status = Status.PENDING.value
-        super(ParallelStrategyAnalyser, self).__init__(*args, **kwargs)
-        self._profiler_dir_mtime = self._get_strategy_file_mtime(self._profiling_dir)
-        self._exception = None
 
     def __new__(cls, *args):
         """Create a new object."""
@@ -126,6 +121,45 @@ class ParallelStrategyAnalyser(BaseAnalyser):
 
         setattr(cls._instance, '_should_init', False)
         return cls._instance
+
+    def __init__(self, profiler_dir):
+        if not self._should_init:
+            return
+        print('profiler_dir: ', profiler_dir)
+        self._status = {}
+        self._data = {}
+        self._profiling_dir = self._normalize_profiling_dir(profiler_dir)
+        print('self._profiling_dir: ', self._profiling_dir)
+        self._profiler_dir_mtime = self._get_strategy_file_mtime(self._profiling_dir)
+        self._exception = None
+
+        parallel_message = get_parallel_message(self._profiling_dir)
+        self.parallel_type = parallel_message.get('parallel_mode')
+        self.stage_num = parallel_message.get('stage_num')
+        self.rank_size = parallel_message.get('rank_size')
+        self.group_num = self.rank_size // self.stage_num
+        self.stage_devices = {}
+        for stage_id in range(self.stage_num):
+            self._status.update({stage_id: Status.PENDING.value})
+            start = stage_id * self.group_num
+            end = start + self.group_num
+            self.stage_devices[stage_id] = list(range(start, end))
+        self._status.update({'metadata': Status.FINISH.value})
+        self.set_data('metadata', {'parallel_type': self.parallel_type, 'stage_devices': self.stage_devices})
+
+        path = Path(self._profiling_dir)
+        self.files = sorted(path.glob(STRATEGY_FILE_PATTERN),
+                            key=lambda filepath: int(filepath.name.split('.')[0].split('_')[-1]))
+        if not self.files:
+            logger.error("Can not find any data in path %s", path.name)
+            raise NotFoundParallelStrategyDataException()
+        if len(self.files) != self.rank_size:
+            logger.error("The num of parallel data is not %s , in path %s", str(self.rank_size), path.name)
+            raise FileNumNotMatchException()
+
+        if self.parallel_type not in SupportedParallelType.list_members():
+            raise UnsupportedParallelTypeException(f"Only support {SupportedParallelType.list_members()} "
+                                                   f"parallel type, but current parallel type is {self.parallel_type}.")
 
     @classmethod
     def _is_create_new_instance(cls, profiler_dir):
@@ -149,100 +183,15 @@ class ParallelStrategyAnalyser(BaseAnalyser):
             return os.path.getmtime(file_path)
         return -1
 
-    @property
-    def data(self):
-        if self._exception is not None:
-            raise self._exception
-
-        if self._status == Status.FINISH.value:
-            response = {'status': self._status}
-            response.update(self._data)
-            if not response.get('graphs'):
-                raise WrongParallelStrategyDataException("Can not find any data or load data failed.")
-            return response
-
-        response = dict(
-            metadata={},
-            graphs=[],
-            status=self._status
-        )
-        return response
-
-    def _load(self):
-        """Load data according to the parsed profiling files."""
-        if self._status in (Status.LOADING.value, Status.FINISH.value):
-            return
-
-        thread = threading.Thread(target=self._load_data_with_catch_exception, name='parallel_strategy_analyser')
-        thread.start()
-
-    def _load_data_with_catch_exception(self):
-        """Wrap load data with try"""
-        start = time.time()
+    @staticmethod
+    def _build_graph(file_data):
+        """This function is used for multiprocessing to build graph."""
+        graph = Graph()
         try:
-            # Consider processing data from up to 8 cards at a time
-            with Pool(processes=8) as pool:
-                self._load_data(pool)
-        except MindInsightException as exc:
-            self._exception = exc
+            graph.build_graph(graph_proto=file_data.graph_proto, rank_id=file_data.rank_id)
         except Exception as exc:
-            self._exception = ParseParallelStrategyDataException(str(exc))
-            logger.exception("Load parallel strategy data failed, detail: %s.", str(exc))
-        finally:
-            self._status = Status.FINISH.value
-            logger.info("Load data from %s use time: %s", self._profiling_dir, (time.time() - start))
-
-    def _load_data(self, pool):
-        """Load data in thread."""
-        logger.info("Start to load data, status: %s.", self._status)
-        self._status = Status.LOADING.value
-        path = Path(self._profiling_dir)
-        files = sorted(path.glob(STRATEGY_FILE_PATTERN),
-                       key=lambda filepath: int(filepath.name.split('.')[0].split('_')[-1]))
-        if not files:
-            logger.error("Can not find any data in path %s", path.name)
-            raise NotFoundParallelStrategyDataException()
-
-        manager = None
-        file_data_dict = {}
-        parallels = []
-        for parallel, exc in pool.imap(self._load_file, files):
-            if exc:
-                raise exc
-            parallels.append(parallel)
-
-        for parallel in parallels:
-            if 'config' not in parallel or not isinstance(parallel.get('config'), dict):
-                raise WrongParallelStrategyDataException("Can not find 'config' key in the given data.")
-
-            parallel_type = parallel['config'].get('parallelType', '')
-            if parallel_type not in SupportedParallelType.list_members():
-                raise UnsupportedParallelTypeException(f"Only support {SupportedParallelType.list_members()} "
-                                                       f"parallel type, but current parallel type is {parallel_type}.")
-
-            if manager is None:
-                stage_devices = parallel['config'].get('stageDevices', [])
-                manager = GraphManager(parallel_type, stage_devices)
-
-            rank_id = str(parallel['config']['rankId'])
-            if rank_id in file_data_dict:
-                raise WrongParallelStrategyDataException(f"The file with the same rank id was found. "
-                                                         f"There should be no file names with the same rank id.")
-
-            file_data_dict[rank_id] = FileData(graph_proto=parallel['graph'], rank_id=rank_id)
-
-            if parallel_type == SupportedParallelType.DATA_PARALLEL.value:
-                break
-
-        for graph, rank_id, exc in pool.imap(self._build_graph, file_data_dict.values()):
-            if exc is not None:
-                raise exc
-
-            manager.add_graph(graph, rank_id)
-
-        manager.merge_graph()
-        self._data = manager.to_dict()
-        self._status = Status.FINISH.value
+            return graph, file_data.rank_id, exc
+        return graph, file_data.rank_id, None
 
     @staticmethod
     def _load_file(file: Path):
@@ -254,17 +203,102 @@ class ParallelStrategyAnalyser(BaseAnalyser):
         except OSError as exc:
             return None, exc
         except json.JSONDecodeError:
-            return None, WrongParallelStrategyDataException("The file is not a valid json file.")
+            return None, WrongParallelStrategyDataException(f"The file is not a valid json file: {file.name}.")
 
     @staticmethod
-    def _build_graph(file_data):
-        """This function is used for multiprocessing to build graph."""
-        graph = Graph()
+    def _normalize_profiling_dir(profiling_dir):
+        """Normalize the profiling dir."""
         try:
-            graph.build_graph(graph_proto=file_data.graph_proto, rank_id=file_data.rank_id)
-        except Exception as exc:
-            return graph, file_data.rank_id, exc
-        return graph, file_data.rank_id, None
+            return validate_and_normalize_path(profiling_dir, 'profiler')
+        except ValidationError:
+            raise ProfilerPathErrorException('The profiling dir is invalid.')
 
-    def _filter(self, filter_condition):
-        """Inherits from the parent class, but doesn't need to do anything."""
+    def set_data(self, stage_id, data):
+        self._data[stage_id] = data
+        thread = threading.Thread(target=ParallelStrategyCache.set_cache,
+                                  args=(stage_id, data, self._profiling_dir, True))
+        thread.start()
+
+    def get_data(self, stage_id):
+        """Get the one of stages data."""
+
+        if self._exception is not None:
+            raise self._exception
+
+        response = {'status': self._status.get(stage_id), 'data': {}}
+        if self._status.get(stage_id) == Status.FINISH.value:
+            data = self._data.get(stage_id, {})
+            if not data:
+                raise WrongParallelStrategyDataException("Can not find any data or load data failed.")
+            response.update({'data': data})
+        return response
+
+    def load_by_stage_id(self, stage_id):
+        """Load the parallel data by stage_id"""
+        if self._status.get(stage_id) in (Status.LOADING.value, Status.FINISH.value):
+            return
+        thread = threading.Thread(target=self._load_data_with_catch_exception,
+                                  args=(stage_id, self.stage_devices.get(stage_id)))
+        thread.start()
+
+        other_thread_list = []
+        for other_stage_id, stage_devices in self.stage_devices.items():
+            if other_stage_id == stage_id or self._status.get(other_stage_id) in \
+                    (Status.LOADING.value, Status.FINISH.value):
+                continue
+            other_thread_list.append(threading.Thread(target=self._load_data_with_catch_exception,
+                                                      args=(other_stage_id, stage_devices)))
+        for t in other_thread_list:
+            t.start()
+
+    def _load_data_with_catch_exception(self, stage_id, stage_devices):
+        """Wrap load data with try"""
+        start = time.time()
+        self._status[stage_id] = Status.LOADING.value
+        logger.info('Start to load data, status: %s.', self._status.get(stage_id))
+        try:
+            # Consider processing data from up to 8 cards at a time
+            with Pool(processes=8) as pool:
+                self._load_data(pool, stage_id, stage_devices)
+        except MindInsightException as exc:
+            self._exception = exc
+        except Exception as exc:
+            self._exception = ParseParallelStrategyDataException(str(exc))
+            logger.exception("Load parallel strategy data failed, detail: %s.", str(exc))
+        finally:
+            self._status[stage_id] = Status.FINISH.value
+            logger.info("Load data from %s use time: %s", self._profiling_dir, (time.time() - start))
+
+    def _load_data(self, pool, stage_id, stage_devices):
+        """Load data in thread."""
+        start = stage_id * self.group_num
+        end = start + self.group_num
+        files = self.files[start: end]
+
+        file_data_dict = {}
+        for parallel, exc in pool.imap(self._load_file, files):
+            if exc:
+                raise exc
+
+            if 'config' not in parallel or not isinstance(parallel.get('config'), dict):
+                raise WrongParallelStrategyDataException("Can not find 'config' key in the given data.")
+
+            rank_id = parallel['config']['rankId']
+            if rank_id in file_data_dict:
+                raise WrongParallelStrategyDataException(f"The file with the same rank id was found. "
+                                                         f"There should be no file names with the same rank id.")
+
+            file_data_dict[rank_id] = FileData(graph_proto=parallel['graph'], rank_id=rank_id)
+
+            parallel_type = parallel['config'].get('parallelType', '')
+            if parallel_type == SupportedParallelType.DATA_PARALLEL.value:
+                break
+        graph_manager = GraphManager(self.parallel_type, stage_id, stage_devices)
+        for graph, rank_id, exc in pool.imap(self._build_graph, file_data_dict.values()):
+            if exc:
+                raise exc
+            graph_manager.add_graph(graph, rank_id)
+
+        graph_manager.merge_graph()
+        self.set_data(stage_id, graph_manager.to_dict())
+        self._status[stage_id] = Status.FINISH.value
