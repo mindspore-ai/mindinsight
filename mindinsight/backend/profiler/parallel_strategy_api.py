@@ -18,8 +18,6 @@ Profile api.
 This module provides the interfaces to profile parallel strategy.
 """
 import os
-import json
-from threading import Thread
 
 from flask import Blueprint, request, jsonify
 from marshmallow import ValidationError
@@ -27,7 +25,6 @@ from marshmallow import ValidationError
 from mindinsight.conf import settings
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException
-from mindinsight.profiler.common.exceptions.exceptions import ProfilerIOException
 from mindinsight.profiler.common.log import logger as log
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.common.util import check_train_job_and_profiler_dir
@@ -65,37 +62,11 @@ def get_parallel_strategy():
     check_train_job_and_profiler_dir(profiler_dir)
     log.info("call get_parallel_strategy: %s, %s", str(train_id), str(stage_id))
 
-    res_data = ParallelStrategyCache.get_cache(train_id, stage_id, profiler_dir)
+    res_data = ParallelStrategyCache.get_cache(stage_id, profiler_dir)
     if res_data:
         return jsonify({'status': Status.FINISH.value, 'data': res_data})
 
-    analyser = AnalyserFactory.instance().get_analyser('parallel_strategy', profiler_dir, train_id)
-
-    if analyser.data['status'] == Status.FINISH.value:
-        try:
-            thread_list = []
-            meta_data = analyser.data.get('metadata', {})
-            graphs_data = analyser.data.get('graphs', {})
-
-            if stage_id == 'metadata':
-                res_data = meta_data
-                res_data.update({
-                    "stage_num": len(graphs_data)
-                })
-            else:
-                res_data = graphs_data.get(stage_id, {})
-
-            thread_list.append(Thread(target=ParallelStrategyCache.set_cache,
-                                      args=(train_id, 'metadata', res_data, profiler_dir)))
-
-            for k, v in graphs_data.items():
-                thread_list.append(Thread(target=ParallelStrategyCache.set_cache,
-                                          args=(train_id, k, v, profiler_dir)))
-
-            for t in thread_list:
-                t.start()
-
-        except (IOError, OSError, json.JSONDecodeError) as err:
-            log.error('Error occurred when read graphs file: %s', err)
-            raise ProfilerIOException()
-    return jsonify({'status': analyser.data.get('status'), 'data': res_data})
+    analyser = AnalyserFactory.instance().get_analyser('parallel_strategy', profiler_dir)
+    analyser.load_by_stage_id(stage_id)
+    res_data = analyser.get_data(stage_id)
+    return jsonify(res_data)

@@ -33,6 +33,7 @@ class ProfilerErrors(ProfilerMgrErrors):
     DIR_NOT_FOUND_ERROR = 3 | _GENERAL_MASK
     FILE_NOT_FOUND_ERROR = 4 | _GENERAL_MASK
     IO_ERROR = 5 | _GENERAL_MASK
+    FIELD_MISSED_ERROR = 6 | _GENERAL_MASK
 
     # parser error code
     DEVICE_ID_MISMATCH_ERROR = 0 | _PARSER_MASK
@@ -54,6 +55,7 @@ class ProfilerErrors(ProfilerMgrErrors):
     WRONG_PARALLEL_STRATEGY_DATA_ERROR = 10 | _ANALYSER_MASK
     NOT_FOUND_PARALLEL_STRATEGY_DATA_ERROR = 11 | _ANALYSER_MASK
     PARSE_PARALLEL_STRATEGY_DATA_ERROR = 12 | _ANALYSER_MASK
+    WRONG_PARALLEL_STRATEGY_DATA_NUM_ERROR = 13 | _ANALYSER_MASK
 
 
 @unique
@@ -88,3 +90,4 @@ class ProfilerErrorMsg(Enum):
     WRONG_PARALLEL_STRATEGY_DATA_ERROR = "The provided parallel strategy data is wrong. Detail: {}"
     NOT_FOUND_PARALLEL_STRATEGY_DATA_ERROR = "Can not find any parallel strategy data."
     PARSE_PARALLEL_STRATEGY_DATA_ERROR = "Parse parallel strategy data failed. Detail: {}"
+    WRONG_PARALLEL_STRATEGY_DATA_NUM_ERROR = "The num of parallel data is not match the rank size"

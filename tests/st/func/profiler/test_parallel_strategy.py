@@ -78,6 +78,5 @@ class TestParallelStrategy:
             response = client.get(url)
             ret_json = response.get_json()
 
-        print("test_get_parallel_strategy: ", ret_json)
         file_path = os.path.join(self.RESULT_DIR, 'parallel_strategy.json')
         compare_result_with_file(ret_json, file_path)

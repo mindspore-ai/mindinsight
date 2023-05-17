@@ -1,1 +1,1 @@
-{"status": "finish", "data": {"parallel_type": "auto_parallel", "stage_num": 1}}
+{"status": "finish", "data": {"parallel_type": "auto_parallel", "stage_devices": {"0":  [0, 1]}}}

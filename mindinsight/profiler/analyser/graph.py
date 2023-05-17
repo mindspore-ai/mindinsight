@@ -162,7 +162,7 @@ class Graph:
         self._parse_graph_proto(graph_proto)
         logger.info("Parse graph proto success, op node count: %d, parameters count: %d, "
                     "const count: %d, use time: %s.",
-                    len(self.op_nodes), len(self.parameter_nodes), len(self.const_nodes), (time.time()-start))
+                    len(self.op_nodes), len(self.parameter_nodes), len(self.const_nodes), (time.time() - start))
 
     def list_op_node_id(self):
         for node_id in self.op_nodes:
@@ -197,21 +197,24 @@ class Graph:
     def _parse_op_nodes(self, node_protos):
         """Transform the node proto into Node class."""
         index = 1
-        for _, node_proto in enumerate(node_protos):
-            if 'name' not in node_proto or not node_proto['name'] or\
-                    'fullName' not in node_proto or not node_proto['fullName']:
+        for node_proto in node_protos:
+            name = node_proto.get('name')
+            full_name = node_proto.get('fullName')
+            if not name or not full_name:
                 logger.warning("Finding a node with an empty name or empty full_name will not save it.")
                 continue
-
-            node_name = self._process_node_name(node_proto.get('scope', ''), node_proto.get('opType', ''),
-                                                node_proto['name'], node_proto['fullName'])
-            node = Node(name=node_name, node_id=node_proto['name'], topo_index=index)
+            scope = node_proto.get('scope', '')
+            op_type = node_proto.get('opType', '')
+            node_name = self._process_node_name(scope, opType, name, full_name)
+            node = Node(name=node_name, node_id=name, topo_index=index)
             index += 1
-            node.scope = node_proto.get('scope', '')
-            node.type = node_proto.get('opType', '')
+            node.scope = scope
+            node.type = op_type
 
-            self._parse_attr_proto(node_proto.get('attribute', []), node)
-            self._parse_input_proto(node_proto.get('input', []), node)
+            attribute = node_proto.get('attribute', [])
+            input_ = node_proto.get('input', [])
+            self._parse_attr_proto(attribute, node)
+            self._parse_input_proto(input_, node)
             if 'shapes' in node.attr:
                 node.output_shape = node.attr['shapes']
             else:
@@ -240,11 +243,12 @@ class Graph:
             consts (list[anf_ir_pb2.NameValueProto]): Refer to `anf_ir_pb2.NameValueProto` object.
         """
         for const in consts:
-            if 'key' not in const and not const['key']:
+            key = const.get('key')
+            if not key:
                 logger.warning("Finding a const with an empty key will not save it.")
                 continue
 
-            node = Node(name=const['key'], node_id=const['key'])
+            node = Node(name=key, node_id=key)
             node.type = NodeType.CONST.value
 
             self._append_node(node)
@@ -257,10 +261,11 @@ class Graph:
             parameter_protos (list[dict]): The dict object refers to anf_ir_pb2.ParameterProto.
         """
         for parameter in parameter_protos:
-            if not parameter['name']:
+            name = parameter.get('name')
+            if not name:
                 logger.warning("Finding a parameter with an empty name will not be saved.")
                 continue
-            node = Node(name=parameter['name'], node_id=parameter['name'])
+            node = Node(name=name, node_id=name)
             # Note: Display parameter as Const
             node.type = NodeType.CONST.value
             self._append_node(node)
@@ -487,10 +492,11 @@ class GraphManager:
         >>> manager.merge_graph()
     """
 
-    def __init__(self, parallel_type: str, stage_devices: list):
+    def __init__(self, parallel_type: str, stage_id: str, stage_devices: list):
         self._parallel_type = parallel_type
-        self._stage_devices = self._get_stage_devices(stage_devices)
-        self._stage_merged_graphs = {}
+        self._stage_id = stage_id
+        self._stage_devices = stage_devices
+        self._merged_graph = MergedGraph()
         self._rank_graphs = {}
 
     def add_graph(self, graph: Graph, rank_id: str):
@@ -500,45 +506,26 @@ class GraphManager:
         # If parallel type is data parallel, we can not get stage_devices from proto file.
         if self._parallel_type == SupportedParallelType.DATA_PARALLEL.value:
             if not self._stage_devices:
-                self._stage_devices[0] = list()
-            self._stage_devices[0].append(rank_id)
+                self._stage_devices = list()
+            self._stage_devices.append(rank_id)
 
     def merge_graph(self):
         """Merge the same stage graphs into a merged graph."""
-        for stage, rank_ids in self._stage_devices.items():
-            graphs = []
-            for rank_id in rank_ids:
-                if rank_id not in self._rank_graphs:
-                    logger.warning("This rank id(%s) is not found in all the parsed files.", rank_id)
-                    continue
-                graphs.append(self._rank_graphs[rank_id])
-
-            if not graphs:
-                logger.warning("There can not find any graph in stage %s.", stage)
+        graphs = []
+        for rank_id in self._stage_devices:
+            if rank_id not in self._rank_graphs:
+                logger.warning("This rank id(%s) is not found in all the parsed files.", rank_id)
                 continue
+            graphs.append(self._rank_graphs[rank_id])
 
-            merged_graph = MergedGraph()
-            merged_graph.merge_graphs(graphs)
-            self._stage_merged_graphs[stage] = merged_graph
+        if not graphs:
+            logger.warning("There can not find any graph in stage %s.", self._stage_id)
+            return
 
-    @staticmethod
-    def _get_stage_devices(tensor_proto: list):
-        stage_devices = {}
-        for stage, devices in enumerate(tensor_proto):
-            devices = [dim['size'] for dim in devices['dim']]
-            stage_devices[stage] = devices
-        return stage_devices
+        self._merged_graph.merge_graphs(graphs)
 
     def to_dict(self):
         """Get all merged graphs and the training attributes."""
-        graphs = {}
-        metadata = dict(
-            parallel_type=self._parallel_type
-        )
-        for stage, merged_graph in self._stage_merged_graphs.items():
-            graphs[stage] = merged_graph.to_dict()
-
-        return dict(
-            metadata=metadata,
-            graphs=graphs
-        )
+        if self._merged_graph:
+            return self._merged_graph.to_dict()
+        return None

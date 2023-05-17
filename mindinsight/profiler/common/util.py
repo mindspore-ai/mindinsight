@@ -24,6 +24,7 @@ import re
 from mindinsight import __version__ as mi_version
 from mindinsight.datavisual.utils.tools import to_int
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerDirNotFoundException
+from mindinsight.profiler.common.exceptions.exceptions import ProfilerInfoFieldMissingException
 from mindinsight.datavisual.common.exceptions import TrainJobNotExistError
 from mindinsight.common.util import version_match
 
@@ -265,4 +266,28 @@ def get_profile_data_version(profiler_dir):
                            'ms': ms_data_version,
                            'mi': mi_version}
             return result_data
+    return {}
+
+
+def get_parallel_message(profiler_dir):
+    """get the parallel message"""
+
+    profile_info_pattern = re.compile(r"profiler_info_(\d+).json")
+    profile_info_file = None
+    for f_name in os.listdir(profiler_dir):
+        re_match = re.match(profile_info_pattern, f_name)
+        if re_match:
+            profile_info_file = re_match.group()
+            break
+    if profile_info_file:
+        full_path = os.path.join(profiler_dir, profile_info_file)
+        with open(full_path, 'r') as fr:
+            data = json.load(fr)
+        parallel_mode = data.get('parallel_mode')
+        stage_num = data.get('stage_num')
+        rank_size = data.get('rank_size')
+        if not parallel_mode or not stage_num or not rank_size:
+            msg = f"file: {full_path}, fields: parallel_mode, stage_num, rank_size"
+            raise ProfilerInfoFieldMissingException(msg=msg)
+        return {'parallel_mode': parallel_mode, 'stage_num': stage_num, 'rank_size': rank_size}
     return {}
