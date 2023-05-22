@@ -125,11 +125,9 @@ class ParallelStrategyAnalyser:
     def __init__(self, profiler_dir):
         if not self._should_init:
             return
-        print('profiler_dir: ', profiler_dir)
         self._status = {}
         self._data = {}
         self._profiling_dir = self._normalize_profiling_dir(profiler_dir)
-        print('self._profiling_dir: ', self._profiling_dir)
         self._profiler_dir_mtime = self._get_strategy_file_mtime(self._profiling_dir)
         self._exception = None
 
@@ -240,16 +238,6 @@ class ParallelStrategyAnalyser:
         thread = threading.Thread(target=self._load_data_with_catch_exception,
                                   args=(stage_id, self.stage_devices.get(stage_id)))
         thread.start()
-
-        other_thread_list = []
-        for other_stage_id, stage_devices in self.stage_devices.items():
-            if other_stage_id == stage_id or self._status.get(other_stage_id) in \
-                    (Status.LOADING.value, Status.FINISH.value):
-                continue
-            other_thread_list.append(threading.Thread(target=self._load_data_with_catch_exception,
-                                                      args=(other_stage_id, stage_devices)))
-        for t in other_thread_list:
-            t.start()
 
     def _load_data_with_catch_exception(self, stage_id, stage_devices):
         """Wrap load data with try"""
