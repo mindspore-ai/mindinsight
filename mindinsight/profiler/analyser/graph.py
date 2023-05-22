@@ -205,7 +205,7 @@ class Graph:
                 continue
             scope = node_proto.get('scope', '')
             op_type = node_proto.get('opType', '')
-            node_name = self._process_node_name(scope, opType, name, full_name)
+            node_name = self._process_node_name(scope, op_type, name, full_name)
             node = Node(name=node_name, node_id=name, topo_index=index)
             index += 1
             node.scope = scope
