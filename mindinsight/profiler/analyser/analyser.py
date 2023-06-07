@@ -17,10 +17,13 @@ import csv
 import json
 import os
 
+from mindinsight.datavisual.utils.tools import to_int
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
 from mindinsight.profiler.common.log import logger
 from mindinsight.profiler.common.validator.validate_path import validate_and_normalize_path
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerIOException
+
+COMM_OP_NAME = ('Send', 'Receive', 'AllGather', 'AllReduce')
 
 
 class AicoreTypeAnalyser(BaseAnalyser):
@@ -37,6 +40,7 @@ class AicoreTypeAnalyser(BaseAnalyser):
     """
     _col_names = ['op_type', 'total_time', 'execution_frequency', 'percent']
     _file_name_aicore_type_time = 'aicore_intermediate_{}_type.csv'
+    comm_op_info = {}
 
     def _load(self):
         """Load data according to the parsed AICORE operator types file."""
@@ -53,11 +57,19 @@ class AicoreTypeAnalyser(BaseAnalyser):
             logger.warning('The file <%s> does not exist.', op_type_file_path)
             return
 
+        AicoreDetailAnalyser.generate_comm_op_time(self._profiling_dir, self._device_id)
+
         with open(op_type_file_path, 'r') as file:
             csv_reader = csv.reader(file)
             next(csv_reader)
             for info in csv_reader:
                 self._data.append(self._convert_field_type(info))
+
+        total_exec_time = sum([d[1] for d in self._data])
+
+        for d in self._data:
+            percent = round(d[1] * 100 / total_exec_time, 2)
+            d.append(percent)
 
     def _filter(self, filter_condition):
         """
@@ -93,8 +105,14 @@ class AicoreTypeAnalyser(BaseAnalyser):
         Returns:
             list[Union[str, float]], the converted data.
         """
-        return [row[0], self._format_float_data(float(row[1]) * self._ms_to_us),
-                int(row[2]), self._format_float_data(float(row[3]))]
+
+        if row[0] in COMM_OP_NAME:
+            exec_time, exec_freq = AicoreTypeAnalyser.comm_op_info.get(row[0])
+            exec_time = self._format_float_data(exec_time)
+            return [row[0], exec_time, exec_freq]
+
+        exec_time = self._format_float_data(float(row[1]) * self._ms_to_us)
+        return [row[0], exec_time, int(row[2])]
 
 
 class AicoreDetailAnalyser(BaseAnalyser):
@@ -114,6 +132,8 @@ class AicoreDetailAnalyser(BaseAnalyser):
     _file_name_aicore_detail_time = 'aicore_intermediate_{}_detail.csv'
     _file_name_flops = 'flops_{}.txt'
     _file_name_framework_info = 'framework_raw_{}.csv'
+    _file_name_step_trace_raw_detail_time = 'step_trace_raw_{}_detail_time.csv'
+    comm_op_time = {}
 
     def __init__(self, profiling_dir, device_id):
         super().__init__(profiling_dir, device_id)
@@ -191,6 +211,8 @@ class AicoreDetailAnalyser(BaseAnalyser):
         if not os.path.isfile(framework_file_path):
             logger.warning('The file <%s> does not exist.', framework_file_path)
             return
+
+        self.generate_comm_op_time(self._profiling_dir, self._device_id)
 
         framework_infos = dict()
         with open(framework_file_path, 'r') as file:
@@ -271,6 +293,34 @@ class AicoreDetailAnalyser(BaseAnalyser):
             self._display_col_names.append(self._col_names[9])
 
     @staticmethod
+    def generate_comm_op_time(profiling_dir, device_id):
+        """For generating the communication ops execute time"""
+        if AicoreDetailAnalyser.comm_op_time:
+            return
+        ns_to_us = 1e-2
+        step_trace_raw_file_path = os.path.join(
+            profiling_dir,
+            AicoreDetailAnalyser._file_name_step_trace_raw_detail_time.format(device_id))
+
+        with open(step_trace_raw_file_path, 'r') as file:
+            csv_reader = csv.reader(file)
+            col = next(csv_reader)
+            avg_data = list(csv_reader)[-1]
+
+        for k, v in zip(col, avg_data):
+            if k.startswith('stream_') and not k.endswith('point'):
+                op_name = k.split('/')[-1]
+                op_type = op_name.split('-')[0]
+                value = to_int(v, k)
+                value = float(value) * ns_to_us
+                AicoreDetailAnalyser.comm_op_time[op_name] = value
+                if op_type not in AicoreTypeAnalyser.comm_op_info:
+                    AicoreTypeAnalyser.comm_op_info[op_type] = [value, 1]
+                else:
+                    AicoreTypeAnalyser.comm_op_info.get(op_type)[0] += value
+                    AicoreTypeAnalyser.comm_op_info.get(op_type)[1] += 1
+
+    @staticmethod
     def _convert_framework_field_type(row):
         """
         Convert the field type of framework file to the specific type.
@@ -297,14 +347,28 @@ class AicoreDetailAnalyser(BaseAnalyser):
             list[Union[str, float]], the operator detail information in one row.
         """
         framework_info = framework_infos.get(row[0])
+        op_name = framework_info[1]
+        if op_name.split('-')[0] in COMM_OP_NAME:
+            avg_exec_time = AicoreDetailAnalyser.comm_op_time.get(op_name)
+        else:
+            avg_exec_time = float(row[1]) * self._ms_to_us
+
         flops_info = flops_infos.get(row[0], ['-', '-', '-', '-', '-', '-'])
-        return [framework_info[1], framework_info[2],
-                self._format_float_data(float(row[1]) * self._ms_to_us),
-                self._format_float_data(int(row[2])),
+        exec_freq = int(row[2]) if len(row) > 2 else '-'
+        if len(flops_info) < 6:
+            flops_info_3 = '-'
+            flops_info_4 = '-'
+        else:
+            flops_info_3 = flops_info[3]
+            flops_info_4 = flops_info[4]
+
+        return [op_name, framework_info[2],
+                self._format_float_data(avg_exec_time),
+                self._format_float_data(exec_freq),
                 self._format_float_data(flops_info[0]),
                 self._format_float_data(flops_info[1]),
-                self._format_float_data(flops_info[3]),
-                self._format_float_data(flops_info[4]),
+                self._format_float_data(flops_info_3),
+                self._format_float_data(flops_info_4),
                 framework_info[0], framework_info[4]]
 
 
