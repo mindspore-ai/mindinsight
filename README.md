@@ -46,6 +46,17 @@ Click to view the [Tutorial documentation](https://www.mindspore.cn/mindinsight/
     - Confirm that [wheel](https://pypi.org/project/wheel/) 0.32.0 or later is installed.
 - All other dependencies are included in [requirements.txt](https://gitee.com/mindspore/mindinsight/blob/master/requirements.txt).
 
+### Version dependency
+
+Due the dependency between MindInsight and MindSpore, please follow the table below and install the corresponding MindSpore verision from [MindSpore download page](https://www.mindspore.cn/versions/en).
+
+| MindInsight Version | Branch                                                    | MindSpore Version |
+| ------------------ | --------------------------------------------------------- | ----------------- |
+| 2.0.0              | [r2.0](https://gitee.com/mindspore/mindinsight/tree/r2.0/) | 2.0.0           |
+| 1.9.0              | [r1.9](https://gitee.com/mindspore/mindinsight/tree/r1.9/) | 1.9.0           |
+| 1.8.0              | [r1.8](https://gitee.com/mindspore/mindinsight/tree/r1.8/) | 1.8.0           |
+| 1.7.0              | [r1.7](https://gitee.com/mindspore/mindinsight/tree/r1.7/) | 1.7.0           |
+
 ### Installation Methods
 
 You can install MindInsight either by pip or by source code.
