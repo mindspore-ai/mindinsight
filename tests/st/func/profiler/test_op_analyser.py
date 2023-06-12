@@ -28,17 +28,17 @@ from tests.st.func.profiler.conftest import BASE_SUMMARY_DIR
 OP_GATHER_V2_INFO = {
     'col_name':
         ['op_name', 'op_type', 'avg_execution_time', 'execution_frequency',
-         'FLOPs', 'FLOPS', 'FLOPS_Utilization', 'subgraph', 'full_op_name', 'op_info'],
+         'FLOPs(cube)', 'FLOPS(cube)', 'FLOPs(vec)', 'FLOPS(vec)', 'full_op_name', 'op_info'],
     'object': [
         [
-            'AssignAdd-op203', 'AssignAdd', 1.79, 3, '-', '-', '-', 'Default', 'Default/AssignAdd-op203',
+            'AssignAdd-op203', 'AssignAdd', 1.79, 3, '-', '-', '-', '-', 'Default/AssignAdd-op203',
             {'input_0': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]},
              'input_1': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]},
              'output_0': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]}
              }
         ],
         [
-            'AssignAdd-op206', 'AssignAdd', 1.283, 3, '-', '-', '-', 'Default', 'Default/AssignAdd-op206',
+            'AssignAdd-op206', 'AssignAdd', 1.283, 3, '-', '-', '-', '-', 'Default/AssignAdd-op206',
             {'input_0': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]},
              'input_1': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]},
              'output_0': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]}

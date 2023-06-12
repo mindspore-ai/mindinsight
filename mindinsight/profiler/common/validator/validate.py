@@ -24,8 +24,8 @@ from mindinsight.profiler.common.exceptions.exceptions import ProfilerParamTypeE
 from mindinsight.profiler.common.log import logger as log
 
 AICORE_TYPE_COL = ["op_type", "total_time", "execution_frequency", "percent"]
-AICORE_DETAIL_COL = ["op_name", "op_type", "avg_execution_time", "execution_frequency", "FLOPs", "FLOPS",
-                     "FLOPS_Utilization", "subgraph", "full_op_name"]
+AICORE_DETAIL_COL = ["op_name", "op_type", "avg_execution_time", "execution_frequency", "FLOPs(cube)",
+                     "FLOPS(cube)", "FLOPs(vec)", "FLOPS(vec)", "full_op_name",]
 PYNATIVE_TYPE_COL = ["op_type", "execution_time", "execution_frequency", "percent"]
 PYNATIVE_DETAIL_COL = ["op_name", "op_type", "avg_execution_time", "subgraph", "full_op_name"]
 AICPU_TYPE_COL = ["op_type", "total_time", "execution_frequency", "percent"]
