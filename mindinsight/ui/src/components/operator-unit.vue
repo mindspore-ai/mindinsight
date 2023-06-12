@@ -26,12 +26,6 @@ limitations under the License.
       <span :title="$t('operator.flopsUtilizationTitle')">
         {{$t('operator.flopsUtilization')}}{{flops.FLOPS_Utilization===undefined?'--':flops.FLOPS_Utilization}}%
       </span>
-      <div class="view-detail">
-        <button @click="showFlopsDetails"
-                :disabled="Object.keys(flops).length===0"
-                :class="{disabled:Object.keys(flops).length===0}">{{ $t('profiling.viewDetail') }}
-          <i class="el-icon-d-arrow-right"></i></button>
-      </div>
     </div>
     <div class="cl-profiler-top"
          :class="{fullScreen:coreFullScreen}"

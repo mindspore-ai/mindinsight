@@ -1,1 +1,1 @@
-{"FLOPs": 329608.369, "FLOPS": 4859.39, "FLOPS_Utilization": 0.725}
+{"cube_FLOPs": 329608.369, "vec_FLOPs": 0, "cube_FLOPS": 4859.39,"vec_FLOPS": 0, "cube_FLOPS_Utilization": 0.725, "vec_FLOPS_Utilization": 0.725}
