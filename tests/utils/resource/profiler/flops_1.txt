@@ -1,11 +1,11 @@
-op_full_name, FLOPs, FLOPS, FLOPS utilization
-Default/AtomicAddrClean-op104, 333, 333, 33
-Default/AtomicAddrClean-op105, 333, 333, 33
-Default/AtomicAddrClean-op106, 333, 333, 33
-Default/Cast-op10, 333, 333, 33
-Default/network-WithLossCell/_backbone-LeNet5/conv1-Conv2d/Cast-op12, 333, 333, 33
-Gradients/Default/network-WithLossCell/_backbone-LeNet5/conv1-Conv2d/gradConv2D/Cast-op53, 333, 333, 33
-Default/TransData-op11, 333, 333, 33
-Gradients/Default/network-WithLossCell/_backbone-LeNet5/gradReshape/TransData-op44, 333, 333, 33
-Default/network-WithLossCell/_backbone-LeNet5/conv1-Conv2d/Conv2D-op13, 333, 333, 33
-Default/network-WithLossCell/_backbone-LeNet5/fc3-Dense/MatMul-op9, 333, 333, 33
+op_full_name, FLOPs(cube), FLOPS(cube), FLOPS utilization(cube), FLOPs(vec), FLOPS(vec), FLOPS utilization(vec)
+Default/AtomicAddrClean-op104, 333, 333, 33, 333, 333, 33
+Default/AtomicAddrClean-op105, 333, 333, 33, 333, 333, 33
+Default/AtomicAddrClean-op106, 333, 333, 33, 333, 333, 33
+Default/Cast-op10, 333, 333, 33, 333, 333, 33
+Default/network-WithLossCell/_backbone-LeNet5/conv1-Conv2d/Cast-op12, 333, 333, 33, 333, 333, 33
+Gradients/Default/network-WithLossCell/_backbone-LeNet5/conv1-Conv2d/gradConv2D/Cast-op53, 333, 333, 33, 333, 333, 33
+Default/TransData-op11, 333, 333, 33, 333, 333, 33
+Gradients/Default/network-WithLossCell/_backbone-LeNet5/gradReshape/TransData-op44, 333, 333, 33, 333, 333, 33
+Default/network-WithLossCell/_backbone-LeNet5/conv1-Conv2d/Conv2D-op13, 333, 333, 33, 333, 333, 33
+Default/network-WithLossCell/_backbone-LeNet5/fc3-Dense/MatMul-op9, 333, 333, 33, 333, 333, 33
