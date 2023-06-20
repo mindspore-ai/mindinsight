@@ -2,6 +2,20 @@
 
 [查看中文](./RELEASE_CN.md)
 
+## MindInsight 2.0.0 Release Notes
+
+### Bug fixes
+
+- [I7BIKO] Fix the inaccurate Flops problem in the mixed scene of cube and vector
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Chuting Liu, Han Gao, Qingxiang Zang.
+
+Contributions of any kind are welcome!
+
 ## MindSpore Insight 2.0.0-rc1 Release Notes
 
 ### Major Features and Improvements
