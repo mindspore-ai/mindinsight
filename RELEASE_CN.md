@@ -2,6 +2,18 @@
 
 [View English](./RELEASE.md)
 
+## MindSpore Insight 2.0.0 Release Notes
+
+### Bug fixes
+
+- [I7BIKO] 修复cube和vector混合场景下Flops不准问题
+
+感谢以下人员做出的贡献:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Chuting Liu, Han Gao, Qingxiang Zang.
+
+欢迎以任何形式对项目提供贡献！
+
 ## MindSpore Insight 2.0.0-rc1 Release Notes
 
 ### 主要特性和增强
