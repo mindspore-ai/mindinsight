@@ -135,12 +135,13 @@ export default {
           const graphs = {};
 
           for (let i = 0; i < res.data.stage_num; i++) {
-            params['stage_id'] = i;
+          for (var stage_id in Object.keys(res.data.stage_devices))
+            params['stage_id'] = stage_id;
             let cur_stage_data = await (
               await RequestService.getGraphData(params).catch((err) => {
               throw err;
             })).data.data;
-            graphs[i] = cur_stage_data;
+            graphs[stage_id] = cur_stage_data;
           }
 
           // change noData graph  show status
@@ -170,7 +171,7 @@ export default {
               label: 'Stage ' + stageCnt + ': ' + JSON.stringify(ranks),
             };
           });
-          this.graphData = graphs['0'];
+          this.graphData = graphs;
           const topScopeSet = _buildTopScopeSet(graphs['0']);
           this.showNodeTypeOptions = [];
           for (const topScope of topScopeSet) {
@@ -199,18 +200,8 @@ export default {
     // the logic of getting displayed graph
     async getDisplayedGraph(showNodeType = null, showRankId = null) {
       if (!showRankId) showRankId = '0';
-      const params = {
-        profile: this.trainInfo.dir,
-        train_id: this.trainInfo.id,
-        stage_id: showRankId
-      };
-      this.graphData = await (
-        await RequestService.getGraphData(params).catch((err) => {
-        this.loading.show = false;
-        throw err;
-      })).data.data;
       const visGraph = buildGraph(
-          JSON.parse(JSON.stringify(this.graphData)),
+          JSON.parse(JSON.stringify(this.graphData[showRankId])),
           this.bipartite,
       );
       const elkGraph = createElkGraph(
