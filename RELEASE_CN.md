@@ -8,6 +8,8 @@
 
 - [I7BIKO] 修复cube和vector混合场景下Flops不准问题
 
+### 贡献者
+
 感谢以下人员做出的贡献:
 
 Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Chuting Liu, Han Gao, Qingxiang Zang.
