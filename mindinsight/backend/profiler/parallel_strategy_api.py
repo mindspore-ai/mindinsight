@@ -50,7 +50,7 @@ def get_parallel_strategy():
     train_id = request.args.get('train_id')
     stage_id = request.args.get('stage_id')
     if stage_id != "metadata":
-        stage_id = int(stage_id)
+        stage_id = int(stage_id) if stage_id else 'metadata'
 
     profiler_dir = os.path.realpath(os.path.join(settings.SUMMARY_BASE_DIR, train_id, 'profiler'))
 

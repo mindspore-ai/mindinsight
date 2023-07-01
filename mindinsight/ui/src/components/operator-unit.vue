@@ -18,20 +18,17 @@ limitations under the License.
     <div class="flops-info"
          v-if="hasFlopsInfo">
       <span :title="$t('operator.flops')">
-        FLOPs{{$t('symbols.colon')}}{{flops.FLOPs===undefined?'--':flops.FLOPs}}M
+        FLOPs(cube){{$t('symbols.colon')}}{{flops.cube_FLOPs===undefined?'--':flops.cube_FLOPs}}M
       </span>
       <span :title="$t('operator.flopsS')">
-        FLOPS{{$t('symbols.colon')}}{{flops.FLOPS===undefined?'--':flops.FLOPS}}G/{{$t('header.timeSecond')}}
+        FLOPS(cube){{$t('symbols.colon')}}{{flops.cube_FLOPS===undefined?'--':flops.cube_FLOPS}}G/{{$t('header.timeSecond')}}
       </span>
-      <span :title="$t('operator.flopsUtilizationTitle')">
-        {{$t('operator.flopsUtilization')}}{{flops.FLOPS_Utilization===undefined?'--':flops.FLOPS_Utilization}}%
+      <span :title="$t('operator.flops')">
+        FLOPs(vec){{$t('symbols.colon')}}{{flops.vec_FLOPs===undefined?'--':flops.vec_FLOPs}}M
       </span>
-      <div class="view-detail">
-        <button @click="showFlopsDetails"
-                :disabled="Object.keys(flops).length===0"
-                :class="{disabled:Object.keys(flops).length===0}">{{ $t('profiling.viewDetail') }}
-          <i class="el-icon-d-arrow-right"></i></button>
-      </div>
+      <span :title="$t('operator.flopsS')">
+        FLOPS(vec){{$t('symbols.colon')}}{{flops.vec_FLOPS===undefined?'--':flops.vec_FLOPS}}G/{{$t('header.timeSecond')}}
+      </span>
     </div>
     <div class="cl-profiler-top"
          :class="{fullScreen:coreFullScreen}"
