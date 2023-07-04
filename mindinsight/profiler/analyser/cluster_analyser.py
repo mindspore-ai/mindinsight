@@ -362,8 +362,11 @@ class ClusterFlopsAnalyser(ClusterAnalyser):
                 continue
 
             file_content = self._get_file_content(file_path)
-            max_flops = max(max_flops, file_content.get('FLOPs'))
 
+            if file_content.get('FLOPs'):
+                max_flops = max(max_flops, file_content.get('FLOPs'))
+            else:
+                max_flops = max(max_flops, file_content.get('cube_FLOPs') + file_content.get('vec_FLOPs'))
             flops_dict = {
                 'rank_id': rank_id
             }
@@ -372,7 +375,11 @@ class ClusterFlopsAnalyser(ClusterAnalyser):
 
         # Normalize the flops by divide the max flops in all device.
         for flops_info in flops_info_list:
-            flops_info['FLOPs_norm'] = flops_info['FLOPs'] / max_flops
+            if flops_info.get('FLOPs'):
+                flops_info['FLOPs_norm'] = flops_info['FLOPs'] / max_flops
+            else:
+                flops_info['FLOPs_norm'] = (flops_info['cube_FLOPs'] + flops_info['vec_FLOPs']) / max_flops
+                flops_info['FLOPs'] = flops_info['cube_FLOPs'] + flops_info['vec_FLOPs']
 
         return flops_info_list
 

@@ -126,7 +126,7 @@ class ParallelAnalyser(BaseAnalyser):
         for flop in self._flops_summary:
             flops.append({
                 "rank_id": flop["rank_id"],
-                "FLOPS": flop["FLOPS"]
+                "FLOPS": flop["FLOPS"] if flop.get("FLOPS") else flop["cube_FLOPS"] + flop["vec_FLOPS"]
             })
 
         return flops
@@ -219,7 +219,7 @@ class ParallelAnalyser(BaseAnalyser):
         for flop in self._flops_summary:
             flops.append({
                 "rank_id": flop["rank_id"],
-                "FLOPs": flop["FLOPs"]
+                "FLOPs": flop["FLOPs"] if flop.get("FLOPs") else flop["cube_FLOPs"] + flop["vec_FLOPs"]
             })
 
         return flops

@@ -109,8 +109,8 @@ class AicoreDetailAnalyser(BaseAnalyser):
     Raises:
         ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    _col_names = ['op_name', 'op_type', 'avg_execution_time', 'execution_frequency', 'FLOPs', 'FLOPS',
-                  'FLOPS_Utilization', 'subgraph', 'full_op_name', 'op_info']
+    _col_names = ['op_name', 'op_type', 'avg_execution_time', 'execution_frequency', 'MFLOPs(10^6 cube)',
+                  'GFLOPS(10^9 cube)', 'MFLOPs(10^6 vector)', 'GFLOPS(10^9 vector)', 'full_op_name', 'op_info']
     _file_name_aicore_detail_time = 'aicore_intermediate_{}_detail.csv'
     _file_name_flops = 'flops_{}.txt'
     _file_name_framework_info = 'framework_raw_{}.csv'
@@ -208,6 +208,8 @@ class AicoreDetailAnalyser(BaseAnalyser):
                 next(f_obj)
                 for line in f_obj:
                     flops_line = line.strip().split(',')
+                    if not flops_line[1]:
+                        continue
                     # flops_line[0] is full_op_name.
                     flops_infos[flops_line[0]] = flops_line[1:]
         else:
@@ -297,7 +299,16 @@ class AicoreDetailAnalyser(BaseAnalyser):
             list[Union[str, float]], the operator detail information in one row.
         """
         framework_info = framework_infos.get(row[0])
-        flops_info = flops_infos.get(row[0], ['-', '-', '-'])
+        flops_info = flops_infos.get(row[0], ['-', '-', '-', '-'])
+        if len(flops_info) > 3:
+            return [framework_info[1], framework_info[2],
+                    self._format_float_data(float(row[1]) * self._ms_to_us),
+                    self._format_float_data(int(row[2])),
+                    self._format_float_data(flops_info[0]),
+                    self._format_float_data(flops_info[1]),
+                    self._format_float_data(flops_info[2]),
+                    self._format_float_data(flops_info[3]),
+                    framework_info[0], framework_info[4]]
         return [framework_info[1], framework_info[2],
                 self._format_float_data(float(row[1]) * self._ms_to_us),
                 self._format_float_data(int(row[2])),
