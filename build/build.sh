@@ -64,19 +64,9 @@ build_mindinsight() {
     build_wheel
 }
 
-build_mindconverter() {
-    cd $PROJECT_BASEDIR/ecosystem_tools/mindconverter || exit
-    build_wheel
-    mkdir -p $PROJECT_BASEDIR/output
-    cp output/*.whl $PROJECT_BASEDIR/output
-    cp output/*.whl.sha256 $PROJECT_BASEDIR/output
-    cd $PROJECT_BASEDIR || exit
-}
-
 build_entry() {
     if [ $# -eq 0 ]; then
         build_mindinsight
-        build_mindconverter
         exit
     fi
 
@@ -84,16 +74,12 @@ build_entry() {
         echo "Cleaning starts"
         cd $PROJECT_BASEDIR || exit
         clean_files
-        cd $PROJECT_BASEDIR/ecosystem_tools/mindconverter || exit
-        clean_files
         echo "Cleaning done"
         exit
     fi
 
     if [ "$1" = "mindinsight" ]; then
         build_mindinsight
-    elif [ "$1" = "mindconverter" ]; then
-        build_mindconverter
     else
         echo "unknown command: $1"
         exit
@@ -123,7 +109,6 @@ show_usage() {
     echo "  -h              show this help message and exit"
     echo "  clean           clean build files"
     echo "  mindinsight     build mindinsight"
-    echo "  mindconverter   build mindconverter"
 }
 
 check_opts() {
