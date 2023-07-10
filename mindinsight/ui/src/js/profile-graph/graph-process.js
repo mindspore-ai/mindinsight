@@ -63,7 +63,7 @@ function _getNormalEdgeAndSpecialEdge(allEdges, nodeMap) {
   for (const edge of allEdges) {
     const {source, target} = edge;
     const [sNode, tNode] = [source, target];
-    const isNormalEdge = true;
+    var isNormalEdge = true;
     for (const def of specialEdgesDef) {
       if (def.condition(sNode, tNode, nodeMap)) {
         isNormalEdge = false;
