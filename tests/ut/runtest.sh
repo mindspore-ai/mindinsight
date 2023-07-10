@@ -35,11 +35,6 @@ run_mindinsight_test() {
     echo "Test mindinsight all use cases success."
 }
 
-run_mindconverter_test() {
-    cd "$PROJECT_DIR/tests/ecosystem_tools/mindconverter" || exit
-    bash tests/ut/runtest.sh
-    echo "Test mindconverter all use cases success."
-}
 
 run_test() {
     echo "Start to run test."
@@ -47,12 +42,9 @@ run_test() {
 
     if [ $# -eq 0 ]; then
         run_mindinsight_test
-        run_mindconverter_test
     else
         if  [ $1 == "mindinsight" ]; then
             run_mindinsight_test
-        elif [ $1 == "mindconverter" ]; then
-            run_mindconverter_test
         fi
     fi
 }

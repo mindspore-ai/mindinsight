@@ -7,11 +7,6 @@
 "mindinsight/mindinsight/profiler/analyser/parallel_strategy_analyser.py"              "broad-except"
 "mindinsight/mindinsight/profiler/analyser/parallel_strategy_analyser.py"              "unnecessary-lambda"
 
-# MindConverter
-"mindinsight/ecosystem_tools/mindconverter/mindconverter/forward_call.py"              "invalid-name"
-"mindinsight/ecosystem_tools/mindconverter/mindconverter/code_analysis.py"             "invalid-name"
-"mindinsight/ecosystem_tools/mindconverter/mindconverter/ast_edits.py"                 "invalid-name"
-
 # Tests
 "mindinsight/tests/st/func/lineagemgr/collection/model/test_model_lineage.py"          "protected-access"
 "mindinsight/tests/ut/datavisual/data_transform/test_data_loader.py"                   "protected-access"
