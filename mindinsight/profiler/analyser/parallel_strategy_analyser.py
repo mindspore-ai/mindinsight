@@ -278,9 +278,6 @@ class ParallelStrategyAnalyser:
 
             file_data_dict[rank_id] = FileData(graph_proto=parallel['graph'], rank_id=rank_id)
 
-            parallel_type = parallel['config'].get('parallelType', '')
-            if parallel_type == SupportedParallelType.DATA_PARALLEL.value:
-                break
         graph_manager = GraphManager(self.parallel_type, stage_id, stage_devices)
         for graph, rank_id, exc in pool.imap(self._build_graph, file_data_dict.values()):
             if exc:
