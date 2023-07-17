@@ -17,7 +17,7 @@ limitations under the License.
   <div class="pro-router-wrap">
     <div class="pro-router-left">
       <!-- Step trace area -->
-      <div v-show="isHeterogeneous || !isDynamic" class="step-trace">
+      <div v-show="!isHeterogeneous || !isDynamic" class="step-trace">
         <div class="title-wrap">
           <div class="title" v-show="!svg.noData && !isHeterogeneous ">{{ $t('profiling.stepTrace') }}</div>
           <div class="view-detail" v-if="isDynamic">
@@ -119,7 +119,7 @@ limitations under the License.
         </div>
       </div>
       <!--Operator Detail-->
-      <div v-show="!isHeterogeneous && isDynamic" class="operator-detail">
+      <div v-show="isHeterogeneous && isDynamic" class="operator-detail">
         <div class="title-wrap">
           <div class="title"> {{$t('profiling.operatorShapeDetail')}}</div>
           <div class="view-detail" v-if="isDynamic">
@@ -1552,7 +1552,7 @@ export default {
                 this.operatorOptions.series = series;
                 this.operatorOptions.legend.data = legend;
                 this.topOperatorArr = details;
-                if(!this.isHeterogeneous){
+                if(this.isHeterogeneous && this.isDynamic){
                   this.$nextTick(() => {
                     if(!this.chartObj)
                       this.chartObj = echarts.init(document.getElementById('operatorShapeDetailChart'), echartsThemeName);
