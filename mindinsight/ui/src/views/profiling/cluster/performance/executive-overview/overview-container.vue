@@ -206,8 +206,8 @@ export default {
           const metadata = res.data;
           const graphs = {};
 
-          for (let i = 0; i < res.data.stage_num; i++) {
-            params['stage_id'] = i;
+          for(var stage_id in Object.keys(res.data.stage_devices)) {
+            params['stage_id'] = stage_id;
             let cur_stage_data = await (
               await requestService.getGraphData(params).catch((err) => {
               throw err;
