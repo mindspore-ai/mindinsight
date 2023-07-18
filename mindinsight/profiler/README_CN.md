@@ -33,4 +33,4 @@ Profiler目前支持Ascend、GPU和集群的图模式以及Ascend的Pynative模�
 
 ## 使用详情
 
-MindSpore Profiler的使用详情，请参考<https://www.mindspore.cn/mindinsight/docs/zh-CN/master/performance_profiling.html>。
+MindSpore Profiler的使用详情，请参考<https://www.mindspore.cn/mindinsight/docs/zh-CN/r2.1/performance_profiling.html>。
