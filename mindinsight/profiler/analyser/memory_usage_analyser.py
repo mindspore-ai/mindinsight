@@ -93,11 +93,16 @@ class MemoryUsageAnalyser(BaseAnalyser):
             json, the content of memory usage breakdowns.
         """
         memory_details = self._get_file_content(device_type, FileType.DETAILS.value)
-        if graph_id not in memory_details:
+        graph = None
+        if memory_details:
+            for memory_data in memory_details.values():
+                if graph_id == str(memory_data.get('graph_id', -1)):
+                    graph = memory_data
+                    break
+        if not graph:
             logger.error('Invalid graph id: %s', graph_id)
             raise ParamValueError('Invalid graph id.')
 
-        graph = memory_details[graph_id]
         if not ('breakdowns' in graph and node_id < len(graph['breakdowns'])):
             logger.error('Invalid node id: %s', node_id)
             raise ParamValueError('Invalid node id.')
