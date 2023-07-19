@@ -503,12 +503,6 @@ class GraphManager:
         """Add an original graph object which is parsed from pb files."""
         self._rank_graphs[rank_id] = graph
 
-        # If parallel type is data parallel, we can not get stage_devices from proto file.
-        if self._parallel_type == SupportedParallelType.DATA_PARALLEL.value:
-            if not self._stage_devices:
-                self._stage_devices = list()
-            self._stage_devices.append(rank_id)
-
     def merge_graph(self):
         """Merge the same stage graphs into a merged graph."""
         graphs = []
