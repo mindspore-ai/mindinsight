@@ -642,7 +642,7 @@ function getStrategyInfo(data) {
       ...graph.parameter_nodes,
     ];
     for (const node of nodes) {
-      const strategy = node.parallel_shard;
+      let strategy = node.parallel_shard;
       if (strategy.length !== 0) {
         strategy = JSON.parse(strategy);
         for (let i = 0; i < strategy.length; i++) {

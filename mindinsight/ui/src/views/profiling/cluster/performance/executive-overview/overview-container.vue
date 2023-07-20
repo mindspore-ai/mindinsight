@@ -212,7 +212,7 @@ export default {
               await requestService.getGraphData(params).catch((err) => {
               throw err;
             })).data.data;
-            graphs[i] = cur_stage_data;
+            graphs[stage_id] = cur_stage_data;
           }
           $store.commit("setGraphData", {
             "graphs": graphs,
