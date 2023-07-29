@@ -15,12 +15,17 @@
 """Debugger python API."""
 import os.path
 from typing import Iterable
+import csv
+import stat
+from pathlib import Path
+import numpy as np
 
 import mindinsight
 from mindinsight.debugger.api.conditions import WatchpointHit, HitDetail, WatchpointHandle, WatchpointHitImpl
 from mindinsight.debugger.api.debugger_engine import DebuggerEngine
 from mindinsight.debugger.api.debugger_tensor import DebuggerTensor, DebuggerTensorImpl
 from mindinsight.debugger.api.node import Node, NodeImpl, NodeUniqueId
+from mindinsight.debugger.api.statistic import TensorStatistic, SummaryStatistic
 from mindinsight.debugger.common.exceptions.exceptions import DebuggerParamValueError
 from mindinsight.debugger.common.log import LOGGER as log
 from mindinsight.debugger.common.log import setup_logger
@@ -311,6 +316,255 @@ class DumpAnalyzer:
                 if node_filter_func(node, query_filter_func):
                     tensors.extend(node.get_output_tensors(slots=slots, iterations=iterations))
         return tensors
+
+    def select_tensor_statistics(
+            self,
+            iterations=None,
+            ranks=None):
+        """
+        Select tensors.
+
+        Select the matched tensors in the directory according to the
+        sepicified filter condition, see the parameters for detail.
+
+        Args:
+            iterations (Union[int, list[int], None], optional): The iteration(s) to select. ``None`` means all dumped
+                iterations will be selected. Default: ``None``.
+            ranks (Union[int, list[int], None], optional): The rank(s) to select. ``None`` means all ranks
+                will be selected. Default: ``None``.
+
+        Returns:
+          Dict[TensorStatistic], the matched TensorStatistics. The format is:
+            {"rank_id":{
+                "iteration_id":[TensorStatistic],
+                ...
+                }
+            ...
+            }
+
+        Examples:
+                >>> from mindinsight.debugger import DumpAnalyzer
+                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+                >>> statistics = my_run.select_tensor_statistics(ranks=[0])
+        """
+        ranks = self._get_iterable_ranks(ranks)
+        dumped_iterations = self.get_iterations(ranks)
+        iterations = parse_param_to_iterable_obj(iterations, 'iterations', dumped_iterations)
+
+        tensor_statistics = {}
+        for rank_id in ranks:
+            static_in_rank = {}
+            for iteration_id in self.get_iterations(ranks=[rank_id]):
+                if iteration_id not in iterations:
+                    continue
+                tensor_statistic = self._get_statistic(rank_id=rank_id, iteration_id=iteration_id)
+                static_in_rank[iteration_id] = tensor_statistic
+            tensor_statistics[rank_id] = static_in_rank
+        return tensor_statistics
+
+    def _get_statistic(self, rank_id, iteration_id):
+        """
+        Get the TensorStatic of the corresponding rank and iteration.
+        """
+        tensor_statistics = []
+        if not self._data_loader.has_data:
+            return tensor_statistics
+        net_name = self._data_loader.get_net_name()
+        net_dir = Path(os.path.join(self._dump_dir, 'rank_' + str(rank_id), net_name)).absolute()
+        for graph_dir in net_dir.iterdir():
+            target_step_dir = graph_dir / str(iteration_id)
+            if not target_step_dir.is_dir():
+                continue
+            statistic_file_path = os.path.join(target_step_dir, "statistic.csv")
+            with open(statistic_file_path, 'r') as f:
+                csv_reader = csv.DictReader(f)
+                # The first line of the csv file is the title, so skip the first line.
+                for statistic_line in csv_reader:
+                    tensor_statistics.append(statistic_line)
+        return tensor_statistics
+
+    def compute_statistic(self, debugger_tensors):
+        """
+        Compute the statistic of the given tensors.
+        """
+        statistics = {}
+        for tensor in debugger_tensors:
+            rank_id = tensor.rank
+            is_new_rank = rank_id not in statistics
+            static_in_rank = statistics.get(rank_id, {})
+            iteration = tensor.iteration
+            is_new_iteration = iteration not in static_in_rank
+            static_in_iter = static_in_rank.get(iteration, [])
+            single_static = self._compute_statistic(tensor)
+            static_in_iter.append(single_static)
+            if is_new_iteration:
+                static_in_rank[iteration] = static_in_iter
+            if is_new_rank:
+                statistics[rank_id] = static_in_rank
+        return statistics
+
+    def _compute_statistic(self, debugger_tensor):
+        """Compute the tensor statistic for one tensor."""
+        statistic = TensorStatistic()
+        op_name = debugger_tensor.node.name
+        tensor_value = debugger_tensor.value()
+        if tensor_value is None:
+            return statistic
+        short_name = op_name.split('/')[-1]
+        op_type = short_name.split('-')[0]
+        statistic.op_name = short_name
+        statistic.op_type = op_type
+        statistic.io = 'output'
+        statistic.slot = debugger_tensor.slot
+        statistic.data_size = tensor_value.nbytes
+        statistic.data_type = tensor_value.dtype
+        statistic.shape = tensor_value.shape
+        statistic.min_value = np.amin(tensor_value)
+        statistic.max_value = np.amax(tensor_value)
+        statistic.avg_value = tensor_value.mean()
+        statistic.count = tensor_value.size
+        statistic.negative_zero_count = np.sum(np.where(tensor_value == 0, 1, 0))
+        statistic.positive_zero_count = np.sum(np.where(tensor_value == 0, 1, 0))
+        statistic.negative_inf_count = len(np.nonzero(np.isneginf(tensor_value))[0])
+        statistic.positive_inf_count = len(np.nonzero(np.isposinf(tensor_value))[0])
+        statistic.nan_count = len(np.nonzero(np.isnan(tensor_value))[0])
+        return statistic
+
+    def summary_statistics(self, statistics, overflow_value=65500):
+        """Summary the statistics in the different rank and iteration"""
+        summary_statistics = {}
+        for rank_id, statistics_in_rank in statistics.items():
+            log.warning("process statistics in rank, rank_id is: %s", rank_id)
+            for iteration_id, statistics_in_iteration in statistics_in_rank.items():
+                log.warning("process statistics in iteration, iteration_id is: %s", iteration_id)
+                for statistic in statistics_in_iteration:
+                    if isinstance(statistic, TensorStatistic):
+                        self._put_tensor_statistic_to_summarystatistics(statistic, summary_statistics, overflow_value)
+                    else:
+                        self._put_dict_statistic_to_summarystatistics(statistic, summary_statistics, overflow_value)
+        return summary_statistics
+
+    def _put_dict_statistic_to_summarystatistics(self, statistic, summary_statistics, overflow_value=65500):
+        """Put dict_statistic to summarized statistics, used for Statistic of dict type from statistic file."""
+        op_name = statistic.get('Op Name', 'unkown')
+        op_type = statistic.get('Op Type', 'unkown')
+        io = statistic.get('IO', 'output')
+        slot = statistic.get('Slot', 0)
+        tensor_name = op_name + ":" + io + ":" + str(slot)
+        positive_inf_count = statistic.get('Positive Inf Count', 0)
+        negative_inf_count = statistic.get('Negative Inf Count', 0)
+        nan_count = statistic.get('NaN Count', 0)
+        min_value = statistic.get('Min Value', 0)
+        max_value = statistic.get('Max Value', 0)
+        has_out_of_range = False
+        summary_statistic = summary_statistics.get(tensor_name, SummaryStatistic())
+        if not summary_statistic.op_type:
+            summary_statistic.op_type = op_type
+        if not summary_statistic.op_name:
+            summary_statistic.op_name = op_name
+        if not summary_statistic.tensor_name:
+            summary_statistic.tensor_name = tensor_name
+            summary_statistics[tensor_name] = summary_statistic
+        summary_statistic.total_dump_iterations += 1
+        if int(positive_inf_count) > 0 or int(negative_inf_count) > 0:
+            summary_statistic.inf_iterations += 1
+        if int(nan_count) > 0:
+            summary_statistic.nan_iterations += 1
+        if abs(float(min_value)) > overflow_value or abs(float(max_value)) > overflow_value:
+            summary_statistic.out_of_range_iterations += 1
+            has_out_of_range = True
+        if int(positive_inf_count) == 0 and int(negative_inf_count) == 0 and int(
+                nan_count) == 0 and not has_out_of_range:
+            summary_statistic.normal_iterations += 1
+
+    def _put_tensor_statistic_to_summarystatistics(self, statistic, summary_statistics, overflow_value=65500):
+        """Put tensor_statistic to summarized statistics, used for TensorStatistic from tensor file."""
+        op_name = statistic.op_name
+        op_type = statistic.op_type
+        io = statistic.io
+        slot = statistic.slot
+        min_value = statistic.min_value
+        max_value = statistic.max_value
+        has_out_of_range = False
+        tensor_name = op_name + ":" + io + ":" + str(slot)
+        summary_statistic = summary_statistics.get(tensor_name, SummaryStatistic())
+        if not summary_statistic.op_type:
+            summary_statistic.op_type = op_type
+        if not summary_statistic.op_name:
+            summary_statistic.op_name = op_name
+        if not summary_statistic.tensor_name:
+            summary_statistic.tensor_name = tensor_name
+            summary_statistics[tensor_name] = summary_statistic
+        summary_statistic.total_dump_iterations += 1
+        if statistic.positive_inf_count > 0 or statistic.negative_inf_count > 0:
+            summary_statistic.inf_iterations += 1
+        if statistic.nan_count > 0:
+            summary_statistic.nan_iterations += 1
+        if abs(min_value) > overflow_value or abs(max_value) > overflow_value:
+            summary_statistic.out_of_range_iterations += 1
+            has_out_of_range = True
+        if statistic.positive_inf_count == 0 and statistic.negative_inf_count == 0 and statistic.nan_count == 0 and \
+                not has_out_of_range:
+            summary_statistic.normal_iterations += 1
+
+    def export_statistics(self, tensor_statistics, out_path="./"):
+        """Export the tensor staticstics to the out_path. """
+        ks = tensor_statistics.keys()
+        if not ks:
+            log.warning("The given tensor_statistics is empty.")
+            return
+        if not os.path.exists(out_path):
+            os.makedirs(out_path, exist_ok=True)
+        if isinstance(list(ks)[0], int):
+            for rank_id, statistics_in_rank in tensor_statistics.items():
+                for iteration_id, statistics_in_iteration in statistics_in_rank.items():
+                    self._export_statistics_in_one_iteration(statistics_in_iteration, rank_id, iteration_id, out_path)
+        elif isinstance(list(ks)[0], str):
+            self._export_summary_statistics(tensor_statistics, out_path)
+        else:
+            log.warning("Invalid tensor_statistics data structure.")
+
+    def _export_summary_statistics(self, tensor_statistics, out_path):
+        """Export the summarized statistics to out_path."""
+        statistic_file_path = os.path.join(out_path, "statistics_summary.csv")
+        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+        modes = stat.S_IWUSR | stat.S_IRUSR
+        with os.fdopen(os.open(statistic_file_path, flags, modes), 'w', newline='') as f:
+            csv_writer = csv.writer(f)
+            statistic_header = ["op_type", "op_name", "tensor_name", "inf_iterations", "nan_iterations",
+                                "out_of_range_iterations", "total_dump_iterations", "normal_iterations"]
+            csv_writer.writerow(statistic_header)
+            for _, statistic in tensor_statistics.items():
+                statistic_line = [statistic.op_type, statistic.op_name, statistic.tensor_name,
+                                  statistic.inf_iterations, statistic.nan_iterations, statistic.out_of_range_iterations,
+                                  statistic.total_dump_iterations, statistic.normal_iterations]
+                csv_writer.writerow(statistic_line)
+        log.info("export summarised statistics to file: %s", statistic_file_path)
+
+    def _export_statistics_in_one_iteration(self, tensor_statistics_in_one_iteration, rank_id, iteration_id, out_path):
+        """Export tensor_statistics in one iteration."""
+        iteration_path = os.path.join(out_path, str(rank_id), str(iteration_id))
+        if not os.path.exists(iteration_path):
+            os.makedirs(iteration_path, exist_ok=True)
+        statistic_file_path = os.path.join(iteration_path, "statistics.csv")
+        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+        modes = stat.S_IWUSR | stat.S_IRUSR
+        with os.fdopen(os.open(statistic_file_path, flags, modes), 'w', newline='') as f:
+            csv_writer = csv.writer(f)
+            statistic_header = ["Op Type", "Op Name", "Task ID", "Stream ID", "Timestamp", "IO", "Slot", "Data Size",
+                                "Data Type", "Shape", "Max Value", "Min Value", "Avg Value", "Count",
+                                "Negative Zero Count", "Positive Zero Count", "NaN Count", "Negative Inf Count",
+                                "Positive Inf Count", "Zero Count"]
+            csv_writer.writerow(statistic_header)
+            for statistic in tensor_statistics_in_one_iteration:
+                statistic_line = [statistic.op_type, statistic.op_name, statistic.task_id,
+                                  statistic.stream_id, statistic.time_stamp, statistic.io, statistic.slot,
+                                  statistic.data_size, statistic.data_type, statistic.shape, statistic.max_value,
+                                  statistic.min_value, statistic.avg_value, statistic.count,
+                                  statistic.negative_zero_count, statistic.positive_zero_count, statistic.nan_count,
+                                  statistic.negative_inf_count, statistic.positive_inf_count, statistic.zero_count]
+                csv_writer.writerow(statistic_line)
+        log.info("export summarised statistics to file: %s", statistic_file_path)
 
     def get_iterations(self, ranks=None) -> Iterable[int]:
         """
