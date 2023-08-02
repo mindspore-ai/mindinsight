@@ -2,7 +2,25 @@
 
 [查看中文](./RELEASE_CN.md)
 
-## MindInsight 2.0.0 Release Notes
+## MindSpore Insight 2.1.0 Release Notes
+
+### Major Features and Improvements
+
+#### Profiler
+
+- [STABLE] Profiler supports the collection of time-consuming data at each stage of the Host.
+- [Beta] Profiler supports the collection of memory data at each stage of the Host.
+- [Beta] Profiler supports the execution time consumption of collecting data processing operators.
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+ Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, Yang Luo, TianCi Xiao, DaWei Fan.
+
+Contributions of any kind are welcome!
+
+## MindSpore Insight 2.0.0 Release Notes
 
 ### Bug fixes
 
