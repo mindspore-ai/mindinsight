@@ -4,6 +4,8 @@
 
 ## MindSpore Insight 2.1.0 Release Notes
 
+### 主要特性和增强
+
 #### Profiler
 
 - [STABLE] Profiler支持收集Host侧各个阶段耗时数据。

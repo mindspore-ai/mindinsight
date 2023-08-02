@@ -4,6 +4,8 @@
 
 ## MindSpore Insight 2.1.0 Release Notes
 
+### Major Features and Improvements
+
 #### Profiler
 
 - [STABLE] Profiler supports the collection of time-consuming data at each stage of the Host.
