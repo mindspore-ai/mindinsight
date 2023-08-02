@@ -2,6 +2,22 @@
 
 [View English](./RELEASE.md)
 
+## MindSpore Insight 2.1.0 Release Notes
+
+#### Profiler
+
+- [STABLE] Profiler支持收集Host侧各个阶段耗时数据。
+- [Beta] Profiler支持收集Host侧各个阶段内存数据。
+- [Beta] Profiler支持收集数据处理算子的执行耗时。
+
+### 贡献者
+
+感谢以下人员做出的贡献:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, Yang Luo, TianCi Xiao, DaWei Fan.
+
+欢迎以任何形式对项目提供贡献！
+
 ## MindSpore Insight 2.0.0 Release Notes
 
 ### Bug fixes
