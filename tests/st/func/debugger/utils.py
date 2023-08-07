@@ -15,6 +15,8 @@
 """Test debugger server utils."""
 import json
 import os
+import csv
+import stat
 import shutil
 import tempfile
 import time
@@ -137,12 +139,12 @@ def build_dump_structue(base_dir, dump_name, step_num, graph_id):
                  dump_steps={graph_id: list(range(step_num))})
 
 
-def build_multi_net_dump_structure(dump_name=None, create_tensor=False):
+def build_multi_net_dump_structure(dump_name=None, create_tensor=False, create_statistic=False):
     """Build the multi-net dump file structure."""
     debugger_tmp_dir = tempfile.mkdtemp(suffix='debugger_tmp')
     dump_dir = os.path.join(debugger_tmp_dir, dump_name) if dump_name else debugger_tmp_dir
     gen = DumpStructureGenerator(dump_dir)
-    gen.generate(rank_num=2, create_tensor=create_tensor)
+    gen.generate(rank_num=2, create_tensor=create_tensor, create_statistic=create_statistic)
     return debugger_tmp_dir
 
 
@@ -212,7 +214,7 @@ class DumpStructureGenerator:
                     handle.write(str(count) + '\n')
 
     @staticmethod
-    def generate_dump_steps(rank_dir, dump_steps=None, create_tensor=False):
+    def generate_dump_steps(rank_dir, dump_steps=None, create_tensor=False, create_statistic=False):
         """Generate dump steps."""
         if dump_steps is None:
             dump_steps = {0: [0, 4], 3: [1, 6]}
@@ -241,8 +243,39 @@ class DumpStructureGenerator:
                     tensor2_dir = step_dir / cast2_name
                     cast2_tensor = np.zeros((32, 1, 32, 32), dtype=np.float32)
                     np.save(tensor2_dir, cast2_tensor)
+                # Create file statistic.csv in the graph 0 directory.
+                if graph_id == 0 or graph_id == 3 and create_statistic:
+                    statistic_file_name = 'statistic.csv'
+                    statistic_dir = step_dir / statistic_file_name
+                    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+                    modes = stat.S_IWUSR | stat.S_IRUSR
+                    with os.fdopen(os.open(statistic_dir, flags, modes), 'w', newline='') as f:
+                        csv_writer = csv.writer(f)
+                        statistic_header = ["Op Type", "Op Name", "Task ID", "Stream ID", "Timestamp", "IO", "Slot",
+                                            "Data Size",
+                                            "Data Type", "Shape", "Max Value", "Min Value", "Avg Value", "Count",
+                                            "Negative Zero Count", "Positive Zero Count", "NaN Count",
+                                            "Negative Inf Count",
+                                            "Positive Inf Count", "Zero Count"]
+                        csv_writer.writerow(statistic_header)
+                        conv2d_statistic = ['Conv2D', 'Conv2D-op1', 0, 0, int(time.time()), 'output', 0,
+                                            32 * 6 * 28 * 28 * 2,
+                                            'float32', '(32, 6, 28, 28)', 65504, -65504, 0, 32 * 6 * 28 * 28,
+                                            10, 10, 0, 1, 1, 1000]
+                        csv_writer.writerow(conv2d_statistic)
+                        cast1_statistic = ['Cast', 'Cast-op189', 0, 0, int(time.time()), 'output', 0,
+                                           6 * 1 * 5 * 5 * 2,
+                                           'float32', '(32, 6, 28, 28)', 65504, -65504, 0, 6 * 1 * 5 * 5,
+                                           10, 10, 0, 1, 1, 1000]
+                        csv_writer.writerow(cast1_statistic)
+                        cast2_statistic = ['Cast', 'Cast-op190', 0, 0, int(time.time()), 'output', 0,
+                                           32 * 1 * 32 * 32 * 2,
+                                           'float32', '(32, 6, 28, 28)', 65504, -65504, 0, 32 * 1 * 32 * 32,
+                                           10, 10, 0, 1, 1, 1000]
+                        csv_writer.writerow(cast2_statistic)
 
-    def generate(self, root_graphs=None, rank_num=1, history=None, dump_steps=None, create_tensor=False):
+    def generate(self, root_graphs=None, rank_num=1, history=None, dump_steps=None, create_tensor=False,
+                 create_statistic=False):
         """Generate dump structure."""
         for rank_id in range(rank_num):
             rank_dir = self._dump_dir / f'rank_{rank_id}'
@@ -250,7 +283,7 @@ class DumpStructureGenerator:
             self.generate_dump_metadata(rank_dir, self._dump_mode)
             self.generate_graphs(rank_dir, root_graphs)
             self.generate_execution(rank_dir, history)
-            self.generate_dump_steps(rank_dir, dump_steps, create_tensor)
+            self.generate_dump_steps(rank_dir, dump_steps, create_tensor, create_statistic)
 
     def clean(self):
         """Clean cache."""
