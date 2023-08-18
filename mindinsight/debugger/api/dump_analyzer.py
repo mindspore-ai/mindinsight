@@ -322,9 +322,9 @@ class DumpAnalyzer:
             iterations=None,
             ranks=None):
         """
-        Select tensors.
+        Select tensor statistics.
 
-        Select the matched tensors in the directory according to the
+        Select the matched tensor statistics in the directory according to the
         sepicified filter condition, see the parameters for detail.
 
         Args:
@@ -335,7 +335,12 @@ class DumpAnalyzer:
 
         Returns:
           Dict[TensorStatistic], the matched TensorStatistics. The format is:
-            {"rank_id":{
+
+          .. code-block::
+
+            {
+            "rank_id":
+                {
                 "iteration_id":[TensorStatistic],
                 ...
                 }
@@ -383,9 +388,21 @@ class DumpAnalyzer:
                     tensor_statistics.append(statistic_line)
         return tensor_statistics
 
-    def compute_statistic(self, debugger_tensors):
+    def _compute_statistics(self, debugger_tensors):
         """
         Compute the statistic of the given tensors.
+
+        Args:
+            debugger_tensors(Iterable[DebuggerTensor]): The given DebuggerTensors.
+
+        Returns:
+            Dict[TensorStatistic], the computed TensorStatistics. The format is:
+                {"rank_id":{
+                    "iteration_id":[TensorStatistic],
+                    ...
+                    }
+                ...
+                }
         """
         statistics = {}
         for tensor in debugger_tensors:
@@ -430,8 +447,16 @@ class DumpAnalyzer:
         statistic.nan_count = len(np.nonzero(np.isnan(tensor_value))[0])
         return statistic
 
-    def summary_statistics(self, statistics, overflow_value=65500):
-        """Summary the statistics in the different rank and iteration"""
+    def summary_statistics(self, statistics, overflow_value=65500, out_path="./"):
+        """
+        Summary the statistics in the different ranks and iterations.
+
+        Args:
+            statistics(Dict[TensorStatistic]): The given TensorStatistic. They can be the return value of
+            compute_statistic or select_tensor_statistics.
+            overflow_value(int, optional): The given overflow threshold, default: 65500.
+            out_path(str, optional): The given output directory to save the statistics. Default: "./".
+        """
         summary_statistics = {}
         for rank_id, statistics_in_rank in statistics.items():
             log.warning("process statistics in rank, rank_id is: %s", rank_id)
@@ -442,7 +467,7 @@ class DumpAnalyzer:
                         self._put_tensor_statistic_to_summarystatistics(statistic, summary_statistics, overflow_value)
                     else:
                         self._put_dict_statistic_to_summarystatistics(statistic, summary_statistics, overflow_value)
-        return summary_statistics
+        self._export_to_disk(summary_statistics, out_path)
 
     def _put_dict_statistic_to_summarystatistics(self, statistic, summary_statistics, overflow_value=65500):
         """Put dict_statistic to summarized statistics, used for Statistic of dict type from statistic file."""
@@ -507,8 +532,16 @@ class DumpAnalyzer:
                 not has_out_of_range:
             summary_statistic.normal_iterations += 1
 
-    def export_statistics(self, tensor_statistics, out_path="./"):
-        """Export the tensor staticstics to the out_path. """
+    def _export_to_disk(self, tensor_statistics, out_path="./"):
+        """
+        Export the tensor staticstics to the out_path.
+
+        Args:
+            tensor_statistics(Union[Dict[TensorStatistic], Dict[SummaryStatistic]]): The given Statistics.
+            They can be the return value of compute_statistic or summary_statistics.
+            out_path(str, optional): The given output directory to save the statistics. Default: "./".
+
+        """
         ks = tensor_statistics.keys()
         if not ks:
             log.warning("The given tensor_statistics is empty.")

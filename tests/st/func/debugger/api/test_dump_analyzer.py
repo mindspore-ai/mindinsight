@@ -92,75 +92,13 @@ class TestDumpAnalyzer:
     @pytest.mark.platform_arm_ascend_training
     @pytest.mark.platform_x86_gpu_training
     @pytest.mark.platform_x86_ascend_training
-    def test_compute_statistic(self):
-        """Test compute_statistic."""
-        tensors = self.dump_analyzer.select_tensors('Conv2D-op1', iterations=0)
-        tensor_statistics = self.dump_analyzer.compute_statistic(tensors)
-        assert len(tensor_statistics) == 2
-        assert len(tensor_statistics[0]) == 1
-        assert len(tensor_statistics[1]) == 1
-        statistic_item = tensor_statistics[0][0]
-        for item in statistic_item:
-            assert item.max_value == 11
-            assert item.count == 12
-
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
-    def test_summary_statistics_1(self):
+    def test_summary_statistics(self):
         """Test summary_statistic, for statistics from statistic.csv."""
         tensor_statistics = self.dump_analyzer.select_tensor_statistics(ranks=0, iterations=1)
-        summarized_statistic = self.dump_analyzer.summary_statistics(tensor_statistics)
-        assert len(summarized_statistic) == 3
-
-
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
-    def test_summary_statistics_2(self):
-        """Test summary_statistic, for statistics from compute_statistic."""
-        tensors = self.dump_analyzer.select_tensors('Conv2D-op1', iterations=0)
-        tensor_statistics = self.dump_analyzer.compute_statistic(tensors)
-        summarized_statistic = self.dump_analyzer.summary_statistics(tensor_statistics)
-        assert len(summarized_statistic) == 1
-
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
-    def test_export_statistics_1(self):
-        """Test export_statistics, for summarized statistic."""
-        tensor_statistics = self.dump_analyzer.select_tensor_statistics(ranks=0, iterations=1)
-        summarized_statistic = self.dump_analyzer.summary_statistics(tensor_statistics)
         with tempfile.TemporaryDirectory(dir='/tmp') as tmp_dir:
-            self.dump_analyzer.export_statistics(summarized_statistic, tmp_dir)
+            self.dump_analyzer.summary_statistics(tensor_statistics, 65500, tmp_dir)
             statistic_file = os.path.join(tmp_dir, 'statistics_summary.csv')
             os.path.isfile(statistic_file)
-
-    @pytest.mark.level0
-    @pytest.mark.env_single
-    @pytest.mark.platform_x86_cpu
-    @pytest.mark.platform_arm_ascend_training
-    @pytest.mark.platform_x86_gpu_training
-    @pytest.mark.platform_x86_ascend_training
-    def test_export_statistics_2(self):
-        """Test export_statistics, for statistics with every iteration."""
-        tensors = self.dump_analyzer.select_tensors('Conv2D-op1', iterations=0)
-        tensor_statistics = self.dump_analyzer.compute_statistic(tensors)
-        with tempfile.TemporaryDirectory(dir='/tmp') as tmp_dir:
-            self.dump_analyzer.export_statistics(tensor_statistics, tmp_dir)
-            file_in_rank_0 = os.path.join(tmp_dir, '0', '0', 'statistics.csv')
-            os.path.isfile(file_in_rank_0)
-            file_in_rank_1 = os.path.join(tmp_dir, '1', '0', 'statistics.csv')
-            os.path.isfile(file_in_rank_1)
 
     @pytest.mark.level0
     @pytest.mark.env_single
