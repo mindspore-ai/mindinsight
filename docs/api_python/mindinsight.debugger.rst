@@ -16,7 +16,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
     参数：
         - **dump_dir** (str) - 存储Dump数据文件的目录。
-        - **mem_limit** (int，可选) - 检查监测点的内存限制(以MB为单位)，可选值：从2048MB到2147483647MB，``None`` 表示不设限制，只受限于计算机内存。默认值：``None``。
+        - **mem_limit** (int，可选) - 检查监测点的内存限制(以MB为单位)，可选值：从2048MB到2147483647MB， ``None`` 表示不设限制，只受限于计算机内存。默认值： ``None``。
 
     .. py:method:: check_watchpoints(watchpoints, error_on_no_value=False)
 
@@ -28,7 +28,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         参数：
             - **watchpoints** (Iterable[Watchpoint]) - 监测点列表。
-            - **error_on_no_value** (bool，可选) - 当指定的张量没有存储在 `dump_dir` 路径中时，是否抛出错误码。默认值：``False``。
+            - **error_on_no_value** (bool，可选) - 当指定的张量没有存储在 `dump_dir` 路径中时，是否抛出错误码。默认值： ``False``。
 
         返回：
             Iterable[WatchpointHit]，监测点命中列表，并按张量落盘时间排序。
@@ -40,7 +40,7 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         这些文件将包含图节点的堆栈信息。
 
         参数：
-            - **output_dir** (str，可选) - 保存文件的输出目录，``None`` 表示使用当前的工作目录。默认值：``None``。
+            - **output_dir** (str，可选) - 保存文件的输出目录， ``None`` 表示使用当前的工作目录。默认值： ``None``。
 
         返回：
             str，生成文件的路径。
@@ -103,9 +103,9 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         参数：
             - **query_string** (str) - 查询字符串。对于要选择的节点，匹配目标字段必须包含或能匹配到查询的字符串。
             - **use_regex** (bool，可选) - 是否对目标字段按照查询字符串进行正则匹配。默认值：``False``。
-            - **select_by** (str，可选) - 选择节点时要搜索的字段。可用值为 ``""node_name"``、 ``"code_stack"``。 ``"node_name"`` 表示根据节点的名称进行筛选。``"code_stack"`` 表示对系统的堆栈信息进行筛选。默认值：``"node_name"``。
-            - **ranks** (Union[int, list[int], None]，可选) -  要选择的逻辑卡号或者逻辑卡号列表，``None`` 表示将考虑所有逻辑卡。选定的节点必须存在于指定的逻辑卡上。默认值：``None``。
-            - **case_sensitive** (bool，可选) - 对目标字段进行匹配时是否区分大小写。默认值：``True``。
+            - **select_by** (str，可选) - 选择节点时要搜索的字段。可用值为 ``""node_name"``、 ``"code_stack"``。 ``"node_name"`` 表示根据节点的名称进行筛选。 ``"code_stack"`` 表示对系统的堆栈信息进行筛选。默认值： ``"node_name"``。
+            - **ranks** (Union[int, list[int], None]，可选) -  要选择的逻辑卡号或者逻辑卡号列表， ``None`` 表示将考虑所有逻辑卡。选定的节点必须存在于指定的逻辑卡上。默认值： ``None``。
+            - **case_sensitive** (bool，可选) - 对目标字段进行匹配时是否区分大小写。默认值： ``True``。
 
         返回：
             Iterable[Node]，匹配的节点。
@@ -118,12 +118,12 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
 
         参数：
             - **query_string** (str) - 查询字符串。对于要选择的张量，匹配目标字段必须包含或能匹配到查询字符串。
-            - **use_regex** (bool，可选) - 指明查询对象是否为正则表达式。默认值：``False``。
-            - **select_by** (str，可选) - 选择张量时要搜索的字段。可用值为 ``""node_name"``、 ``"code_stack"``。 ``"node_name"`` 表示在图中搜索张量的节点名称。``"code_stack"`` 表示输出该张量的节点的堆栈信息。默认值：``"node_name"``。
-            - **iterations** (Union[int, list[int], None]，可选) - 要选择的迭代序号或迭代序号列表，``None`` 表示选择保存的所有迭代。默认值：``None``。
-            - **ranks** (Union[int, list[int], None]，可选) - 要选择的逻辑卡号或逻辑卡号列表，``None`` 表示将选择所有逻辑卡。默认值：``None``。
-            - **slots** (list[int]，可选) -  所选张量的编号，``None`` 表示将选择所有编号。默认值：``None``。
-            - **case_sensitive** (bool，可选) - 选择张量时是否区分大小写。默认值：``True``。
+            - **use_regex** (bool，可选) - 指明查询对象是否为正则表达式。默认值： ``False``。
+            - **select_by** (str，可选) - 选择张量时要搜索的字段。可用值为 ``""node_name"``、 ``"code_stack"``。 ``"node_name"`` 表示在图中搜索张量的节点名称。 ``"code_stack"`` 表示输出该张量的节点的堆栈信息。默认值： ``"node_name"``。
+            - **iterations** (Union[int, list[int], None]，可选) - 要选择的迭代序号或迭代序号列表， ``None`` 表示选择保存的所有迭代。默认值： ``None``。
+            - **ranks** (Union[int, list[int], None]，可选) - 要选择的逻辑卡号或逻辑卡号列表， ``None`` 表示将选择所有逻辑卡。默认值： ``None``。
+            - **slots** (list[int]，可选) -  所选张量的编号， ``None`` 表示将选择所有编号。默认值： ``None``。
+            - **case_sensitive** (bool，可选) - 选择张量时是否区分大小写。默认值： ``True``。
 
         返回：
             Iterable[DebuggerTensor]，匹配的张量。
@@ -135,11 +135,11 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         根据给定的筛选条件选择目录中匹配的张量统计信息，具体用法请参考参数说明。
 
         参数：
-            - **iterations** (Union[int, list[int], None]，可选) - 要选择的迭代序号或迭代序号列表，``None`` 表示选择保存的所有迭代。默认值：``None``。
-            - **ranks** (Union[int, list[int], None]，可选) - 要选择的逻辑卡号或逻辑卡号列表，``None`` 表示将选择所有逻辑卡。默认值：``None``。
+            - **iterations** (Union[int, list[int], None]，可选) - 要选择的迭代序号或迭代序号列表， ``None`` 表示选择保存的所有迭代。默认值： ``None``。
+            - **ranks** (Union[int, list[int], None]，可选) - 要选择的逻辑卡号或逻辑卡号列表， ``None`` 表示将选择所有逻辑卡。默认值： ``None``。
 
         返回：
-            Dict[TensorStatistic]，匹配的张量统计信息。格式为:
+            Dict[TensorStatistic]，匹配的张量统计信息。格式如下，
 
             .. code-block::
 
@@ -157,9 +157,9 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         汇总不同卡号、迭代的统计信息，并保存到指定路径。
 
         参数：
-            - **statistics** (Dict[TensorStatistic]) - 给定的张量统计信息。它可以是select_tensor_statistics的返回值.
-            - **overflow_value** (int, 可选): 给定的溢出阈值。 默认值: 65500.
-            - **out_path** (str, 可选): 指定保存统计信息的路径。 默认值: "./"。
+            - **statistics** (Dict[TensorStatistic]) - 给定的张量统计信息。它可以是 `select_tensor_statistics` 的返回值。
+            - **overflow_value** (int, 可选) - 给定的溢出阈值。 默认值:  ``65500`` 。
+            - **out_path** (str, 可选) - 指定保存统计信息的路径。 默认值:  ``"./"`` 。
 
 .. py:class:: mindinsight.debugger.Node(node_feature)
 

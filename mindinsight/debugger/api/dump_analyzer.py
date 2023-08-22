@@ -334,23 +334,23 @@ class DumpAnalyzer:
                 will be selected. Default: ``None``.
 
         Returns:
-          Dict[TensorStatistic], the matched TensorStatistics. The format is:
+            Dict[TensorStatistic], the matched TensorStatistics. The format is as below.
 
-          .. code-block::
+            .. code-block::
 
-            {
-            "rank_id":
                 {
-                "iteration_id":[TensorStatistic],
+                "rank_id":
+                    {
+                    "iteration_id":[TensorStatistic],
+                    ...
+                    }
                 ...
                 }
-            ...
-            }
 
         Examples:
-                >>> from mindinsight.debugger import DumpAnalyzer
-                >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
-                >>> statistics = my_run.select_tensor_statistics(ranks=[0])
+            >>> from mindinsight.debugger import DumpAnalyzer
+            >>> my_run = DumpAnalyzer(dump_dir="/path/to/your/dump_dir_with_dump_data")
+            >>> statistics = my_run.select_tensor_statistics(ranks=[0])
         """
         ranks = self._get_iterable_ranks(ranks)
         dumped_iterations = self.get_iterations(ranks)
@@ -396,7 +396,10 @@ class DumpAnalyzer:
             debugger_tensors(Iterable[DebuggerTensor]): The given DebuggerTensors.
 
         Returns:
-            Dict[TensorStatistic], the computed TensorStatistics. The format is:
+            Dict[TensorStatistic], the computed TensorStatistics. The format is as below.
+
+            .. code-block::
+
                 {"rank_id":{
                     "iteration_id":[TensorStatistic],
                     ...
@@ -453,9 +456,9 @@ class DumpAnalyzer:
 
         Args:
             statistics(Dict[TensorStatistic]): The given TensorStatistic. They can be the return value of
-            compute_statistic or select_tensor_statistics.
-            overflow_value(int, optional): The given overflow threshold, default: 65500.
-            out_path(str, optional): The given output directory to save the statistics. Default: "./".
+                `compute_statistic` or `select_tensor_statistics`.
+            overflow_value(int, optional): The given overflow threshold, default: ``65500``.
+            out_path(str, optional): The given output directory to save the statistics. Default: ``"./"``.
         """
         summary_statistics = {}
         for rank_id, statistics_in_rank in statistics.items():
@@ -538,8 +541,8 @@ class DumpAnalyzer:
 
         Args:
             tensor_statistics(Union[Dict[TensorStatistic], Dict[SummaryStatistic]]): The given Statistics.
-            They can be the return value of compute_statistic or summary_statistics.
-            out_path(str, optional): The given output directory to save the statistics. Default: "./".
+                They can be the return value of `compute_statistic` or `summary_statistics`.
+            out_path(str, optional): The given output directory to save the statistics. Default: ``"./"``.
 
         """
         ks = tensor_statistics.keys()
