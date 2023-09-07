@@ -180,7 +180,9 @@ class MsprofTimelineAnalyser(BaseAnalyser):
                     if event.get('ph') == 'M' or event.get('tid') not in tids:
                         continue
 
-                    event['name'] = f"{tids.get(event.get('tid'))} {event.get('name')}"
+                    event_name = event.get('name').strip()
+                    if event_name.startswith('Iteration') and len(event_name.spilt(' ')) == 2:
+                        event['name'] = f"{tids.get(event.get('tid'))} {event_name}"
 
                     if difference_ts and event.get('ts'):
                         event['ts'] += difference_ts
