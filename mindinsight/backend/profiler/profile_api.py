@@ -1,4 +1,4 @@
-# Copyright 2020-2022 Huawei Technologies Co., Ltd
+# Copyright 2020-2023 Huawei Technologies Co., Ltd
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -541,6 +541,69 @@ def get_timeline_detail():
     analyser = AnalyserFactory.instance().get_analyser(
         'timeline', profiler_dir_abs, device_id)
     timeline = analyser.get_display_timeline(device_type, scope_name_num)
+
+    return jsonify(timeline)
+
+
+@BLUEPRINT.route("/profile/msprof_timeline_option", methods=["GET"])
+def get_msprof_timeline_option():
+    """
+    Get msprof timeline option.
+    Returns:
+        Response, the option of timeline.
+        {'rank_list': rank_list, 'model_list': model_list}
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/msprof_timeline_option
+    """
+    summary_dir = request.args.get("dir")
+    profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'msprof_timeline', profiler_dir_abs, None)
+
+    res = analyser.get_option()
+    return res
+
+
+@BLUEPRINT.route("/profile/msprof_timeline", methods=["GET"])
+def get_msprof_timeline():
+    """
+    Get msprof timeline.
+
+    Returns:
+        Response, the detail information of timeline.
+
+    Examples:
+        >>> GET http://xxxx/v1/mindinsight/profile/msprof_timeline
+    """
+    summary_dir = request.args.get("dir")
+    profiler_dir_abs = validate_and_normalize_profiler_path(summary_dir, settings.SUMMARY_BASE_DIR)
+    check_train_job_and_profiler_dir(profiler_dir_abs)
+
+    rank_list = request.args.get("rank_list", None)
+    model_list = request.args.get("model_list", None)
+    kind = request.args.get("kind", None)
+    merge_model = request.args.get("merge_model", True)
+
+    if rank_list:
+        rank_list = [int(rank_id) for rank_id in rank_list.split(',')]
+
+    if model_list:
+        model_list = [int(model_id) for model_id in model_list.split(',')]
+
+    if not kind:
+        kind = 'summary'
+
+    if merge_model == 'false':
+        merge_model = False
+    else:
+        merge_model = True
+
+    analyser = AnalyserFactory.instance().get_analyser(
+        'msprof_timeline', profiler_dir_abs, None)
+
+    timeline = analyser.get_merged_timeline(rank_list, model_list, kind, merge_model)
 
     return jsonify(timeline)
 
