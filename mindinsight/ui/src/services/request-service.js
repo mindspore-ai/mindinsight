@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 Huawei Technologies Co., Ltd.All Rights Reserved.
+ * Copyright 2019-2023 Huawei Technologies Co., Ltd.All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -266,6 +266,26 @@
        },
      });
    },
+   queryMsprofTimelineOption(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/msprof_timeline_option',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
+  queryMsprofTimeline(params) {
+    return axios({
+      method: 'get',
+      url: 'v1/mindinsight/profile/msprof_timeline',
+      params: params,
+      headers: {
+        ignoreError: true,
+      },
+    });
+  },
    queryOpQueue(params) {
      return axios({
        method: 'post',

@@ -1,5 +1,5 @@
 <!--
-Copyright 2020-2021 Huawei Technologies Co., Ltd.All Rights Reserved.
+Copyright 2020-2023 Huawei Technologies Co., Ltd.All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -531,6 +531,137 @@ limitations under the License.
         <p v-show="!timelineInfo.initOver">{{$t("public.dataLoading")}}</p>
         <p v-show="timelineInfo.initOver">{{$t("public.noData")}}</p>
       </div>
+
+      <!-- Msprof time line detail -->
+      <div class="item-head" v-if="!isPynative">
+        <div class="title">{{ $t('profiling.timeLineMsprof') }}</div>
+        <div class="tip-icon">
+          <el-tooltip placement="bottom"
+                      effect="light">
+            <div slot="content"
+                 class="tooltip-container">
+              <div class="pro-dash-tooltip">
+                <div class="font-size-style">{{$t("profiling.features")}}</div>
+                <div class="font-style">{{$t("profiling.timelineMsprofTips.title1")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content11")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content12")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content13")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content14")}}</div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineMsprofTips.title2")}}</div>
+                <div>
+                  {{$t("profiling.timelineMsprofTips.content21.part1")}}
+                  <b>{{$t("profiling.timelineMsprofTips.content21.part2")}}</b>
+                  {{$t("profiling.timelineMsprofTips.content21.part3")}}
+                </div>
+                <div>{{$t("profiling.timelineMsprofTips.content22")}}</div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineMsprofTips.title3")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content31")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content32")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content33")}}</div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineMsprofTips.title4")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content41")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content42")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content43")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content44")}}</div>
+              </div>
+            </div>
+            <i class="el-icon-info"></i>
+          </el-tooltip>
+        </div>
+        <div class="view-detail">
+          <button @click="queryMsprofTimeline()"
+                  v-show="!timeLineMsprof.waiting"
+                  :disabled="timeLineMsprof.disable"
+                  :class="{disabled:timeLineMsprof.disable}">{{ $t('profiling.downloadTimeline') }}
+          </button>
+          <div class="el-icon-loading loading-icon"
+               v-show="timeLineMsprof.waiting"></div>
+        </div>
+      </div>
+
+      <!-- Msprof time line detail -->
+      <div class="item-content time-line"
+           v-if="!timelineInfoMsprof.noData && !isPynative">
+        <div class="info-line">
+          <span>{{$t('profiling.rankList')}}</span>
+          <span>
+            <el-select
+              v-model="timelineInfoMsprof.rankListSelected"
+              :placeholder="$t('profiling.select')"
+              class="option-name"
+              multiple
+              collapse-tags>
+              <el-option
+                v-for="item in timelineInfoMsprof.rankList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value">
+              </el-option>
+            </el-select>
+          </span>
+        </div>
+        <div class="info-line">
+          <span>{{$t('profiling.modelList')}}</span>
+          <span>
+            <el-select
+              v-model="timelineInfoMsprof.modelListSelected"
+              :placeholder="$t('profiling.select')"
+              class="option-name"
+              multiple
+              collapse-tags>
+              <el-option
+                v-for="item in timelineInfoMsprof.modelList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value">
+              </el-option>
+            </el-select>
+          </span>
+        </div>
+        <div class="info-line">
+          <span>{{$t('profiling.kind')}}</span>
+          <span>
+            <el-select v-model="timelineInfoMsprof.kindSelected"
+                       :placeholder="$t('public.select')"
+                       class="scope-name">
+              <el-option v-for="item in timelineInfoMsprof.kindArr"
+                         :key="item.value"
+                         :label="item.label"
+                         :value="item.value">
+              </el-option>
+            </el-select>
+          </span>
+        </div>
+        <div class="info-line">
+          <span>{{$t('profiling.mergeModel')}}</span>
+          <span>
+            <el-select v-model="timelineInfoMsprof.mergeModelSelected"
+                       :placeholder="$t('public.select')"
+                       class="scope-name">
+              <el-option v-for="item in timelineInfoMsprof.mergeModelArr"
+                         :key="item.value"
+                         :label="item.label"
+                         :value="item.value">
+              </el-option>
+            </el-select>
+          </span>
+        </div>
+      </div>
+      <!-- Msprof time line no data -->
+      <div class="image-noData"
+           v-if="timelineInfoMsprof.noData && !isPynative">
+        <div>
+          <img :src="require('@/assets/images/nodata.png')"
+               alt="" />
+        </div>
+        <p v-show="!timelineInfoMsprof.initOver">{{$t("public.dataLoading")}}</p>
+        <p v-show="timelineInfoMsprof.initOver">{{$t("public.noData")}}</p>
+      </div>
+
+
     </div>
   </div>
 </template>
@@ -623,6 +754,35 @@ export default {
         initOver: false, // Is initialization complete
         scopeNameNum: '',
         scopeNameNumArr: [],
+      },
+      timeLineMsprof: {
+        // Time line data
+        data: null,
+        waiting: false, // Is it waiting for interface return
+        disable: true,
+      },
+      timelineInfoMsprof: {
+        // Time line information
+        rankListSelected: [],
+        rankList: [],
+        modelListSelected: [],
+        modelList: [],
+        kindSelected: 'summary',
+        kindArr: [{
+                    value: 'summary',
+                    label: 'summary'
+                  }, {
+                    value: 'detail',
+                    label: 'detail'
+                  }],
+        mergeModelSelected: true,
+        mergeModelArr: [{
+                          value: true,
+                          label: 'Yes'
+                        }, {
+                          value: false,
+                          label: 'No'
+                        }],
       },
       processSummary: {
         // Data of process summary
@@ -724,6 +884,7 @@ export default {
       this.$bus.$on('collapse', this.resizeTrace);
     }, 500);
     if (this.isPynative) this.cardChange();
+    if (!this.isPynative) this.queryMsprofTimelineOption();
   },
   watch: {
     rankID: {
@@ -1525,6 +1686,83 @@ export default {
       document.body.removeChild(downloadLink);
     },
     /**
+     * Query the data of msprof time line
+     */
+    queryMsprofTimelineOption() {
+      const params = {
+        dir: this.trainInfo.path,
+      };
+      RequestService.queryMsprofTimelineOption(params)
+          .then((res) => {
+            this.timelineInfo.initOver = true;
+            if (res && res.data && res.data.rank_list && res.data.model_list) {
+              this.timelineInfoMsprof.noData = false;
+              this.timeLineMsprof.disable = false;
+              this.timelineInfoMsprof.rankList = res.data.rank_list
+                   .fill()
+                   .map((value, key) => {
+                     return {
+                       label: "rank"+key.toString(),
+                       value: key,
+                     };
+                   });
+              this.timelineInfoMsprof.modelList = res.data.model_list
+                   .fill()
+                   .map((value, key) => {
+                     return {
+                       label: "graph"+key.toString(),
+                       value: key,
+                     };
+                   });
+            } else {
+              this.timelineInfoMsprof.noData = true;
+              this.timeLineMsprof.disable = true;
+            }
+          })
+          .catch(() => {
+            this.timelineInfoMsprof.noData = true;
+            this.timelineInfoMsprof.initOver = true;
+            this.timeLineMsprof.disable = true;
+          });
+    },
+    queryMsprofTimeline() {
+      this.timeLineMsprof.waiting = true;
+      this.timeLineMsprof.disable = true;
+      const params = {
+        dir: this.trainInfo.path,
+        rank_list: this.timelineInfoMsprof.rankListSelected,
+        model_list: this.timelineInfoMsprof.modelListSelected,
+        kind: this.timelineInfoMsprof.kindSelected,
+        merge_model: this.timelineInfoMsprof.mergeModelSelected,
+      };
+      console.log(params)
+      RequestService.queryMsprofTimeline(params)
+          .then((res) => {
+            this.timeLineMsprof.waiting = false;
+            if (res && res.data && res.data.length) {
+              this.timeLineMsprof.data = JSON.stringify(res.data);
+              this.timeLineMsprof.disable = false;
+              this.downloadTimelineMsprofFile()
+            }
+          })
+          .catch(() => {
+            this.timeLineMsprof.waiting = false;
+          });
+    },
+    /**
+     * Download timeline data file
+     */
+    downloadTimelineMsprofFile() {
+      const downloadLink = document.createElement('a');
+      downloadLink.download = this.getDocNameMsprof();
+      downloadLink.style.display = 'none';
+      const blob = new Blob([this.timeLineMsprof.data]);
+      downloadLink.href = URL.createObjectURL(blob);
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    },
+    /**
      * Set the data of process
      * @param {Object} data The data of process
      */
@@ -1584,6 +1822,26 @@ export default {
       const millisecond = date.getMilliseconds();
       const timestamp = `${year}${mouth}${day}${hour}${minute}${second}${millisecond}`;
       return `timeline_${dir}_${this.rankID}_scope-num-${this.timelineInfo.scopeNameNum}_${timestamp}.json`;
+    },
+    /**
+     * Generate a download msprof file name
+     * @return {String}
+     */
+    getDocNameMsprof() {
+      const dealNumber = (value) => {
+        const prefix = value < 10 ? '0' : '';
+        return prefix + value;
+      };
+      const date = new Date();
+      const year = date.getFullYear();
+      const mouth = dealNumber(date.getMonth() + 1);
+      const day = dealNumber(date.getDate());
+      const hour = dealNumber(date.getHours());
+      const minute = dealNumber(date.getMinutes());
+      const second = dealNumber(date.getSeconds());
+      const millisecond = date.getMilliseconds();
+      const timestamp = `${year}${mouth}${day}${hour}${minute}${second}${millisecond}`;
+      return `merged_${this.timelineInfoMsprof.kindSelected}_timeline_${timestamp}.json`;
     },
     /**
      * Keep the number with n decimal places.
@@ -1771,7 +2029,7 @@ export default {
 }
 /* Dashboard Item Content */
 .single-performance-dashboard .item-content {
-  height: calc(100% - 56px);
+  height: calc(100% - 100px);
   padding: 0 15px;
 }
 /* Data Prepare */
@@ -1932,5 +2190,8 @@ export default {
 }
 .single-performance-dashboard .time-line .loading-icon {
   margin-left: 5px;
+}
+.single-performance-dashboard .time-line .info-line .option-name {
+  width: 200px;
 }
 </style>
