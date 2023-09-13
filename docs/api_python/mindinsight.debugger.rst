@@ -110,24 +110,6 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
         返回：
             Iterable[Node]，匹配的节点。
 
-    .. py:method:: select_tensors(query_string, use_regex=False, select_by="node_name", iterations=None, ranks=None, slots=None, case_sensitive=True)
-
-        筛选张量。
-
-        根据给定的筛选条件选择目录中匹配的张量，具体用法请参考参数说明。
-
-        参数：
-            - **query_string** (str) - 查询字符串。对于要选择的张量，匹配目标字段必须包含或能匹配到查询字符串。
-            - **use_regex** (bool，可选) - 指明查询对象是否为正则表达式。默认值： ``False``。
-            - **select_by** (str，可选) - 选择张量时要搜索的字段。可用值为 ``""node_name"``、 ``"code_stack"``。 ``"node_name"`` 表示在图中搜索张量的节点名称。 ``"code_stack"`` 表示输出该张量的节点的堆栈信息。默认值： ``"node_name"``。
-            - **iterations** (Union[int, list[int], None]，可选) - 要选择的迭代序号或迭代序号列表， ``None`` 表示选择保存的所有迭代。默认值： ``None``。
-            - **ranks** (Union[int, list[int], None]，可选) - 要选择的逻辑卡号或逻辑卡号列表， ``None`` 表示将选择所有逻辑卡。默认值： ``None``。
-            - **slots** (list[int]，可选) -  所选张量的编号， ``None`` 表示将选择所有编号。默认值： ``None``。
-            - **case_sensitive** (bool，可选) - 选择张量时是否区分大小写。默认值： ``True``。
-
-        返回：
-            Iterable[DebuggerTensor]，匹配的张量。
-
     .. py:method:: select_tensor_statistics(iterations=None, ranks=None)
 
         筛选张量统计信息。
@@ -151,6 +133,24 @@ MindSpore调试器是为图模式训练提供的调试工具，可以用来查�
                     }
                 ...
                 }
+
+    .. py:method:: select_tensors(query_string, use_regex=False, select_by="node_name", iterations=None, ranks=None, slots=None, case_sensitive=True)
+
+        筛选张量。
+
+        根据给定的筛选条件选择目录中匹配的张量，具体用法请参考参数说明。
+
+        参数：
+            - **query_string** (str) - 查询字符串。对于要选择的张量，匹配目标字段必须包含或能匹配到查询字符串。
+            - **use_regex** (bool，可选) - 指明查询对象是否为正则表达式。默认值： ``False``。
+            - **select_by** (str，可选) - 选择张量时要搜索的字段。可用值为 ``""node_name"``、 ``"code_stack"``。 ``"node_name"`` 表示在图中搜索张量的节点名称。 ``"code_stack"`` 表示输出该张量的节点的堆栈信息。默认值： ``"node_name"``。
+            - **iterations** (Union[int, list[int], None]，可选) - 要选择的迭代序号或迭代序号列表， ``None`` 表示选择保存的所有迭代。默认值： ``None``。
+            - **ranks** (Union[int, list[int], None]，可选) - 要选择的逻辑卡号或逻辑卡号列表， ``None`` 表示将选择所有逻辑卡。默认值： ``None``。
+            - **slots** (list[int]，可选) -  所选张量的编号， ``None`` 表示将选择所有编号。默认值： ``None``。
+            - **case_sensitive** (bool，可选) - 选择张量时是否区分大小写。默认值： ``True``。
+
+        返回：
+            Iterable[DebuggerTensor]，匹配的张量。
 
     .. py:method:: summary_statistics(statistics, overflow_value=65500, out_path="./")
 
