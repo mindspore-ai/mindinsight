@@ -19,7 +19,7 @@ limitations under the License.
     <div class="cl-profiler">
       <el-tabs v-model="apiType"
                @tab-click="tabChange">
-        <el-tab-pane :label="labelName"
+        <el-tab-pane label="AICORE"
                      name="core">
           <operator-unit chartId="core-echarts"
                          :currentCard="rankID"
@@ -29,13 +29,12 @@ limitations under the License.
                          :accuracy="6"
                          :headerFilder="headerFilder"
                          :unit="$t('profiling.gpuunit')"
-                         :hasFlopsInfo="!isPynative"
+                         :hasFlopsInfo="true"
                          ref="core" />
         </el-tab-pane>
         <el-tab-pane label="AICPU"
                      class="cpu-tab"
-                     name="cpu"
-                     v-if="!isPynative">
+                     name="cpu">
           <operator-unit chartId="cpu-echarts"
                          :currentCard="rankID"
                          :opType="cpuOpType"
@@ -79,7 +78,6 @@ export default {
         path: this.$route.query.path,
         dir: this.$route.query.dir,
       }, // Complete train info
-      isPynative: false,
       labelName: "AICORE",
       apiType: 'core',
       coreOpType: {
@@ -259,15 +257,6 @@ export default {
   },
   created() {
     const mode = this.$route.query.mode;
-    this.isPynative = mode === 'pynative'? true: false;
-    if (this.isPynative) {
-      // update show data when mode is pynative
-      this.labelName = 'ASCEND',
-      this.coreOpType = {
-        all: 'pynative_type',
-        detail: 'pynative_detail',
-      }
-    }
   }
 };
 </script>

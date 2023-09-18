@@ -17,7 +17,7 @@ limitations under the License.
   <div class="single-performance-dashboard">
     <!-- Step trace area -->
     <div class="dashboard-item"
-         v-if="!isPynative && !isDynamic">
+         v-if="!isDynamic">
       <div class="item-head">
         <div class="title">{{ $t('profiling.stepTrace') }}</div>
         <!-- Step trace description -->
@@ -178,8 +178,7 @@ limitations under the License.
       </div>
     </div>
     <!-- Operator information display area -->
-    <div class="dashboard-item"
-         v-if="!isPynative">
+    <div class="dashboard-item">
       <div class="item-head">
         <div class="title">{{ $t('profiling.rankOfOperator') }}</div>
         <div class="view-detail">
@@ -224,29 +223,6 @@ limitations under the License.
           </div>
         </div>
       </div>
-    </div>
-    <!-- Pynative operator information display area -->
-    <div class="dashboard-item-pynative"
-         v-if="isPynative">
-      <div class="item-head">
-        <div class="title">{{ $t('profiling.rankOfOperator') }}</div>
-        <div class="view-detail">
-          <button @click="viewDetail('operator')"
-                  :disabled="pieChart.noData && pieChart.data.length === 0"
-                  :class="{disabled:pieChart.noData && pieChart.data.length === 0}">{{ $t('profiling.viewDetail') }}
-            <i class="el-icon-d-arrow-right"></i></button>
-        </div>
-      </div>
-      <operator-unit chartId="pynative-echarts"
-                         :currentCard="rankID"
-                         :opType="pynativeOpType"
-                         :opSortCondition="pynativeOpSortCondition"
-                         :search="pynativeSearch"
-                         :accuracy="6"
-                         :unit="$t('profiling.unit')"
-                         :hasFlopsInfo="!isPynative"
-                         :notTable="true"
-                         ref="pynative" />
     </div>
     <!-- Data Process -->
     <div class="dashboard-item">
@@ -879,7 +855,6 @@ export default {
     setTimeout(() => {
       this.$bus.$on('collapse', this.resizeTrace);
     }, 500);
-    if (this.isPynative) this.cardChange();
     if (!this.isPynative) this.queryMsprofTimelineOption();
   },
   watch: {
@@ -920,7 +895,7 @@ export default {
         this.queryTrainingTrace();
       }
       this.getProccessSummary();
-      if (!this.isPynative) this.initPieChart();
+      this.initPieChart();
     },
     /**
      * init the default shape data
@@ -1083,15 +1058,6 @@ export default {
         });
       }
       return tipInnerHTML.join('<br>');
-    },
-    /**
-     * Get the data of pynative operator
-     */
-    cardChange() {
-      const ref = this.$refs['pynative'];
-      ref.clearCoreData();
-      ref.coreStatisticType = 0;
-      ref.getCoreTypeList();
     },
     /**
      * Get the data of process summary
@@ -1695,19 +1661,18 @@ export default {
               this.timelineInfoMsprof.noData = false;
               this.timeLineMsprof.disable = false;
               this.timelineInfoMsprof.rankList = res.data.rank_list
-                   .fill()
                    .map((value, key) => {
                      return {
-                       label: "rank"+key.toString(),
-                       value: key,
+                       label: "rank"+value.toString(),
+                       value: value,
                      };
                    });
               this.timelineInfoMsprof.modelList = res.data.model_list
                    .fill()
                    .map((value, key) => {
                      return {
-                       label: "graph"+key.toString(),
-                       value: key,
+                       label: "graph"+value.toString(),
+                       value: value,
                      };
                    });
             } else {
