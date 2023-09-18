@@ -46,10 +46,11 @@ def get_absolute_ts_start_info(pro_path) -> float:
 
 def get_rank_id_from_info_json(pro_path):
     """
-    Get rank id from PROFXXX
+    Get rank id and device id from PROFXXX
     """
     info_json = ""
     rank_id = 0
+    device_id = 0
     for root, _, files in os.walk(pro_path):
         for file in files:
             if "info.json." in file and ".done" not in file:
@@ -59,9 +60,13 @@ def get_rank_id_from_info_json(pro_path):
     if info_json:
         with open(info_json, "r+") as f:
             info = json.load(f)
-        rank_id = info.get("rank_id")
+        rank_id = int(info.get('rank_id', rank_id))
+        device_id = int(info.get('deviced', device_id))
 
-    return rank_id
+    if rank_id == -1:
+        rank_id = 0
+
+    return rank_id, device_id
 
 
 def get_timeline_info(prof_dirs):
@@ -72,15 +77,14 @@ def get_timeline_info(prof_dirs):
     timeline_info = {}
 
     for prof_path in prof_dirs:
-        rank_id = get_rank_id_from_info_json(prof_path)
+        rank_id, device_id = get_rank_id_from_info_json(prof_path)
         ts_difference_us = get_absolute_ts_start_info(prof_path)
         if rank_id is None:
             logger.warning('Could not find the rank id in %s, ignore this file.', prof_path)
             continue
 
-        if rank_id in timeline_info and prof_path > timeline_info.get(rank_id)[0]:
-            timeline_info[rank_id] = (prof_path, ts_difference_us)
-        elif rank_id not in timeline_info:
+        if rank_id not in timeline_info or (rank_id in timeline_info and prof_path > timeline_info.get(rank_id)[0]):
+            prof_path = os.path.join(prof_path, f'device_{device_id}')
             timeline_info[rank_id] = (prof_path, ts_difference_us)
 
     return timeline_info
@@ -90,6 +94,15 @@ def get_job_dir(parent_path):
     job_path_list = glob.glob(fr'{parent_path}/PROF_*_*')
     timeline_info = get_timeline_info(job_path_list)
     return timeline_info
+
+
+def get_newest_file(file_list, split_num=4):
+    new_file_list = {}
+    for file_path in file_list:
+        key = '_'.join(file_path.split('/')[-1].split('_')[:split_num])
+        if key not in new_file_list or new_file_list[key] < file_path:
+            new_file_list[key] = file_path
+    return list(new_file_list.values())
 
 
 class MsprofTimelineAnalyser(BaseAnalyser):
@@ -181,7 +194,7 @@ class MsprofTimelineAnalyser(BaseAnalyser):
                         continue
 
                     event_name = event.get('name').strip()
-                    if event_name.startswith('Iteration') and len(event_name.spilt(' ')) == 2:
+                    if event_name.startswith('Iteration') and len(event_name.split(' ')) == 2:
                         event['name'] = f"{tids.get(event.get('tid'))} {event_name}"
 
                     if difference_ts and event.get('ts'):
@@ -475,7 +488,7 @@ class MsprofTimelineAnalyser(BaseAnalyser):
             data_list = []
 
             # get step trace
-            step_trace_file_name = fr'{job_dir}/device_{rank_id}/timeline/step_trace_{rank_id}_*_*.json'
+            step_trace_file_name = fr'{job_dir}/timeline/step_trace_*_*_*.json'
             file_list = glob.glob(step_trace_file_name)
             if not file_list:
                 logger.error('Could not find step trace file in %s/device_%s/timeline', job_dir, rank_id)
@@ -486,16 +499,16 @@ class MsprofTimelineAnalyser(BaseAnalyser):
             file_list = []
             if model_list:
                 for model_id in model_list:
-                    overlap_file_name = fr'{job_dir}/device_{rank_id}/timeline/msprof_{rank_id}_{model_id}_*.json'
+                    overlap_file_name = fr'{job_dir}/timeline/msprof_*_{model_id}_*.json'
                     file_list.extend(glob.glob(overlap_file_name))
             else:
-                overlap_file_name = fr'{job_dir}/device_{rank_id}/timeline/msprof_{rank_id}_*_*.json'
+                overlap_file_name = fr'{job_dir}/timeline/msprof_*_*_*.json'
                 file_list.extend(glob.glob(overlap_file_name))
 
             if not file_list:
                 logger.error('Could not find overlap analysis file in %s/device_%s/timeline', job_dir, rank_id)
             else:
-                data_list.extend(self._parse_overlap_analysis_data(file_list, difference_ts))
+                data_list.extend(self._parse_overlap_analysis_data(get_newest_file(file_list), difference_ts))
 
             timeline_data[rank_id] = data_list
 
@@ -522,27 +535,28 @@ class MsprofTimelineAnalyser(BaseAnalyser):
 
             if model_list:
                 for model_id in model_list:
-                    hardware_file_name = fr'{job_dir}/device_{rank_id}/timeline/task_time_{rank_id}_{model_id}_*.json'
+                    hardware_file_name = fr'{job_dir}/timeline/task_time_*_{model_id}_*.json'
                     file_list_hardware.extend(glob.glob(hardware_file_name))
 
-                    hccl_file_name = fr'{job_dir}/device_{rank_id}/timeline/hccl_{rank_id}_{model_id}_*.json'
+                    hccl_file_name = fr'{job_dir}/timeline/hccl_*_{model_id}_*.json'
                     file_list_hccl.extend(glob.glob(hccl_file_name))
             else:
-                hardware_file_name = fr'{job_dir}/device_{rank_id}/timeline/task_time_{rank_id}_*_*.json'
+                hardware_file_name = fr'{job_dir}/timeline/task_time_*_*_*.json'
                 file_list_hardware.extend(glob.glob(hardware_file_name))
 
-                hccl_file_name = fr'{job_dir}/device_{rank_id}/timeline/hccl_{rank_id}_*_*.json'
+                hccl_file_name = fr'{job_dir}/timeline/hccl_*_*_*.json'
                 file_list_hccl.extend(glob.glob(hccl_file_name))
 
             if not file_list_hardware:
                 logger.error('Could not find ascend hardware file in %s/device_%s/timeline', job_dir, rank_id)
             else:
-                data_list.extend(self._parse_ascend_hardware_data(file_list_hardware, difference_ts))
+                data_list.extend(self._parse_ascend_hardware_data(get_newest_file(file_list_hardware, 5),
+                                                                  difference_ts))
 
             if not file_list_hccl:
                 logger.error('Could not find hccl file in %s/device_%s/timeline', job_dir, rank_id)
             else:
-                data_list.extend(self._parse_hccl_data(file_list_hccl, difference_ts))
+                data_list.extend(self._parse_hccl_data(get_newest_file(file_list_hccl), difference_ts))
 
             timeline_data[rank_id] = data_list
 
@@ -602,13 +616,13 @@ class MsprofTimelineAnalyser(BaseAnalyser):
         model_dict = {}
         model_merged = set()
         for rank_id, (job_dir, _) in sub_dirs.items():
-            step_trace_file_name = fr'{job_dir}/device_{rank_id}/timeline/step_trace_{rank_id}_*_*.json'
+            step_trace_file_name = fr'{job_dir}/timeline/step_trace_*_*_*.json'
             file_list = glob.glob(step_trace_file_name)
             model_set = set()
             for file_name in file_list:
                 last_name = file_name.rsplit('/', maxsplit=1)[-1]
-                last_name_suffix = last_name.split(f'step_trace_{rank_id}_')[-1]
-                model_id = last_name_suffix.split('_')[0]
+                last_name_suffix = last_name.split(f'step_trace_')[-1]
+                model_id = last_name_suffix.split('_')[1]
                 model_set.add(int(model_id))
             model_dict[rank_id] = model_set
             model_merged.update(model_set)

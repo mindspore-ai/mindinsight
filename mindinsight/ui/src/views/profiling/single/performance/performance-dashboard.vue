@@ -1735,7 +1735,6 @@ export default {
         kind: this.timelineInfoMsprof.kindSelected,
         merge_model: this.timelineInfoMsprof.mergeModelSelected,
       };
-      console.log(params)
       RequestService.queryMsprofTimeline(params)
           .then((res) => {
             this.timeLineMsprof.waiting = false;
