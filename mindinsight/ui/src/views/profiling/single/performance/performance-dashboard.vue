@@ -585,13 +585,12 @@ limitations under the License.
       <!-- Msprof time line detail -->
       <div class="item-content time-line"
            v-if="!timelineInfoMsprof.noData && !isPynative">
-        <div class="info-line">
+        <div class="msprof_timeline">
           <span>{{$t('profiling.rankList')}}</span>
           <span>
             <el-select
               v-model="timelineInfoMsprof.rankListSelected"
               :placeholder="$t('profiling.select')"
-              class="option-name"
               multiple
               collapse-tags>
               <el-option
@@ -603,13 +602,12 @@ limitations under the License.
             </el-select>
           </span>
         </div>
-        <div class="info-line">
+        <div class="msprof_timeline">
           <span>{{$t('profiling.modelList')}}</span>
           <span>
             <el-select
               v-model="timelineInfoMsprof.modelListSelected"
               :placeholder="$t('profiling.select')"
-              class="option-name"
               multiple
               collapse-tags>
               <el-option
@@ -621,12 +619,11 @@ limitations under the License.
             </el-select>
           </span>
         </div>
-        <div class="info-line">
+        <div class="msprof_timeline">
           <span>{{$t('profiling.kind')}}</span>
           <span>
             <el-select v-model="timelineInfoMsprof.kindSelected"
-                       :placeholder="$t('public.select')"
-                       class="scope-name">
+                       :placeholder="$t('public.select')">
               <el-option v-for="item in timelineInfoMsprof.kindArr"
                          :key="item.value"
                          :label="item.label"
@@ -635,12 +632,11 @@ limitations under the License.
             </el-select>
           </span>
         </div>
-        <div class="info-line">
+        <div class="msprof_timeline">
           <span>{{$t('profiling.mergeModel')}}</span>
           <span>
             <el-select v-model="timelineInfoMsprof.mergeModelSelected"
-                       :placeholder="$t('public.select')"
-                       class="scope-name">
+                       :placeholder="$t('public.select')">
               <el-option v-for="item in timelineInfoMsprof.mergeModelArr"
                          :key="item.value"
                          :label="item.label"
@@ -2192,5 +2188,10 @@ export default {
 }
 .single-performance-dashboard .time-line .info-line .option-name {
   width: 200px;
+}
+.single-performance-dashboard .msprof_timeline {
+  display: flex;
+  align-items: center;
+  justify-content: right;
 }
 </style>
