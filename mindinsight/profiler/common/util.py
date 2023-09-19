@@ -20,6 +20,7 @@ This module provides the utils.
 import json
 import os
 import re
+import glob
 
 from mindinsight import __version__ as mi_version
 from mindinsight.datavisual.utils.tools import to_int
@@ -42,60 +43,41 @@ def analyse_device_list_from_profiler_dir(profiler_dir):
     Returns:
         list, the device_id list.
     """
-    profiler_file_prefix = ["ascend_timeline_display", "output_op_compute_time"]
-    gpu_profiler_file_prefix = ["gpu_op_detail_info", "gpu_activity_data", "gpu_op_type_info"]
-    cpu_profiler_file_prefix = ["cpu_op_detail_info", "cpu_op_type_info"]
-    pynative_profiler_file_prefix = "pynative_op_intermediate"
-    profiler_info_file_prefix = "profiler_info"
+    profiler_file_prefix = ("ascend_timeline_display*", "output_op_compute_time*")
+    gpu_profiler_file_prefix = ("gpu_op_detail_info*", "gpu_activity_data*", "gpu_op_type_info*")
+    cpu_profiler_file_prefix = ("cpu_op_detail_info*", "cpu_op_type_info*")
 
-    device_id_list = set()
-    gpu_device_id_list = set()
-    cpu_device_id_list = set()
-    profiler_device_id_list = set()
-    pynative_device_id_list = set()
+    def get_device_list_and_profiler_mode():
+        profiler_info_list = glob.glob(fr'{profiler_dir}/profiler_info_*.json')
+        device_id_list = set()
+        profiler_mode = ''
+        for profiler_info_file in profiler_info_list:
+            if not profiler_mode:
+                with os.fdopen(os.open(profiler_info_file, os.O_RDONLY, 0o400), 'r') as fr:
+                    json_data = json.load(fr)
+                profiler_mode = json_data.get('context_mode', '')
+            device_id = profiler_info_file.split('profiler_info_')[-1].split('.')[0]
+            device_id_list.add(device_id)
+        return sorted(list(device_id_list)), profiler_mode
 
-    depth = 0
-    for _, _, filenames in os.walk(profiler_dir):
-        if depth == 1:
-            break
-        for filename in filenames:
-            if filename.startswith("step_trace_raw"):
-                items = filename.split("_")
-                device_num = ""
-                if len(items) > 3:
-                    device_num = items[3]
-            else:
-                items = filename.split("_")
-                device_num = items[-1].split(".")[0] if items[-1].split(".") else ""
-            file_prefix = '_'.join(items[:-1])
-            if device_num.isdigit():
-                if file_prefix in profiler_file_prefix:
-                    device_id_list.add(device_num)
-                elif file_prefix in gpu_profiler_file_prefix:
-                    gpu_device_id_list.add(device_num)
-                elif file_prefix in cpu_profiler_file_prefix:
-                    cpu_device_id_list.add(device_num)
-                elif file_prefix in profiler_info_file_prefix:
-                    profiler_device_id_list.add(device_num)
-            if '_'.join(items[:-2]) == pynative_profiler_file_prefix and items[3].isdigit():
-                pynative_device_id_list.add(items[3])
-        depth += 1
-    profiler_type = ""
-    if device_id_list:
-        result_list = sorted(list(device_id_list))
-        profiler_type = "ascend"
-    elif gpu_device_id_list:
-        result_list = sorted(list(gpu_device_id_list))
-        profiler_type = "gpu"
-    elif cpu_device_id_list:
-        result_list = sorted(list(cpu_device_id_list))
-        profiler_type = "cpu"
-    elif profiler_device_id_list:
-        result_list = sorted(list(profiler_device_id_list))
-    else:
-        result_list = []
-    profiler_mode = "pynative" if pynative_device_id_list else "graph"
-    return result_list, profiler_type, profiler_mode
+    device_id_list, profiler_mode = get_device_list_and_profiler_mode()
+
+    def get_profiler_type(file_prefix):
+        for file_name in file_prefix:
+            if glob.glob(fr'{profiler_dir}/{file_name}'):
+                return True
+        return False
+
+    if get_profiler_type(profiler_file_prefix):
+        return device_id_list, 'ascend', profiler_mode
+
+    if get_profiler_type(gpu_profiler_file_prefix):
+        return device_id_list, 'gpu', profiler_mode
+
+    if get_profiler_type(cpu_profiler_file_prefix):
+        return device_id_list, 'cpu', profiler_mode
+
+    return device_id_list, '', profiler_mode
 
 
 def query_latest_trace_time_file(profiler_dir, device_id=0):
