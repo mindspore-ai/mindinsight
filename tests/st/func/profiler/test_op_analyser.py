@@ -77,32 +77,31 @@ class TestOpAnalyser:
         """Test the function of querying AICORE operator type information."""
         expect_result = {
             'col_name':
-                ['op_type', 'total_time', 'execution_frequency', 'percent'],
-            'object': [
-                ['MatMul', 2807.82, 25, 57.6],
-                ['Cast', 104.32, 27, 2.14],
-                ['TransData', 86.12, 9, 1.77],
-                ['ApplyMomentumD', 56.68, 24, 1.16],
-                ['MaxPoolGradWithArgmax', 51.6, 6, 1.06],
-                ['AtomicAddrClean', 48.99, 30, 1.01],
-                ['Conv2DBackpropFilterD', 45.68, 6, 0.94],
-                ['Conv2D', 38.97, 6, 0.8],
-                ['MaxPoolWithArgmax', 34.32, 6, 0.7],
-                ['FusionOp_ReluGradV2_Cast', 32.87, 6, 0.67],
-                ['SoftmaxCrossEntropyWithLogits', 28.7, 3, 0.59],
-                ['BiasAddGrad', 26.73, 9, 0.55],
-                ['ReluV2', 25.99, 6, 0.53],
-                ['Conv2DBackpropInputD', 16.07, 3, 0.33],
-                ['OneHotD', 15.89, 3, 0.33],
-                ['ReluGrad', 11.54, 6, 0.24],
-                ['Relu', 9.67, 6, 0.2],
-                ['AssignAdd', 9.22, 6, 0.19],
-                ['TensorMove', 5.31, 3, 0.11],
-                ['Mul', 4.29, 3, 0.09],
-                ['ReduceMeanD', 4.24, 3, 0.09],
-                ['GetNext', 0.15, 3, 0.0],
-                ['StreamRecv', 0.15, 3, 0.0],
-                ['StreamSend', 0.03, 3, 0.0]],
+                ['op_type', 'total_time', 'execution_frequency', 'total_percent', 'avg_time'],
+            'object': [['MatMul', 2807.82, 25, 5760.0, 112.313],
+                       ['Cast', 104.32, 27, 214.0, 3.864],
+                       ['TransData', 86.12, 9, 177.0, 9.569],
+                       ['ApplyMomentumD', 56.68, 24, 116.0, 2.362],
+                       ['MaxPoolGradWithArgmax', 51.6, 6, 106.0, 8.6],
+                       ['AtomicAddrClean', 48.99, 30, 101.0, 1.633],
+                       ['Conv2DBackpropFilterD', 45.68, 6, 94.0, 7.613],
+                       ['Conv2D', 38.97, 6, 80.0, 6.495],
+                       ['MaxPoolWithArgmax', 34.32, 6, 70.0, 5.72],
+                       ['FusionOp_ReluGradV2_Cast', 32.87, 6, 67.0, 5.478],
+                       ['SoftmaxCrossEntropyWithLogits', 28.7, 3, 59.0, 9.567],
+                       ['BiasAddGrad', 26.73, 9, 55.0, 2.97],
+                       ['ReluV2', 25.99, 6, 53.0, 4.332],
+                       ['Conv2DBackpropInputD', 16.07, 3, 33.0, 5.357],
+                       ['OneHotD', 15.89, 3, 33.0, 5.297],
+                       ['ReluGrad', 11.54, 6, 24.0, 1.923],
+                       ['Relu', 9.67, 6, 20.0, 1.612],
+                       ['AssignAdd', 9.22, 6, 19.0, 1.537],
+                       ['TensorMove', 5.31, 3, 11.0, 1.77],
+                       ['Mul', 4.29, 3, 9.0, 1.43],
+                       ['ReduceMeanD', 4.24, 3, 9.0, 1.413],
+                       ['GetNext', 0.15, 3, 0.0, 0.05],
+                       ['StreamRecv', 0.15, 3, 0.0, 0.05],
+                       ['StreamSend', 0.03, 3, 0.0, 0.01]],
             'size': 24
         }
         condition = {
@@ -124,10 +123,10 @@ class TestOpAnalyser:
         """Test the function of querying AICORE operator type information."""
         expect_result = {
             'col_name':
-                ['op_type', 'total_time', 'execution_frequency', 'percent'],
+                ['op_type', 'total_time', 'execution_frequency', 'total_percent', 'avg_time'],
             'object': [
-                ['MatMul', 2807.82, 25, 57.6],
-                ['Mul', 4.29, 3, 0.09]
+                ['MatMul', 2807.82, 25, 5760.0, 112.313],
+                ['Mul', 4.29, 3, 9.0, 1.43]
             ],
             'size': 2
         }

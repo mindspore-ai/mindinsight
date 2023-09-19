@@ -73,7 +73,7 @@ class GpuAnalyser(BaseAnalyser):
 
 class GpuOpTypeAnalyser(GpuAnalyser):
     """Gpu operation type analyser."""
-    _col_names = ["op_type", "type_occurrences", "total_time", "proportion", "avg_time"]
+    _col_names = ["op_type", "total_time", "execution_frequency", "total_percent", "avg_time"]
     _csv_file_to_analyse = 'gpu_op_type_info_{}.csv'
 
     def _convert_field_type(self, row):
@@ -86,7 +86,7 @@ class GpuOpTypeAnalyser(GpuAnalyser):
         Returns:
             list, the converted data.
         """
-        return [row[0], int(row[1]), self._format_float_data(float(row[2])),
+        return [row[0], self._format_float_data(float(row[2])), int(row[1]),
                 self._format_float_data(float(row[3]) * 100), self._format_float_data(float(row[4]))]
 
 
