@@ -28,6 +28,7 @@ limitations under the License.
                          :search="coreSearch"
                          :accuracy="6"
                          :headerFilder="headerFilder"
+                         :chart="aicoreOpChart"
                          :unit="$t('profiling.gpuunit')"
                          :hasFlopsInfo="true"
                          ref="core" />
@@ -126,7 +127,7 @@ export default {
         execution_time: `execution_time (${this.$t('profiling.gpuunit')})`,
         avg_execution_time: `avg_execution_time (${this.$t('profiling.gpuunit')})`,
         execution_frequency: `execution_frequency (${this.$t('profiling.countUnit')})`,
-        percent: 'percent (%)',
+        total_percent: 'total_percent (%)',
         total_time: 'total_time (us)',
         dispatch_time: 'dispatch_time (us)',
         total_compute_time: 'total_compute_time (us)',
@@ -205,6 +206,9 @@ export default {
             this.$t('symbols.rightbracket'),
           type: 'op_name',
         },
+      },
+      aicoreOpCart:{
+        value: 4,
       },
       hostChart: {
         value: 4,

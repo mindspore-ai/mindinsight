@@ -20,7 +20,7 @@ from unittest import TestCase
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from tests.ut.profiler import PROFILER_DIR
 
-COL_NAMES = ['op_type', 'total_time', 'execution_frequency', 'percent']
+COL_NAMES = ['op_type', 'total_time', 'execution_frequency', 'total_percent', 'avg_time']
 
 
 def get_type_infos(indexes=None, sort_name=None, sort_type=True):
@@ -44,9 +44,10 @@ def get_type_infos(indexes=None, sort_name=None, sort_type=True):
         _ = next(csv_reader)
         cache = []
         for type_info in csv_reader:
+            total_time = round(float(type_info[1]) * 1e3, 3)
             cache.append(
-                [type_info[0], round(float(type_info[1]) * 1e3, 3), int(type_info[2]),
-                 float(type_info[3])]
+                [type_info[0], total_time, int(type_info[2]),
+                 float(type_info[3]) * 100, round(total_time / int(type_info[2]), 3)]
             )
 
     if indexes:

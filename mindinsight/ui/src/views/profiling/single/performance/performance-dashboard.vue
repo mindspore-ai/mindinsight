@@ -1668,7 +1668,6 @@ export default {
                      };
                    });
               this.timelineInfoMsprof.modelList = res.data.model_list
-                   .fill()
                    .map((value, key) => {
                      return {
                        label: "graph"+value.toString(),

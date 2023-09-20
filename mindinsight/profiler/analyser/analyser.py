@@ -35,7 +35,7 @@ class AicoreTypeAnalyser(BaseAnalyser):
     Raises:
         ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    _col_names = ['op_type', 'total_time', 'execution_frequency', 'percent']
+    _col_names = ['op_type', 'total_time', 'execution_frequency', 'total_percent', 'avg_time']
     _file_name_aicore_type_time = 'aicore_intermediate_{}_type.csv'
 
     def _load(self):
@@ -93,8 +93,10 @@ class AicoreTypeAnalyser(BaseAnalyser):
         Returns:
             list[Union[str, float]], the converted data.
         """
-        return [row[0], self._format_float_data(float(row[1]) * self._ms_to_us),
-                int(row[2]), self._format_float_data(float(row[3]))]
+        total_time = self._format_float_data(float(row[1]) * self._ms_to_us)
+        return [row[0], total_time,
+                int(row[2]), self._format_float_data(float(row[3]) * 100),
+                self._format_float_data(total_time / int(row[2]))]
 
 
 class AicoreDetailAnalyser(BaseAnalyser):
