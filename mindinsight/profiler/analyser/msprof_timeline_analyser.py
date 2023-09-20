@@ -61,7 +61,7 @@ def get_rank_id_from_info_json(pro_path):
         with open(info_json, "r+") as f:
             info = json.load(f)
         rank_id = int(info.get('rank_id', rank_id))
-        device_id = int(info.get('deviced', device_id))
+        device_id = int(info.get('devices', device_id))
 
     if rank_id == -1:
         rank_id = 0
