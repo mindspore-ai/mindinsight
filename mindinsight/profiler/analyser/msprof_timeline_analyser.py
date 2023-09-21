@@ -593,8 +593,11 @@ class MsprofTimelineAnalyser(BaseAnalyser):
         sub_dirs = get_job_dir(self._profiling_dir)
 
         if rank_list:
-            for key in sub_dirs:
-                if key not in rank_list: sub_dirs.pop(key)
+            new_sub_dirs = {}
+            for key, value in sub_dirs.items():
+                if key in rank_list:
+                    new_sub_dirs[key] = value
+            sub_dirs = new_sub_dirs
 
         if not sub_dirs:
             logger.error('Could not found any rank from %s', rank_list)
