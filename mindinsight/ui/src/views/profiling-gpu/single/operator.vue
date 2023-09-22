@@ -56,7 +56,7 @@ limitations under the License.
                          :opType="hostType"
                          :opSortCondition="hostSortCondition"
                          :search="hostSearch"
-                         :chart="hostChart"
+                         :chart="hostOpChart"
                          :accuracy="3"
                          :headerFilder="hostHeaderFilder"
                          :unit="$t('profiling.gpuunit')"
@@ -209,7 +209,7 @@ export default {
       gpuCudaChart: {
         value: 8,
       },
-      hostChart: {
+      hostOpChart: {
         value: 4,
         percent: 5,
       },

@@ -43,6 +43,7 @@ limitations under the License.
                          :search="cpuSearch"
                          :accuracy="6"
                          :headerFilder="headerFilder"
+                         :chart="aicpuOpChart"
                          :unit="$t('profiling.gpuunit')"
                          ref="cpu" />
         </el-tab-pane>
@@ -56,7 +57,7 @@ limitations under the License.
                          :search="hostSearch"
                          :accuracy="6"
                          :headerFilder="hostHeaderFilder"
-                         :chart="hostChart"
+                         :chart="hostOpChart"
                          :unit="$t('profiling.gpuunit')"
                          ref="host" />
         </el-tab-pane>
@@ -207,10 +208,13 @@ export default {
           type: 'op_name',
         },
       },
-      aicoreOpCart:{
+      aicoreOpChart:{
         value: 4,
       },
-      hostChart: {
+      aicpuOpChart:{
+        value: 1,
+      },
+      hostOpChart: {
         value: 4,
         percent: 5,
       },

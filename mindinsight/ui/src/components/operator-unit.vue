@@ -347,7 +347,7 @@ export default {
       type: Object,
       default: () => {
         return {
-          percent: 4,
+          value: 4,
         };
       },
     },
