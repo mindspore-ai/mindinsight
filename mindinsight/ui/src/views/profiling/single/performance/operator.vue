@@ -135,7 +135,7 @@ export default {
         compute_time: `compute_time (${this.$t('profiling.gpuunit')})`,
         total_time_proportion: 'total_time_proportion (%)',
         op_total_time: 'op_total_time (us)',
-        avg_time: 'avg_time (us)',
+        avg_time: `avg_time (${this.$t('profiling.gpuunit')})`,
         op_avg_time: 'op_avg_time (us)',
         FLOPs: 'FLOPs (M)',
         FLOPS: 'FLOPS (G/s)',
