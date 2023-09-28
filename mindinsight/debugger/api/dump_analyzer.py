@@ -371,7 +371,7 @@ class DumpAnalyzer:
         """
         Get the TensorStatic of the corresponding rank and iteration.
         """
-        tensor_statistics = []
+        tensor_statistics = {}
         if not self._data_loader.has_data:
             return tensor_statistics
         net_name = self._data_loader.get_net_name()
@@ -385,7 +385,9 @@ class DumpAnalyzer:
                 csv_reader = csv.DictReader(f)
                 # The first line of the csv file is the title, so skip the first line.
                 for statistic_line in csv_reader:
-                    tensor_statistics.append(statistic_line)
+                    tensor_name = statistic_line.get('Op Name') + ':' + statistic_line.get(
+                        'IO') + ':' + statistic_line.get('Slot')
+                    tensor_statistics.update({tensor_name: statistic_line})
         return tensor_statistics
 
     def _compute_statistics(self, debugger_tensors):
@@ -401,7 +403,9 @@ class DumpAnalyzer:
             .. code-block::
 
                 {"rank_id":{
-                    "iteration_id":[TensorStatistic],
+                    "iteration_id":
+                        "tensor_name":
+                            [TensorStatistic],
                     ...
                     }
                 ...
@@ -414,9 +418,10 @@ class DumpAnalyzer:
             static_in_rank = statistics.get(rank_id, {})
             iteration = tensor.iteration
             is_new_iteration = iteration not in static_in_rank
-            static_in_iter = static_in_rank.get(iteration, [])
+            static_in_iter = static_in_rank.get(iteration, {})
             single_static = self._compute_statistic(tensor)
-            static_in_iter.append(single_static)
+            tensor_name = single_static.op_name + ':' + single_static.io + ':' + str(single_static.slot)
+            static_in_iter.update({tensor_name: single_static})
             if is_new_iteration:
                 static_in_rank[iteration] = static_in_iter
             if is_new_rank:
@@ -465,7 +470,7 @@ class DumpAnalyzer:
             log.warning("process statistics in rank, rank_id is: %s", rank_id)
             for iteration_id, statistics_in_iteration in statistics_in_rank.items():
                 log.warning("process statistics in iteration, iteration_id is: %s", iteration_id)
-                for statistic in statistics_in_iteration:
+                for _, statistic in statistics_in_iteration.items():
                     if isinstance(statistic, TensorStatistic):
                         self._put_tensor_statistic_to_summarystatistics(statistic, summary_statistics, overflow_value)
                     else:
