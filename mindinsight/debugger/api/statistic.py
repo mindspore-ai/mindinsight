@@ -49,13 +49,14 @@ class TensorStatistic:
 class SummaryStatistic:
     """The tensor statistic class."""
 
-    def __init__(self, op_type='', op_name='', tensor_name='', inf_iterations=0, nan_iterations=0,
-                 out_of_range_iterations=0, total_dump_iterations=0, normal_iterations=0):
+    def __init__(self, op_type='', op_name='', tensor_name='', inf_number=0, nan_number=0,
+                 out_of_range_number=0, total_number=0, none_overflow_number=0, total_iterations=0):
         self.op_type = op_type
         self.op_name = op_name
         self.tensor_name = tensor_name
-        self.inf_iterations = inf_iterations
-        self.nan_iterations = nan_iterations
-        self.out_of_range_iterations = out_of_range_iterations
-        self.total_dump_iterations = total_dump_iterations
-        self.normal_iterations = normal_iterations
+        self.inf_number = inf_number
+        self.nan_number = nan_number
+        self.out_of_range_number = out_of_range_number
+        self.total_number = total_number
+        self.none_overflow_number = none_overflow_number
+        self.total_iterations = total_iterations

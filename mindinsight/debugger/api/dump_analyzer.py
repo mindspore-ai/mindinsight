@@ -341,8 +341,12 @@ class DumpAnalyzer:
                 {
                 "rank_id":
                     {
-                    "iteration_id":[TensorStatistic],
-                    ...
+                    "iteration_id":
+                        {
+                        "tensor_name":
+                            [TensorStatistic],
+                        ...
+                        }
                     }
                 ...
                 }
@@ -387,7 +391,9 @@ class DumpAnalyzer:
                 for statistic_line in csv_reader:
                     tensor_name = statistic_line.get('Op Name') + ':' + statistic_line.get(
                         'IO') + ':' + statistic_line.get('Slot')
-                    tensor_statistics.update({tensor_name: statistic_line})
+                    statistics_for_specified_name = tensor_statistics.get(tensor_name, [])
+                    statistics_for_specified_name.append(statistic_line)
+                    tensor_statistics.update({tensor_name: statistics_for_specified_name})
         return tensor_statistics
 
     def _compute_statistics(self, debugger_tensors):
@@ -404,9 +410,11 @@ class DumpAnalyzer:
 
                 {"rank_id":{
                     "iteration_id":
+                        {
                         "tensor_name":
                             [TensorStatistic],
-                    ...
+                        ...
+                        }
                     }
                 ...
                 }
@@ -421,7 +429,9 @@ class DumpAnalyzer:
             static_in_iter = static_in_rank.get(iteration, {})
             single_static = self._compute_statistic(tensor)
             tensor_name = single_static.op_name + ':' + single_static.io + ':' + str(single_static.slot)
-            static_in_iter.update({tensor_name: single_static})
+            statistics_for_specified_name = static_in_iter.get(tensor_name, [])
+            statistics_for_specified_name.append(single_static)
+            static_in_iter.update({tensor_name: statistics_for_specified_name})
             if is_new_iteration:
                 static_in_rank[iteration] = static_in_iter
             if is_new_rank:
@@ -470,11 +480,15 @@ class DumpAnalyzer:
             log.warning("process statistics in rank, rank_id is: %s", rank_id)
             for iteration_id, statistics_in_iteration in statistics_in_rank.items():
                 log.warning("process statistics in iteration, iteration_id is: %s", iteration_id)
-                for _, statistic in statistics_in_iteration.items():
-                    if isinstance(statistic, TensorStatistic):
-                        self._put_tensor_statistic_to_summarystatistics(statistic, summary_statistics, overflow_value)
-                    else:
-                        self._put_dict_statistic_to_summarystatistics(statistic, summary_statistics, overflow_value)
+                for tensor_name, statistics_for_name in statistics_in_iteration.items():
+                    for statistic in statistics_for_name:
+                        if isinstance(statistic, TensorStatistic):
+                            self._put_tensor_statistic_to_summarystatistics(statistic, summary_statistics,
+                                                                            overflow_value)
+                        else:
+                            self._put_dict_statistic_to_summarystatistics(statistic, summary_statistics, overflow_value)
+                    summary_statistic = summary_statistics.get(tensor_name, SummaryStatistic())
+                    summary_statistic.total_iterations += 1
         self._export_to_disk(summary_statistics, out_path)
 
     def _put_dict_statistic_to_summarystatistics(self, statistic, summary_statistics, overflow_value=65500):
@@ -498,17 +512,17 @@ class DumpAnalyzer:
         if not summary_statistic.tensor_name:
             summary_statistic.tensor_name = tensor_name
             summary_statistics[tensor_name] = summary_statistic
-        summary_statistic.total_dump_iterations += 1
+        summary_statistic.total_number += 1
         if int(positive_inf_count) > 0 or int(negative_inf_count) > 0:
-            summary_statistic.inf_iterations += 1
+            summary_statistic.inf_number += 1
         if int(nan_count) > 0:
-            summary_statistic.nan_iterations += 1
+            summary_statistic.nan_number += 1
         if abs(float(min_value)) > overflow_value or abs(float(max_value)) > overflow_value:
-            summary_statistic.out_of_range_iterations += 1
+            summary_statistic.out_of_range_number += 1
             has_out_of_range = True
         if int(positive_inf_count) == 0 and int(negative_inf_count) == 0 and int(
                 nan_count) == 0 and not has_out_of_range:
-            summary_statistic.normal_iterations += 1
+            summary_statistic.none_overflow_number += 1
 
     def _put_tensor_statistic_to_summarystatistics(self, statistic, summary_statistics, overflow_value=65500):
         """Put tensor_statistic to summarized statistics, used for TensorStatistic from tensor file."""
@@ -528,17 +542,17 @@ class DumpAnalyzer:
         if not summary_statistic.tensor_name:
             summary_statistic.tensor_name = tensor_name
             summary_statistics[tensor_name] = summary_statistic
-        summary_statistic.total_dump_iterations += 1
+        summary_statistic.total_number += 1
         if statistic.positive_inf_count > 0 or statistic.negative_inf_count > 0:
-            summary_statistic.inf_iterations += 1
+            summary_statistic.inf_number += 1
         if statistic.nan_count > 0:
-            summary_statistic.nan_iterations += 1
+            summary_statistic.nan_number += 1
         if abs(min_value) > overflow_value or abs(max_value) > overflow_value:
-            summary_statistic.out_of_range_iterations += 1
+            summary_statistic.out_of_range_number += 1
             has_out_of_range = True
         if statistic.positive_inf_count == 0 and statistic.negative_inf_count == 0 and statistic.nan_count == 0 and \
                 not has_out_of_range:
-            summary_statistic.normal_iterations += 1
+            summary_statistic.none_overflow_number += 1
 
     def _export_to_disk(self, tensor_statistics, out_path="./"):
         """
@@ -572,13 +586,13 @@ class DumpAnalyzer:
         modes = stat.S_IWUSR | stat.S_IRUSR
         with os.fdopen(os.open(statistic_file_path, flags, modes), 'w', newline='') as f:
             csv_writer = csv.writer(f)
-            statistic_header = ["op_type", "op_name", "tensor_name", "inf_iterations", "nan_iterations",
-                                "out_of_range_iterations", "total_dump_iterations", "normal_iterations"]
+            statistic_header = ["op_type", "op_name", "tensor_name", "inf_number", "nan_number",
+                                "out_of_range_number", "total_number", "none_overflow_number", "total_iterations"]
             csv_writer.writerow(statistic_header)
             for _, statistic in tensor_statistics.items():
                 statistic_line = [statistic.op_type, statistic.op_name, statistic.tensor_name,
-                                  statistic.inf_iterations, statistic.nan_iterations, statistic.out_of_range_iterations,
-                                  statistic.total_dump_iterations, statistic.normal_iterations]
+                                  statistic.inf_number, statistic.nan_number, statistic.out_of_range_number,
+                                  statistic.total_number, statistic.none_overflow_number, statistic.total_iterations]
                 csv_writer.writerow(statistic_line)
         log.info("export summarised statistics to file: %s", statistic_file_path)
 
