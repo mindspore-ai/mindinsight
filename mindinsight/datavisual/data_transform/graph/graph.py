@@ -467,7 +467,8 @@ class Graph:
 
             node = self._get_normal_node(node_name=name)
             self._normal_node_map.pop(name)
-            self._node_id_map_name.pop(node.node_id)
+            if self._node_id_map_name.get(node.node_id):
+                self._node_id_map_name.pop(node.node_id)
 
     def _update_node_name_of_cache(self, node, new_name, update_parent=False):
         """
