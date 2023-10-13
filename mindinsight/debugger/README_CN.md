@@ -20,4 +20,4 @@ MindSpore Debugger是为图模式训练提供的调试工具，可以用来查�
 
 ## Debugger使用方法
 
-MindSpore Debugger的使用方法，请参考<https://www.mindspore.cn/mindinsight/docs/zh-CN/master/debugger.html>。
+MindSpore Debugger的使用方法，请参考<https://www.mindspore.cn/mindinsight/docs/zh-CN/r2.2/debugger.html>。
