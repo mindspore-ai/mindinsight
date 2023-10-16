@@ -282,7 +282,7 @@ class TensorUtils:
             tensor_max = ma_value.max()
         tensor_sum = ma_value.sum(dtype=np.float64)
         neg_zero_count, pos_zero_count, zero_count = TensorUtils._np_count_comp_zero(ma_value)
-        statistics = Statistics({'is_bool': tensors.dtype == np.bool,
+        statistics = Statistics({'is_bool': tensors.dtype == bool,
                                  'max_value': tensor_max,
                                  'min_value': tensor_min,
                                  'avg_value': tensor_sum / valid,
