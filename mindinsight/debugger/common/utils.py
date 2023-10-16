@@ -35,7 +35,7 @@ from mindinsight.utils.tensor import Statistics
 
 # translate the MindSpore type to numpy type.
 NUMPY_TYPE_MAP = {
-    'DT_BOOL': np.bool_,
+    'DT_BOOL': bool,
 
     'DT_INT8': np.int8,
     'DT_INT16': np.int16,
