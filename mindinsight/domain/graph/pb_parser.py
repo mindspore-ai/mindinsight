@@ -50,7 +50,7 @@ class PBParser(Parser):
             self.proto.DT_BASE_FLOAT: MindSporeType.FLOAT,
         }
         self.numpy_type_mapping = {
-            self.proto.DT_BOOL: np.bool,
+            self.proto.DT_BOOL: bool,
 
             self.proto.DT_INT8: np.int8,
             self.proto.DT_INT16: np.int16,
@@ -61,7 +61,7 @@ class PBParser(Parser):
             self.proto.DT_FLOAT32: np.float32,
             self.proto.DT_FLOAT64: np.float64,
 
-            self.proto.DT_STRING: np.str
+            self.proto.DT_STRING: str
         }
         self.int_types = (
             self.proto.DT_INT8,
