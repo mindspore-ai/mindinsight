@@ -2,6 +2,32 @@
 
 [View English](./RELEASE.md)
 
+## MindSpore MindInsight 2.2.0 Release Notes
+
+### 主要特性和增强
+
+#### Profiler
+
+- [STABLE] Profiler支持收集自定义AICPU 算子耗时。
+- [Beta] 支持多卡的timeline数据合并能力。
+
+#### Dump
+
+- [Beta] 提供溢出算子的统计能力。
+
+### Bug fixes
+
+- [I7J1LF] 修复Profiler解析数据报IndexError问题。
+- [I82CGQ] 修复溢出检测报core dump问题。
+
+### 贡献者
+
+感谢以下人员做出的贡献:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, Yang Luo, TianCi Xiao, DaWei Fan.
+
+欢迎以任何形式对项目提供贡献！
+
 ## MindSpore Insight 2.1.0 Release Notes
 
 ### 主要特性和增强
