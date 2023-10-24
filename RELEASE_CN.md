@@ -14,8 +14,6 @@
 #### Dump
 
 - [Beta] 提供溢出算子的统计能力。
-- [Beta] Dump支持Ascend 910B。
-- [Beta] 算子溢出检测支持Ascend 910B。
 
 ### Bug fixes
 

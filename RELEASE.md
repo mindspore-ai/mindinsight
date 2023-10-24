@@ -14,8 +14,6 @@
 #### Dump
 
 - [Beta] Provides statistical capabilities for overflow operators.
-- [Beta] Dump supports Ascend 910B.
-- [Beta] Operator overflow detection supports Ascend 910B.
 
 ### Bug fixes
 
