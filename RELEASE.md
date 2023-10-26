@@ -2,6 +2,32 @@
 
 [查看中文](./RELEASE_CN.md)
 
+## MindSpore Insight 2.2.0 Release Notes
+
+### Major Features and Improvements
+
+#### Profiler
+
+- [STABLE] Profiler supports collecting custom AICPU operator time consumption.
+- [Beta] Supports timeline data merging capabilities of multiple cards.
+
+#### Dump
+
+- [Beta] Provides statistical capabilities for overflow operators.
+
+### Bug fixes
+
+- [I7J1LF] Fixed the IndexError problem in Profiler parsing datagrams.
+- [I82CGQ] Fixed overflow detection reporting core dump issue.
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+ Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, Yang Luo, TianCi Xiao, DaWei Fan.
+
+Contributions of any kind are welcome!
+
 ## MindSpore Insight 2.1.0 Release Notes
 
 ### Major Features and Improvements
