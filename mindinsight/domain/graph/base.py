@@ -561,6 +561,12 @@ class NodeTypeEnum(enum.Enum):
     UPDATE_STATE = 'UpdateState'
 
 
+class AttributeType(enum.Enum):
+    """Refer to 'mind_ir_pb2.AttributeType' object"""
+    TENSORS='TENSORS'
+    TUPLE='TUPLE'
+
+
 class DebuggerSource(Source):
     """Source Data object"""
 

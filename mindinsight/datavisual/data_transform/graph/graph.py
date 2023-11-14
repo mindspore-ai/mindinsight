@@ -64,14 +64,23 @@ class Graph:
         self._leaf_nodes = {}
         self._full_name_map_name = {}
 
-    def build_graph(self, proto_data):
+    def build_graph(self, proto_data, mindir_graph=False):
         """This method is used to build the graph."""
         logger.info("Start to build graph")
         start_time = time.time()
 
         # Notice:
         # The following methods are interdependent and cannot be switched at will.
-        self._parse_data(proto_data)
+        if mindir_graph:
+            self._parse_mindir_data(proto_data.graph)
+            if hasattr(proto_data, 'functions'):
+                for function in proto_data.functions:
+                    self._parse_mindir_data(function)
+            self._update_input_after_create_node()
+            self._update_output_after_create_node()
+        else:
+            self._parse_data(proto_data)
+
         self._add_variable_nodes(NodeTypeEnum.PARAMETER.value)
         self._build_aggregation_scope_nodes()
         self._process_independent_layout()
@@ -195,6 +204,9 @@ class Graph:
         The graph is then built based on the cache.
         """
         raise NotImplementedError("Before you can build a graph, you need to parse the data.")
+
+    def _parse_mindir_data(self, proto_data):
+        raise NotImplementedError("Before you can build a graph, you need to parse the mindir data.")
 
     def _build_name_scope_nodes(self):
         """
@@ -585,3 +597,9 @@ class Graph:
                     input_attr = getattr(target_node, 'inputs')[subnode.name]
                     input_attr['independent_layout'] = True
                     target_node.add_inputs(subnode.name, input_attr)
+
+    def _update_input_after_create_node(self):
+        pass
+
+    def _update_output_after_create_node(self):
+        pass

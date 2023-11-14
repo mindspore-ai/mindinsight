@@ -66,7 +66,6 @@ class FileHandler:
         prefix_index = path.find("://")
         prefix = path[:prefix_index] if prefix_index >= 0 else ""
         file_system = _FILE_SYSTEMS.get(prefix, None)
-
         if file_system is None:
             raise ValueError("No filesystem can be found for prefix %s" % prefix)
         return file_system
