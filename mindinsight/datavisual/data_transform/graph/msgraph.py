@@ -25,7 +25,6 @@ from mindinsight.datavisual.proto_files.mindinsight_anf_ir_pb2 import DataType
 from mindinsight.domain.graph.base import NodeTypeEnum, DebuggerSource, AttributeType
 from mindinsight.datavisual.proto_files.mindinsight_mind_ir_pb2 import _TENSORPROTO_DATATYPE
 
-
 class MSGraph(Graph):
     """The object describes the MindSpore graph, and it is defined in the anf_ir proto file."""
     def _parse_data(self, proto_data):
@@ -494,7 +493,6 @@ class MSGraph(Graph):
         node.type=node_type
         if getattr(node_proto, 'source_address', None):
             node.stack = DebuggerSource.build_stack_from_source_address(node_proto.source_address)
-        self._parse_mindir_attributes(node_proto.attribute, node)
         self._parse_mindir_node_inputs(node_proto.input, node)
 
         node.scope = scope
@@ -603,17 +601,6 @@ class MSGraph(Graph):
             }
 
             node.add_inputs(src_name=input_proto, input_attr=input_attr)
-
-    def _parse_mindir_attributes(self, attributes, node):
-        """
-        Parse `mind_ir_pb2.AttributeProto` object., and Filters large attribute values.
-
-        Args:
-            attributes (list[mind_ir_pb2.AttributeProto]): Refer to `mind_ir_pb2.AttributeProto` object.
-            node (Node): Refer to `Node` object, it is used to log message and update attr.
-        """
-        for attr in attributes:
-            node.add_attr({attr.name: str(attr.tensors)})
 
     def _parse_mindir_constant(self, cst_proto):
         """
