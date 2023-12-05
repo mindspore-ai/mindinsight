@@ -13,9 +13,15 @@
 # limitations under the License.
 # ============================================================================
 """The Timeline Analyser."""
+import csv
 import json
 import os
 import glob
+import re
+import time
+from decimal import Decimal
+import logging as logger
+from concurrent.futures import ThreadPoolExecutor
 from marshmallow import ValidationError
 
 from mindinsight.profiler.analyser.base_analyser import BaseAnalyser
@@ -36,11 +42,11 @@ def get_absolute_ts_start_info(pro_path) -> float:
     if start_json:
         with open(start_json, "r+") as f:
             info = json.load(f)
-        ts_us = float(info.get("collectionTimeBegin", 0))
-        ts_ns = float(info.get("clockMonotonicRaw", 0))
+        ts_us = Decimal(info.get("collectionTimeBegin", 0)).quantize(Decimal('0.000'))
+        ts_ns = Decimal(info.get("clockMonotonicRaw", 0)).quantize(Decimal('0.000'))
         if not ts_us and not ts_ns:
             return 0
-        return ts_us - ts_ns / 1000
+        return ts_us - ts_ns / Decimal(1000)
     return 0
 
 
@@ -92,20 +98,19 @@ def get_timeline_info(prof_dirs):
 
 def get_job_dir(parent_path):
     job_path_list = glob.glob(fr'{parent_path}/PROF_*_*')
-    timeline_info = get_timeline_info(job_path_list)
-    return timeline_info
+    return get_timeline_info(job_path_list)
 
 
-def get_newest_file(file_list, split_num=4):
+def get_newest_file(file_list):
     new_file_list = {}
     for file_path in file_list:
-        key = '_'.join(file_path.split('/')[-1].split('_')[:split_num])
+        key = '_'.join(file_path.split('.')[0].split('/')[-1].split('_')[:-1])
         if key not in new_file_list or new_file_list[key] < file_path:
             new_file_list[key] = file_path
     return list(new_file_list.values())
 
 
-class MsprofTimelineAnalyser(BaseAnalyser):
+class MsprofTimelineOldAnalyser(BaseAnalyser):
     """
     Analyse timeline data from file.
     """
@@ -198,7 +203,8 @@ class MsprofTimelineAnalyser(BaseAnalyser):
                         event['name'] = f"{tids.get(event.get('tid'))} {event_name}"
 
                     if difference_ts and event.get('ts'):
-                        event['ts'] += difference_ts
+                        ts = Decimal(event.get('ts')).quantize(Decimal('0.000'))
+                        event['ts'] = str(ts + difference_ts)
 
                     event['tid'] = pid
 
@@ -312,7 +318,8 @@ class MsprofTimelineAnalyser(BaseAnalyser):
                         event['tid'] = tid_mapper.get(event.get('name'))
 
                         if difference_ts and event.get('ts'):
-                            event['ts'] += difference_ts
+                            ts = Decimal(event.get('ts')).quantize(Decimal('0.000'))
+                            event['ts'] = str(ts + difference_ts)
                         new_events.append(event)
             return new_events
 
@@ -387,7 +394,8 @@ class MsprofTimelineAnalyser(BaseAnalyser):
                     event['pid'] = pid
 
                     if difference_ts and event.get('ts'):
-                        event['ts'] += difference_ts
+                        ts = Decimal(event.get('ts')).quantize(Decimal('0.000'))
+                        event['ts'] = str(ts + difference_ts)
                     new_events.append(event)
 
             return new_events
@@ -464,7 +472,8 @@ class MsprofTimelineAnalyser(BaseAnalyser):
                     event['pid'] = pid
 
                     if difference_ts and event.get('ts'):
-                        event['ts'] += difference_ts
+                        ts = Decimal(event.get('ts')).quantize(Decimal('0.000'))
+                        event['ts'] = str(ts + difference_ts)
                     new_events.append(event)
 
             return new_events
@@ -550,7 +559,7 @@ class MsprofTimelineAnalyser(BaseAnalyser):
             if not file_list_hardware:
                 logger.error('Could not find ascend hardware file in %s/device_%s/timeline', job_dir, rank_id)
             else:
-                data_list.extend(self._parse_ascend_hardware_data(get_newest_file(file_list_hardware, 5),
+                data_list.extend(self._parse_ascend_hardware_data(get_newest_file(file_list_hardware),
                                                                   difference_ts))
 
             if not file_list_hccl:
@@ -627,6 +636,495 @@ class MsprofTimelineAnalyser(BaseAnalyser):
                 last_name_suffix = last_name.split(f'step_trace_')[-1]
                 model_id = last_name_suffix.split('_')[1]
                 model_set.add(int(model_id))
+            model_dict[rank_id] = model_set
+            model_merged.update(model_set)
+        return model_dict, model_merged
+
+    def get_option(self):
+        """
+        Get the option values
+        """
+        # get all job path, like PROF_*
+        sub_dirs = get_job_dir(self._profiling_dir)
+        rank_list = list(sub_dirs.keys())
+        rank_list.sort()
+
+        _, model_merged = self._get_models(sub_dirs)
+        model_list = list(model_merged)
+        model_list.sort()
+
+        return {'rank_list': rank_list, 'model_list': model_list}
+
+
+class MsprofTimelineAnalyser(BaseAnalyser):
+    """
+    Analyse timeline data from file.
+    """
+
+    def _load(self):
+        """Load data according to the parsed profiling files."""
+
+    def _filter(self, filter_condition):
+        """
+        Filter the profiling data according to the filter condition.
+
+        Args:
+            filter_condition (dict): The filter condition.
+        """
+
+    def _parse_step_trace_metadata(self, raw_data, model_list):
+        """
+        Get step trace by merge models
+        """
+        pattern1 = re.compile(r'Step Trace\(Model ID:(\d)+\)')
+        pattern2 = re.compile(r'(\d)+')
+        metadata = {}
+        pid = None
+        for event in raw_data:
+            if event.get("ph") != "M":
+                continue
+
+            if event.get('name') == 'process_name':
+                pid = event.get('pid')
+
+                if pid not in metadata:
+                    metadata[pid] = {}
+                continue
+
+            if event.get('name') == 'thread_name':
+                arg_name = event.get('args', {}).get('name')
+                arg_name = re.search(pattern1, arg_name)
+                if not arg_name:
+                    continue
+                model_id = re.search(pattern2, arg_name.group())
+                if not model_id:
+                    continue
+                model_id = model_id.group()
+                tid = event.get('tid')
+                if not model_list or int(model_id) in model_list:
+                    metadata[event.get('pid')][tid] = f'Model {model_id}'
+
+        return metadata, pid
+
+    def _parse_step_trace_merge(self, rank_id, old_pid, new_pid, raw_data, metadata, difference_ts):
+        """parse data with merge model mode """
+
+        new_events = [{
+            "name": "process_name",
+            "pid": new_pid,
+            "args": {
+                "name": f"Step Trace Rank{rank_id}"
+            },
+            "ph": "M"
+        }, {
+            "name": "thread_name",
+            "pid": new_pid,
+            "tid": 0,
+            "args": {
+                "name": "iterations"
+            },
+            "ph": "M"
+        }]
+
+        for event in raw_data:
+            arg_name = metadata.get(old_pid, {}).get(event.get('tid'))
+            if event.get('ph') == 'M' or event.get('pid') != old_pid or not arg_name:
+                continue
+
+            event_name = event.get('name').strip()
+            if event.get('ph') == 'X' and event_name.startswith('Iteration') and len(
+                    event_name.split(' ')) == 2:
+                event['name'] = f"{arg_name} {event_name}"
+
+            if difference_ts and event.get('ts'):
+                ts = Decimal(event.get('ts')).quantize(Decimal('0.000'))
+                event['ts'] = str(ts + difference_ts)
+            event['pid'] = new_pid
+            event['tid'] = 0
+            new_events.append(event)
+        return new_events
+
+    def _parse_step_trace_notmerge(self, rank_id, old_pid, new_pid, raw_data, metadata, difference_ts):
+        """parse data with not merge model mode """
+
+        new_events = []
+        for event in raw_data:
+            arg_name = metadata.get(old_pid, {}).get(event.get('tid'))
+            if event.get('pid') != old_pid or not arg_name:
+                continue
+            if event.get('name') == 'process_name' and event.get('ph') == 'M':
+                event['args']['name'] = f"Step Trace Rank{rank_id}"
+
+            event['pid'] = new_pid
+
+            if difference_ts and event.get('ts'):
+                ts = Decimal(event.get('ts')).quantize(Decimal('0.000'))
+                event['ts'] = str(ts + difference_ts)
+            new_events.append(event)
+        return new_events
+
+    def _parse_step_trace_data(self, file_list, rank_id, difference_ts, model_list, merge_model):
+        """
+        parse step trace data
+        """
+        try:
+            flags = os.O_RDONLY
+            raw_data = []
+            for file_path in file_list:
+                with os.fdopen(os.open(file_path, flags, 0o400), 'r') as fr:
+                    raw_data.extend(json.load(fr))
+
+            metadata, old_pid = self._parse_step_trace_metadata(raw_data, model_list)
+            if not metadata:
+                logger.error('Could not found process_name pid. method: _parse_step_trace_data')
+                return []
+
+            new_pid = int(f'2{rank_id}')
+            if merge_model:
+                return self._parse_step_trace_merge(rank_id, old_pid, new_pid, raw_data, metadata, difference_ts)
+            return self._parse_step_trace_notmerge(rank_id, old_pid, new_pid, raw_data, metadata, difference_ts)
+        except ValidationError as err:
+            logger.error('parse_step_trace_data failed! please theck. detail: %s', err)
+            raise ValidationError from err
+
+        except (IOError, OSError, json.JSONDecodeError) as err:
+            logger.error('parse_step_trace_data failed! please theck. detail: %s', err)
+            return []
+
+    def _parse_overlap_analysis_data(self, file_list, rank_id, difference_ts):
+        """
+        parse overlap analysis data
+        """
+        try:
+            flags = os.O_RDONLY
+            raw_data = []
+            for file_path in file_list:
+                with os.fdopen(os.open(file_path, flags, 0o400), 'r') as fr:
+                    raw_data.extend(json.load(fr))
+
+            pid = None
+            for event in raw_data:
+                if event.get('name') == 'process_name' and event.get("ph") == "M" and \
+                        event.get('args').get('name') == 'Overlap Analysis':
+                    pid = event.get('pid')
+                    break
+
+            if not pid:
+                print('Could not found process_name pid. method: _parse_overlap_analysis_data')
+                return []
+
+            new_events = []
+            new_pid = int(f'1{rank_id}')
+            for event in raw_data:
+                if event.get('pid') != pid:
+                    continue
+
+                if event.get('name') == 'process_name' and event.get("ph") == "M":
+                    event["args"]["name"] += f" Rank{rank_id}"
+
+                event['pid'] = new_pid
+                if difference_ts and event.get('ts'):
+                    ts = Decimal(event.get('ts')).quantize(Decimal('0.000'))
+                    event['ts'] = str(ts + difference_ts)
+
+                new_events.append(event)
+
+            return new_events
+
+        except ValidationError as err:
+            print('parse_overlap_analysis_data failed! please theck. detail: %s', err)
+            raise ValidationError from err
+
+        except (IOError, OSError, json.JSONDecodeError) as err:
+            print('parse_overlap_analysis_data failed! please theck. detail: %s', err)
+            return []
+
+    def _parse_ascend_hardware_data(self, file_list, rank_id, difference_ts, model_list):
+        """
+        parse ascend hardware data
+        """
+        try:
+            flags = os.O_RDONLY
+            raw_data = []
+            for file_path in file_list:
+                with os.fdopen(os.open(file_path, flags, 0o400), 'r') as fr:
+                    raw_data.extend(json.load(fr))
+
+            new_events = []
+            pid = None
+            tid_mapper = {}
+            tid_set = set()
+            new_pid = int(f'3{rank_id}')
+            for event in raw_data:
+                if event.get('name') == 'process_name' and event.get("ph") == "M" and \
+                        event.get('args').get('name') == 'Ascend Hardware':
+                    pid = event.get('pid')
+                    continue
+
+                if event.get('name') == 'thread_name' and event.get("ph") == "M" and \
+                        'Stream' in event.get('args').get('name'):
+                    event['pid'] = new_pid
+                    tid_mapper.update({event.get('tid'): event})
+                    continue
+
+                if event.get("ph") != "M":
+                    model_id = event.get('args', {}).get('Model Id')
+                    tid = event.get('tid')
+                    if model_list and model_id not in model_list:
+                        continue
+
+                    if difference_ts and event.get('ts'):
+                        ts = Decimal(event.get('ts')).quantize(Decimal('0.000'))
+                        event['ts'] = str(ts + difference_ts)
+                    event['pid'] = new_pid
+                    tid_set.add(tid)
+                    new_events.append(event)
+
+            if not pid:
+                logger.error('Could not found process_name pid. method: _parse_ascend_hardware_data')
+                return []
+
+            new_metadata = [{
+                "name": "process_name",
+                "pid": new_pid,
+                "args": {
+                    "name": f"Ascend Hardware Rank{rank_id}"
+                },
+                "ph": "M"
+            }]
+
+            for tid in tid_set:
+                new_metadata.append(tid_mapper.get(tid))
+
+            return new_metadata + new_events
+
+        except ValidationError as err:
+            logger.error('parse_ascend_hardware_data failed! please theck. detail: %s', err)
+            raise ValidationError from err
+
+        except (IOError, OSError, json.JSONDecodeError) as err:
+            logger.error('parse_ascend_hardware_data failed! please theck. detail: %s', err)
+            return []
+
+    def _parse_hccl_data(self, file_list, rank_id, difference_ts, model_list):
+        """
+        parse hccl data
+        """
+        try:
+            flags = os.O_RDONLY
+            raw_data = []
+            for file_path in file_list:
+                with os.fdopen(os.open(file_path, flags, 0o400), 'r') as fr:
+                    raw_data.extend(json.load(fr))
+
+            pid = None
+            tid_mapper = {}
+            tid_set = set()
+            new_events = []
+            new_pid = int(f'4{rank_id}')
+            for event in raw_data:
+                if event.get('name') == 'process_name' and event.get("ph") == "M" and \
+                        event.get('args').get('name') == 'HCCL':
+                    pid = event.get('pid')
+                    continue
+
+                if event.get('name') == 'thread_name' and event.get("ph") == "M" and \
+                        ('Plane' in event.get('args').get('name') or 'Communication' in event.get('args').get('name')):
+                    event['pid'] = new_pid
+                    tid_mapper.update({event.get('tid'): event})
+                    continue
+
+                if event.get("ph") != "M":
+                    model_id = event.get('args', {}).get('model id')
+                    tid = event.get('tid')
+                    if model_list and model_id not in model_list:
+                        continue
+
+                    if difference_ts and event.get('ts'):
+                        ts = Decimal(event.get('ts')).quantize(Decimal('0.000'))
+                        event['ts'] = str(ts + difference_ts)
+
+                    event['pid'] = new_pid
+                    tid_set.add(tid)
+                    new_events.append(event)
+
+            if not pid:
+                logger.error('Could not found process_name pid. method: _parse_hccl_data')
+                return []
+
+            new_metadata = [{
+                "name": "process_name",
+                "pid": new_pid,
+                "args": {
+                    "name": f"HCCL Rank{rank_id}"
+                },
+                "ph": "M"
+            }]
+
+            for tid in tid_set:
+                new_metadata.append(tid_mapper.get(tid))
+
+            return new_metadata + new_events
+
+        except ValidationError as err:
+            logger.error('parse_hccl_data failed! please theck. detail: %s', err)
+            raise ValidationError from err
+
+        except (IOError, OSError, json.JSONDecodeError) as err:
+            logger.error('parse_hccl_data failed! please theck. detail: %s', err)
+            return []
+
+    def _get_summary_timeline_data(self, sub_dirs, merge_model):
+        """
+        Get summary timeline
+        Returns:
+            json, the content of timeline data.
+        """
+        task_list = []
+        timeline_data = []
+        with ThreadPoolExecutor() as pool:
+            for rank_id, (job_dir, difference_ts) in sub_dirs.items():
+
+                # get step trace
+                step_trace_file_name = fr'{job_dir}/timeline/step_trace_*.json'
+                file_list = glob.glob(step_trace_file_name)
+                if not file_list:
+                    logger.error('Could not find step trace file in %s/device_%s/timeline', job_dir, rank_id)
+                else:
+                    task_list.append(pool.submit(self._parse_step_trace_data, get_newest_file(file_list),
+                                                 rank_id, difference_ts, None,
+                                                 merge_model))
+
+                # get overlap analysis
+                overlap_file_name = fr'{job_dir}/timeline/msprof_*.json'
+                file_list = glob.glob(overlap_file_name)
+
+                if not file_list:
+                    logger.error('Could not find overlap analysis file in %s/device_%s/timeline', job_dir, rank_id)
+                else:
+                    task_list.append(pool.submit(self._parse_overlap_analysis_data, get_newest_file(file_list),
+                                                 rank_id, difference_ts))
+
+            all_done = list(range(len(task_list)))
+            print(all_done)
+            while all_done:
+                for ind, t in enumerate(task_list):
+                    if ind in all_done and t.done():
+                        timeline_data.extend(t.result())
+                        all_done.remove(ind)
+
+        return timeline_data
+
+    def _get_detail_timeline_data(self, sub_dirs, model_list, merge_model):
+        """
+        Get detail timeline
+        Returns:
+            json, the content of timeline data.
+        """
+
+        timeline_data = []
+        task_list = []
+        with ThreadPoolExecutor() as pool:
+            for rank_id, (job_dir, difference_ts) in sub_dirs.items():
+
+                # get step_trace data
+                step_trace_file_name = fr'{job_dir}/timeline/step_trace_*.json'
+                file_list_step_trace = glob.glob(step_trace_file_name)
+                if not file_list_step_trace:
+                    logger.error('Could not find step trace file in %s/device_%s/timeline', job_dir, rank_id)
+                else:
+                    task_list.append(pool.submit(self._parse_step_trace_data, get_newest_file(file_list_step_trace),
+                                                 rank_id, difference_ts, model_list,
+                                                 merge_model))
+
+                    # timeline_data.extend(self._parse_step_trace_data(get_newest_file(file_list_step_trace),
+                    #                                                  rank_id, difference_ts, model_list,
+                    #                                                  merge_model))
+
+                # get Ascend Hardware
+                hardware_file_name = fr'{job_dir}/timeline/task_time_*.json'
+                file_list_hardware = glob.glob(hardware_file_name)
+                if not file_list_hardware:
+                    logger.error('Could not find ascend hardware file in %s/device_%s/timeline', job_dir, rank_id)
+                else:
+                    task_list.append(pool.submit(self._parse_ascend_hardware_data, get_newest_file(file_list_hardware),
+                                                 rank_id, difference_ts, model_list))
+
+                    # timeline_data.extend(self._parse_ascend_hardware_data(get_newest_file(file_list_hardware),
+                    #                                                       rank_id, difference_ts, model_list))
+
+                # get hccl
+                hccl_file_name = fr'{job_dir}/timeline/hccl_*.json'
+                file_list_hccl = glob.glob(hccl_file_name)
+                if not file_list_hccl:
+                    logger.error('Could not find hccl file in %s/device_%s/timeline', job_dir, rank_id)
+                else:
+                    task_list.append(pool.submit(self._parse_hccl_data, get_newest_file(file_list_hccl),
+                                                 rank_id, difference_ts, model_list))
+
+                    # timeline_data.extend(self._parse_hccl_data(get_newest_file(file_list_hccl),
+                    #                                            rank_id, difference_ts, model_list))
+
+            all_done = list(range(len(task_list)))
+            print(all_done)
+            while all_done:
+                for ind, t in enumerate(task_list):
+                    if ind in all_done and t.done():
+                        timeline_data.extend(t.result())
+                        all_done.remove(ind)
+
+        return timeline_data
+
+    def get_merged_timeline(self, rank_list, model_list, kind, merge_model=True):
+        """
+        Get the merged timeline
+        """
+
+        # get all job path, like PROF_*
+        sub_dirs = get_job_dir(self._profiling_dir)
+
+        if rank_list:
+            new_sub_dirs = {}
+            for key, value in sub_dirs.items():
+                if key in rank_list:
+                    new_sub_dirs[key] = value
+            sub_dirs = new_sub_dirs
+
+        if not sub_dirs:
+            logger.error('Could not found any rank from %s', rank_list)
+            return []
+
+        if kind == 'summary':
+            start = time.time()
+            summary_data = self._get_summary_timeline_data(sub_dirs, merge_model)
+            print(time.time() - start)
+            return summary_data
+
+        if kind == 'detail':
+            start = time.time()
+            detail_data = self._get_detail_timeline_data(sub_dirs, model_list, merge_model)
+            print(time.time() - start)
+            return detail_data
+        return []
+
+    def _get_models(self, sub_dirs):
+        """
+        Get all models
+        """
+        model_dict = {}
+        model_merged = set()
+        for rank_id, (job_dir, _) in sub_dirs.items():
+            step_trace_file_name = fr'{job_dir}/summary/step_trace_*.csv'
+            file_list = glob.glob(step_trace_file_name)
+            file_name = max(file_list)
+            model_set = set()
+            with open(file_name, 'r', newline='') as fr:
+                reader = csv.DictReader(fr, delimiter=',', quotechar='"')
+                for row in reader:
+                    model_id = row.get('Model ID')
+                    if model_id:
+                        model_set.add(int(model_id))
+
             model_dict[rank_id] = model_set
             model_merged.update(model_set)
         return model_dict, model_merged
