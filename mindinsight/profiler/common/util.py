@@ -251,6 +251,25 @@ def get_profile_data_version(profiler_dir):
     return {}
 
 
+def get_all_export_flag(profiler_dir):
+    """ get the flag what means whether support all-export mode. """
+
+    profile_info_pattern = re.compile(r"profiler_info_(\d+).json")
+    profile_info_file = None
+    for f_name in os.listdir(profiler_dir):
+        re_match = re.match(profile_info_pattern, f_name)
+        if re_match:
+            profile_info_file = re_match.group()
+            break
+    if profile_info_file:
+        full_path = os.path.join(profiler_dir, profile_info_file)
+        with open(full_path, 'r') as fr:
+            data = json.load(fr)
+        return data.get('all_export', False)
+
+    return False
+
+
 def get_parallel_message(profiler_dir):
     """get the parallel message"""
 
