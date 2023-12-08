@@ -2,6 +2,20 @@
 
 [查看中文](./RELEASE_CN.md)
 
+## MindSpore Insight 2.2.1 Release Notes
+
+### Bug fixes
+
+- [I88AN5] MindSpore Insight adapts to Numpy version higher than 1.20.0.
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, Yang Luo, TianCi Xiao, DaWei Fan.
+
+Contributions of any kind are welcome!
+
 ## MindSpore Insight 2.2.0 Release Notes
 
 ### Major Features and Improvements

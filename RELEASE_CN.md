@@ -2,7 +2,21 @@
 
 [View English](./RELEASE.md)
 
-## MindSpore MindInsight 2.2.0 Release Notes
+## MindSpore Insight 2.2.1 Release Notes
+
+### Bug fixes
+
+- [I88AN5] MindSpore Insight适配Numpy高于1.20.0版本。
+
+### 贡献者
+
+感谢以下人员做出的贡献:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, Yang Luo, TianCi Xiao, DaWei Fan.
+
+欢迎以任何形式对项目提供贡献！
+
+## MindSpore Insight 2.2.0 Release Notes
 
 ### 主要特性和增强
 
