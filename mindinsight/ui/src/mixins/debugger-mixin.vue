@@ -624,6 +624,7 @@ export default {
               if (res.data.metadata.state === this.state.node_too_large) {
                 this.dialogVisible = true;
                 this.nodeDataIsLarge = true;
+                this.maxGraphNodeSize = res.data.metadata.max_graph_node_size;
                 return;
               }
               this.dealMetadata(res.data.metadata);

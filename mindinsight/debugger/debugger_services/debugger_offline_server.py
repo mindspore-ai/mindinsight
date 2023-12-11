@@ -231,6 +231,7 @@ class DebuggerOfflineManager:
         try:
             graphs = self._data_loader.load_graphs(threshold=settings.MAX_GRAPH_NODE_SIZE)
         except DebuggerNodeTooLarge as err:
+            self._metadata_stream.max_graph_node_size = settings.MAX_GRAPH_NODE_SIZE
             self._update_state(ServerStatus.NODE_TOO_LARGE)
             log.exception(err)
             return
