@@ -373,6 +373,132 @@ limitations under the License.
     </div>
     <!-- Time line display area -->
     <div class="dashboard-item">
+
+      <!-- Msprof time line detail -->
+      <div class="item-head" v-if="!isPynative">
+        <div class="title">{{ $t('profiling.timeLineMsprof') }}</div>
+        <div class="tip-icon">
+          <el-tooltip placement="bottom"
+                      effect="light">
+            <div slot="content"
+                 class="tooltip-container">
+              <div class="pro-dash-tooltip">
+                <div class="font-size-style">{{$t("profiling.features")}}</div>
+                <div class="font-style">{{$t("profiling.timelineMsprofTips.title1")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content11")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content12")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content13")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content14")}}</div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineMsprofTips.title2")}}</div>
+                <div>
+                  {{$t("profiling.timelineMsprofTips.content21.part1")}}
+                  <b>{{$t("profiling.timelineMsprofTips.content21.part2")}}</b>
+                  {{$t("profiling.timelineMsprofTips.content21.part3")}}
+                </div>
+                <div>{{$t("profiling.timelineMsprofTips.content22")}}</div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineMsprofTips.title3")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content31")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content32")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content33")}}</div>
+                <br>
+                <div class="font-style">{{$t("profiling.timelineMsprofTips.title4")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content41")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content42")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content43")}}</div>
+                <div>{{$t("profiling.timelineMsprofTips.content44")}}</div>
+              </div>
+            </div>
+            <i class="el-icon-info"></i>
+          </el-tooltip>
+        </div>
+        <div class="view-detail">
+          <button @click="queryMsprofTimeline()"
+                  v-show="!timeLineMsprof.waiting"
+                  :disabled="timeLineMsprof.disable"
+                  :class="{disabled:timeLineMsprof.disable}">{{ $t('profiling.downloadTimeline') }}
+          </button>
+          <div class="el-icon-loading loading-icon"
+               v-show="timeLineMsprof.waiting"></div>
+        </div>
+      </div>
+
+      <!-- Msprof time line detail -->
+      <div class="item-content time-line"
+           v-if="!timelineInfoMsprof.noData && !isPynative">
+        <div class="msprof_timeline">
+          <span>{{$t('profiling.rankList')}}</span>
+          <span>
+            <el-select
+              v-model="timelineInfoMsprof.rankListSelected"
+              :placeholder="$t('profiling.select')"
+              multiple
+              collapse-tags>
+              <el-option
+                v-for="item in timelineInfoMsprof.rankList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value">
+              </el-option>
+            </el-select>
+          </span>
+        </div>
+        <div class="msprof_timeline" v-show="timelineInfoMsprof.kindSelected=='detail'">
+          <span>{{$t('profiling.modelList')}}</span>
+          <span>
+            <el-select
+              v-model="timelineInfoMsprof.modelListSelected"
+              :placeholder="$t('profiling.select')"
+              multiple
+              collapse-tags>
+              <el-option
+                v-for="item in timelineInfoMsprof.modelList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value">
+              </el-option>
+            </el-select>
+          </span>
+        </div>
+        <div class="msprof_timeline">
+          <span>{{$t('profiling.kind')}}</span>
+          <span>
+            <el-select v-model="timelineInfoMsprof.kindSelected"
+                       :placeholder="$t('public.select')">
+              <el-option v-for="item in timelineInfoMsprof.kindArr"
+                         :key="item.value"
+                         :label="item.label"
+                         :value="item.value">
+              </el-option>
+            </el-select>
+          </span>
+        </div>
+        <div class="msprof_timeline">
+          <span>{{$t('profiling.mergeModel')}}</span>
+          <span>
+            <el-select v-model="timelineInfoMsprof.mergeModelSelected"
+                       :placeholder="$t('public.select')">
+              <el-option v-for="item in timelineInfoMsprof.mergeModelArr"
+                         :key="item.value"
+                         :label="item.label"
+                         :value="item.value">
+              </el-option>
+            </el-select>
+          </span>
+        </div>
+      </div>
+      <!-- Msprof time line no data -->
+      <div class="image-noData"
+           v-if="timelineInfoMsprof.noData && !isPynative">
+        <div>
+          <img :src="require('@/assets/images/nodata.png')"
+               alt="" />
+        </div>
+        <p v-show="!timelineInfoMsprof.initOver">{{$t("public.dataLoading")}}</p>
+        <p v-show="timelineInfoMsprof.initOver">{{$t("public.noData")}}</p>
+      </div>
+
       <div class="item-head">
         <div class="title">{{ $t('profiling.timeLine') }}</div>
         <div class="tip-icon">
@@ -507,132 +633,6 @@ limitations under the License.
         <p v-show="!timelineInfo.initOver">{{$t("public.dataLoading")}}</p>
         <p v-show="timelineInfo.initOver">{{$t("public.noData")}}</p>
       </div>
-
-      <!-- Msprof time line detail -->
-      <div class="item-head" v-if="!isPynative">
-        <div class="title">{{ $t('profiling.timeLineMsprof') }}</div>
-        <div class="tip-icon">
-          <el-tooltip placement="bottom"
-                      effect="light">
-            <div slot="content"
-                 class="tooltip-container">
-              <div class="pro-dash-tooltip">
-                <div class="font-size-style">{{$t("profiling.features")}}</div>
-                <div class="font-style">{{$t("profiling.timelineMsprofTips.title1")}}</div>
-                <div>{{$t("profiling.timelineMsprofTips.content11")}}</div>
-                <div>{{$t("profiling.timelineMsprofTips.content12")}}</div>
-                <div>{{$t("profiling.timelineMsprofTips.content13")}}</div>
-                <div>{{$t("profiling.timelineMsprofTips.content14")}}</div>
-                <br>
-                <div class="font-style">{{$t("profiling.timelineMsprofTips.title2")}}</div>
-                <div>
-                  {{$t("profiling.timelineMsprofTips.content21.part1")}}
-                  <b>{{$t("profiling.timelineMsprofTips.content21.part2")}}</b>
-                  {{$t("profiling.timelineMsprofTips.content21.part3")}}
-                </div>
-                <div>{{$t("profiling.timelineMsprofTips.content22")}}</div>
-                <br>
-                <div class="font-style">{{$t("profiling.timelineMsprofTips.title3")}}</div>
-                <div>{{$t("profiling.timelineMsprofTips.content31")}}</div>
-                <div>{{$t("profiling.timelineMsprofTips.content32")}}</div>
-                <div>{{$t("profiling.timelineMsprofTips.content33")}}</div>
-                <br>
-                <div class="font-style">{{$t("profiling.timelineMsprofTips.title4")}}</div>
-                <div>{{$t("profiling.timelineMsprofTips.content41")}}</div>
-                <div>{{$t("profiling.timelineMsprofTips.content42")}}</div>
-                <div>{{$t("profiling.timelineMsprofTips.content43")}}</div>
-                <div>{{$t("profiling.timelineMsprofTips.content44")}}</div>
-              </div>
-            </div>
-            <i class="el-icon-info"></i>
-          </el-tooltip>
-        </div>
-        <div class="view-detail">
-          <button @click="queryMsprofTimeline()"
-                  v-show="!timeLineMsprof.waiting"
-                  :disabled="timeLineMsprof.disable"
-                  :class="{disabled:timeLineMsprof.disable}">{{ $t('profiling.downloadTimeline') }}
-          </button>
-          <div class="el-icon-loading loading-icon"
-               v-show="timeLineMsprof.waiting"></div>
-        </div>
-      </div>
-
-      <!-- Msprof time line detail -->
-      <div class="item-content time-line"
-           v-if="!timelineInfoMsprof.noData && !isPynative">
-        <div class="msprof_timeline">
-          <span>{{$t('profiling.rankList')}}</span>
-          <span>
-            <el-select
-              v-model="timelineInfoMsprof.rankListSelected"
-              :placeholder="$t('profiling.select')"
-              multiple
-              collapse-tags>
-              <el-option
-                v-for="item in timelineInfoMsprof.rankList"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value">
-              </el-option>
-            </el-select>
-          </span>
-        </div>
-        <div class="msprof_timeline">
-          <span>{{$t('profiling.modelList')}}</span>
-          <span>
-            <el-select
-              v-model="timelineInfoMsprof.modelListSelected"
-              :placeholder="$t('profiling.select')"
-              multiple
-              collapse-tags>
-              <el-option
-                v-for="item in timelineInfoMsprof.modelList"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value">
-              </el-option>
-            </el-select>
-          </span>
-        </div>
-        <div class="msprof_timeline">
-          <span>{{$t('profiling.kind')}}</span>
-          <span>
-            <el-select v-model="timelineInfoMsprof.kindSelected"
-                       :placeholder="$t('public.select')">
-              <el-option v-for="item in timelineInfoMsprof.kindArr"
-                         :key="item.value"
-                         :label="item.label"
-                         :value="item.value">
-              </el-option>
-            </el-select>
-          </span>
-        </div>
-        <div class="msprof_timeline">
-          <span>{{$t('profiling.mergeModel')}}</span>
-          <span>
-            <el-select v-model="timelineInfoMsprof.mergeModelSelected"
-                       :placeholder="$t('public.select')">
-              <el-option v-for="item in timelineInfoMsprof.mergeModelArr"
-                         :key="item.value"
-                         :label="item.label"
-                         :value="item.value">
-              </el-option>
-            </el-select>
-          </span>
-        </div>
-      </div>
-      <!-- Msprof time line no data -->
-      <div class="image-noData"
-           v-if="timelineInfoMsprof.noData && !isPynative">
-        <div>
-          <img :src="require('@/assets/images/nodata.png')"
-               alt="" />
-        </div>
-        <p v-show="!timelineInfoMsprof.initOver">{{$t("public.dataLoading")}}</p>
-        <p v-show="timelineInfoMsprof.initOver">{{$t("public.noData")}}</p>
-      </div>
-
 
     </div>
   </div>
