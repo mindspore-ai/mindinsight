@@ -2,9 +2,34 @@
 
 [View English](./RELEASE.md)
 
+## MindSpore Insight 2.2.10 Release Notes
+
+### 主要特性和增强
+
+#### Profiler
+
+- [Beta] profiler解析数据性能优化。
+
+#### Dump
+
+- [STABLE] mindspore.set_context新增异常dump使能参数exception_dump。
+
+### Bug Fixes
+
+- [I8KUKB] 修复print和summary算子从队列读取数据过程中销毁通道造成core dump的问题。
+- [I8M00H] 修复profiler时间线限定算子类型引起的解析错误。
+
+### 贡献者
+
+感谢以下人员做出的贡献:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, Yang Luo, TianCi Xiao, DaWei Fan.
+
+欢迎以任何形式对项目提供贡献！
+
 ## MindSpore Insight 2.2.1 Release Notes
 
-### Bug fixes
+### Bug Fixes
 
 - [I88AN5] MindSpore Insight适配Numpy高于1.20.0版本。
 
@@ -29,7 +54,7 @@ Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxian
 
 - [Beta] 提供溢出算子的统计能力。
 
-### Bug fixes
+### Bug Fixes
 
 - [I7J1LF] 修复Profiler解析数据报IndexError问题。
 - [I82CGQ] 修复溢出检测报core dump问题。
@@ -62,7 +87,7 @@ Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxian
 
 ## MindSpore Insight 2.0.0 Release Notes
 
-### Bug fixes
+### Bug Fixes
 
 - [I7BIKO] 修复cube和vector混合场景下Flops不准问题
 
@@ -90,7 +115,7 @@ Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Chuting 
 
 - [STABLE] Profiler算子耗时占比使用total time计算。
 
-### Bug fixes
+### Bug Fixes
 
 - 修复若干页面展示问题。
 
