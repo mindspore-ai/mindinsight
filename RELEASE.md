@@ -2,9 +2,34 @@
 
 [查看中文](./RELEASE_CN.md)
 
+## MindSpore Insight 2.2.10 Release Notes
+
+### Major Features and Improvements
+
+#### Profiler
+
+- [Beta] Profiler parsing data performance optimization.
+
+#### Dump
+
+- [STABLE] Mindspore.set_context adds exception dump enable parameter exception_dump.
+
+### Bug Fixes
+
+- [I8KUKB] Fixed the problem of core dump caused by destroying the channel when the print and summary operators read data from the queue.
+- [I8M00H] Fixed the parsing error caused by operator type limited by profiler timeline.
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, Yang Luo, TianCi Xiao, DaWei Fan.
+
+Contributions of any kind are welcome!
+
 ## MindSpore Insight 2.2.1 Release Notes
 
-### Bug fixes
+### Bug Fixes
 
 - [I88AN5] MindSpore Insight adapts to Numpy version higher than 1.20.0.
 
@@ -29,7 +54,7 @@ Contributions of any kind are welcome!
 
 - [Beta] Provides statistical capabilities for overflow operators.
 
-### Bug fixes
+### Bug Fixes
 
 - [I7J1LF] Fixed the IndexError problem in Profiler parsing datagrams.
 - [I82CGQ] Fixed overflow detection reporting core dump issue.
@@ -62,7 +87,7 @@ Contributions of any kind are welcome!
 
 ## MindSpore Insight 2.0.0 Release Notes
 
-### Bug fixes
+### Bug Fixes
 
 - [I7BIKO] Fix the inaccurate Flops problem in the mixed scene of cube and vector
 
@@ -90,7 +115,7 @@ Contributions of any kind are welcome!
 
 - [STABLE] The time-consuming ratio of the Profiler operator is calculated using total time.
 
-### Bug fixes
+### Bug Fixes
 
 - Fix some page display issues.
 
@@ -298,7 +323,7 @@ New start command options:
 | `-offline-debugger-mem-limit`        | Optional  | Specifies the maximum memory limit of a single offline debugger session. When the offline debugger cannot be executed due to insufficient memory, set it according to the device memory. | Integer | 16*1024       | 6*1024~The upper limit of int32 |
 | `--max-offline-debugger-session-num` | Optional  | Specifies the maximum session number of the offline debugger. The session number refers to the amount of training jobs that can be debugged at the same time.                            | Integer | 2             | 1~2                             |
 
-### Bug fixes
+### Bug Fixes
 
 - Wrong sorting of cards displayed on the single page and cluster.[!11801](https://gitee.com/mindspore/mindspore/pulls/11801)
 
@@ -328,7 +353,7 @@ Contributions of any kind are welcome!
 
 NA
 
-### Bug fixes
+### Bug Fixes
 
 ### Contributors
 
@@ -389,7 +414,7 @@ Determine whether collect communication performance information while profiling.
 
 NA
 
-### Bug fixes
+### Bug Fixes
 
 - Error information missing when running on an unsupported device (e.g, cpu).([!11801](https://gitee.com/mindspore/mindspore/pulls/11801))
 
@@ -451,7 +476,7 @@ The parameter `raise_exception` determines whether to throw an exception when an
 
 The pth format model is not supported anymore, please use ONNX to migrate.
 
-### Bug fixes
+### Bug Fixes
 
 - Error information missing when running on an unsupported device (e.g, cpu). [!11801](https://gitee.com/mindspore/mindspore/pulls/11801)
 
