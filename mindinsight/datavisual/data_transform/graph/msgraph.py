@@ -554,7 +554,8 @@ class MSGraph(Graph):
 
             input_shapes = []
             if input_proto.HasField('attr_info'):
-                node.output_data_type = self._get_data_type_name_by_value(input_proto.attr_info, input_proto.attr_info.type, 'type')
+                node.output_data_type = self._get_data_type_name_by_value(
+                    input_proto.attr_info, input_proto.attr_info.type, 'type')
                 node.output_shape = input_shapes
                 node.output_nums = len(node.output_shape)
                 attr = dict(
@@ -691,7 +692,8 @@ class MSGraph(Graph):
         Get data type by parse type proto object.
 
         The name of the AttributeType, refer to `mind_ir_pb2.AttributeProto`
-        If AttributeProto.type is `TENSORS` or `TUPLE`, the data name we return is `data_type[element_type, element_type]`.
+        If AttributeProto.type is `TENSORS` or `TUPLE`,
+        the data name we return is `data_type[element_type, element_type]`.
 
         Args:
             attr_proto: Refer to `mind_ir_pb2.AttributeProto`.
