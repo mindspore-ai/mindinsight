@@ -223,11 +223,13 @@ class _PbParser(_Parser):
             if not self._set_latest_file(filename):
                 continue
             future = executor.submit(self._parse_pb_file, self._summary_dir, filename)
+
             def add_tensor_event(future_value):
                 tensor_events = future_value.result()
                 for tensor_event in tensor_events:
                     if tensor_event is not None:
                         events_data.add_tensor_event(tensor_event)
+
             if future is not None:
                 future.add_done_callback(exception_no_raise_wrapper(add_tensor_event))
             return False
@@ -568,13 +570,14 @@ class _SummaryParser(_Parser):
 
 
 class _MindirParser(_Parser):
+    """This class is used to parse mindir graph file."""
     def __init__(self, summary_dir):
         super(_MindirParser, self).__init__(summary_dir)
         self._latest_mtime = 0
 
     def parse_files(self, executor, filenames, events_data):
-        mindir_filenames=self.filter_files(filenames)
-        mindir_filenames=self.sort_files(mindir_filenames)
+        mindir_filenames = self.filter_files(filenames)
+        mindir_filenames = self.sort_files(mindir_filenames)
         for filename in mindir_filenames:
             if not self._set_latest_file(filename):
                 continue
@@ -590,6 +593,7 @@ class _MindirParser(_Parser):
                 future.add_done_callback(exception_no_raise_wrapper(add_tensor_event))
             return False
         return True
+
     def filter_files(self, filenames):
         return list(filter(lambda filename: re.search(r'\.mindir$', filename), filenames))
 
@@ -631,7 +635,7 @@ class _MindirParser(_Parser):
         except ParseError:
             logger.warning("The given file is not a valid mindir file, file path: %s.", file_path)
             return None
-        ret_tensor_events = build_graph_events(model_proto, filename, 0, FileHandler.file_stat(file_path).mtime,True)
+        ret_tensor_events = build_graph_events(model_proto, filename, 0, FileHandler.file_stat(file_path).mtime, True)
 
         logger.info("Build graph success, file path: %s.", file_path)
         return ret_tensor_events

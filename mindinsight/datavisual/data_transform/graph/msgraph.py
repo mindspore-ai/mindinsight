@@ -14,7 +14,6 @@
 # ============================================================================
 """This file is used to define the MindSpore graph."""
 import re
-import time
 
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.log import logger
@@ -25,8 +24,10 @@ from mindinsight.datavisual.proto_files.mindinsight_anf_ir_pb2 import DataType
 from mindinsight.domain.graph.base import NodeTypeEnum, DebuggerSource, AttributeType
 from mindinsight.datavisual.proto_files.mindinsight_mind_ir_pb2 import _TENSORPROTO_DATATYPE
 
+
 class MSGraph(Graph):
     """The object describes the MindSpore graph, and it is defined in the anf_ir proto file."""
+
     def _parse_data(self, proto_data):
         """
         The proto data is parsed and all nodes are stored in the specified structure.
@@ -434,7 +435,7 @@ class MSGraph(Graph):
         """
         logger.info("Start to parse graph proto data.")
 
-        self._parse_mindir_op_nodes(proto_data.node,proto_data.output)
+        self._parse_mindir_op_nodes(proto_data.node, proto_data.output)
         self._parse_mindir_graph_inputs(proto_data.input)
         self._parse_mindir_parameter(proto_data.parameter)
 
@@ -449,7 +450,7 @@ class MSGraph(Graph):
             node_protos (list[mind_ir_pb2.NodeProto]): Refer to mind_ir_pb2.NodeProto.
         """
         logger.debug("Start to parse output from graph.")
-        output_names=[]
+        output_names = []
         for output_proto in output_protos:
             output_names.append(output_proto.name)
 
@@ -458,7 +459,7 @@ class MSGraph(Graph):
             if not node_proto.name:
                 logger.warning("Finding a node with an empty name will not save it.")
                 continue
-            if node_proto.op_type=='Constant':
+            if node_proto.op_type == 'Constant':
                 self._parse_mindir_constant(node_proto)
                 continue
             self._parse_mindir_op_node(topological_index, node_proto, output_names)
@@ -468,7 +469,7 @@ class MSGraph(Graph):
         node_id = node_proto.name
         id_match = re.match(r"^(.*?_.*?)_", node_id)
         node_name = node_proto.domain
-        if id_match :
+        if id_match:
             graph_id = id_match.group(1)
             if '/' in node_name:
                 node_name = node_name[:node_name.find('/')] + '[' + graph_id + ']' + node_name[node_name.find('/'):]
@@ -477,20 +478,20 @@ class MSGraph(Graph):
 
         scope = node_name
         if '/' in scope:
-            scope=scope[:scope.rfind('/')]
+            scope = scope[:scope.rfind('/')]
 
         # The Graphviz plug-in that the UI USES can't handle these special characters.
         check_invalid_character(node_name)
         if node_id in output_names:
-            node_id=node_id[:node_id.find(':')]
+            node_id = node_id[:node_id.find(':')]
 
         node = Node(name=node_name, node_id=node_id, topological_index=topological_index)
         node.full_name = node_name
         node_type = node_proto.op_type
-        type_result=re.search(r'::(.*):',node_type)
+        type_result = re.search(r'::(.*):', node_type)
         if type_result:
-            node_type=type_result.group(1)
-        node.type=node_type
+            node_type = type_result.group(1)
+        node.type = node_type
         if getattr(node_proto, 'source_address', None):
             node.stack = DebuggerSource.build_stack_from_source_address(node_proto.source_address)
         self._parse_mindir_node_inputs(node_proto.input, node)
@@ -515,9 +516,9 @@ class MSGraph(Graph):
                 logger.warning("Finding a parameter with an empty name will not save it.")
                 continue
             check_invalid_character(parameter.name)
-            para_name=parameter.name
+            para_name = parameter.name
             if ':' in para_name:
-                para_name=para_name[para_name.rfind(':')+1:]
+                para_name = para_name[para_name.rfind(':') + 1:]
             node = Node(name=para_name, node_id=parameter.name)
             node.type = NodeTypeEnum.PARAMETER.value
             node.output_shape = [self._get_shape_by_parse_tensor_proto(parameter)]
@@ -534,50 +535,62 @@ class MSGraph(Graph):
                          "node def name: %s", node.node_id, node.name, parameter.name)
 
     def _parse_mindir_graph_inputs(self, input_protos):
-        for input in input_protos:
-            if not input.name:
+        """
+        Parse the inputs of mindir graph and create parameter nodes
+        Args:
+            input_protos: Refer to mind_ir_pb2.ValueInfoProto
+
+        """
+        for input_proto in input_protos:
+            if not input_proto.name:
                 logger.warning("The input proto of graph is empty, will ignore.")
                 continue
-            input_name=input.name
+            input_name = input_proto.name
             if ':' in input_name:
-                input_name=input_name[input_name.rfind(':')+1:]
+                input_name = input_name[input_name.rfind(':') + 1:]
             check_invalid_character(input_name)
-            node = Node(name=input_name, node_id=input.name)
+            node = Node(name=input_name, node_id=input_proto.name)
             node.type = NodeTypeEnum.PARAMETER.value
 
-            input_shapes=[]
-            if input.HasField('attr_info'):
-                node.output_data_type=self._get_data_type_name_by_value(input.attr_info,input.attr_info.type,'type')
+            input_shapes = []
+            if input_proto.HasField('attr_info'):
+                node.output_data_type = self._get_data_type_name_by_value(input_proto.attr_info, input_proto.attr_info.type, 'type')
                 node.output_shape = input_shapes
                 node.output_nums = len(node.output_shape)
                 attr = dict(
-                    type=self._get_data_type_name_by_value(input.attr_info,input.attr_info.type,'type'),
+                    type=self._get_data_type_name_by_value(input_proto.attr_info, input_proto.attr_info.type, 'type'),
                     shape=str(input_shapes)
                 )
                 node.add_attr(attr)
                 self._cache_node(node)
                 continue
-            for tensor_proto in input.tensor:
-                input_shape=self._get_shape_by_parse_tensor_proto(tensor_proto)
-                if len(input_shape)!=0:
+            for tensor_proto in input_proto.tensor:
+                input_shape = self._get_shape_by_parse_tensor_proto(tensor_proto)
+                if not input_shape:
                     input_shapes.append(input_shape)
-            if len(input_shapes)==0:
+            if not input_shapes:
                 input_shapes.append([])
             node.output_shape = input_shapes
             node.output_nums = len(node.output_shape)
-            node.output_data_type = self._get_data_type_by_parse_tensor_proto(input.tensor, node)
+            node.output_data_type = self._get_data_type_by_parse_tensor_proto(input_proto.tensor, node)
             attr = dict(
-                type=self._get_data_type_by_parse_tensor_proto(input.tensor, node),
+                type=self._get_data_type_by_parse_tensor_proto(input_proto.tensor, node),
                 shape=str(input_shapes)
             )
             node.add_attr(attr)
 
             self._cache_node(node)
             logger.debug("Foreach inputs, node id: %s, node name: %s, "
-                         "node def name: %s", input_name, input_name, input.name)
-
+                         "node def name: %s", input_name, input_name, input_proto.name)
 
     def _parse_mindir_node_inputs(self, input_protos, node):
+        """
+        Parse the inputs of node in mindir graph
+        Args:
+            input_protos: Refer to mind_ir_pb2.NodeProto
+            node: Refer to `Node` object, it is used to log message and update input.
+
+        """
         for input_proto in input_protos:
             if not input_proto:
                 logger.warning("The input proto of node(%s) is empty, will ignore.", node.name)
@@ -624,24 +637,34 @@ class MSGraph(Graph):
             else:
                 node.add_attr({cst_proto.name: str(attr)})
 
-        node.output_shape=self._get_shape_by_parse_attr_proto(cst_proto.attribute)
+        node.output_shape = self._get_shape_by_parse_attr_proto(cst_proto.attribute)
         node.output_nums = len(node.output_shape)
         self._get_data_type_by_parse_attr_proto(cst_proto.attribute, node)
 
         # dim is zero
-        if(node.output_nums == 0):
+        if node.output_nums == 0:
             node.output_shape.append([])
 
         self._cache_node(node)
 
     def _get_shape_by_parse_attr_proto(self, attr_proto):
-        shapes=[]
+        """
+        Get shape by parsing AttributeProto.
+        If data type is `TENSORS`, refer to `mind_ir_pb2.TensorProto`.
+        If data type is `TUPLE`, recursively running.
+        Args:
+            attr_proto: refer to `mind_ir_pb2.AttributeProto`.
+
+        Returns: list[list[TensorProto.dims], list[TensorProto.dims]].
+
+        """
+        shapes = []
         for attr in attr_proto:
-            if self._get_data_type_name_by_value(attr,attr.type,'type')==AttributeType.TENSORS.value:
+            if self._get_data_type_name_by_value(attr, attr.type, 'type') == AttributeType.TENSORS.value:
                 for tensor in attr.tensors:
                     shapes.append(self._get_shape_by_parse_tensor_proto(tensor))
                 continue
-            if self._get_data_type_name_by_value(attr,attr.type,'type')==AttributeType.TUPLE.value:
+            if self._get_data_type_name_by_value(attr, attr.type, 'type') == AttributeType.TUPLE.value:
                 shapes.extend(self._get_shape_by_parse_attr_proto(attr.values))
             else:
                 shapes.extend([])
@@ -652,44 +675,59 @@ class MSGraph(Graph):
         Parse proto's `message TensorProto` to get shape information.
 
         Args:
-            type_proto (mind_ir_pb2.TensorProto): Refer to mind_ir_pb2.TensorProto.
+            type_proto (mind_ir_pb2.TensorProto): Refer to `mind_ir_pb2.TensorProto`.
 
         Returns:
             list, a list of shape.
         """
 
-        shape=[]
+        shape = []
         for dim in tensor_proto.dims:
             shape.append(dim)
         return shape
 
     def _get_data_type_by_parse_attr_proto(self, attr_proto, node):
-        data_types=[]
+        """
+        Get data type by parse type proto object.
+
+        The name of the AttributeType, refer to `mind_ir_pb2.AttributeProto`
+        If AttributeProto.type is `TENSORS` or `TUPLE`, the data name we return is `data_type[element_type, element_type]`.
+
+        Args:
+            attr_proto: Refer to `mind_ir_pb2.AttributeProto`.
+
+        Returns:
+            list, the data type list.
+
+        """
+        data_types = []
         for attr in attr_proto:
             if self._get_data_type_name_by_value(attr, attr.type, 'type') == AttributeType.TENSORS.value:
-                elem_types=[]
+                elem_types = []
                 for tensor in attr.tensors:
                     data_type_name = self._get_data_type_name(tensor)
                     node.elem_types.append(data_type_name)
                     elem_types.append(data_type_name)
                 data_types.append(f'{AttributeType.TENSORS.value}{str(elem_types)}')
             if self._get_data_type_name_by_value(attr, attr.type, 'type') == AttributeType.TUPLE.value:
-                data_type=self._get_data_type_by_parse_attr_proto(attr.values, node)
+                data_type = self._get_data_type_by_parse_attr_proto(attr.values, node)
                 data_types.append(f'{AttributeType.TUPLE.value}{str(data_type)}')
-        if len(data_types)>0:
+        if data_types:
             return data_types[0]
-        else:
-            return ""
+
+        return ""
 
     def _get_data_type_by_parse_parameter(self, parameter, node):
+        """Get data type by parsing parameter in mindir graph, refer to `mind_ir_b2.TensorProto`."""
         data_type_name = self._get_data_type_name(parameter)
         node.elem_types.append(data_type_name)
         return str([data_type_name])
 
     def _get_data_type_by_parse_tensor_proto(self, tensor_protos, node):
-        data_types=[]
+        """Get data type by parsing `TensorProto`."""
+        data_types = []
         for tensor_proto in tensor_protos:
-            elem_type_name=self._get_data_type_name(tensor_proto)
+            elem_type_name = self._get_data_type_name(tensor_proto)
             node.elem_types.append(elem_type_name)
             data_types.append(elem_type_name)
         return str(data_types)

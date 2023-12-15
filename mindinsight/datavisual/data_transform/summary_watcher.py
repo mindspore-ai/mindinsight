@@ -37,7 +37,7 @@ class SummaryWatcher:
 
     SUMMARY_FILENAME_REGEX = r'summary\.(?P<timestamp>\d+)'
     PB_FILENAME_REGEX = r'\.pb$'
-    MINDIR_FILENAME_REGEX=r'\.mindir$'
+    MINDIR_FILENAME_REGEX = r'\.mindir$'
     PROFILER_DIRECTORY_REGEX = r'^profiler'
     MAX_SUMMARY_DIR_COUNT = 999
     SUMMARY_PB_MINDIR_BLACKLIST = {
@@ -246,7 +246,7 @@ class SummaryWatcher:
         """"Update the summary dict by checking file."""
         summary_pattern = re.search(self.SUMMARY_FILENAME_REGEX, entry.name)
         pb_pattern = re.search(self.PB_FILENAME_REGEX, entry.name)
-        mindir_pattern=re.search(self.MINDIR_FILENAME_REGEX, entry.name)
+        mindir_pattern = re.search(self.MINDIR_FILENAME_REGEX, entry.name)
         if not self._is_valid_pattern_result(summary_pattern, pb_pattern, mindir_pattern, list_explain, entry):
             return True
 
@@ -315,7 +315,7 @@ class SummaryWatcher:
         """Check the pattern result is valid."""
         is_in_summary_pb_mindir_blacklist = self._check_by_blacklist(entry.name)
         is_valid_pb = pb_pattern is not None and not is_in_summary_pb_mindir_blacklist
-        is_valid_mindir=mindir_pattern is not None and not is_in_summary_pb_mindir_blacklist
+        is_valid_mindir = mindir_pattern is not None and not is_in_summary_pb_mindir_blacklist
         if summary_pattern is None and not is_valid_pb and not is_valid_mindir:
             return False
         if list_explain and not entry.name.endswith(EXPLAIN_SUMMARY_SUFFIX):
