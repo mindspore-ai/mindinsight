@@ -99,7 +99,7 @@ class Tensor:
                 dump_type = DumpType.ASYNC
 
             if dump_type == DumpType.ASYNC:
-                file_name = file_name[file_name.find('.')+1:]
+                file_name = file_name[file_name.find('.') + 1:]
                 if is_npy:
                     regex = r'_(?P<op_name>[A-Za-z0-9]+)-op(?P<op_id>\d+)' \
                             r'\.(?P<stream_id>\d+)\.(?P<task_id>\d+)' \
@@ -559,6 +559,12 @@ class NodeTypeEnum(enum.Enum):
     MAKETUPLE = 'MakeTuple'
     TUPLE_GET_ITEM = 'TupleGetItem'
     UPDATE_STATE = 'UpdateState'
+
+
+class AttributeType(enum.Enum):
+    """Refer to 'mind_ir_pb2.AttributeType' object"""
+    TENSORS = 'TENSORS'
+    TUPLE = 'TUPLE'
 
 
 class DebuggerSource(Source):

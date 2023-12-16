@@ -13,13 +13,16 @@
 # limitations under the License.
 # ============================================================================
 """This file is used to define the MindSpore graph."""
+import re
+
 from mindinsight.datavisual.common.enums import PluginNameEnum
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.data_transform.graph.graph import EdgeTypeEnum, Graph, check_invalid_character
 from mindinsight.datavisual.data_transform.graph.node import Node
 from mindinsight.datavisual.data_transform.graph.node_tree import NodeTree
 from mindinsight.datavisual.proto_files.mindinsight_anf_ir_pb2 import DataType
-from mindinsight.domain.graph.base import NodeTypeEnum, DebuggerSource
+from mindinsight.domain.graph.base import NodeTypeEnum, DebuggerSource, AttributeType
+from mindinsight.datavisual.proto_files.mindinsight_mind_ir_pb2 import _TENSORPROTO_DATATYPE
 
 
 class MSGraph(Graph):
@@ -422,3 +425,316 @@ class MSGraph(Graph):
     def _get_data_type_name_by_value(data_type, value, field_name='data_type'):
         """Get the data type name by the enum value, data_type refer to `DataType` object."""
         return data_type.DESCRIPTOR.fields_by_name[field_name].enum_type.values_by_number[value].name
+
+    def _parse_mindir_data(self, proto_data):
+        """
+        The proto data is parsed and all nodes are stored in the specified structure.
+
+        Args:
+            proto_data (mind_ir_pb2.GraphProto): Refer to mind_ir_pb2.GraphProto object.
+        """
+        logger.info("Start to parse graph proto data.")
+
+        self._parse_mindir_op_nodes(proto_data.node, proto_data.output)
+        self._parse_mindir_graph_inputs(proto_data.input)
+        self._parse_mindir_parameter(proto_data.parameter)
+
+        logger.info("Parse proto data end, normal node count(only contain op node, "
+                    "parameter, const): %s.", self.normal_node_count)
+
+    def _parse_mindir_op_nodes(self, node_protos, output_protos):
+        """
+        Parse `mind_ir_pb2.NodeProto` object, and create a normal node.
+
+        Args:
+            node_protos (list[mind_ir_pb2.NodeProto]): Refer to mind_ir_pb2.NodeProto.
+        """
+        logger.debug("Start to parse output from graph.")
+        output_names = []
+        for output_proto in output_protos:
+            output_names.append(output_proto.name)
+
+        logger.debug("Start to parse op nodes from proto.")
+        for topological_index, node_proto in enumerate(node_protos):
+            if not node_proto.name:
+                logger.warning("Finding a node with an empty name will not save it.")
+                continue
+            if node_proto.op_type == 'Constant':
+                self._parse_mindir_constant(node_proto)
+                continue
+            self._parse_mindir_op_node(topological_index, node_proto, output_names)
+
+    def _parse_mindir_op_node(self, topological_index, node_proto, output_names):
+        """Parse `mind_ir_pb2.NodeProto` ,`mind_ir_pb2.ValueInfoProto` object, and create a normal node."""
+        node_id = node_proto.name
+        id_match = re.match(r"^(.*?_.*?)_", node_id)
+        node_name = node_proto.domain
+        if id_match:
+            graph_id = id_match.group(1)
+            if '/' in node_name:
+                node_name = node_name[:node_name.find('/')] + '[' + graph_id + ']' + node_name[node_name.find('/'):]
+            else:
+                node_name = node_name + '[' + graph_id + ']'
+
+        scope = node_name
+        if '/' in scope:
+            scope = scope[:scope.rfind('/')]
+
+        # The Graphviz plug-in that the UI USES can't handle these special characters.
+        check_invalid_character(node_name)
+        if node_id in output_names:
+            node_id = node_id[:node_id.find(':')]
+
+        node = Node(name=node_name, node_id=node_id, topological_index=topological_index)
+        node.full_name = node_name
+        node_type = node_proto.op_type
+        type_result = re.search(r'::(.*):', node_type)
+        if type_result:
+            node_type = type_result.group(1)
+        node.type = node_type
+        if getattr(node_proto, 'source_address', None):
+            node.stack = DebuggerSource.build_stack_from_source_address(node_proto.source_address)
+        self._parse_mindir_node_inputs(node_proto.input, node)
+
+        node.scope = scope
+        node.output_shape = self._get_shape_by_parse_attr_proto(node_proto.attribute)
+        node.output_nums = len(node.output_shape)
+        node.output_data_type = self._get_data_type_by_parse_attr_proto(node_proto.attribute, node)
+
+        self._cache_node(node)
+
+    def _parse_mindir_parameter(self, parameter_protos):
+        """
+        Parse `mind_ir_pb2.TensorProto` object, and create a parameter node.
+
+        Args:
+            parameter_protos (list[mind_ir_pb2.TensorProto]): Refer to mind_ir_pb2.TensorProto.
+        """
+        logger.debug("Start to parse parameters from proto.")
+        for parameter in parameter_protos:
+            if not parameter.name:
+                logger.warning("Finding a parameter with an empty name will not save it.")
+                continue
+            check_invalid_character(parameter.name)
+            para_name = parameter.name
+            if ':' in para_name:
+                para_name = para_name[para_name.rfind(':') + 1:]
+            node = Node(name=para_name, node_id=parameter.name)
+            node.type = NodeTypeEnum.PARAMETER.value
+            node.output_shape = [self._get_shape_by_parse_tensor_proto(parameter)]
+            node.output_nums = len(node.output_shape)
+            node.output_data_type = self._get_data_type_by_parse_parameter(parameter, node)
+            attr = dict(
+                type=self._get_data_type_by_parse_parameter(parameter, node),
+                shape=str(node.output_shape)
+            )
+            node.add_attr(attr)
+
+            self._cache_node(node)
+            logger.debug("Foreach graph proto parameters, node id: %s, node name: %s, "
+                         "node def name: %s", node.node_id, node.name, parameter.name)
+
+    def _parse_mindir_graph_inputs(self, input_protos):
+        """
+        Parse the inputs of mindir graph and create parameter nodes
+        Args:
+            input_protos: Refer to mind_ir_pb2.ValueInfoProto
+
+        """
+        for input_proto in input_protos:
+            if not input_proto.name:
+                logger.warning("The input proto of graph is empty, will ignore.")
+                continue
+            input_name = input_proto.name
+            if ':' in input_name:
+                input_name = input_name[input_name.rfind(':') + 1:]
+            check_invalid_character(input_name)
+            node = Node(name=input_name, node_id=input_proto.name)
+            node.type = NodeTypeEnum.PARAMETER.value
+
+            input_shapes = []
+            if input_proto.HasField('attr_info'):
+                node.output_data_type = self._get_data_type_name_by_value(
+                    input_proto.attr_info, input_proto.attr_info.type, 'type')
+                node.output_shape = input_shapes
+                node.output_nums = len(node.output_shape)
+                attr = dict(
+                    type=self._get_data_type_name_by_value(input_proto.attr_info, input_proto.attr_info.type, 'type'),
+                    shape=str(input_shapes)
+                )
+                node.add_attr(attr)
+                self._cache_node(node)
+                continue
+            for tensor_proto in input_proto.tensor:
+                input_shape = self._get_shape_by_parse_tensor_proto(tensor_proto)
+                if not input_shape:
+                    input_shapes.append(input_shape)
+            if not input_shapes:
+                input_shapes.append([])
+            node.output_shape = input_shapes
+            node.output_nums = len(node.output_shape)
+            node.output_data_type = self._get_data_type_by_parse_tensor_proto(input_proto.tensor, node)
+            attr = dict(
+                type=self._get_data_type_by_parse_tensor_proto(input_proto.tensor, node),
+                shape=str(input_shapes)
+            )
+            node.add_attr(attr)
+
+            self._cache_node(node)
+            logger.debug("Foreach inputs, node id: %s, node name: %s, "
+                         "node def name: %s", input_name, input_name, input_proto.name)
+
+    def _parse_mindir_node_inputs(self, input_protos, node):
+        """
+        Parse the inputs of node in mindir graph
+        Args:
+            input_protos: Refer to mind_ir_pb2.NodeProto
+            node: Refer to `Node` object, it is used to log message and update input.
+
+        """
+        for input_proto in input_protos:
+            if not input_proto:
+                logger.warning("The input proto of node(%s) is empty, will ignore.", node.name)
+                continue
+
+            # if ":" in input_proto:
+            #     input_proto = input_proto.split(":")[-1]
+
+            edge_type = EdgeTypeEnum.DATA.value
+
+            # Notice:
+            # 1. The name in the input proto is the node id of the Node object.
+            # 2. In the current step, the shape of source node cannot be obtained,
+            #    so it is set to empty list by default, and the next step will update it.
+            # 3. Same with scope, set the default value first.
+            input_attr = {
+                "shape": [],
+                "edge_type": edge_type,
+                "independent_layout": False,
+                'data_type': ''
+            }
+
+            node.add_inputs(src_name=input_proto, input_attr=input_attr)
+
+    def _parse_mindir_constant(self, cst_proto):
+        """
+                Parse `mind_ir_pb2.NodeProto` object, and create a const node.
+
+                Args:
+                    consts (list[mind_ir_pb2.NodeProto]): Refer to `mind_ir_pb2.NodeProto` object.
+                """
+        logger.debug("Start to parse consts from proto.")
+
+        if not cst_proto.name:
+            logger.warning("Finding a const with an empty name will not save it.")
+            return
+        check_invalid_character(cst_proto.name)
+        node = Node(name=cst_proto.name, node_id=cst_proto.name, full_name=cst_proto.name)
+        node.type = NodeTypeEnum.CONST.value
+        for attr in cst_proto.attribute:
+            data_type = self._get_data_type_name_by_value(attr, attr.type, 'type')
+            if attr.ByteSize() > self.MAX_NODE_ATTRIBUTE_VALUE_BYTES:
+                node.add_attr({cst_proto.name: 'type: ' + data_type})
+            else:
+                node.add_attr({cst_proto.name: str(attr)})
+
+        node.output_shape = self._get_shape_by_parse_attr_proto(cst_proto.attribute)
+        node.output_nums = len(node.output_shape)
+        self._get_data_type_by_parse_attr_proto(cst_proto.attribute, node)
+
+        # dim is zero
+        if node.output_nums == 0:
+            node.output_shape.append([])
+
+        self._cache_node(node)
+
+    def _get_shape_by_parse_attr_proto(self, attr_proto):
+        """
+        Get shape by parsing AttributeProto.
+        If data type is `TENSORS`, refer to `mind_ir_pb2.TensorProto`.
+        If data type is `TUPLE`, recursively running.
+        Args:
+            attr_proto: refer to `mind_ir_pb2.AttributeProto`.
+
+        Returns: list[list[TensorProto.dims], list[TensorProto.dims]].
+
+        """
+        shapes = []
+        for attr in attr_proto:
+            if self._get_data_type_name_by_value(attr, attr.type, 'type') == AttributeType.TENSORS.value:
+                for tensor in attr.tensors:
+                    shapes.append(self._get_shape_by_parse_tensor_proto(tensor))
+                continue
+            if self._get_data_type_name_by_value(attr, attr.type, 'type') == AttributeType.TUPLE.value:
+                shapes.extend(self._get_shape_by_parse_attr_proto(attr.values))
+            else:
+                shapes.extend([])
+        return shapes
+
+    def _get_shape_by_parse_tensor_proto(self, tensor_proto):
+        """
+        Parse proto's `message TensorProto` to get shape information.
+
+        Args:
+            type_proto (mind_ir_pb2.TensorProto): Refer to `mind_ir_pb2.TensorProto`.
+
+        Returns:
+            list, a list of shape.
+        """
+
+        shape = []
+        for dim in tensor_proto.dims:
+            shape.append(dim)
+        return shape
+
+    def _get_data_type_by_parse_attr_proto(self, attr_proto, node):
+        """
+        Get data type by parse type proto object.
+
+        The name of the AttributeType, refer to `mind_ir_pb2.AttributeProto`
+        If AttributeProto.type is `TENSORS` or `TUPLE`,
+        the data name we return is `data_type[element_type, element_type]`.
+
+        Args:
+            attr_proto: Refer to `mind_ir_pb2.AttributeProto`.
+
+        Returns:
+            list, the data type list.
+
+        """
+        data_types = []
+        for attr in attr_proto:
+            if self._get_data_type_name_by_value(attr, attr.type, 'type') == AttributeType.TENSORS.value:
+                elem_types = []
+                for tensor in attr.tensors:
+                    data_type_name = self._get_data_type_name(tensor)
+                    node.elem_types.append(data_type_name)
+                    elem_types.append(data_type_name)
+                data_types.append(f'{AttributeType.TENSORS.value}{str(elem_types)}')
+            if self._get_data_type_name_by_value(attr, attr.type, 'type') == AttributeType.TUPLE.value:
+                data_type = self._get_data_type_by_parse_attr_proto(attr.values, node)
+                data_types.append(f'{AttributeType.TUPLE.value}{str(data_type)}')
+        if data_types:
+            return data_types[0]
+
+        return ""
+
+    def _get_data_type_by_parse_parameter(self, parameter, node):
+        """Get data type by parsing parameter in mindir graph, refer to `mind_ir_b2.TensorProto`."""
+        data_type_name = self._get_data_type_name(parameter)
+        node.elem_types.append(data_type_name)
+        return str([data_type_name])
+
+    def _get_data_type_by_parse_tensor_proto(self, tensor_protos, node):
+        """Get data type by parsing `TensorProto`."""
+        data_types = []
+        for tensor_proto in tensor_protos:
+            elem_type_name = self._get_data_type_name(tensor_proto)
+            node.elem_types.append(elem_type_name)
+            data_types.append(elem_type_name)
+        return str(data_types)
+
+    @staticmethod
+    def _get_data_type_name(tensor_proto):
+        """Get the data type name by the enum value, data_type refer to `DataType` object."""
+        return _TENSORPROTO_DATATYPE.values_by_number[tensor_proto.data_type].name

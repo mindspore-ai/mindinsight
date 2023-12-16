@@ -42,6 +42,7 @@ from mindinsight.datavisual.data_transform.tensor_container import TensorContain
 from mindinsight.datavisual.data_transform.loss_landscape_container import LossLandscapeContainer
 from mindinsight.datavisual.proto_files import mindinsight_anf_ir_pb2 as anf_ir_pb2
 from mindinsight.datavisual.proto_files import mindinsight_summary_pb2 as summary_pb2
+from mindinsight.datavisual.proto_files import mindinsight_mind_ir_pb2 as mind_ir_pb2
 from mindinsight.datavisual.utils.tools import exception_no_raise_wrapper
 from mindinsight.utils.computing_resource_mgr import ComputingResourceManager, Executor
 from mindinsight.utils.exceptions import UnknownError
@@ -67,6 +68,7 @@ class MSDataLoader:
         self._parser_list = []
         self._parser_list.append(_SummaryParser(summary_dir))
         self._parser_list.append(_PbParser(summary_dir))
+        self._parser_list.append(_MindirParser(summary_dir))
         self._is_integrity = True
 
     @property
@@ -221,11 +223,13 @@ class _PbParser(_Parser):
             if not self._set_latest_file(filename):
                 continue
             future = executor.submit(self._parse_pb_file, self._summary_dir, filename)
+
             def add_tensor_event(future_value):
                 tensor_events = future_value.result()
                 for tensor_event in tensor_events:
                     if tensor_event is not None:
                         events_data.add_tensor_event(tensor_event)
+
             if future is not None:
                 future.add_done_callback(exception_no_raise_wrapper(add_tensor_event))
             return False
@@ -565,25 +569,98 @@ class _SummaryParser(_Parser):
         return filenames
 
 
-def build_graph_events(graph_proto, filename, step, wall_time):
+class _MindirParser(_Parser):
+    """This class is used to parse mindir graph file."""
+    def __init__(self, summary_dir):
+        super(_MindirParser, self).__init__(summary_dir)
+        self._latest_mtime = 0
+
+    def parse_files(self, executor, filenames, events_data):
+        mindir_filenames = self.filter_files(filenames)
+        mindir_filenames = self.sort_files(mindir_filenames)
+        for filename in mindir_filenames:
+            if not self._set_latest_file(filename):
+                continue
+            future = executor.submit(self._parse_mindir_file, self._summary_dir, filename)
+
+            def add_tensor_event(future_value):
+                tensor_events = future_value.result()
+                for tensor_event in tensor_events:
+                    if tensor_event is not None:
+                        events_data.add_tensor_event(tensor_event)
+
+            if future is not None:
+                future.add_done_callback(exception_no_raise_wrapper(add_tensor_event))
+            return False
+        return True
+
+    def filter_files(self, filenames):
+        return list(filter(lambda filename: re.search(r'\.mindir$', filename), filenames))
+
+    def sort_files(self, filenames):
+        """Sort by modify time increments and filenames increments."""
+        filenames = sorted(filenames, key=lambda file: (
+            FileHandler.file_stat(FileHandler.join(self._summary_dir, file)).mtime, file))
+        return filenames
+
+    def _set_latest_file(self, filename):
+        mtime = FileHandler.file_stat(FileHandler.join(self._summary_dir, filename)).mtime
+        if mtime < self._latest_mtime or \
+                (mtime == self._latest_mtime and filename <= self._latest_filename):
+            return False
+
+        self._latest_mtime = mtime
+        self._latest_filename = filename
+
+        return True
+
+    @staticmethod
+    def _parse_mindir_file(summary_dir, filename):
+        """
+        Parse mindir file and write content to `EventsData`.
+
+        Args:
+            filename (str): The file path of mindir file.
+
+        Returns:
+            TensorEvent, if load mindir file and build graph success, will return tensor event, else return None.
+        """
+        file_path = FileHandler.join(summary_dir, filename)
+        logger.info("Start to load graph from mindir file, file path: %s.", file_path)
+        filehandler = FileHandler(file_path)
+        model_proto = mind_ir_pb2.ModelProto()
+
+        try:
+            model_proto.ParseFromString(filehandler.read())
+        except ParseError:
+            logger.warning("The given file is not a valid mindir file, file path: %s.", file_path)
+            return None
+        ret_tensor_events = build_graph_events(model_proto, filename, 0, FileHandler.file_stat(file_path).mtime, True)
+
+        logger.info("Build graph success, file path: %s.", file_path)
+        return ret_tensor_events
+
+
+def build_graph_events(graph_proto, filename, step, wall_time, mindir_graph=False):
     """Build graph events for MSgraph and OptimizedGraph."""
     ret_tensor_events = []
-    graph_event = build_graph_event(graph_proto, PluginNameEnum.GRAPH.value, filename, step, wall_time)
+    graph_event = build_graph_event(graph_proto, PluginNameEnum.GRAPH.value, filename, step, wall_time, mindir_graph)
     if graph_event.value.list_node_by_scope():
         ret_tensor_events.append(graph_event)
     optimized_graph_event = build_graph_event(graph_proto, PluginNameEnum.OPTIMIZED_GRAPH.value, filename, step,
-                                              wall_time)
+                                              wall_time, mindir_graph)
     if optimized_graph_event.value.list_node_by_scope():
         ret_tensor_events.append(optimized_graph_event)
     return ret_tensor_events
 
 
-def build_graph_event(graph_proto, plugin, filename, step, wall_time):
+def build_graph_event(graph_proto, plugin, filename, step, wall_time, mindir_graph=False):
     """Build a graph event."""
     graph = MSGraph() if plugin == PluginNameEnum.GRAPH.value else OptimizedGraph()
 
     try:
-        graph.build_graph(graph_proto)
+        graph.build_graph(graph_proto, mindir_graph)
+
     except Exception as ex:
         # Normally, there are no exceptions, and it is only possible for users on the MindSpore side
         # to dump other non-default graphs.
