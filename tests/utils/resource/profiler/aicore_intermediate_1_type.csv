@@ -1,4 +1,4 @@
-op_type,total_time,execution_frequency,percent
+kernel_type,total_time,execution_frequency,percent
 AtomicAddrClean,0.007283,6,0.49
 Cast,0.053395,13,3.63
 TransData,0.121800,5,8.23

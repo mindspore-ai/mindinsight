@@ -1,4 +1,4 @@
-full_op_name,execution_time,execution_frequency
+full_kernel_name,execution_time,execution_frequency
 Default/GetNext-op6,5e-05,3
 Default/StreamSend-op199,1e-05,3
 Default/StreamRecv-op202,5e-05,3
