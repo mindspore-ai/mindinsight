@@ -54,7 +54,7 @@ class TestAicpuAnalyser:
     def test_query_aicpu_type(self):
         """Test the function of querying AICPU operator type information."""
         expect_result = {
-            'col_name': ['op_type', 'execution_time', 'execution_frequency', 'percent'],
+            'col_name': ['kernel_type', 'execution_time', 'execution_frequency', 'percent'],
             'object': [
                 ['InitData', 7906.0, 1, 89.84],
                 ['GetNext', 590.5, 2, 6.71],
@@ -74,7 +74,7 @@ class TestAicpuAnalyser:
     def test_query_aicpu_detail(self):
         """Test the function of querying AICPU operator type information."""
         expect_result = {
-            'col_name': ['op_name', 'op_type', 'total_time',
+            'col_name': ['kernel_name', 'kernel_type', 'total_time',
                          'dispatch_time', 'execution_frequency'],
             'size': 3
         }

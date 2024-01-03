@@ -35,7 +35,7 @@ class AicoreTypeAnalyser(BaseAnalyser):
     Raises:
         ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    _col_names = ['op_type', 'total_time', 'execution_frequency', 'total_percent', 'avg_time']
+    _col_names = ['kernel_type', 'total_time', 'execution_frequency', 'total_percent', 'avg_time']
     _file_name_aicore_type_time = 'aicore_intermediate_{}_type.csv'
 
     def _load(self):
@@ -111,8 +111,8 @@ class AicoreDetailAnalyser(BaseAnalyser):
     Raises:
         ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    _col_names = ['op_name', 'op_type', 'avg_execution_time', 'execution_frequency', 'MFLOPs(10^6 cube)',
-                  'GFLOPS(10^9 cube)', 'MFLOPs(10^6 vector)', 'GFLOPS(10^9 vector)', 'full_op_name', 'op_info']
+    _col_names = ['op_name', 'kernel_name', 'kernel_type', 'avg_execution_time', 'execution_frequency',
+                  'MFLOPs(10^6 cube)', 'GFLOPS(10^9 cube)', 'MFLOPs(10^6 vector)', 'GFLOPS(10^9 vector)', 'op_info']
     _file_name_aicore_detail_time = 'aicore_intermediate_{}_detail.csv'
     _file_name_flops = 'flops_{}.txt'
     _file_name_framework_info = 'framework_raw_{}.csv'
@@ -141,8 +141,13 @@ class AicoreDetailAnalyser(BaseAnalyser):
         self._filter(filter_condition)
 
         type_detail_cache = {}
+        is_display_full_op_name = filter_condition.get(
+            'is_display_full_op_name', True
+        )
+        kernel_type_idx = 2 if is_display_full_op_name else 1
+        avg_exec_time_idx = 3 if is_display_full_op_name else 2
         for detail_info in self._result:
-            op_type = detail_info[1]
+            op_type = detail_info[kernel_type_idx]
             if op_type not in op_type_order:
                 continue
             infos = type_detail_cache.get(op_type)
@@ -156,7 +161,7 @@ class AicoreDetailAnalyser(BaseAnalyser):
             detail_infos = type_detail_cache.get(op_type)
             if detail_infos is None:
                 continue
-            detail_infos.sort(key=lambda item: item[2], reverse=True)
+            detail_infos.sort(key=lambda item: item[avg_exec_time_idx], reverse=True)
             result.extend(detail_infos)
 
         return {
@@ -239,9 +244,9 @@ class AicoreDetailAnalyser(BaseAnalyser):
             return self._default_filter(item, filter_condition)
 
         def _inner_map(item: list):
-            inner_item = item[0:8]
+            inner_item = item[1:9]
             if is_display_full_op_name:
-                inner_item.append(item[8])
+                inner_item.insert(0, item[0])
             if is_display_detail:
                 inner_item.append(item[9])
             return inner_item
@@ -268,9 +273,9 @@ class AicoreDetailAnalyser(BaseAnalyser):
             is_display_full_op_name (bool): Whether to display the operator full
                 name.
         """
-        self._display_col_names = self._col_names[0:8]
+        self._display_col_names = self._col_names[1:9]
         if is_display_full_op_name:
-            self._display_col_names.append(self._col_names[8])
+            self._display_col_names.insert(0, self._col_names[0])
         if is_display_detail:
             self._display_col_names.append(self._col_names[9])
 
@@ -285,8 +290,8 @@ class AicoreDetailAnalyser(BaseAnalyser):
         Returns:
             list[Union[str, float]], the converted data.
         """
-        return [row[3], row[4], row[5], row[6],
-                json.loads(row[7]) if row[7] else None]
+        return [row[4], row[5], row[6], row[7],
+                json.loads(row[8]) if row[8] else None]
 
     def _get_op_detail_info(self, row, framework_infos, flops_infos):
         """
@@ -303,21 +308,21 @@ class AicoreDetailAnalyser(BaseAnalyser):
         framework_info = framework_infos.get(row[0])
         flops_info = flops_infos.get(row[0], ['-', '-', '-', '-'])
         if len(flops_info) > 3:
-            return [framework_info[1], framework_info[2],
+            return [framework_info[0], framework_info[1], framework_info[2],
                     self._format_float_data(float(row[1]) * self._ms_to_us),
                     self._format_float_data(int(row[2])),
                     self._format_float_data(flops_info[0]),
                     self._format_float_data(flops_info[1]),
                     self._format_float_data(flops_info[2]),
                     self._format_float_data(flops_info[3]),
-                    framework_info[0], framework_info[4]]
-        return [framework_info[1], framework_info[2],
+                    framework_info[4]]
+        return [framework_info[0], framework_info[1], framework_info[2],
                 self._format_float_data(float(row[1]) * self._ms_to_us),
                 self._format_float_data(int(row[2])),
                 self._format_float_data(flops_info[0]),
                 self._format_float_data(flops_info[1]),
                 self._format_float_data(flops_info[2]),
-                framework_info[3], framework_info[0], framework_info[4]]
+                framework_info[3], framework_info[4]]
 
 
 class AicpuTypeAnalyser(BaseAnalyser):
@@ -332,7 +337,7 @@ class AicpuTypeAnalyser(BaseAnalyser):
     Raises:
         ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    _col_names = ['op_type', 'total_time', 'execution_frequency', 'percent']
+    _col_names = ['kernel_type', 'total_time', 'execution_frequency', 'percent']
     _file_name_aicpu_time = 'aicpu_intermediate_{}.csv'
 
     def _load(self):
@@ -404,7 +409,7 @@ class AicpuDetailAnalyser(BaseAnalyser):
     Raises:
         ProfilerPathErrorException: If the profiling dir is invalid.
     """
-    _col_names = ['op_name', 'op_type', 'avg_execution_time', 'dispatch_time',
+    _col_names = ['kernel_name', 'kernel_type', 'avg_execution_time', 'dispatch_time',
                   'execution_frequency']
     _file_name_aicpu_time = 'aicpu_intermediate_{}.csv'
 

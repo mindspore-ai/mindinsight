@@ -1,4 +1,4 @@
-op_type,total_time,execution_frequency,percent
+kernel_type,total_time,execution_frequency,percent
 GetNext,0.00015,3,0.00
 StreamSend,0.00003,3,0.00
 StreamRecv,0.00015,3,0.00

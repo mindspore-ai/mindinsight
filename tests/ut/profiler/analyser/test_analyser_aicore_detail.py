@@ -21,8 +21,8 @@ from unittest import TestCase
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from tests.ut.profiler import PROFILER_DIR
 
-COL_NAMES = ['op_name', 'op_type', 'avg_execution_time', 'execution_frequency', 'MFLOPs(10^6 cube)',
-             'GFLOPS(10^9 cube)', 'MFLOPs(10^6 vector)', 'GFLOPS(10^9 vector)', 'full_op_name', 'op_info']
+COL_NAMES = ['op_name', 'kernel_name', 'kernel_type', 'avg_execution_time', 'execution_frequency',
+             'MFLOPs(10^6 cube)', 'GFLOPS(10^9 cube)', 'MFLOPs(10^6 vector)', 'GFLOPS(10^9 vector)', 'op_info']
 
 
 def get_detail_infos(indexes=None, sort_name=None, sort_type=True):
@@ -52,9 +52,9 @@ def get_detail_infos(indexes=None, sort_name=None, sort_type=True):
         for fm_info, detail_info, flops_line in zip(fm_csv_reader, detail_csv_reader, flops_reader):
             flops = flops_line.strip().split(',')
             cache.append(
-                [fm_info[4], fm_info[5], round(float(detail_info[1]) * 1e3, 3), int(detail_info[2]), float(flops[1]),
-                 float(flops[2]), float(flops[3]), float(flops[4]),
-                 fm_info[3], json.loads(fm_info[7]) if fm_info[7] else None]
+                [fm_info[4], fm_info[5], fm_info[6], round(float(detail_info[1]) * 1e3, 3), int(detail_info[2]),
+                 float(flops[1]), float(flops[2]), float(flops[3]), float(flops[4]),
+                 json.loads(fm_info[8]) if fm_info[8] else None]
             )
 
     if indexes:
@@ -99,7 +99,7 @@ class TestAicoreDetailAnalyser(TestCase):
         }
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'in': ['MatMul']
                 }
             }
@@ -109,7 +109,7 @@ class TestAicoreDetailAnalyser(TestCase):
 
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'not_in': ['AtomicAddrClean', 'Cast', 'TransData', 'Conv2D']
                 }
             }
@@ -119,7 +119,7 @@ class TestAicoreDetailAnalyser(TestCase):
 
         condition = {
             'filter_condition': {
-                'op_name': {
+                'kernel_name': {
                     'partial_match_str_in': ['op9']
                 }
             }
@@ -145,12 +145,12 @@ class TestAicoreDetailAnalyser(TestCase):
 
         expect_result = {
             'col_name': COL_NAMES,
-            'object': get_detail_infos(sort_name='op_name', sort_type=False),
+            'object': get_detail_infos(sort_name='kernel_name', sort_type=False),
             'size': 10
         }
         condition = {
             'sort_condition': {
-                'name': 'op_name',
+                'name': 'kernel_name',
                 'type': 'ascending'
             }
         }
@@ -198,7 +198,7 @@ class TestAicoreDetailAnalyser(TestCase):
         }
         condition = {
             'filter_condition': {
-                'op_name': {
+                'kernel_name': {
                     'partial_match_str_in': ['Atomic', 'Conv']
                 }
             },
@@ -222,10 +222,10 @@ class TestAicoreDetailAnalyser(TestCase):
         }
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'in': ['Conv2D', 'AtomicAddrClean', 'TransData']
                 },
-                'op_name': {
+                'kernel_name': {
                     'partial_match_str_in': ['Atomic', 'Conv']
                 }
             },
@@ -247,7 +247,7 @@ class TestAicoreDetailAnalyser(TestCase):
         }
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'in': ['MatMul']
                 },
                 'is_display_detail': False
@@ -257,13 +257,13 @@ class TestAicoreDetailAnalyser(TestCase):
         self.assertDictEqual(expect_result, result)
 
         expect_result = {
-            'col_name': COL_NAMES[0:8],
-            'object': [item[0:8] for item in detail_infos],
+            'col_name': COL_NAMES[1:9],
+            'object': [item[1:9] for item in detail_infos],
             'size': 1
         }
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'in': ['MatMul']
                 },
                 'is_display_detail': False,
@@ -278,12 +278,12 @@ class TestAicoreDetailAnalyser(TestCase):
         """Test the success of the querying and sorting function by operator type."""
         detail_infos = get_detail_infos(indexes=[9, 0, 2, 1, 5, 3, 4])
         expect_result = {
-            'col_name': COL_NAMES[0:8],
-            'object': [item[0:8] for item in detail_infos]
+            'col_name': COL_NAMES[1:9],
+            'object': [item[1:9] for item in detail_infos]
         }
 
         filter_condition = {
-            'op_type': {
+            'kernel_type': {
                 'in': ['AtomicAddrClean', 'Cast', 'MatMul'],
                 'not_in': ['TransData']
             },

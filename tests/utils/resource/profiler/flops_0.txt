@@ -1,4 +1,4 @@
-op_full_name, FLOPs, FLOPS, FLOPS utilization
+full_kernel_name, FLOPs, FLOPS, FLOPS utilization
 Default/Cast-op6, 333, 333, 33
 Default/TransData-op7, 333, 333, 33
 Default/network-WithLossCell/_backbone-ResNet/conv1-Conv2d/Cast-op5, 333, 333, 33

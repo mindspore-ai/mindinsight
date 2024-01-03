@@ -27,19 +27,19 @@ from tests.st.func.profiler.conftest import BASE_SUMMARY_DIR
 
 OP_GATHER_V2_INFO = {
     'col_name':
-        ['op_name', 'op_type', 'avg_execution_time', 'execution_frequency',
-         'MFLOPs(10^6 cube)', 'GFLOPS(10^9 cube)', 'MFLOPs(10^6 vector)', 'GFLOPS(10^9 vector)', 'full_op_name',
+        ['op_name', 'kernel_name', 'kernel_type', 'avg_execution_time', 'execution_frequency',
+         'MFLOPs(10^6 cube)', 'GFLOPS(10^9 cube)', 'MFLOPs(10^6 vector)', 'GFLOPS(10^9 vector)',
          'op_info'],
     'object': [
         [
-            'AssignAdd-op203', 'AssignAdd', 1.79, 3, '-', '-', '-', '-', 'Default/AssignAdd-op203',
+            'Default/AssignAdd-op203', 'AssignAdd-op203', 'AssignAdd', 1.79, 3, '-', '-', '-', '-',
             {'input_0': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]},
              'input_1': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]},
              'output_0': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]}
              }
         ],
         [
-            'AssignAdd-op206', 'AssignAdd', 1.283, 3, '-', '-', '-', '-', 'Default/AssignAdd-op206',
+            'Default/AssignAdd-op206', 'AssignAdd-op206', 'AssignAdd', 1.283, 3, '-', '-', '-', '-',
             {'input_0': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]},
              'input_1': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]},
              'output_0': {'format': 'DEFAULT', 'data_type': 'INT32', 'shape': [1]}
@@ -77,7 +77,7 @@ class TestOpAnalyser:
         """Test the function of querying AICORE operator type information."""
         expect_result = {
             'col_name':
-                ['op_type', 'total_time', 'execution_frequency', 'total_percent', 'avg_time'],
+                ['kernel_type', 'total_time', 'execution_frequency', 'total_percent', 'avg_time'],
             'object': [['MatMul', 2807.82, 25, 5760.0, 112.313],
                        ['Cast', 104.32, 27, 214.0, 3.864],
                        ['TransData', 86.12, 9, 177.0, 9.569],
@@ -123,7 +123,7 @@ class TestOpAnalyser:
         """Test the function of querying AICORE operator type information."""
         expect_result = {
             'col_name':
-                ['op_type', 'total_time', 'execution_frequency', 'total_percent', 'avg_time'],
+                ['kernel_type', 'total_time', 'execution_frequency', 'total_percent', 'avg_time'],
             'object': [
                 ['MatMul', 2807.82, 25, 5760.0, 112.313],
                 ['Mul', 4.29, 3, 9.0, 1.43]
@@ -132,7 +132,7 @@ class TestOpAnalyser:
         }
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'partial_match_str_in': ['Mul']
                 }
             },
@@ -155,7 +155,7 @@ class TestOpAnalyser:
         expect_result = OP_GATHER_V2_INFO
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'in': ['AssignAdd']
                 }
             },
