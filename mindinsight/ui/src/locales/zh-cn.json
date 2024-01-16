@@ -632,6 +632,7 @@
     "modelList": "子图：",
     "kind": "数据类型：",
     "mergeModel": "合并多子图：",
+    "scopeName": "切分算子scope层级：",
     "select": "默认选择全部：",
     "flopsScopeTipOne": "节点移动：通过拖动scope节点，将其移动到指定位置。",
     "flopsScopeTipTwo": "重置：将图形恢复到初始状态。",
