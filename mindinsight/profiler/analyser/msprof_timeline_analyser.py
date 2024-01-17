@@ -221,11 +221,8 @@ class MsprofTimelineOldAnalyser(BaseAnalyser):
                         new_events.append(event)
 
             return new_events
-        except ValidationError as err:
-            logger.error('parse_step_trace_data failed! please theck. detail: %s', err)
-            raise ValidationError from err
 
-        except (IOError, OSError, json.JSONDecodeError) as err:
+        except (ValidationError, IOError, OSError, json.JSONDecodeError) as err:
             logger.error('parse_step_trace_data failed! please theck. detail: %s', err)
             return []
 
@@ -323,11 +320,7 @@ class MsprofTimelineOldAnalyser(BaseAnalyser):
                         new_events.append(event)
             return new_events
 
-        except ValidationError as err:
-            logger.error('parse_overlap_analysis_data failed! please theck. detail: %s', err)
-            raise ValidationError from err
-
-        except (IOError, OSError, json.JSONDecodeError) as err:
+        except (ValidationError, IOError, OSError, json.JSONDecodeError) as err:
             logger.error('parse_overlap_analysis_data failed! please theck. detail: %s', err)
             return []
 
@@ -400,11 +393,7 @@ class MsprofTimelineOldAnalyser(BaseAnalyser):
 
             return new_events
 
-        except ValidationError as err:
-            logger.error('parse_ascend_hardware_data failed! please theck. detail: %s', err)
-            raise ValidationError from err
-
-        except (IOError, OSError, json.JSONDecodeError) as err:
+        except (ValidationError, IOError, OSError, json.JSONDecodeError) as err:
             logger.error('parse_ascend_hardware_data failed! please theck. detail: %s', err)
             return []
 
@@ -478,11 +467,7 @@ class MsprofTimelineOldAnalyser(BaseAnalyser):
 
             return new_events
 
-        except ValidationError as err:
-            logger.error('parse_hccl_data failed! please theck. detail: %s', err)
-            raise ValidationError from err
-
-        except (IOError, OSError, json.JSONDecodeError) as err:
+        except (ValidationError, IOError, OSError, json.JSONDecodeError) as err:
             logger.error('parse_hccl_data failed! please theck. detail: %s', err)
             return []
 
@@ -763,11 +748,7 @@ class MsprofTimelineAnalyser(BaseAnalyser):
 
             return process_list + thread_list + new_timeline, scope_data
 
-        except ValidationError as err:
-            logger.error('parse_cann_data failed! please theck. detail: %s', err)
-            raise ValidationError from err
-
-        except (IOError, OSError, json.JSONDecodeError) as err:
+        except (ValidationError, IOError, OSError, json.JSONDecodeError) as err:
             logger.error('parse_cann_data failed! please theck. detail: %s', err)
             return []
 
@@ -916,11 +897,7 @@ class MsprofTimelineAnalyser(BaseAnalyser):
 
             return self._parse_step_trace_not_merge(pid, new_pid, rank_id, raw_data, tid_mapper, difference_ts)
 
-        except ValidationError as err:
-            logger.error('parse_step_trace_data failed! please theck. detail: %s', err)
-            raise ValidationError from err
-
-        except (IOError, OSError, json.JSONDecodeError) as err:
+        except (ValidationError, IOError, OSError, json.JSONDecodeError) as err:
             logger.error('parse_step_trace_data failed! please theck. detail: %s', err)
             return []
 
@@ -968,11 +945,7 @@ class MsprofTimelineAnalyser(BaseAnalyser):
 
             return new_events
 
-        except ValidationError as err:
-            logger.error('parse_overlap_analysis_data failed! please theck. detail: %s', err)
-            raise ValidationError from err
-
-        except (IOError, OSError, json.JSONDecodeError) as err:
+        except (ValidationError, IOError, OSError, json.JSONDecodeError) as err:
             logger.error('parse_overlap_analysis_data failed! please theck. detail: %s', err)
             return []
 
@@ -1053,11 +1026,7 @@ class MsprofTimelineAnalyser(BaseAnalyser):
                 new_metadata.append(thread_event)
             return new_metadata + new_events, scope_data
 
-        except ValidationError as err:
-            logger.error('parse_ascend_hardware_data failed! please theck. detail: %s', err)
-            raise ValidationError from err
-
-        except (IOError, OSError, json.JSONDecodeError) as err:
+        except (ValidationError, IOError, OSError, json.JSONDecodeError) as err:
             logger.error('parse_ascend_hardware_data failed! please theck. detail: %s', err)
             return []
 
@@ -1124,11 +1093,7 @@ class MsprofTimelineAnalyser(BaseAnalyser):
                 new_metadata.append(tid_mapper.get(tid))
             return new_metadata + new_events
 
-        except ValidationError as err:
-            logger.error('parse_hccl_data failed! please theck. detail: %s', err)
-            raise ValidationError from err
-
-        except (IOError, OSError, json.JSONDecodeError) as err:
+        except (ValidationError, IOError, OSError, json.JSONDecodeError) as err:
             logger.error('parse_hccl_data failed! please theck. detail: %s', err)
             return []
 
@@ -1175,11 +1140,7 @@ class MsprofTimelineAnalyser(BaseAnalyser):
 
             return new_events
 
-        except ValidationError as err:
-            logger.error('parse_cann_data failed! please theck. detail: %s', err)
-            raise ValidationError from err
-
-        except (IOError, OSError, json.JSONDecodeError) as err:
+        except (ValidationError, IOError, OSError, json.JSONDecodeError) as err:
             logger.error('parse_cann_data failed! please theck. detail: %s', err)
             return []
 
@@ -1410,9 +1371,13 @@ class MsprofTimelineAnalyser(BaseAnalyser):
         for rank_id, (job_dir, _) in sub_dirs.items():
             step_trace_file_name = fr'{job_dir}/summary/step_trace_*.csv'
             file_list = glob.glob(step_trace_file_name)
-            file_name = max(file_list)
             model_set = set()
-            with open(file_name, 'r', newline='') as fr:
+            if not file_list:
+                model_dict[rank_id] = model_set
+                model_merged.update(model_set)
+                continue
+
+            with open(max(file_list), 'r', newline='') as fr:
                 reader = csv.DictReader(fr, delimiter=',', quotechar='"')
                 for row in reader:
                     model_id = row.get('Model ID')
