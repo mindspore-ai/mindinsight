@@ -375,7 +375,7 @@ limitations under the License.
     <div class="dashboard-item">
 
       <!-- Msprof time line tips -->
-      <div class="item-head" v-if="!isPynative">
+      <div class="item-head">
         <div class="title">{{ $t('profiling.timeLineMsprof') }}</div>
         <div class="tip-icon">
           <el-tooltip placement="bottom"
@@ -444,7 +444,7 @@ limitations under the License.
             </el-select>
           </span>
         </div>
-        <div class="msprof_timeline" v-show="timelineInfoMsprof.kindSelected=='detail'">
+        <div class="msprof_timeline" v-show="timelineInfoMsprof.kindSelected=='detail' && !isPynative">
           <span>{{$t('profiling.modelList')}}</span>
           <span>
             <el-select
@@ -474,7 +474,7 @@ limitations under the License.
             </el-select>
           </span>
         </div>
-        <div class="msprof_timeline">
+        <div class="msprof_timeline" v-show="!isPynative">
           <span>{{$t('profiling.mergeModel')}}</span>
           <span>
             <el-select v-model="timelineInfoMsprof.mergeModelSelected"
@@ -503,7 +503,7 @@ limitations under the License.
       </div>
       <!-- Msprof time line no data -->
       <div class="image-noData"
-           v-if="timelineInfoMsprof.noData && !isPynative">
+           v-if="timelineInfoMsprof.noData">
         <div>
           <img :src="require('@/assets/images/nodata.png')"
                alt="" />
@@ -725,7 +725,7 @@ export default {
     setTimeout(() => {
       this.$bus.$on('collapse', this.resizeTrace);
     }, 500);
-    if (!this.isPynative) this.queryMsprofTimelineOption();
+    this.queryMsprofTimelineOption();
   },
   watch: {
     rankID: {
