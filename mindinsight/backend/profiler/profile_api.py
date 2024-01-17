@@ -585,6 +585,7 @@ def get_msprof_timeline():
     model_list = request.args.get("model_list", None)
     kind = request.args.get("kind", None)
     merge_model = request.args.get("merge_model", True)
+    scope_name = request.args.get("scope_name", False)
 
     if rank_list:
         rank_list = [int(rank_id) for rank_id in rank_list.split(',')]
@@ -600,16 +601,20 @@ def get_msprof_timeline():
     else:
         merge_model = True
 
+    if scope_name == 'false':
+        scope_name = False
+    else:
+        scope_name = True
+
     flag = get_all_export_flag(profiler_dir_abs)
     if flag:
         analyser = AnalyserFactory.instance().get_analyser(
             'msprof_timeline', profiler_dir_abs, None)
+        timeline = analyser.get_merged_timeline(rank_list, model_list, kind, merge_model, scope_name)
     else:
         analyser = AnalyserFactory.instance().get_analyser(
             'msprof_timeline_old', profiler_dir_abs, None)
-
-    timeline = analyser.get_merged_timeline(rank_list, model_list, kind, merge_model)
-
+        timeline = analyser.get_merged_timeline(rank_list, model_list, kind, merge_model)
     return jsonify(timeline)
 
 
