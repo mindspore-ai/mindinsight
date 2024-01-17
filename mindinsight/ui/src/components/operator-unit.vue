@@ -734,7 +734,7 @@ export default {
                     },
                     pageTotal: 0,
                     op_filter_condition: {
-                      op_type: {
+                      kernel_type: {
                         in: [k[0]],
                       },
                     },
