@@ -584,8 +584,8 @@ def get_msprof_timeline():
     rank_list = request.args.get("rank_list", None)
     model_list = request.args.get("model_list", None)
     kind = request.args.get("kind", None)
-    merge_model = request.args.get("merge_model", True)
-    scope_name = request.args.get("scope_name", False)
+    merge_model = request.args.get("merge_model", 'true')
+    scope_name = request.args.get("scope_name", 'false')
 
     if rank_list:
         rank_list = [int(rank_id) for rank_id in rank_list.split(',')]
