@@ -31,7 +31,7 @@ from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from mindinsight.profiler.analyser.minddata_analyser import MinddataAnalyser
 from mindinsight.profiler.common.exceptions.exceptions import ProfilerFileNotFoundException
 from mindinsight.profiler.common.util import analyse_device_list_from_profiler_dir, \
-    check_train_job_and_profiler_dir, get_profile_data_version, get_all_export_flag
+    check_train_job_and_profiler_dir, get_profile_data_version
 from mindinsight.profiler.common.validator.validate import validate_condition, validate_ui_proc
 from mindinsight.profiler.common.validator.validate import validate_minddata_pipeline_condition
 from mindinsight.profiler.common.validator.validate_path import \
@@ -155,8 +155,7 @@ def get_training_trace_graph():
         if os.path.exists(profiler_info_file):
             with open(profiler_info_file, 'r', encoding='utf-8') as file:
                 profiler_info = json.loads(file.read())
-            if profiler_info.get("context_mode", "graph").lower() == "pynative" or len(profiler_info.get("graph_ids",
-                                                                                                         [])) > 1:
+            if profiler_info.get("context_mode", "graph").lower() == "pynative":
                 return jsonify(graph_info)
             if profiler_info.get("is_heterogeneous", False):
                 graph_info = {'is_heterogeneous': True}
@@ -606,15 +605,10 @@ def get_msprof_timeline():
     else:
         scope_name = True
 
-    flag = get_all_export_flag(profiler_dir_abs)
-    if flag:
-        analyser = AnalyserFactory.instance().get_analyser(
-            'msprof_timeline', profiler_dir_abs, None)
-        timeline = analyser.get_merged_timeline(rank_list, model_list, kind, merge_model, scope_name)
-    else:
-        analyser = AnalyserFactory.instance().get_analyser(
-            'msprof_timeline_old', profiler_dir_abs, None)
-        timeline = analyser.get_merged_timeline(rank_list, model_list, kind, merge_model)
+    analyser = AnalyserFactory.instance().get_analyser(
+        'msprof_timeline', profiler_dir_abs, None)
+    timeline = analyser.get_merged_timeline(rank_list, model_list, kind, merge_model, scope_name)
+
     return jsonify(timeline)
 
 
