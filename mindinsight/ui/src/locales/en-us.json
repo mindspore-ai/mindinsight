@@ -328,6 +328,7 @@
     "titleText": "Profiling - Single-host",
     "profilingDashboard": "Profiling Dashboard",
     "showAverage": "Average value",
+    "iterTotalTime": "Step Total Time",
     "iterationGapTime": "Step Interval",
     "fpBpTime": "Forward and Backward Propagation",
     "fpTime": "Forward Propagation",

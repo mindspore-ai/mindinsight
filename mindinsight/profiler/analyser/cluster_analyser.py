@@ -172,10 +172,11 @@ class ClusterStepTraceAnalyser(ClusterAnalyser):
         # step_trace_info[7]: fp_and_bp time
         # step_trace_info[8]: tail time
         # divided by 1e5, the unit becomes a millisecond
+        iter_total_time = round(float(step_trace_info[3]) / 1e5, 4)
         iteration_interval = round(float(step_trace_info[6]) / 1e5, 4)
         fp_and_bp = round(float(step_trace_info[7]) / 1e5, 4)
         tail = round(float(step_trace_info[8]) / 1e5, 4)
-        step_trace_info = [iteration_interval, fp_and_bp, tail]
+        step_trace_info = [iteration_interval, fp_and_bp, tail, iter_total_time]
         return step_trace_info
 
     def _get_cluster_step_bottleneck_info(self, step_num, stage_id):

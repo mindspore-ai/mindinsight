@@ -227,6 +227,7 @@ export default {
         iteration_interval: this.$t('profiling.iterationGapTime'),
         fp_and_bp: this.$t('profiling.fpBpTime'),
         tail: this.$t('profiling.tailTime'),
+        iter_total_time: this.$t('profiling.iterTotalTime'),
         communication_alone: this.$t('profilingCluster.communicationAloneTime'),
         computation: this.$t('profilingCluster.computationTime'),
         receive_alone: this.$t('profilingCluster.receiveAloneTime'),
@@ -278,8 +279,9 @@ export default {
                   this.$t('profiling.iterationGapTime'),
                   this.$t('profiling.fpBpTime'),
                   this.$t('profiling.tailTime'),
+                  this.$t('profiling.iterTotalTime')
                 ],
-                cols: ['iteration_interval', 'fp_and_bp', 'tail'],
+                cols: ['iteration_interval', 'fp_and_bp', 'tail', 'iter_total_time'],
                 tips: [
                   {
                     label: this.$t('profiling.iterationGapTime'),

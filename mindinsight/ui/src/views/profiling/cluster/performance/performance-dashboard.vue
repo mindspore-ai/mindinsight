@@ -80,6 +80,7 @@ export default {
           this.$t('profiling.iterationGapTime'),
           this.$t('profiling.fpBpTime'),
           this.$t('profiling.tailTime'),
+          this.$t('profiling.iterTotalTime')
         ],
         title: this.$t('profilingCluster.stepChartTitle'),
       }, // Chart object of performance window
@@ -164,6 +165,7 @@ export default {
                     this.$t('profiling.iterationGapTime'),
                     this.$t('profiling.fpBpTime'),
                     this.$t('profiling.tailTime'),
+                    this.$t('profiling.iterTotalTime')
                   ],
                 },
                 'model-parallel': {

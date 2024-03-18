@@ -327,6 +327,7 @@
     "titleText": "性能分析 - 单机",
     "profilingDashboard": "性能看板",
     "showAverage": "展示平均值",
+    "iterTotalTime": "迭代总耗时",
     "iterationGapTime": "迭代间隙时间",
     "fpBpTime": "前向+反向时间",
     "fpTime": "前向时间",
