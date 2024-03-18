@@ -45,22 +45,24 @@ class TimelineService:
         operator_time_maps = {}
 
         for device_name, cur_op_nodes in self.op_nodes.items():
-            step_start = 0
+            step_start = 0.0
             step_end = float('inf')
             for item in self.all_data.get(device_name):
                 if item['name'] == step:
-                    step_start = item['ts']
-                    step_end = item['ts'] + item['dur']
+                    step_start = float(item['ts'])
+                    step_end = step_start + float(item['dur'])
                     break
 
             operator_time_maps[device_name] = {}
             for item in cur_op_nodes:
-                if step_start < item['ts'] < step_end or\
-                    item['dur'] < step_start < item['ts'] + item['dur']:
-                    operator_time_maps.get(device_name)[item['name']] = {"st": item['ts'],\
-                    "ed": item['ts'] + item['dur'], "dur": item['dur']}
-                    max_time = max(max_time, item['ts'] + item['dur'])
-                    min_time = min(min_time, item['ts'])
+                ts = float(item['ts'])
+                dur = float(item['dur'])
+                if step_start < ts < step_end or dur < step_start < ts + dur:
+                    operator_time_maps.get(device_name)[item['name']] = {"st": ts,
+                                                                         "ed": ts + dur,
+                                                                         "dur": dur}
+                    max_time = max(max_time, ts + dur)
+                    min_time = min(min_time, ts)
 
         def cmp(a):
             return int(re.search(r'\d+', a[0]).group())
@@ -80,10 +82,10 @@ class TimelineService:
                         aggre_node['st_min'] = min(aggre_node.get('st_min'), node.get('st'))
                         aggre_node['ed_max'] = max(aggre_node.get('ed_max'), node.get('ed'))
                         aggre_node['ed_min'] = min(aggre_node.get('ed_min'), node.get('ed'))
-                        aggre_node['st_avg'] = (node['st'] + aggre_node['st_avg'] *\
-                        aggre_node['n']) / (aggre_node['n'] + 1)
-                        aggre_node['ed_avg'] = (node['ed'] + aggre_node['ed_avg'] *\
-                        aggre_node['n']) / (aggre_node['n'] + 1)
+                        aggre_node['st_avg'] = (node['st'] + aggre_node['st_avg'] *
+                                                aggre_node['n']) / (aggre_node['n'] + 1)
+                        aggre_node['ed_avg'] = (node['ed'] + aggre_node['ed_avg'] *
+                                                aggre_node['n']) / (aggre_node['n'] + 1)
                         aggre_node['n'] += 1
                     else:
                         data[node_name] = {
@@ -96,8 +98,8 @@ class TimelineService:
                             'n': 1
                         }
             stage_data[stage_name] = {"data": data, "devices": device_names}
-        TimelineData = collections.namedtuple('TimelineData',\
-            ['operator_time_maps', 'min_time', 'max_time', 'stage_data'])
+        TimelineData = collections.namedtuple('TimelineData',
+                                              ['operator_time_maps', 'min_time', 'max_time', 'stage_data'])
         timeline_data = TimelineData(operator_time_maps, min_time, max_time, stage_data)
         return timeline_data
 
@@ -151,8 +153,9 @@ class TimelineService:
             minn = float('inf')
             for item in cur_one_step_op:
                 if 'name' in item and 'AllReduce' in item['name']:
-                    if item['ts'] < minn:
-                        minn = item['ts']
+                    ts = float(item['ts'])
+                    if ts < minn:
+                        minn = ts
                         min_all_reduce = item
             if min_all_reduce == '':
                 continue
@@ -162,8 +165,8 @@ class TimelineService:
                 for item in one_step_op.get(device_name2):
                     if item['name'] == min_all_reduce['name']:
                         visited.add(device_name2)
-                        min_all_reduce['ed'] = min_all_reduce['ts'] + min_all_reduce['dur']
-                        item['ed'] = item['ts'] + item['dur']
+                        min_all_reduce['ed'] = float(min_all_reduce['ts']) + float(min_all_reduce['dur'])
+                        item['ed'] = float(item['ts']) + float(item['dur'])
                         self.align_info[device_name2] = min_all_reduce['ed'] - item['ed']
                         stages.append(device_name2)
                         break
@@ -174,7 +177,7 @@ class TimelineService:
         for device_name, cur_data in self.all_data.items():
             for item in cur_data:
                 if 'ts' in item:
-                    item['ts'] += self.align_info.get(device_name)
+                    item['ts'] = float(item['ts']) + self.align_info.get(device_name)
         self.stage_device_map = {}
 
         def cmp(a):
@@ -196,15 +199,15 @@ class TimelineService:
         ret = {}
         for device_name, cur_op_nodes in self.op_nodes.items():
             ret[device_name] = []
-            step_start = 0
+            step_start = 0.0
             step_end = float('inf')
             for item in self.all_data.get(device_name):
                 if item['name'] == step:
-                    step_start = item['ts']
-                    step_end = item['ts'] + item['dur']
+                    step_start = float(item['ts'])
+                    step_end = step_start + float(item['dur'])
                     break
             for item in cur_op_nodes:
-                if item['ts'] > step_start and item['ts'] < step_end:
+                if step_start < float(item['ts']) < step_end:
                     ret.get(device_name).append(item)
         return ret
 
@@ -218,16 +221,16 @@ class TimelineService:
         ret = {}
         for device_name, cur_data in self.all_data.items():
             ret[device_name] = []
-            step_start = 0
+            step_start = 0.0
             step_end = float('inf')
             for item in cur_data:
                 if item['name'] == step:
-                    step_start = item['ts']
-                    step_end = item['ts'] + item['dur']
+                    step_start = float(item['ts'])
+                    step_end = step_start + float(item['dur'])
                     break
             for item in cur_data:
                 if 'scope_level' in item:
-                    if item['ts'] > step_start and item['ts'] < step_end:
+                    if step_start < float(item['ts']) < step_end:
                         ret.get(device_name).append(item)
         return ret
 
@@ -247,7 +250,7 @@ def _find_scope(cur_scope_by_level, op):
         l = 0
         r = len(intervals) - 1
         ans = -1
-        t = op['ts']
+        t = float(op['ts'])
         while l <= r:
             mid = (l + r) >> 1
             if intervals[mid][0] <= t:
@@ -255,6 +258,6 @@ def _find_scope(cur_scope_by_level, op):
                 l = mid + 1
             else:
                 r = mid - 1
-        if ans != -1 and intervals[ans][0] + intervals[ans][1] >= op['ts'] + op['dur']:
+        if ans != -1 and intervals[ans][0] + intervals[ans][1] >= float(op['ts']) + float(op['dur']):
             return cur_scope, True
     return "", False

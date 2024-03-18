@@ -116,7 +116,10 @@ class ParallelProposer(Proposer):
         percent = 0.0
         for step_interval in step_intervals:
             # get how much more than the average
-            proportion = step_interval["step_interval"] / avg_step_interval - 1
+            if avg_step_interval == 0:
+                proportion = 0.0
+            else:
+                proportion = step_interval["step_interval"] / avg_step_interval - 1
             if proportion > self._step_interval_threshold and proportion > percent:
                 rank_id = step_interval["rank_id"]
                 val = step_interval["step_interval"]
