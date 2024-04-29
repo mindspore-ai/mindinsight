@@ -249,6 +249,54 @@ class MsprofTimelineAnalyser(BaseAnalyser):
             filter_condition (dict): The filter condition.
         """
 
+    def _parse_overlap_analysis_data(self, file_list, rank_id, difference_ts):
+        """
+        parse overlap analysis data
+        """
+        try:
+            flags = os.O_RDONLY
+            raw_data = []
+            for file_path in file_list:
+                with os.fdopen(os.open(file_path, flags, 0o400), 'r') as fr:
+                    raw_data.extend(json.load(fr))
+
+            pid = None
+            for event in raw_data:
+                if event.get('name') == 'process_name' and event.get("ph") == "M" and \
+                        event.get('args').get('name') == 'Overlap Analysis':
+                    pid = event.get('pid')
+                    break
+
+            if not pid:
+                logger.warning('Could not found process_name pid. method: _parse_overlap_analysis_data')
+                return []
+
+            new_events = []
+            new_pid = int(f'{self.overlap_index}{rank_id}')
+            for event in raw_data:
+                if event.get('pid') != pid:
+                    continue
+
+                if event.get('name') == 'process_name' and event.get("ph") == "M":
+                    event["args"]["name"] += f" Rank{rank_id}"
+
+                if event.get('name') == 'process_sort_index' and event.get("ph") == "M":
+                    event["args"]["sort_index"] = self.overlap_index
+
+                event['pid'] = new_pid
+                if event.get('ts'):
+                    ts = Decimal(event.get('ts')).quantize(Decimal('0.000'))
+                    ts += difference_ts
+                    event['ts'] = str(ts)
+
+                new_events.append(event)
+
+            return new_events
+
+        except (ValidationError, IOError, OSError, json.JSONDecodeError) as err:
+            logger.error('parse_overlap_analysis_data failed! please theck. detail: %s', err)
+            return []
+
     def _parse_step_trace_metadata(self, raw_data, model_list):
         """
         Get step trace by merge models
@@ -627,7 +675,7 @@ class MsprofTimelineAnalyser(BaseAnalyser):
                 file_list = get_newest_file(glob.glob(step_trace_file_name))
 
                 if not file_list:
-                    logger.error('Could not find step trace file in %s', job_dir)
+                    logger.warning('Could not find step trace file in %s', job_dir)
                 else:
                     task_list.append(pool.submit(self._parse_step_trace_data, file_list,
                                                  rank_id, difference_ts, None,
@@ -638,7 +686,7 @@ class MsprofTimelineAnalyser(BaseAnalyser):
                 file_list = get_newest_file(glob.glob(overlap_file_name))
 
                 if not file_list:
-                    logger.error('Could not find overlap analysis file in %s', job_dir)
+                    logger.warning('Could not find overlap analysis file in %s', job_dir)
                 else:
                     task_list.append(pool.submit(self._parse_overlap_analysis_data, file_list,
                                                  rank_id, difference_ts))
@@ -679,7 +727,7 @@ class MsprofTimelineAnalyser(BaseAnalyser):
                 step_trace_file_name = fr'{job_dir}/step_trace_*.json'
                 file_list_step_trace = get_newest_file(glob.glob(step_trace_file_name))
                 if not file_list_step_trace:
-                    logger.error('Could not find step trace file in %s', job_dir)
+                    logger.warning('Could not find step trace file in %s', job_dir)
                 else:
                     task_list.append(pool.submit(self._parse_step_trace_data, file_list_step_trace,
                                                  rank_id, difference_ts, model_list, merge_model))
@@ -688,7 +736,7 @@ class MsprofTimelineAnalyser(BaseAnalyser):
                 msprof_file_name = fr'{job_dir}/msprof_*.json'
                 file_list_msprof = get_newest_file(glob.glob(msprof_file_name))
                 if not file_list_msprof:
-                    logger.error('Could not find msprof file in %s', job_dir)
+                    logger.warning('Could not find msprof file in %s', job_dir)
                 else:
                     ascend_timeline, scope_data = self._parse_msprof_data(file_list_msprof,
                                                                           rank_id, difference_ts, model_list,
@@ -731,6 +779,8 @@ class MsprofTimelineAnalyser(BaseAnalyser):
         for rank_id, (job_dir, _) in sub_dirs.items():
             step_trace_file_name = fr'{job_dir}/step_trace_*.csv'
             file_list = get_newest_file(glob.glob(step_trace_file_name))
+            if not file_list:
+                continue
             model_set = set()
             with open(file_list[0], 'r', newline='') as fr:
                 reader = csv.DictReader(fr, delimiter=',', quotechar='"')
