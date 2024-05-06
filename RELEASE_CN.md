@@ -2,7 +2,21 @@
 
 [View English](./RELEASE.md)
 
-## MindInsight 2.3.0-rc1 Release Notes
+## MindSpore Insight 2.3.0-rc2 Release Notes
+
+### Bug Fixes
+
+- [I9JTLU] 修复summary timeline下载页面报"system error"的错误。
+
+### 贡献者
+
+感谢以下人员做出的贡献:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, DaWei Fan, XinYu Shi, KaiDa Qiu, Wei Zhang, XianQi Zhou, Chen Mao, XiHan Peng.
+
+欢迎以任何形式对项目提供贡献！
+
+## MindSpore Insight 2.3.0-rc1 Release Notes
 
 ### 主要特性和增强
 
@@ -27,7 +41,7 @@ Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxian
 
 欢迎以任何形式对项目提供贡献！
 
-## MindSpore MindInsight 2.2.0 Release Notes
+## MindSpore Insight 2.2.0 Release Notes
 
 ### 主要特性和增强
 
@@ -113,7 +127,7 @@ Ning Ma, Chuting Liu, Jiaxing Zhu, Qingxiang Zang, Yaomin Mao.
 
 欢迎以任何形式对项目提供贡献！
 
-## MindInsight 2.0.0-alpha Release Notes
+## MindSpore Insight 2.0.0-alpha Release Notes
 
 ### 主要特性和增强
 
@@ -138,7 +152,7 @@ Ning Ma, Chuting Liu, Jiaxing Zhu, Qingxiang Zang, Yaomin Mao.
 
 欢迎以任何形式对项目提供贡献！
 
-## MindInsight 1.9.0 Release Notes
+## MindSpore Insight 1.9.0 Release Notes
 
 ### 主要特性和增强
 
@@ -165,7 +179,7 @@ Special thanks to Zhongwei Wang, Rongchen Zhu, Jiaying Lu, Zhiyong Wang, Yating 
 
 欢迎以任何形式对项目提供贡献！
 
-## MindInsight 1.8.0 Release Notes
+## MindSpore Insight 1.8.0 Release Notes
 
 ### 主要特性和增强
 
@@ -194,7 +208,7 @@ Special thanks to Zhiyong Wang, Zhongwei Wang, Rusheng Pan, Yating Wei, Luoxuan 
 
 欢迎以任何形式对项目提供贡献！
 
-## MindInsight 1.7.0 Release Notes
+## MindSpore Insight 1.7.0 Release Notes
 
 ### 主要特性及改进
 

@@ -2,7 +2,21 @@
 
 [查看中文](./RELEASE_CN.md)
 
-## MindInsight 2.3.0-rc1 Release Notes
+## MindSpore Insight 2.3.0-rc2 Release Notes
+
+### Bug Fixes
+
+- [I9JTLU] Fixed the "system error" reported on the summary timeline download page.
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, DaWei Fan, XinYu Shi, KaiDa Qiu, Wei Zhang, XianQi Zhou, Chen Mao, XiHan Peng.
+
+Contributions of any kind are welcome!
+
+## MindSpore Insight 2.3.0-rc1 Release Notes
 
 ### Major Features and Improvements
 
@@ -113,7 +127,7 @@ Ning Ma, Chuting Liu, Jiaxing Zhu, Qingxiang Zang, Yaomin Mao.
 
 Contributions of any kind are welcome!
 
-## MindInsight 2.0.0-alpha Release Notes
+## MindSpore Insight 2.0.0-alpha Release Notes
 
 ### Major Features and Improvements
 
@@ -138,7 +152,7 @@ Ning Ma, Chuting Liu, Jiaxing Zhu, Qingxiang Zang, Yaomin Mao.
 
 Contributions of any kind are welcome!
 
-## MindInsight 1.9.0 Release Notes
+## MindSpore Insight 1.9.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -167,7 +181,7 @@ Special thanks to Zhongwei Wang, Rongchen Zhu, Jiaying Lu, Zhiyong Wang, Yating 
 
 Contributions of any kind are welcome!
 
-## MindInsight 1.8.0 Release Notes
+## MindSpore Insight 1.8.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -198,7 +212,7 @@ Special thanks to Zhiyong Wang, Zhongwei Wang, Rusheng Pan, Yating Wei, Luoxuan 
 
 Contributions of any kind are welcome!
 
-## MindInsight 1.7.0 Release Notes
+## MindSpore Insight 1.7.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -223,9 +237,9 @@ Special thanks to Zhiyong Wang, Zhongwei Wang, Rusheng Pan, Yating Wei, Luoxuan 
 
 Contributions of any kind are welcome!
 
-# MindInsight 1.6.0
+# MindSpore Insight 1.6.0
 
-## MindInsight 1.6.0 Release Notes
+## MindSpore Insight 1.6.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -266,9 +280,9 @@ Special thanks to Zhiyong Wang, Zhongwei Wang, Rusheng Pan, Yating Wei, Luoxuan 
 
 Contributions of any kind are welcome!
 
-# MindInsight 1.5.0
+# MindSpore Insight 1.5.0
 
-## MindInsight 1.5.0 Release Notes
+## MindSpore Insight 1.5.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -300,7 +314,7 @@ Contributions of any kind are welcome!
 
 ##### Command Line Interface
 
-reviously, we don't set memory limit for offline debugger. In order to use offline debugger in limited environment, we provide with memory limit options when start MindInsight server.  View the [Offline Debugger Tutorial](https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.5/debugger_offline.html).
+reviously, we don't set memory limit for offline debugger. In order to use offline debugger in limited environment, we provide with memory limit options when start MindSpore Insight server.  View the [Offline Debugger Tutorial](https://www.mindspore.cn/mindinsight/docs/zh-CN/r1.5/debugger_offline.html).
 
 New start command options:
 
@@ -321,9 +335,9 @@ Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Mi
 
 Contributions of any kind are welcome!
 
-# MindInsight 1.4.0
+# MindSpore Insight 1.4.0
 
-## MindInsight 1.4.0 Release Notes
+## MindSpore Insight 1.4.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -349,9 +363,9 @@ Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Mi
 
 Contributions of any kind are welcome!
 
-# MindInsight 1.3.0
+# MindSpore Insight 1.3.0
 
-## MindInsight 1.3.0 Release Notes
+## MindSpore Insight 1.3.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -380,7 +394,7 @@ Contributions of any kind are welcome!
 
 #### Build & Installation
 
-- [STABLE] Unified MindInsight installation package, supporting multiple Linux distributions, CPU architectures(x86/ARM), and Python versions(3.7/3.8/3.9).
+- [STABLE] Unified MindSpore Insight installation package, supporting multiple Linux distributions, CPU architectures(x86/ARM), and Python versions(3.7/3.8/3.9).
 
 ### API Change
 
@@ -412,9 +426,9 @@ Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Mi
 
 Contributions of any kind are welcome!
 
-# MindInsight 1.2.0
+# MindSpore Insight 1.2.0
 
-## MindInsight 1.2.0 Release Notes
+## MindSpore Insight 1.2.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -474,9 +488,9 @@ Congli Gao, Longfei Li, Yongxiong Liang, Chongming Liu, Pengting Luo, Yanming Mi
 
 Contributions of any kind are welcome!
 
-# MindInsight 1.1.0
+# MindSpore Insight 1.1.0
 
-## MindInsight 1.1.0 Release Notes
+## MindSpore Insight 1.1.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -540,9 +554,9 @@ Congli Gao, Jianfeng Zhu, Zhenzhong Kou, Longfei Li, Yongxiong Liang, Chongming 
 
 Contributions of any kind are welcome!
 
-# MindInsight 1.0.0
+# MindSpore Insight 1.0.0
 
-## MindInsight 1.0.0 Release Notes
+## MindSpore Insight 1.0.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -565,9 +579,9 @@ Congli Gao, Jianfeng Zhu, Zhenzhong Kou, Hongzhang Li, Longfei Li, Yongxiong Lia
 
 Contributions of any kind are welcome!
 
-# MindInsight 0.7.0-beta
+# MindSpore Insight 0.7.0-beta
 
-## MindInsight 0.7.0 Release Notes
+## MindSpore Insight 0.7.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -589,9 +603,9 @@ Congli Gao, Weifeng Huang, Zhenzhong Kou, Hongzhang Li, Longfei Li, Yongxiong Li
 
 Contributions of any kind are welcome!
 
-# MindInsight 0.6.0-beta
+# MindSpore Insight 0.6.0-beta
 
-## MindInsight 0.6.0 Release Notes
+## MindSpore Insight 0.6.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -614,9 +628,9 @@ Congli Gao, Weifeng Huang, Zhenzhong Kou, Hongzhang Li, Longfei Li, Yongxiong Li
 
 Contributions of any kind are welcome!
 
-# MindInsight 0.5.0-beta
+# MindSpore Insight 0.5.0-beta
 
-## MindInsight 0.5.0 Release Notes
+## MindSpore Insight 0.5.0 Release Notes
 
 ### Major Features and Improvements
 
@@ -648,15 +662,15 @@ Chao Chen, Congli Gao, Ye Huang, Weifeng Huang, Zhenzhong Kou, Hongzhang Li, Lon
 
 Contributions of any kind are welcome!
 
-# MindInsight 0.3.0-alpha
+# MindSpore Insight 0.3.0-alpha
 
-## MindInsight 0.3.0 Release Notes
+## MindSpore Insight 0.3.0 Release Notes
 
 ### Major Features and Improvements
 
 - Profiling
     - Provide easy to use apis for profiling start/stop and profiling data analyse (on Ascend only).
-    - Provide operators performance display and analysis on MindInsight UI.
+    - Provide operators performance display and analysis on MindSpore Insight UI.
 - Large scale network computation graph visualization.
 - Optimize summary record implementation and improve its performance.
 - Improve lineage usability
@@ -682,15 +696,15 @@ Chao Chen, Congli Gao, Ye Huang, Weifeng Huang, Zhenzhong Kou, Hongzhang Li, Lon
 
 Contributions of any kind are welcome!
 
-# MindInsight 0.2.0-alpha
+# MindSpore Insight 0.2.0-alpha
 
-## MindInsight 0.2.0 Release Notes
+## MindSpore Insight 0.2.0 Release Notes
 
 ### Major Features and Improvements
 
 - Parameter distribution graph (Histogram).
 
-    Now you can use [`HistogramSummary`](https://www.mindspore.cn/docs/en/master/api_python/mindspore.ops.html#mindspore.ops.HistogramSummary) and MindInsight to record and visualize distribution info of tensors. See our [tutorial](https://www.mindspore.cn/mindinsight/docs/en/master/index.html).
+    Now you can use [`HistogramSummary`](https://www.mindspore.cn/docs/en/master/api_python/mindspore.ops.html#mindspore.ops.HistogramSummary) and MindSpore Insight to record and visualize distribution info of tensors. See our [tutorial](https://www.mindspore.cn/mindinsight/docs/en/master/index.html).
 
 - Lineage support Custom information
 - GPU support
@@ -712,9 +726,9 @@ Ye Huang, Weifeng Huang, Zhenzhong Kou, Pengting Luo, Hongzhang Li, Yongxiong Li
 
 Contributions of any kind are welcome!
 
-# MindInsight 0.1.0-alpha
+# MindSpore Insight 0.1.0-alpha
 
-## MindInsight 0.1.0 Release Notes
+## MindSpore Insight 0.1.0 Release Notes
 
 - Training process observation
     - Provides and displays training process information, including computational graphs and training process indicators.
