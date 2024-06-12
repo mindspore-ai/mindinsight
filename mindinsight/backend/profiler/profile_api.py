@@ -173,12 +173,6 @@ def get_training_trace_graph():
         }})
     graph_info['summary'] = analyser.summary
     graph_info['point_info'] = analyser.point_info(graph_type)
-    graph_info['is_heterogeneous'] = False
-
-    # In heterogeneous training scene, do not display step trace data.
-    cpu_op_type_file_name = f"cpu_op_type_info_{device_id}.csv"
-    if cpu_op_type_file_name in os.listdir(profiler_dir_abs):
-        graph_info = {'is_heterogeneous': True}
 
     return jsonify(graph_info)
 
@@ -844,12 +838,12 @@ def get_cluster_step_trace_info():
     device_id = condition.get("device_id", "0")
     to_int(device_id, 'device_id')
 
-    # In heterogeneous training scene, do not display cluster step trace data.
-    cpu_op_type_file_name_prefix = "cpu_op_type_info_"
-    for item in os.listdir(profiler_dir_abs):
-        if cpu_op_type_file_name_prefix in item:
-            step_trace_info = {'is_heterogeneous': True}
-            return jsonify(step_trace_info)
+    profiler_info_file = os.path.join(profiler_dir_abs, f'profiler_info_{device_id}.json')
+    if os.path.exists(profiler_info_file):
+        with open(profiler_info_file, 'r', encoding='utf-8') as file:
+            profiler_info = json.loads(file.read())
+        if profiler_info.get("is_heterogeneous", False):
+            return jsonify({'is_heterogeneous': True})
 
     analyser = AnalyserFactory.instance().get_analyser(
         'cluster_step_trace', profiler_dir_abs, device_id
