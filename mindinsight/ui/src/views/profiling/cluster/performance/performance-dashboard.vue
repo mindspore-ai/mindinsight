@@ -150,10 +150,6 @@ export default {
         };
         RequestService.getClusterInfo(params)
           .then((res) => {
-            if (typeof res.data === 'object' && res.data.is_heterogeneous) {
-              this.performanceState = HETEROGENEOUS;
-              return;
-            }
             if (res?.data?.info?.length > 0) {
               let chartData = [];
               const parallelMode = res.data['parallel-mode'];
