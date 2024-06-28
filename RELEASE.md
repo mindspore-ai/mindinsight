@@ -2,6 +2,22 @@
 
 [查看中文](./RELEASE_CN.md)
 
+## MindSpore Insight 2.3.0 Release Notes
+
+### Major Features and Improvements
+
+#### Profiler
+
+- [STABLE] In PyNative mode, Timeline intergrates host profiling information, including task time and user-side call stack information.
+
+### Contributors
+
+Thanks goes to these wonderful people:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, DaWei Fan, XinYu Shi, KaiDa Qiu, Wei Zhang, XianQi Zhou, Chen Mao, XiHan Peng.
+
+Contributions of any kind are welcome!
+
 ## MindSpore Insight 2.3.0-rc2 Release Notes
 
 ### Bug Fixes
