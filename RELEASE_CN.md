@@ -2,6 +2,22 @@
 
 [View English](./RELEASE.md)
 
+## MindSpore Insight 2.3.0 Release Notes
+
+### 主要特性和增强
+
+#### Profiler
+
+- [STABLE] PyNative模式下Timeline整合host profiling信息，包括任务耗时、用户侧调用栈信息。
+
+### 贡献者
+
+感谢以下人员做出的贡献:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, DaWei Fan, XinYu Shi, KaiDa Qiu, Wei Zhang, XianQi Zhou, Chen Mao, XiHan Peng.
+
+欢迎以任何形式对项目提供贡献！
+
 ## MindSpore Insight 2.3.0-rc2 Release Notes
 
 ### Bug Fixes
