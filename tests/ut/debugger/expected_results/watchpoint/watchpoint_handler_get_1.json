@@ -1,1 +1,0 @@
-[{"id": 1, "watch_condition": {"id": "tensor_too_small", "params": [{"name": "max_lt", "value": 1.0}], "abbr": "TS"}}, {"id": 2, "watch_condition": {"id": "tensor_too_small", "params": [{"name": "min_lt", "value": 1.0}], "abbr": "TS"}}, {"id": 3, "watch_condition": {"id": "tensor_too_large", "params": [{"name": "max_gt", "value": 1.0}], "abbr": "TL"}}]

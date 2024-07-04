@@ -19,11 +19,6 @@ from mindinsight.conf import settings
 from mindinsight.datavisual.common.log import logger
 from mindinsight.datavisual.data_transform.data_manager import DATA_MANAGER
 from mindinsight.lineagemgr.cache_item_updater import LineageCacheItemUpdater
-from mindinsight.debugger.debugger_folder_analyzer import DebuggerFolderAnalyzer
-
-ANALYZERS = {
-    "debugger_folder_analyzer": DebuggerFolderAnalyzer()
-}
 
 
 def init_module(app):
@@ -36,8 +31,6 @@ def init_module(app):
     """
     # Just to suppress pylint warning about unused arg.
     logger.debug("App: %s", type(app))
-    for analyzer in ANALYZERS.values():
-        DATA_MANAGER.register_folder_analyzer(analyzer)
     DATA_MANAGER.register_brief_cache_item_updater(LineageCacheItemUpdater())
     # Let gunicorn load other modules first.
     time.sleep(1)
