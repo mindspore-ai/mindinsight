@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2020 Huawei Technologies Co., Ltd.
+# Copyright 2020-2024 Huawei Technologies Co., Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ run_mindinsight_test() {
                 continue
             fi
             echo "Run test for path: $sub_dir"
-            pytest "$sub_dir" --disable-pytest-warnings -m "$PYTEST_MARK"
+            python -m pytest "$sub_dir" --disable-pytest-warnings -m "$PYTEST_MARK"
         done
     done
 
