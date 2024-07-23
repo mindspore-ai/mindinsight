@@ -2,6 +2,61 @@
 
 [View English](./RELEASE.md)
 
+## MindSpore Insight 2.3.0 Release Notes
+
+### 主要特性和增强
+
+#### Profiler
+
+- [STABLE] PyNative模式下Timeline整合host profiling信息，包括任务耗时、用户侧调用栈信息。
+
+### 贡献者
+
+感谢以下人员做出的贡献:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, DaWei Fan, XinYu Shi, KaiDa Qiu, Wei Zhang, XianQi Zhou, Chen Mao, XiHan Peng.
+
+欢迎以任何形式对项目提供贡献！
+
+## MindSpore Insight 2.3.0-rc2 Release Notes
+
+### Bug Fixes
+
+- [I9JTLU] 修复summary timeline下载页面报"system error"的错误。
+
+### 贡献者
+
+感谢以下人员做出的贡献:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, DaWei Fan, XinYu Shi, KaiDa Qiu, Wei Zhang, XianQi Zhou, Chen Mao, XiHan Peng.
+
+欢迎以任何形式对项目提供贡献！
+
+## MindSpore Insight 2.3.0-rc1 Release Notes
+
+### 主要特性和增强
+
+#### Profiler
+
+- [BETA] 动态启停profiling，用户可以根据训练情况实时采集profiling 数据，减少采集数据量。
+- [BETA] Profiling通信算子耗时矩阵，用户通过分析通信算子耗时矩阵，找出集群通信性能瓶颈。
+- [BETA] 提高昇腾环境解析Profiling数据的性能。
+- [BETA] 支持离线解析Profiling生成的数据，用户可以先采集数据，然后根据需要再解析数据。
+- [BETA] 支持采集HBM、PCIe、l2_cache性能数据，丰富性能分析指标。
+
+#### Dump
+
+- [BETA] Dump保存的统计信息记录MD5值，用户可以通过MD5值确定张量值的微小差异。
+- [BETA] Dump支持bfloat16数据类型，支撑用户定位bfloat16类型的算子精度问题。
+
+### 贡献者
+
+感谢以下人员做出的贡献:
+
+Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxiang Zang, DaWei Fan, XinYu Shi, KaiDa Qiu, Wei Zhang, XianQi Zhou, Chen Mao, XiHan Peng.
+
+欢迎以任何形式对项目提供贡献！
+
 ## MindSpore Insight 2.2.1 Release Notes
 
 ### Bug fixes
@@ -102,7 +157,7 @@ Ning Ma, Chuting Liu, Jiaxing Zhu, Qingxiang Zang, Yaomin Mao.
 
 欢迎以任何形式对项目提供贡献！
 
-## MindInsight 2.0.0-alpha Release Notes
+## MindSpore Insight 2.0.0-alpha Release Notes
 
 ### 主要特性和增强
 
@@ -127,7 +182,7 @@ Ning Ma, Chuting Liu, Jiaxing Zhu, Qingxiang Zang, Yaomin Mao.
 
 欢迎以任何形式对项目提供贡献！
 
-## MindInsight 1.9.0 Release Notes
+## MindSpore Insight 1.9.0 Release Notes
 
 ### 主要特性和增强
 
@@ -154,7 +209,7 @@ Special thanks to Zhongwei Wang, Rongchen Zhu, Jiaying Lu, Zhiyong Wang, Yating 
 
 欢迎以任何形式对项目提供贡献！
 
-## MindInsight 1.8.0 Release Notes
+## MindSpore Insight 1.8.0 Release Notes
 
 ### 主要特性和增强
 
@@ -183,7 +238,7 @@ Special thanks to Zhiyong Wang, Zhongwei Wang, Rusheng Pan, Yating Wei, Luoxuan 
 
 欢迎以任何形式对项目提供贡献！
 
-## MindInsight 1.7.0 Release Notes
+## MindSpore Insight 1.7.0 Release Notes
 
 ### 主要特性及改进
 

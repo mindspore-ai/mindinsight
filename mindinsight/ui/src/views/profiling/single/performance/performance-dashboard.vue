@@ -73,7 +73,7 @@ limitations under the License.
                alt="" />
         </div>
         <p v-show="!svg.initOver">{{$t("public.dataLoading")}}</p>
-        <p v-show="svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noStepStraceData")}}</p>
+        <p v-show="svg.initOver">{{$t("public.noStepStraceData")}}</p>
       </div>
       <!-- Step trace SVG container -->
       <div class="item-content step-trace"
@@ -169,7 +169,7 @@ limitations under the License.
                alt="" />
         </div>
         <p v-show="!svg.initOver">{{$t("public.dataLoading")}}</p>
-        <p v-show="svg.initOver">{{isHeterogeneous?$t("profiling.isHeterogeneous"):$t("public.noData")}}</p>
+        <p v-show="svg.initOver">{{$t("public.noData")}}</p>
       </div>
       <!-- Step trace SVG container -->
       <div class="shape-step"
@@ -373,143 +373,9 @@ limitations under the License.
     </div>
     <!-- Time line display area -->
     <div class="dashboard-item">
-      <div class="item-head">
-        <div class="title">{{ $t('profiling.timeLine') }}</div>
-        <div class="tip-icon">
-          <el-tooltip placement="bottom"
-                      effect="light">
-            <div slot="content"
-                 class="tooltip-container">
-              <div class="pro-dash-tooltip" v-if="!isPynative">
-                <div class="font-size-style">{{$t("profiling.features")}}</div>
-                <div class="font-style">{{$t("profiling.timelineTips.title1")}}</div>
-                <div>{{$t("profiling.timelineTips.content11")}}</div>
-                <div>{{$t("profiling.timelineTips.content12")}}</div>
-                <div>{{$t("profiling.timelineTips.content13")}}</div>
-                <div>{{$t("profiling.timelineTips.content14")}}</div>
-                <br>
-                <div class="font-style">{{$t("profiling.timelineTips.title2")}}</div>
-                <div>
-                  {{$t("profiling.timelineTips.content21.part1")}}
-                  <b>{{$t("profiling.timelineTips.content21.part2")}}</b>
-                  {{$t("profiling.timelineTips.content21.part3")}}
-                </div>
-                <div>{{$t("profiling.timelineTips.content22")}}</div>
-                <div>
-                  {{$t("profiling.timelineTips.content23.part1")}}
-                  <b>{{$t("profiling.timelineTips.content23.part2")}}</b>
-                  {{$t("profiling.timelineTips.content23.part3")}}
-                  <b>{{$t("profiling.timelineTips.content23.part4")}}</b>
-                  {{$t("profiling.timelineTips.content23.part5")}}
-                  <b>{{$t("profiling.timelineTips.content23.part6")}}</b>
-                  {{$t("profiling.timelineTips.content23.part7")}}
-                </div>
-                <br>
-                <div class="font-style">{{$t("profiling.timelineTips.title3")}}</div>
-                <div>{{$t("profiling.timelineTips.content31")}}</div>
-                <div>{{$t("profiling.timelineTips.content32")}}</div>
-                <br>
-                <div class="font-style">{{$t("profiling.timelineTips.title4")}}</div>
-                <div>{{$t("profiling.timelineTips.content41")}}</div>
-                <div class="indent">{{$t("profiling.timelineTips.content42")}}</div>
-                <div class="indent">{{$t("profiling.timelineTips.content43")}}</div>
-                <div class="indent">{{$t("profiling.timelineTips.content44")}}</div>
-                <div>{{$t("profiling.timelineTips.content45")}}</div>
-                <div>{{$t("profiling.timelineTips.content46")}}</div>
-                <div>{{$t("profiling.timelineTips.content47")}}</div>
-                <div>{{$t("profiling.timelineTips.content48")}}</div>
-                <div class="indent">{{$t("profiling.timelineTips.content49")}}</div>
-                <div class="indent">{{$t("profiling.timelineTips.content410")}}</div>
-                <div class="indent">{{$t("profiling.timelineTips.content411")}}</div>
-                <div class="indent">{{$t("profiling.timelineTips.content412")}}</div>
-              </div>
-              <div class="pro-dash-tooltip" v-if="isPynative">
-                <div class="font-size-style">{{$t("profiling.features")}}</div>
-                <div class="font-style">{{$t("profiling.timelineTips.title1")}}</div>
-                <div>{{$t("profiling.pynativeTimelineTips.content11")}}</div>
-                <div>{{$t("profiling.pynativeTimelineTips.content12")}}</div>
-                <br>
-                <div class="font-style">{{$t("profiling.timelineTips.title2")}}</div>
-                <div>
-                  {{$t("profiling.timelineTips.content21.part1")}}
-                  <b>{{$t("profiling.timelineTips.content21.part2")}}</b>
-                  {{$t("profiling.timelineTips.content21.part3")}}
-                </div>
-                <div>{{$t("profiling.timelineTips.content22")}}</div>
-                <div>
-                  {{$t("profiling.timelineTips.content23.part1")}}
-                  <b>{{$t("profiling.timelineTips.content23.part2")}}</b>
-                  {{$t("profiling.timelineTips.content23.part3")}}
-                  <b>{{$t("profiling.timelineTips.content23.part4")}}</b>
-                  {{$t("profiling.timelineTips.content23.part5")}}
-                  <b>{{$t("profiling.timelineTips.content23.part6")}}</b>
-                  {{$t("profiling.timelineTips.content23.part7")}}
-                </div>
-                <br>
-                <div class="font-style">{{$t("profiling.timelineTips.title3")}}</div>
-                <div>{{$t("profiling.pynativeTimelineTips.content31")}}</div>
-                <br>
-                <div class="font-style">{{$t("profiling.timelineTips.title4")}}</div>
-                <div class="indent">{{$t("profiling.pynativeTimelineTips.content41")}}</div>
-                <div class="indent">{{$t("profiling.pynativeTimelineTips.content42")}}</div>
-                <div class="indent">{{$t("profiling.pynativeTimelineTips.content43")}}</div>
-              </div>
-            </div>
-            <i class="el-icon-info"></i>
-          </el-tooltip>
-        </div>
-        <div class="view-detail">
-          <button @click="downloadTimelineFile()"
-                  v-show="!timeLine.waiting"
-                  :disabled="timeLine.disable"
-                  :class="{disabled:timeLine.disable}">{{ $t('profiling.downloadTimeline') }}
-          </button>
-          <div class="el-icon-loading loading-icon"
-               v-show="timeLine.waiting"></div>
-        </div>
-      </div>
-      <!-- Time line detail -->
-      <div class="item-content time-line"
-           v-if="!timelineInfo.noData">
-        <div class="info-line">
-          <span>{{$t('profiling.scopeNameNum')}}</span><span>
-            <el-select v-model="timelineInfo.scopeNameNum"
-                       :placeholder="$t('public.select')"
-                       class="scope-name"
-                       @change="queryTimeline">
-              <el-option v-for="item in timelineInfo.scopeNameNumArr"
-                         :key="item.value"
-                         :label="item.label"
-                         :value="item.value">
-              </el-option>
-            </el-select>
-          </span>
-        </div>
-        <div class="info-line">
-          <span>{{$t('profiling.opTotalTime')}}</span><span>{{timelineInfo.totalTime}}ms</span>
-        </div>
-        <div class="info-line">
-          <span>{{$t('profiling.streamNum')}}</span><span>{{timelineInfo.streamNum}}</span>
-        </div>
-        <div class="info-line">
-          <span>{{$t('profiling.opNum')}}</span><span>{{timelineInfo.opNum}}</span>
-        </div>
-        <div class="info-line">
-          <span>{{$t('profiling.opTimes')}}</span><span>{{timelineInfo.opTimes + $t('profiling.times')}}</span>
-        </div>
-      </div>
-      <div class="image-noData"
-           v-if="timelineInfo.noData">
-        <div>
-          <img :src="require('@/assets/images/nodata.png')"
-               alt="" />
-        </div>
-        <p v-show="!timelineInfo.initOver">{{$t("public.dataLoading")}}</p>
-        <p v-show="timelineInfo.initOver">{{$t("public.noData")}}</p>
-      </div>
 
-      <!-- Msprof time line detail -->
-      <div class="item-head" v-if="!isPynative">
+      <!-- Msprof time line tips -->
+      <div class="item-head">
         <div class="title">{{ $t('profiling.timeLineMsprof') }}</div>
         <div class="tip-icon">
           <el-tooltip placement="bottom"
@@ -560,7 +426,7 @@ limitations under the License.
 
       <!-- Msprof time line detail -->
       <div class="item-content time-line"
-           v-if="!timelineInfoMsprof.noData && !isPynative">
+           v-if="!timelineInfoMsprof.noData">
         <div class="msprof_timeline">
           <span>{{$t('profiling.rankList')}}</span>
           <span>
@@ -578,7 +444,7 @@ limitations under the License.
             </el-select>
           </span>
         </div>
-        <div class="msprof_timeline">
+        <div class="msprof_timeline" v-show="timelineInfoMsprof.kindSelected=='detail' && !isPynative">
           <span>{{$t('profiling.modelList')}}</span>
           <span>
             <el-select
@@ -608,7 +474,7 @@ limitations under the License.
             </el-select>
           </span>
         </div>
-        <div class="msprof_timeline">
+        <div class="msprof_timeline" v-show="!isPynative">
           <span>{{$t('profiling.mergeModel')}}</span>
           <span>
             <el-select v-model="timelineInfoMsprof.mergeModelSelected"
@@ -621,10 +487,23 @@ limitations under the License.
             </el-select>
           </span>
         </div>
+        <div class="msprof_timeline" v-show="timelineInfoMsprof.kindSelected=='detail'">
+          <span>{{$t('profiling.scopeName')}}</span>
+          <span>
+            <el-select v-model="timelineInfoMsprof.scopeNameSelected"
+                       :placeholder="$t('public.select')">
+              <el-option v-for="item in timelineInfoMsprof.scopeNameArr"
+                         :key="item.value"
+                         :label="item.label"
+                         :value="item.value">
+              </el-option>
+            </el-select>
+          </span>
+        </div>
       </div>
       <!-- Msprof time line no data -->
       <div class="image-noData"
-           v-if="timelineInfoMsprof.noData && !isPynative">
+           v-if="timelineInfoMsprof.noData">
         <div>
           <img :src="require('@/assets/images/nodata.png')"
                alt="" />
@@ -632,8 +511,6 @@ limitations under the License.
         <p v-show="!timelineInfoMsprof.initOver">{{$t("public.dataLoading")}}</p>
         <p v-show="timelineInfoMsprof.initOver">{{$t("public.noData")}}</p>
       </div>
-
-
     </div>
   </div>
 </template>
@@ -710,23 +587,6 @@ export default {
         colorList: CommonProperty.pieColorArr[this.$store.state.themeIndex],
         initOver: false, // Is initialization complete
       },
-      timeLine: {
-        // Time line data
-        data: null,
-        waiting: false, // Is it waiting for interface return
-        disable: true,
-      },
-      timelineInfo: {
-        // Time line information
-        totalTime: 0,
-        streamNum: 0,
-        opNum: 0, // Number of operators
-        opTimes: 0, // Operator time consuming
-        noData: true,
-        initOver: false, // Is initialization complete
-        scopeNameNum: '',
-        scopeNameNumArr: [],
-      },
       timeLineMsprof: {
         // Time line data
         data: null,
@@ -735,6 +595,8 @@ export default {
       },
       timelineInfoMsprof: {
         // Time line information
+        noData: true,
+        initOver: false,
         rankListSelected: [],
         rankList: [],
         modelListSelected: [],
@@ -749,6 +611,14 @@ export default {
                   }],
         mergeModelSelected: true,
         mergeModelArr: [{
+                          value: true,
+                          label: 'Yes'
+                        }, {
+                          value: false,
+                          label: 'No'
+                        }],
+        scopeNameSelected: false,
+        scopeNameArr: [{
                           value: true,
                           label: 'Yes'
                         }, {
@@ -774,7 +644,6 @@ export default {
         initOver: false, // Is initialization complete
       },
       themeIndex: this.$store.state.themeIndex,
-      isHeterogeneous: false,
       pynativeOpType: {
         all: 'pynative_type',
         detail: 'pynative_detail',
@@ -855,7 +724,7 @@ export default {
     setTimeout(() => {
       this.$bus.$on('collapse', this.resizeTrace);
     }, 500);
-    if (!this.isPynative) this.queryMsprofTimelineOption();
+    this.queryMsprofTimelineOption();
   },
   watch: {
     rankID: {
@@ -863,7 +732,6 @@ export default {
         if (isInteger(newValue)) {
           this.svg.initOver = false;
           this.pieChart.initOver = false;
-          this.timelineInfo.initOver = false;
           this.processSummary.initOver = false;
           this.init();
         } else {
@@ -872,9 +740,7 @@ export default {
             this.svg.noData = true;
             this.svg.initOver = true;
             this.pieChart.initOver = true;
-            this.timelineInfo.initOver = true;
             this.processSummary.initOver = true;
-            this.timeLine.waiting = false;
           }
         }
       },
@@ -886,7 +752,6 @@ export default {
      * Initialization function
      */
     init() {
-      this.queryTimelineInfo();
       if (this.isDynamic) {
         this.$nextTick(() => {
           this.initShapeStep();
@@ -1205,7 +1070,6 @@ export default {
       RequestService.queryTrainingTrace(params).then(
           (res) => {
             this.svg.initOver = true;
-            this.isHeterogeneous = res.data.is_heterogeneous;
             if (res && res.data && res.data.training_trace_graph && res.data.training_trace_graph.length) {
               this.svg.noData = false;
               this.removeTrace();
@@ -1246,7 +1110,6 @@ export default {
             this.totalSteps = '--';
             this.totalTime = '--';
             this.tailPercent = '--';
-            this.isHeterogeneous = false;
           },
       );
     },
@@ -1570,83 +1433,7 @@ export default {
         this.svg.resizeTimer = null;
       }, 500);
     },
-    /**
-     * Query the data of time line
-     */
-    queryTimelineInfo() {
-      const params = {
-        dir: this.trainInfo.path,
-        device_id: this.rankID,
-      };
-      RequestService.queryTimelineInfo(params)
-          .then((res) => {
-            this.timelineInfo.initOver = true;
-            if (res && res.data) {
-              this.timelineInfo.noData = false;
 
-              this.timelineInfo.totalTime =
-              this.toFixedFun(res.data.total_time, 4) || (res.data.total_time === 0 ? 0 : '--');
-              this.timelineInfo.streamNum = res.data.num_of_streams || (res.data.num_of_streams === 0 ? 0 : '--');
-              this.timelineInfo.opNum = res.data.num_of_ops || (res.data.num_of_ops === 0 ? 0 : '--');
-              this.timelineInfo.opTimes = res.data.op_exe_times || (res.data.op_exe_times === 0 ? 0 : '--');
-              if (res.data.max_scope_name_num >= 0) {
-                this.timelineInfo.scopeNameNum = res.data.max_scope_name_num;
-                this.timelineInfo.scopeNameNumArr = Array(res.data.max_scope_name_num + 1)
-                    .fill()
-                    .map((value, key) => {
-                      return {
-                        label: key,
-                        value: key,
-                      };
-                    });
-                this.queryTimeline();
-              } else {
-                this.timeLine.disable = true;
-              }
-            } else {
-              this.timelineInfo.noData = true;
-              this.timeLine.disable = true;
-            }
-          })
-          .catch(() => {
-            this.timelineInfo.noData = true;
-            this.timelineInfo.initOver = true;
-            this.timeLine.disable = true;
-          });
-    },
-    queryTimeline() {
-      this.timeLine.waiting = true;
-      this.timeLine.disable = true;
-      const params = {
-        dir: this.trainInfo.path,
-        device_id: this.rankID,
-        scope_name_num: this.timelineInfo.scopeNameNum,
-      };
-      RequestService.queryTimeline(params)
-          .then((res) => {
-            this.timeLine.waiting = false;
-            if (res && res.data && res.data.length) {
-              this.timeLine.data = JSON.stringify(res.data);
-              this.timeLine.disable = false;
-            }
-          })
-          .catch(() => {
-            this.timeLine.waiting = false;
-          });
-    },
-    /**
-     * Download timeline data file
-     */
-    downloadTimelineFile() {
-      const downloadLink = document.createElement('a');
-      downloadLink.download = this.getDocName();
-      downloadLink.style.display = 'none';
-      const blob = new Blob([this.timeLine.data]);
-      downloadLink.href = URL.createObjectURL(blob);
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-    },
     /**
      * Query the data of msprof time line
      */
@@ -1656,7 +1443,7 @@ export default {
       };
       RequestService.queryMsprofTimelineOption(params)
           .then((res) => {
-            this.timelineInfo.initOver = true;
+            this.timelineInfoMsprof.initOver = true;
             if (res && res.data && res.data.rank_list && res.data.model_list) {
               this.timelineInfoMsprof.noData = false;
               this.timeLineMsprof.disable = false;
@@ -1681,7 +1468,6 @@ export default {
           })
           .catch(() => {
             this.timelineInfoMsprof.noData = true;
-            this.timelineInfoMsprof.initOver = true;
             this.timeLineMsprof.disable = true;
           });
     },
@@ -1694,14 +1480,15 @@ export default {
         model_list: this.timelineInfoMsprof.modelListSelected,
         kind: this.timelineInfoMsprof.kindSelected,
         merge_model: this.timelineInfoMsprof.mergeModelSelected,
+        scope_name: this.timelineInfoMsprof.scopeNameSelected,
       };
       RequestService.queryMsprofTimeline(params)
           .then((res) => {
             this.timeLineMsprof.waiting = false;
             if (res && res.data && res.data.length) {
               this.timeLineMsprof.data = JSON.stringify(res.data);
+              this.downloadTimelineMsprofFile();
               this.timeLineMsprof.disable = false;
-              this.downloadTimelineMsprofFile()
             }
           })
           .catch(() => {
@@ -1758,30 +1545,7 @@ export default {
         this.processSummary.noData = false;
       }
     },
-    /**
-     * Generate a download file name
-     * @return {String}
-     */
-    getDocName() {
-      const dealNumber = (value) => {
-        const prefix = value < 10 ? '0' : '';
-        return prefix + value;
-      };
-      const replacedPrefix = './';
-      let dir = this.trainInfo.dir;
-      if (dir === replacedPrefix) dir = ' ';
-      if (dir.startsWith(replacedPrefix)) dir = dir.replace(replacedPrefix, '');
-      const date = new Date();
-      const year = date.getFullYear();
-      const mouth = dealNumber(date.getMonth() + 1);
-      const day = dealNumber(date.getDate());
-      const hour = dealNumber(date.getHours());
-      const minute = dealNumber(date.getMinutes());
-      const second = dealNumber(date.getSeconds());
-      const millisecond = date.getMilliseconds();
-      const timestamp = `${year}${mouth}${day}${hour}${minute}${second}${millisecond}`;
-      return `timeline_${dir}_${this.rankID}_scope-num-${this.timelineInfo.scopeNameNum}_${timestamp}.json`;
-    },
+
     /**
      * Generate a download msprof file name
      * @return {String}

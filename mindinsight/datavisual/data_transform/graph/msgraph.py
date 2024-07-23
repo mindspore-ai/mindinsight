@@ -66,7 +66,7 @@ class MSGraph(Graph):
         name = f'{node_proto.op_type}-op{node_id}'
         node_name = Node.create_node_name(node_proto.scope, name)
 
-        if node_proto.full_name and node_proto.op_type != NodeTypeEnum.LOAD.value:
+        if node_proto.full_name:
             node_name = node_proto.full_name
 
         if node_proto.full_name and any(

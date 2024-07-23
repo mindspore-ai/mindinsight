@@ -1,4 +1,4 @@
-serial_number,op_type,total_time,dispatch_time,execution_time,run_start,run_end
+serial_number,kernel_type,total_time,dispatch_time,execution_time,run_start,run_end
 1,InitData,7.906,0.15,0.22,154901853050,154901853210
 2,GetNext,0.888,0.132,0.22,154907895189,154907895707
 3,EndOfSequence,0.282,0.078,0.22,154907896287,154907896335

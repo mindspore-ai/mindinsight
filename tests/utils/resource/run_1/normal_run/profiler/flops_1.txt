@@ -1,4 +1,4 @@
-op_full_name, FLOPs, FLOPS, FLOPS utilization
+full_kernel_name, FLOPs, FLOPS, FLOPS utilization
 Default/AssignAdd-op414, 333, 333, 33
 Default/network-TrainStepWrap/optimizer_d-Adam/Mul-op29, 333, 333, 33
 Default/network-TrainStepWrap/optimizer_d-Adam/Assign-op30, 333, 333, 33

@@ -1,4 +1,4 @@
-op_full_name, MFLOPs(10^6 cube), GFLOPS(10^9 cube), FLOPS utilization(cube), MFLOPs(10^6 vector), GFLOPS(10^9 vector), FLOPS utilization(vec)
+full_kernel_name, MFLOPs(10^6 cube), GFLOPS(10^9 cube), FLOPS utilization(cube), MFLOPs(10^6 vector), GFLOPS(10^9 vector), FLOPS utilization(vec)
 Default/AtomicAddrClean-op104, 333, 333, 33, 333, 333, 33
 Default/AtomicAddrClean-op105, 333, 333, 33, 333, 333, 33
 Default/AtomicAddrClean-op106, 333, 333, 33, 333, 333, 33

@@ -80,6 +80,7 @@ export default {
           this.$t('profiling.iterationGapTime'),
           this.$t('profiling.fpBpTime'),
           this.$t('profiling.tailTime'),
+          this.$t('profiling.iterTotalTime')
         ],
         title: this.$t('profilingCluster.stepChartTitle'),
       }, // Chart object of performance window
@@ -149,10 +150,6 @@ export default {
         };
         RequestService.getClusterInfo(params)
           .then((res) => {
-            if (typeof res.data === 'object' && res.data.is_heterogeneous) {
-              this.performanceState = HETEROGENEOUS;
-              return;
-            }
             if (res?.data?.info?.length > 0) {
               let chartData = [];
               const parallelMode = res.data['parallel-mode'];
@@ -164,6 +161,7 @@ export default {
                     this.$t('profiling.iterationGapTime'),
                     this.$t('profiling.fpBpTime'),
                     this.$t('profiling.tailTime'),
+                    this.$t('profiling.iterTotalTime')
                   ],
                 },
                 'model-parallel': {

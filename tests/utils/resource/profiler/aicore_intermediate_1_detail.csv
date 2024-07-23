@@ -1,4 +1,4 @@
-full_op_time,execution_time,execution_frequency
+full_kernel_time,execution_time,execution_frequency
 Default/AtomicAddrClean-op104,0.00133,1
 Default/AtomicAddrClean-op105,0.000987,1
 Default/AtomicAddrClean-op106,0.001129,1

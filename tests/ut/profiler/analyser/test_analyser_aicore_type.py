@@ -20,7 +20,7 @@ from unittest import TestCase
 from mindinsight.profiler.analyser.analyser_factory import AnalyserFactory
 from tests.ut.profiler import PROFILER_DIR
 
-COL_NAMES = ['op_type', 'total_time', 'execution_frequency', 'total_percent', 'avg_time']
+COL_NAMES = ['kernel_type', 'total_time', 'execution_frequency', 'total_percent', 'avg_time']
 
 
 def get_type_infos(indexes=None, sort_name=None, sort_type=True):
@@ -93,7 +93,7 @@ class TestAicoreTypeAnalyser(TestCase):
         }
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'in': ['Cast']
                 }
             }
@@ -108,7 +108,7 @@ class TestAicoreTypeAnalyser(TestCase):
         }
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'not_in': ['Cast']
                 }
             }
@@ -123,7 +123,7 @@ class TestAicoreTypeAnalyser(TestCase):
         }
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'partial_match_str_in': ['C']
                 }
             }
@@ -140,7 +140,7 @@ class TestAicoreTypeAnalyser(TestCase):
         }
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'in': ['Cast', 'Conv2D']
                 }
             }
@@ -155,7 +155,7 @@ class TestAicoreTypeAnalyser(TestCase):
         }
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'not_in': ['Cast', 'Conv2D']
                 }
             }
@@ -170,7 +170,7 @@ class TestAicoreTypeAnalyser(TestCase):
         }
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'partial_match_str_in': ['Trans', 'Conv']
                 }
             }
@@ -182,11 +182,11 @@ class TestAicoreTypeAnalyser(TestCase):
         """Test the success of the querying function."""
         expect_result = {
             'col_name': COL_NAMES,
-            'object': get_type_infos(sort_name='op_type', sort_type=True),
+            'object': get_type_infos(sort_name='kernel_type', sort_type=True),
             'size': 5}
         condition = {
             'sort_condition': {
-                'name': 'op_type',
+                'name': 'kernel_type',
                 'type': 'descending'
             }
         }
@@ -248,7 +248,7 @@ class TestAicoreTypeAnalyser(TestCase):
         }
         condition = {
             'filter_condition': {
-                'op_type': {
+                'kernel_type': {
                     'partial_match_str_in': ['C']
                 }
             },

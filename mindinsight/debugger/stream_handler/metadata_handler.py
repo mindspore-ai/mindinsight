@@ -40,6 +40,7 @@ class MetadataHandler(StreamHandlerBase):
         # maximum step number among all devices
         self._max_step_num = 0
         self._debugger_type = DebuggerServerMode.ONLINE.value
+        self.max_graph_node_size = 0
 
     @property
     def debugger_type(self):
@@ -220,10 +221,12 @@ class MetadataHandler(StreamHandlerBase):
                 'graph_name': self.graph_name,
                 'recommendation_confirmed': self._recommendation_confirmed,
                 'debugger_version': self.debugger_version,
-                'data_version': self.data_version
+                'data_version': self.data_version,
             }
             if self.debugger_type == 'offline':
                 metadata['total_step_num'] = self.max_step_num
+            if self.state == ServerStatus.NODE_TOO_LARGE.value:
+                metadata['max_graph_node_size'] = self.max_graph_node_size
         else:
             if not isinstance(filter_condition, list):
                 filter_condition = [filter_condition]

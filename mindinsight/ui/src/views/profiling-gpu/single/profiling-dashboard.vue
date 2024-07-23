@@ -714,7 +714,6 @@ export default {
       this.queryTimelineInfo();
       this.initPieChart();
       this.getProccessSummary();
-      // this.queryTrainingTrace();
       if(this.isDynamic){
         this.$nextTick(() => {
           this.initDynamicShape();
@@ -1077,7 +1076,6 @@ export default {
                   }
                 } else {
                   this.svg.totalHeight = 0;
-                  // this.svg.noData = true;
                   this.svg.data = [];
                   this.svg.initOver = true;
                   this.removeTrace();
@@ -1500,7 +1498,7 @@ export default {
                   step_filter: ["1"],
                 },
       };
-      let details = [];//
+      let details = [];
       let series = [];
       let legend = [];
       let ssChart = [];
@@ -1591,7 +1589,7 @@ export default {
                   dispaly_op_type: this.topOperatorValueGPU,
                 },
       };
-      let details = [];//
+      let details = [];
       let series = [];
       let legend = [];
       RequestService.queryDynamicShapeGPU(params).then(
@@ -1635,9 +1633,7 @@ export default {
                             details.push(content)
                           }
                   );
-                  // this.getFormatterDetailData(row,isSort);
                 }
-                //
                 this.operatorOptions.xAxis.data = series[0].data.map((_v, i) => i + 1);
                 this.operatorOptions.series = series;
                 this.operatorOptions.legend.data = legend;
@@ -1650,7 +1646,6 @@ export default {
                 this.operatorOptions.legend.tooltip.formatter = (params) =>{
                   return this.formatLegendTip(params);
                 };
-                // search
                 this.$nextTick(() => {
                   this.chartObj.setOption(this.operatorOptions, true);
                   this.drawChart();

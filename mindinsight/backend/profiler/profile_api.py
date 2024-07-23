@@ -155,8 +155,7 @@ def get_training_trace_graph():
         if os.path.exists(profiler_info_file):
             with open(profiler_info_file, 'r', encoding='utf-8') as file:
                 profiler_info = json.loads(file.read())
-            if profiler_info.get("context_mode", "graph").lower() == "pynative" or len(profiler_info.get("graph_ids",
-                                                                                                         [])) > 1:
+            if profiler_info.get("context_mode", "graph").lower() == "pynative":
                 return jsonify(graph_info)
             if profiler_info.get("is_heterogeneous", False):
                 graph_info = {'is_heterogeneous': True}
@@ -174,12 +173,6 @@ def get_training_trace_graph():
         }})
     graph_info['summary'] = analyser.summary
     graph_info['point_info'] = analyser.point_info(graph_type)
-    graph_info['is_heterogeneous'] = False
-
-    # In heterogeneous training scene, do not display step trace data.
-    cpu_op_type_file_name = f"cpu_op_type_info_{device_id}.csv"
-    if cpu_op_type_file_name in os.listdir(profiler_dir_abs):
-        graph_info = {'is_heterogeneous': True}
 
     return jsonify(graph_info)
 
@@ -584,7 +577,8 @@ def get_msprof_timeline():
     rank_list = request.args.get("rank_list", None)
     model_list = request.args.get("model_list", None)
     kind = request.args.get("kind", None)
-    merge_model = request.args.get("merge_model", True)
+    merge_model = request.args.get("merge_model", 'true')
+    scope_name = request.args.get("scope_name", 'false')
 
     if rank_list:
         rank_list = [int(rank_id) for rank_id in rank_list.split(',')]
@@ -600,10 +594,14 @@ def get_msprof_timeline():
     else:
         merge_model = True
 
+    if scope_name == 'false':
+        scope_name = False
+    else:
+        scope_name = True
+
     analyser = AnalyserFactory.instance().get_analyser(
         'msprof_timeline', profiler_dir_abs, None)
-
-    timeline = analyser.get_merged_timeline(rank_list, model_list, kind, merge_model)
+    timeline = analyser.get_merged_timeline(rank_list, model_list, kind, merge_model, scope_name)
 
     return jsonify(timeline)
 
@@ -840,12 +838,12 @@ def get_cluster_step_trace_info():
     device_id = condition.get("device_id", "0")
     to_int(device_id, 'device_id')
 
-    # In heterogeneous training scene, do not display cluster step trace data.
-    cpu_op_type_file_name_prefix = "cpu_op_type_info_"
-    for item in os.listdir(profiler_dir_abs):
-        if cpu_op_type_file_name_prefix in item:
-            step_trace_info = {'is_heterogeneous': True}
-            return jsonify(step_trace_info)
+    profiler_info_file = os.path.join(profiler_dir_abs, f'profiler_info_{device_id}.json')
+    if os.path.exists(profiler_info_file):
+        with open(profiler_info_file, 'r', encoding='utf-8') as file:
+            profiler_info = json.loads(file.read())
+        if profiler_info.get("is_heterogeneous", False):
+            return jsonify({'is_heterogeneous': True})
 
     analyser = AnalyserFactory.instance().get_analyser(
         'cluster_step_trace', profiler_dir_abs, device_id

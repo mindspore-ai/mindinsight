@@ -157,55 +157,55 @@ export default {
       coreSearch: {
         all: {
           label:
-            this.$t('operator.searchByType') +
+            this.$t('operator.searchByKernelType') +
             this.$t('symbols.leftbracket') +
             this.$t('public.caseMode') +
             this.$t('symbols.rightbracket'),
-          type: 'op_type',
+          type: 'kernel_type',
         },
         detail: {
           label:
-            this.$t('operator.searchByName') +
+            this.$t('operator.searchByKernelName') +
             this.$t('symbols.leftbracket') +
             this.$t('public.caseMode') +
             this.$t('symbols.rightbracket'),
-          type: 'op_name',
+          type: 'kernel_name',
         },
       },
       cpuSearch: {
         all: {
           label:
-            this.$t('operator.searchByType') +
+            this.$t('operator.searchByKernelType') +
             this.$t('symbols.leftbracket') +
             this.$t('public.caseMode') +
             this.$t('symbols.rightbracket'),
-          type: 'op_type',
+          type: 'kernel_type',
         },
         detail: {
           label:
-            this.$t('operator.searchByType') +
+            this.$t('operator.searchByKernelType') +
             this.$t('symbols.leftbracket') +
             this.$t('public.caseMode') +
             this.$t('symbols.rightbracket'),
-          type: 'op_type',
+          type: 'kernel_type',
         },
       },
       hostSearch: {
         all: {
           label:
-            this.$t('operator.searchByType') +
+            this.$t('operator.searchByKernelType') +
             this.$t('symbols.leftbracket') +
             this.$t('public.caseMode') +
             this.$t('symbols.rightbracket'),
-          type: 'op_type',
+          type: 'kernel_type',
         },
         detail: {
           label:
-            this.$t('operator.searchByName') +
+            this.$t('operator.searchByKernelName') +
             this.$t('symbols.leftbracket') +
             this.$t('public.caseMode') +
             this.$t('symbols.rightbracket'),
-          type: 'op_name',
+          type: 'kernel_name',
         },
       },
       aicoreOpChart:{
