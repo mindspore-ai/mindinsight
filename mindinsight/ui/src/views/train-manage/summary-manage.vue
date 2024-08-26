@@ -101,16 +101,6 @@ limitations under the License.
                   {{$t('summaryManage.viewProfiler')}}
                 </span>
                 <span class="menu-item operate-btn"
-                      v-if="scope.row.viewOfflineDebugger"
-                      @contextmenu.prevent="rightClick(scope.row, $event, 2)"
-                      @click.stop="goToOfflineDebugger(scope.row)">
-                  {{$t('summaryManage.viewOfflineDebugger')}} </span>
-                <span class="menu-item operate-btn button-disable"
-                      v-else
-                      :title="$t('summaryManage.disableOfflineDebugger')">
-                  {{$t('summaryManage.viewOfflineDebugger')}}
-                </span>
-                <span class="menu-item operate-btn"
                       v-if="scope.row.paramDetails"
                       @click.stop="showModelDialog(scope.row)">
                   {{$t('summaryManage.paramDetails')}} </span>
@@ -171,45 +161,6 @@ limitations under the License.
         <li @click="doRightClick()">{{$t('summaryManage.openNewTab')}}</li>
       </ul>
     </div>
-    <el-dialog :visible.sync="debuggerDialog.showDialogModel"
-               width="50%"
-               :close-on-click-modal="false"
-               class="details-data-list">
-      <span slot="title">
-        <span class="sessionMsg">{{ debuggerDialog.title }}</span>
-        <el-tooltip placement="right"
-                    effect="light"
-                    popper-class="legend-tip"
-                    :content="$t('summaryManage.sessionLimitNum')">
-          <i class="el-icon-info"></i>
-        </el-tooltip>
-      </span>
-      <div class="session-title">{{ $t('summaryManage.sessionLists') }}</div>
-      <el-table :data="debuggerDialog.trainJobs">
-        <el-table-column width="50"
-                         type=index
-                         :label="$t('summaryManage.sorting')">
-        </el-table-column>
-        <el-table-column min-width="300"
-                         prop="relative_path"
-                         :label="$t('summaryManage.dumpPath')"
-                         show-overflow-tooltip>
-        </el-table-column>
-        <!-- operate -->
-        <el-table-column prop="operate"
-                         :label="$t('summaryManage.operation')"
-                         class-name="operate-container">
-          <template slot-scope="scope">
-            <span class="menu-item operate-btn first-btn"
-                  @click="deleteSession(scope.row.session_id)">
-              {{$t('public.delete')}} </span>
-            <span class="menu-item operate-btn first-btn"
-                  @click="viewSession(scope.row)">
-              {{$t('debugger.view')}} </span>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-dialog>
   </div>
 </template>
 
@@ -369,7 +320,6 @@ export default {
                 i.update_time = i.update_time ? i.update_time : '--';
                 i.viewProfiler = i.profiler_dir && i.profiler_dir.length;
                 i.viewDashboard = i.summary_files || i.graph_files || i.lineage_files;
-                i.viewOfflineDebugger = i.dump_dir;
                 i.paramDetails = i.lineage_files;
               });
               this.currentFolder = res.data.name ? res.data.name : '--';
@@ -455,29 +405,7 @@ export default {
         },
       });
     },
-    /**
-     * go to Offline Debugger
-     * @param {Object} row select row
-     */
-    goToOfflineDebugger(row) {
-      this.contextMenu.show = false;
-      const debuggerDir = row.dump_dir;
-      const params = {
-        session_type: 'OFFLINE',
-        dump_dir: debuggerDir,
-      };
-      this.getSessionId(params).then((value) => {
-        if (value !== undefined) {
-          this.$router.push({
-            path: '/offline-debugger',
-            query: {
-              dir: debuggerDir,
-              sessionId: value,
-            },
-          });
-        }
-      });
-    },
+
     getSessionId(params) {
       const loadingInstance = this.$loading(this.loadingOption);
       return RequestService.getSession(params).then(

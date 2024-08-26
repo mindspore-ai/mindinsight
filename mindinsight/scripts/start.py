@@ -18,7 +18,6 @@ import argparse
 import os
 import re
 import sys
-import socket
 from importlib import import_module
 
 import psutil
@@ -180,8 +179,6 @@ class Command(BaseCommand):
 
         try:
             self.check_port()
-            self.check_debugger_port()
-            self.check_offline_debugger_setting()
         except (PortNotAvailableError, SettingValueError) as error:
             self.console.error(error.message)
             self.logfile.error(error.message)
@@ -241,37 +238,3 @@ class Command(BaseCommand):
             log.info(str(error))
 
         return log_base_dir
-
-    def check_debugger_port(self):
-        """Check if the debugger_port is available"""
-        if not settings.ENABLE_DEBUGGER:
-            return
-        ip = settings.HOST
-        debugger_port = settings.DEBUGGER_PORT
-        port = settings.PORT
-        if debugger_port == port:
-            raise PortNotAvailableError("The ports for debugger and web page are both %s,"
-                                        "please use another port as debugger-port." % debugger_port)
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            s.connect((ip, debugger_port))
-            s.shutdown(2)
-            raise PortNotAvailableError(f'Debugger-port {ip}:{debugger_port} is not available for MindInsight')
-        except socket.error:
-            return
-
-    def check_offline_debugger_setting(self):
-        """Check if the offline debugger setting is legal"""
-        mem_limit = settings.OFFLINE_DEBUGGER_MEM_LIMIT
-        session_num = settings.MAX_OFFLINE_DEBUGGER_SESSION_NUM
-        if not isinstance(mem_limit, int) or isinstance(mem_limit, bool) or \
-                mem_limit < MIN_MEM_LIMIT_VALUE or mem_limit > MAX_MEM_LIMIT_VALUE:
-            raise SettingValueError("Offline debugger memory limit should be integer ranging from {} to {} MB, but got"
-                                    " {}. Please check the environment variable MINDINSIGHT_OFFLINE_DEBUGGER_MEM_LIMIT"
-                                    .format(MIN_MEM_LIMIT_VALUE, MAX_MEM_LIMIT_VALUE, mem_limit))
-        if not isinstance(session_num, int) or isinstance(session_num, bool) or \
-                session_num < MIN_SESSION_NUM or session_num > MAX_SESSION_NUM:
-            raise SettingValueError("Max offline debugger session number should be integer ranging from {} to {}, but "
-                                    "got {}. Please check the environment variable "
-                                    "MINDINSIGHT_MAX_OFFLINE_DEBUGGER_SESSION_NUM"
-                                    .format(MIN_SESSION_NUM, MAX_SESSION_NUM, session_num))
