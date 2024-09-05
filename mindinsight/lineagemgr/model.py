@@ -147,7 +147,7 @@ class LineageTable:
     def _remove_unsupported_columns(self):
         """Remove unsupported columns."""
         columns_to_drop = []
-        for name, data in self._df.iteritems():
+        for name, data in self._df.items():
             if not is_simple_numpy_number(data.dtype):
                 columns_to_drop.append(name)
 
