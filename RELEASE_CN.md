@@ -42,7 +42,7 @@ Ning Ma, Jiaxing Zhu, Jiarong Ji, Yanming Miao, Nan Wang, XiaoXian Jin, Qingxian
 - [BETA] Profiling通信算子耗时矩阵，用户通过分析通信算子耗时矩阵，找出集群通信性能瓶颈。
 - [BETA] 提高昇腾环境解析Profiling数据的性能。
 - [BETA] 支持离线解析Profiling生成的数据，用户可以先采集数据，然后根据需要再解析数据。
-- [BETA] 支持采集HBM、PCIe、l2_cache性能数据，丰富性能分析指标。
+- [BETA] 支持采集片上内存、PCIe、l2_cache性能数据，丰富性能分析指标。
 
 #### Dump
 
