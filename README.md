@@ -31,16 +31,16 @@
 Dear users
 
 We regret to inform you that MindInsight will gradually cease releasing updates due to technical planning adjustments. The specific arrangement is as follows:
-  - MindInsight: MindInsight will no longer update or release new versions after version 2.3.
+  - **MindInsight: MindInsight will no longer update or release new versions after version 2.3.**
 
 Thank you for your past use of this application.
 
 To maintain a smooth user experience, we provide these options:
-  - MindInsight: System optimization data visualization has been integrated into MindStudio Insight and scalar visualization, parameter distribution visualization, and computational graphs visualization have been integrated into the MindStudio Insight plugins. For details, see the [MindStudio Insight User Guide](https://www.hiascend.com/document/detail/zh/mindstudio/80RC1/GUI_baseddevelopmenttool/msascendinsightug/Insight_userguide_0002.html).
+  - **MindInsight: System optimization data visualization has been integrated into MindStudio Insight** and scalar visualization, parameter distribution visualization, and computational graphs visualization have been integrated into the MindStudio Insight plugins. For details, see the [MindStudio Insight User Guide](https://www.hiascend.com/document/detail/zh/mindstudio/80RC1/GUI_baseddevelopmenttool/msascendinsightug/Insight_userguide_0002.html).
 
 Our user support team will keep helping you. If you have questions or need heep, cantact us on the forum.
 
-We sincerely thank you for supporting and loving the loving the MindInsight over the years. We will keep working to offer you better products and services.
+We sincerely thank you for supporting MindInsight over the years. We will keep working to offer you better products and services.
 
 Sincerely!
 
